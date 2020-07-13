@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">SnipBack</string>
+    <string name="intro_screenone_label_one">WELCOME TO SNIPBACK</string>
+    <string name="intro_screenone_label_two">THE WORLD"’"S MOST POWERFUL\nRECORD BUTTON</string>
+    <string name="intro_screenone_label_three">SnipBack is loaded with over 40+ features,\nbut one of the most innovative features is the \nability to record into the PAST.</string>
+    <string name="intro_screenone_label_four">Whether it’s going back and adding missed\n
+        footage from the beginning of an event,
+        or \n just waiting for the action to happen first \nand
+        then using our \nexclusive QuickBack feature to go back and get it, SnipBack has\n you covered.</string>
+
 </resources>
