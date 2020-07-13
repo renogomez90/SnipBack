@@ -14,18 +14,13 @@ import androidx.fragment.app.Fragment;
 import com.example.snipback.R;
 
 public class IntroFragment1 extends Fragment {
-    private Context mContext;
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mContext = context;
     }
 
-    public static IntroFragment1 newInstance(String feedType) {
+    public  static  IntroFragment1 newInstance() {
         IntroFragment1 fragment = new IntroFragment1();
-        Bundle bundle = new Bundle();
-        bundle.putString("feedType", feedType);
-        fragment.setArguments(bundle);
         return fragment;
     }
 
