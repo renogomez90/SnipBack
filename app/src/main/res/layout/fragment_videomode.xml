@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/sample_videomode_bg">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/bottom_cont"
+        android:padding="12dp">
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_remove_black_24dp"
+
+            />
+
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/ic_add_black_24dp"
+
+            />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/bottom_cont"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="30dp"
+        android:gravity="center">
+
+        <ImageButton
+            android:id="@+id/r_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/round_transparent"
+            app:srcCompat="@drawable/ic_gallery"
+            tools:ignore="VectorDrawableCompat" />
+
+        <ImageButton
+            android:id="@+id/r_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_toRightOf="@+id/r_1"
+            android:background="@drawable/round_transparent"
+            app:srcCompat="@drawable/ic_video_camera"
+            tools:ignore="VectorDrawableCompat" />
+
+        <RelativeLayout
+            android:id="@+id/con"
+            android:layout_width="140dp"
+            android:layout_height="40dp"
+            android:layout_toRightOf="@+id/r_2"
+            android:gravity="center">
+
+            <ImageButton
+                android:id="@+id/r_3"
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_marginRight="12dp"
+                android:background="@drawable/curve"
+                app:srcCompat="@drawable/ic_reload"
+                tools:ignore="VectorDrawableCompat" />
+
+
+            <ImageButton
+                android:id="@+id/r"
+                android:layout_width="60dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="1dp"
+                android:layout_toRightOf="@+id/r_3"
+                android:background="@drawable/curve2"
+                app:srcCompat="@drawable/ic_reload"
+                tools:ignore="VectorDrawableCompat" />
+
+            <ImageButton
+                android:id="@+id/rec"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="45dp"
+                android:background="@drawable/rec_button" />
+        </RelativeLayout>
+
+        <ImageButton
+            android:id="@+id/r_4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_toRightOf="@+id/con"
+            android:background="@drawable/round_transparent"
+            app:srcCompat="@drawable/ic_camera_diaphram"
+            tools:ignore="VectorDrawableCompat" />
+
+        <ImageButton
+            android:id="@+id/r_5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="12dp"
+            android:layout_toRightOf="@+id/r_4"
+            android:background="@drawable/round_transparent"
+            app:srcCompat="@drawable/ic_menu"
+            tools:ignore="VectorDrawableCompat" />
+
+
+    </RelativeLayout>
+
+</RelativeLayout>
