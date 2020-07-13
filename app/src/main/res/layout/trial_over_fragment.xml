@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        android:padding="37dp">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:padding="12dp"
+            android:src="@drawable/close" />
+
+        <TextView
+            android:id="@+id/tv_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="60dp"
+            android:text="YOUR FREE \nTRIAL IS OVER"
+            android:textColor="#ffffff"
+            android:textSize="20dp" />
+
+        <TextView
+            android:id="@+id/tv_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_1"
+            android:layout_marginTop="12dp"
+            android:text="Subscribe \nto Continue Using All Our Great Features"
+            android:textColor="#ffffff"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/tv_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_2"
+            android:layout_marginTop="12dp"
+            android:text="Includes:"
+            android:textColor="#ffffff"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/tv_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_below="@+id/tv_3"
+            android:text=" Highlight Reel Creator \n Cut Zone - Cut Out Unwanted Video \n Add SlowMo  SpeedUp Zones \n All Future Features Included \n No Ads"
+            android:textColor="#ffffff"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/tv_5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_4"
+            android:layout_marginTop="12dp"
+            android:text="COMING SOON"
+            android:textColor="#EA3C2A"
+            android:textSize="15dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_6"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_below="@+id/tv_5"
+            android:text="Crop Video for Social Media \n Add Background Music \n Add Voiceover"
+            android:textColor="#ffffff"
+            android:textSize="15dp" />
+
+        <Button
+            android:id="@+id/bt1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_below="@+id/tv_6"
+            android:background="@drawable/button"
+            android:text="$1.99/ month"
+            android:textColor="#ffffff" />
+
+        <Button
+            android:id="@+id/bt2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/bt1"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/button"
+            android:text="$11.99/ year"
+            android:textColor="#ffffff" />
+
+        <TextView
+            android:id="@+id/tv_7"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/bt2"
+            android:gravity="center"
+            android:padding="12dp"
+            android:text="Restore Purchase"
+            android:textColor="#ffffff"
+            android:textSize="17dp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_8"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_7"
+            android:gravity="center"
+            android:text="After 7 day free trial, a recurring billing period of $19.49 per year automatically begins. Payment will be charged to iTunes. Account at confirmation of purchase. Subscription automatically renews unless auto renew is turned off at least 24 hours before the end of the current period. Account will be charged for renewal within 24 hoursprior to the end of the current period. Subscription may be managed by the user and autorenewal may be turned off by going to the user's Account Settings after purchase. Any unused portion of a free trial period willl be forfeited when the user purchase a subscription duting free trial."
+            android:textColor="#ffffff"
+            android:textSize="10dp"
+            android:textStyle="bold" />
+    </RelativeLayout>
+</ScrollView>
