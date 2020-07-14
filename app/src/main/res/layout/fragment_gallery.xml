@@ -8,12 +8,20 @@
         android:layout_height="34dp"
         android:text="PHOTOS"
         android:gravity="center"
+        android:id="@+id/photolabel"
         android:fontFamily="@font/barlow_bold"
         android:textSize="13dp"
-        android:layout_marginLeft="64dp"
+        android:layout_marginLeft="44dp"
         android:layout_marginTop="32dp"
         android:background="@drawable/photo_button_background"
         android:textColor="@color/colorPrimaryWhite"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/recycler_view"
+        android:layout_marginLeft="44dp"
+        android:layout_marginTop="24dp"
+        android:layout_below="@+id/photolabel"/>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="55dp"
@@ -26,6 +34,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginLeft="20dp"
+            android:id="@+id/layout_camera"
             android:layout_weight="0.2">
 
             <ImageButton
@@ -51,6 +60,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:id="@+id/layout_link"
             android:layout_weight="0.2">
 
             <ImageButton
@@ -77,6 +87,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:id="@+id/layout_filter"
             android:layout_weight="0.2">
 
             <ImageButton
@@ -103,6 +114,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:id="@+id/layout_view"
             android:layout_weight="0.2">
 
             <ImageButton
@@ -129,6 +141,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:id="@+id/layout_menu"
             android:layout_marginRight="20dp"
             android:layout_weight="0.2">
 
