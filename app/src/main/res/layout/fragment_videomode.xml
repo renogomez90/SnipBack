@@ -51,7 +51,7 @@
             android:layout_marginLeft="12dp"
             android:layout_toRightOf="@+id/r_1"
             android:background="@drawable/round_transparent"
-            app:srcCompat="@drawable/ic_video_camera"
+            app:srcCompat="@drawable/ic_check"
             tools:ignore="VectorDrawableCompat" />
 
         <RelativeLayout
