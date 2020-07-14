@@ -36,9 +36,7 @@ public class IntroFragmentViewPager extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-////
-//        ((MainActivity) Objects.requireNonNull(getActivity())).setBottomHighLighted(R.id.home);
-//        ((MainActivity) Objects.requireNonNull(getActivity())).handleToolBar("Feed", false, false, false);
+
         setupViewPager(viewPager, 0);
 
         tabLayout.setupWithViewPager(viewPager);
@@ -49,16 +47,16 @@ public class IntroFragmentViewPager extends Fragment {
 
     private void setupViewPager(ViewPager viewPager, int categoryId) {
         adapter = new ViewPagerAdapter(getChildFragmentManager());
-        Fragment popularFrag = IntroFragment1.newInstance( "popular");
-        adapter.addFragment(popularFrag, "");
+        Fragment introFragment1 = IntroFragment1.newInstance();
+        adapter.addFragment(introFragment1, "");
 
-        Fragment categoriesFrag = IntroFragment2.newInstance( "Hotshots");
-        adapter.addFragment(categoriesFrag, "");
+        Fragment introFragment2 = IntroFragment2.newInstance();
+        adapter.addFragment(introFragment2, "");
 
-        Fragment favFrag = IntroFragment1.newInstance( "favourites");
-        adapter.addFragment(favFrag, "");
-
-
+        Fragment introductionFragmentThree = IntroductionFragmentThree.newInstance();
+        adapter.addFragment(introductionFragmentThree, "");
+        Fragment introduction_fragment_four = Introduction_Fragment_Four.newInstance();
+        adapter.addFragment(introduction_fragment_four, "");
         viewPager.setAdapter(adapter);
         viewPager.setOffscreenPageLimit(0);
 
@@ -70,25 +68,12 @@ public class IntroFragmentViewPager extends Fragment {
 
             @Override
             public void onPageSelected(int position) {
-                if (position == 1 ) {
-                    Fragment favFrag = IntroFragment2.newInstance( "favourites");
-                    adapter.addFragment(favFrag, "");
+               /* if (position == 1 ) {
+                    Fragment introFragment11 = IntroFragment1.newInstance();
+                    adapter.addFragment(introFragment11,"");
 
 
-                }
-//                if (position != 1 && position != 3) {
-////                    RefreshFeed fragment = (RefreshFeed) adapter.instantiateItem(viewPager, position);
-//                    if (fragment instanceof PopularFeedFragment || fragment instanceof LiveFeedFragment || fragment instanceof FollowingFeedFragment) {
-//                        fragment.fragmentBecameVisible();
-//                    }
-//
-//                } else if (position == 3) {
-//
-//                    ((MainActivity) Objects.requireNonNull(getActivity())).handleToolBar("MY EVENTS", false, false, false);
-//                } else {
-//
-//                    ((MainActivity) Objects.requireNonNull(getActivity())).handleToolBar("Feed", false, false, false);
-//                }
+                }*/
             }
 
             @Override

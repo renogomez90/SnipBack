@@ -1,4 +1,4 @@
-package com.example.snipback;
+package com.example.snipback.fragment;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -10,23 +10,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.snipback.fragment.FragmentGallery;
+import com.example.snipback.R;
 
-public class VideoMode extends Fragment {
+public class FragmentGallery extends Fragment {
     private View rootView;
     ImageButton gallery;
-
+    public  static  FragmentGallery newInstance() {
+        FragmentGallery fragment = new FragmentGallery();
+        return fragment;
+    }
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.fragment_videomode, container, false);
-        gallery= rootView.findViewById(R.id.r_1);
-        gallery.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
-            }
-        });
+        rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
         return rootView;
     }
 }

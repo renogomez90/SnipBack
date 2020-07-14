@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorAccent">
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="37dp"
+        android:layout_marginLeft="37dp"
+        android:textSize="19dp"
+        android:fontFamily="@font/barlow_bold"
+        android:text="WATCH LATER"
+        android:textColor="@color/colorPrimaryWhite"
+        android:background="@drawable/background_button"
+        android:layout_above="@+id/dontshow"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:id="@+id/dontshow"
+        android:layout_marginTop="22dp"
+        android:layout_marginBottom="22dp"
+        android:layout_above="@+id/dots">
+        <CheckBox
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:button="@drawable/background_checkbox"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Don't Show Again"
+            android:textSize="13dp"
+            android:fontFamily="@font/barlow_regular"
+            android:textColor="@color/colorPrimaryWhite"/>
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:id="@+id/dots"
+        android:layout_marginBottom="30dp">
+        <View
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:background="@drawable/round_white"/>
+        <View
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:layout_marginLeft="14dp"
+            android:background="@drawable/round_white"/>
+        <View
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:layout_marginLeft="14dp"
+            android:background="@drawable/round_white"/>
+        <View
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:layout_marginLeft="14dp"
+            android:background="@drawable/rec_button"/>
+
+    </LinearLayout>
+
+
+</RelativeLayout>

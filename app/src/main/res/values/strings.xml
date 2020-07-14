@@ -6,9 +6,40 @@
     <string name="intro_screenone_label_four">Whether it’s going back and adding missed\n
         footage from the beginning of an event,
         or \n just waiting for the action to happen first \nand
-        then using our \nexclusive QuickBack feature to go back and get it, SnipBack has\n you covered.</string>
-
-    <string name="include"><![CDATA[● Highlight Reel Creator\n● Cut Zone - Cut Out Unwanted Video\n● Add SlowMo & SpeedUp Zones\n● All Future Features Included\n● No Ads]]></string>
-    <string name="soon">● Crop Video for Social Media \n● Add Background Music \n● Add Voiceover</string>/
-
+        then using our exclusive QuickBack \nfeature to go back and get it, SnipBack has\n you covered.</string>
+    <string name="quic_backbutton">QUICKBACK \nBUTTON</string>
+    <string name="next_pagelabel">Tap Button or \nSwipe Left on screen.</string>
+    <string name="intro_screentwo_label_one">INNOVATIVE EDITOR</string>
+    <string name="intro_screentwo_label_two">After capturing some great video,
+        our \npatented editor, with its simple “set begin set \nend” method,
+        makes creating highlight reels\n ridiculously simple.
+        You can seamlessly \nextract unwanted segments,
+        specify highlight \nzones,
+        and even apply slow-mo/speed-up\n effects…all easier than ever before.</string>
+    <string name="intro_screentwo_label_three">PLAYER OPTIONS</string>
+    <string name="intro_screentwo_label_four">Editor, Tagging, Capture,\n Sharing, Delete</string>
+    <string name="intro_screentwo_label_five">EDITOR OPTIONS</string>
+    <string name="intro_screenthree_label_one">SNAPBACK PHOTOS</string>
+    <string name="intro_screenthree_label_two">Leveraging our exclusive SnipBack \ntechnology,
+        taking perfect photos has never\n been easier.</string>
+    <string name="intro_screenthree_label_three">Our SnapBack Photos feature essentially \nenables you to
+        take pictures in the past.
+        And \nit’s really simple…just hold up your camera, \nmake your poses, then tap our SnapBack \nbutton.</string>
+    <string name="intro_screenthree_label_four">SnipBack will then let you scan the last 10 \nseconds
+        for the best pics! </string>
+    <string name="intro_screenthree_label_five">SNIPBACK \nBUTTON </string>
+    <string name="intro_screenthree_label_six">Tap Button or \nSwipe Right on screen.</string>
+    <string name="intro_screenfour_label_one">Great overview video covering \nQuickBack,
+        QuickBack+, On-the-Fly \nTagging, and SnapBack Photos.</string>
+    <string name="intro_screenfour_label_2">Great overview video covering \nQuickBack,
+        QuickBack+, On-the-Fly \nTagging, and SnapBack Photos.</string>
+    <string name="intro_screenfour_label_3">How to use our QuickBack feature to \ncapture great highlights,
+        and then \neasily merge them together to create \na great highlight video.</string>
+    <string name="intro_screenfour_label_4">Use QuickBack+ to capture exactly \nwhat you want, nothing more, nothing \nless.</string>
+    <string name="intro_screenfour_label_5">Use our On-the-Fly tagging to add \ntags, including audio tags that can \nplay before/after your video.
+        Plus, how\n to extend QuickBacks.</string>
+    <string name="intro_screenfour_label_6">Use SnapBack Photos to easily \ncapture the best pics.
+        This video \nshows you how to use this feature to \ncapture the best selfies.</string>
+    <string name="intro_screenfour_label_7">Tap Button or \nSwipe Right on screen.</string>
+    <string name="intro_screenfour_label_8">Tap Button or \nSwipe Right on screen.</string>
 </resources>

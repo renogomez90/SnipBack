@@ -13,21 +13,22 @@ import androidx.fragment.app.Fragment;
 
 import com.example.snipback.R;
 
-public class IntroFragment2 extends Fragment {
+public class IntroductionFragmentThree extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+
     }
 
-    public static IntroFragment2 newInstance() {
-        IntroFragment2 fragment = new IntroFragment2();
+    public static IntroductionFragmentThree newInstance() {
+        IntroductionFragmentThree fragment = new IntroductionFragmentThree();
         return fragment;
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_intro2, null);
+        View view = inflater.inflate(R.layout.fragment_intro3, null);
         return view;
     }
     @Override

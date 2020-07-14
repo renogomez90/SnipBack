@@ -18,10 +18,10 @@ public class AppMainActivity extends AppCompatActivity {
 
         VideoMode videoMode = new VideoMode();
         loadFragment(videoMode);
-//        IntroFragmentViewPager fragmentViewPager = new IntroFragmentViewPager();
-//        loadFragment(fragmentViewPager);
+
     }
-    public void loadFragment(Fragment fragment) {
+
+    public   void loadFragment(Fragment fragment) {
         FragmentTransaction fts = getSupportFragmentManager().beginTransaction();
         if (fts != null) {
             fts.replace(R.id.mainFragment, fragment);
