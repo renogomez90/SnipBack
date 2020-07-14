@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.example.snipback.fragment.IntroFragmentViewPager;
+import com.example.snipback.fragment.TrialOver;
 
 public class AppMainActivity extends AppCompatActivity {
 
@@ -15,10 +16,10 @@ public class AppMainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appmain_activity);
 
-//        VideoMode videoMode = new VideoMode();
-//        loadFragment(videoMode);
-        IntroFragmentViewPager fragmentViewPager = new IntroFragmentViewPager();
-        loadFragment(fragmentViewPager);
+        VideoMode videoMode = new VideoMode();
+        loadFragment(videoMode);
+//        IntroFragmentViewPager fragmentViewPager = new IntroFragmentViewPager();
+//        loadFragment(fragmentViewPager);
     }
     public void loadFragment(Fragment fragment) {
         FragmentTransaction fts = getSupportFragmentManager().beginTransaction();
