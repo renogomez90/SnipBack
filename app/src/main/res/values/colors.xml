@@ -10,4 +10,7 @@
     <color name="colorPrimaryRed">#FF1B00</color>
     <color name="colorPrimaryDimRed">#EA3C2A</color>
     <color name="colorPrimaryGrey">#989DA5</color>
+    <color name="progress_color">#C1C1C1</color>
+
+
 </resources>
