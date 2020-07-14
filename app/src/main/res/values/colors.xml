@@ -3,6 +3,7 @@
     <color name="colorPrimary">#000000</color>
     <color name="colorPrimaryDark">#000000</color>
     <color name="colorAccent">#000000</color>
+    <color name="bottom_menu">#212737</color>
     <color name="colorDarkGrey">#2E2E2E</color>
     <color name="colorDarkGreyDim">#989DA5</color>
     <color name="colorPrimaryWhite">#ffffff</color>

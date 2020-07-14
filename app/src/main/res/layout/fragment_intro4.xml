@@ -31,7 +31,6 @@
             android:layout_height="wrap_content"
             android:text="Don't Show Again"
             android:textSize="13dp"
-            b
             android:fontFamily="@font/barlow_regular"
             android:textColor="@color/colorPrimaryWhite"/>
     </LinearLayout>
