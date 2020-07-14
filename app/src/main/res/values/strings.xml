@@ -42,4 +42,7 @@
         This video \nshows you how to use this feature to \ncapture the best selfies.</string>
     <string name="intro_screenfour_label_7">Tap Button or \nSwipe Right on screen.</string>
     <string name="intro_screenfour_label_8">Tap Button or \nSwipe Right on screen.</string>
+
+    <string name="include"><![CDATA[● Highlight Reel Creator\n● Cut Zone - Cut Out Unwanted Video\n● Add SlowMo & SpeedUp Zones\n● All Future Features Included\n● No Ads]]></string>
+    <string name="soon">● Crop Video for Social Media \n● Add Background Music \n● Add Voiceover</string>/
 </resources>
