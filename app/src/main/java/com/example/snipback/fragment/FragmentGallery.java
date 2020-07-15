@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.snipback.AppMainActivity;
 import com.example.snipback.R;
 import com.example.snipback.adapter.AdapterPhotos;
 
@@ -84,8 +85,11 @@ public class FragmentGallery extends Fragment  implements View.OnClickListener {
                 layout_multidelete.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                       relativeLayout_autodeleteactions.setVisibility(View.VISIBLE);
-                        autodelete_arrow.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
+                       relativeLayout_autodeleteactions.setVisibility(View.GONE);
+                        autodelete_arrow.setImageResource(R.drawable.ic_forward);
+                        dialog.cancel();
+                        ((AppMainActivity) getActivity()).loadFragment(FragmentMultiDeletePhoto.newInstance());
+
 
                     }
                 });
