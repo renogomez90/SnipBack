@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_marginTop="53dp"
+        android:src="@drawable/ic_snipback_logo"
+        android:id="@+id/snipbackogo"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/email_addresslabel"
+        android:layout_below="@+id/snipbackogo"
+        android:text="Email Address"
+        android:fontFamily="@font/barlow_regular"
+        android:textColor="@color/colorPrimaryWhite"
+        android:textSize="15dp"
+        android:layout_marginTop="42dp"
+        android:layout_marginLeft="37dp"/>
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_below="@+id/email_addresslabel"
+        android:layout_marginLeft="37dp"
+        android:layout_marginRight="37dp"
+        android:layout_marginTop="9dp"
+        android:background="@drawable/background_checkbox"
+        android:id="@+id/edt_emai_address"/>
+    <Button
+        android:id="@+id/button_register"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/background_button"
+        android:layout_below="@+id/edt_emai_address"
+        android:layout_marginLeft="37dp"
+        android:text="REGISTER"
+        android:fontFamily="@font/barlow_bold"
+        android:textSize="18dp"
+        android:textColor="@color/colorPrimaryWhite"
+        android:layout_marginRight="37dp"
+        android:layout_marginTop="11dp"/>
+    <View
+        android:layout_width="110dp"
+        android:layout_height="2dp"
+        android:layout_marginLeft="37dp"
+        android:id="@+id/line1"
+        android:background="@color/colorDarkGreyDim"
+        android:layout_below="@+id/button_register"/>
+    <TextView
+        android:id="@+id/txt_or"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        />
+    <View
+        android:layout_width="110dp"
+        android:layout_height="2dp"
+        android:layout_marginLeft="37dp"
+        android:id="@+id/line2"
+        android:background="@color/colorDarkGreyDim"
+        android:layout_below="@+id/button_register"/>
+
+</RelativeLayout>

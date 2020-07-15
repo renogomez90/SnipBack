@@ -45,7 +45,7 @@ public class VideoMode extends Fragment {
         Dialog dialog = new Dialog(getActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
-        dialog.setContentView(R.layout.warningdialog_deletevideo);
+        dialog.setContentView(R.layout.fragment_settings);
 
         RelativeLayout con6 = dialog.findViewById(R.id.con6);
         con6.setOnClickListener(new View.OnClickListener() {
