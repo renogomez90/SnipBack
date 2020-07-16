@@ -158,7 +158,7 @@
                 android:orientation="vertical"
                 android:id="@+id/trim">
                 <ImageView
-                    android:layout_width="38dp"
+                    android:layout_width="26dp"
                     android:layout_height="28dp"
                     android:src="@drawable/trim"/>
                 <TextView

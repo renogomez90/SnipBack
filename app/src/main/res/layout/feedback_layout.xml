@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+
+    <RelativeLayout
+        android:id="@+id/con1"
+        android:layout_width="match_parent"
+        android:layout_height="80dp">
+
+
+        <EditText
+            android:id="@+id/tv1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="20dp"
+            android:layout_toRightOf="@+id/img1"
+            android:fontFamily="@font/barlow_bold"
+            android:gravity="center"
+            android:text="SNAPBACK FEEDBACK"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="20dp" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_marginRight="12dp"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/back"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginLeft="22dp"
+                android:src="@drawable/ic_left_arrow" />
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/con2"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@+id/con1">
+
+        <EditText
+            android:id="@+id/tv2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="20dp"
+            android:layout_toRightOf="@+id/img2"
+            android:fontFamily="@font/barlow_medium"
+            android:gravity="left|center"
+            android:text="To: info@hipointinc.com"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="14dp" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="12dp"
+            android:gravity="center">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_add_black_24dp" />
+        </RelativeLayout>
+
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/con3"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@+id/con2">
+
+        <EditText
+            android:id="@+id/tv3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="20dp"
+            android:layout_toRightOf="@+id/img3"
+            android:fontFamily="@font/barlow_medium"
+            android:gravity="left|center"
+            android:text="Cc/Bcc:"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="14dp" />
+
+    </RelativeLayout>
+
+
+    <RelativeLayout
+        android:id="@+id/con4"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@+id/con3">
+
+
+        <EditText
+            android:id="@+id/tv4"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="20dp"
+            android:layout_toRightOf="@+id/img4"
+            android:fontFamily="@font/barlow_medium"
+            android:gravity="left|center"
+            android:text="Subject: SnipBack Feedback"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="15dp" />
+
+
+    </RelativeLayout>
+
+
+
+    <Button
+
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginStart="37dp"
+        android:layout_marginEnd="37dp"
+        android:layout_marginBottom="13dp"
+        android:background="@color/colorPrimaryRed"
+        android:textColor="@color/colorPrimaryWhite"
+        android:text="SEND"
+        android:textSize="19dp"
+        android:fontFamily="@font/barlow_bold"
+        android:layout_alignParentBottom="true"/>
+
+</RelativeLayout>

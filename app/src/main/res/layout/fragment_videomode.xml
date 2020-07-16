@@ -67,7 +67,7 @@
                 android:layout_height="match_parent"
                 android:layout_marginRight="12dp"
                 android:background="@drawable/curve"
-                app:srcCompat="@drawable/ic_reload"
+                app:srcCompat="@drawable/ic_back_video"
                 tools:ignore="VectorDrawableCompat" />
 
 
@@ -78,7 +78,7 @@
                 android:layout_marginLeft="1dp"
                 android:layout_toRightOf="@+id/r_3"
                 android:background="@drawable/curve2"
-                app:srcCompat="@drawable/ic_reload"
+                app:srcCompat="@drawable/ic_snap"
                 tools:ignore="VectorDrawableCompat" />
 
             <ImageButton
@@ -86,7 +86,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="45dp"
-                android:background="@drawable/rec_button" />
+                android:background="@drawable/ic_rec" />
         </RelativeLayout>
 
         <ImageButton

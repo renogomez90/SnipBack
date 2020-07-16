@@ -13,18 +13,24 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.snipback.fragment.Feedback_fragment;
 import com.example.snipback.fragment.FragmentGallery;
 
 public class VideoMode extends Fragment {
     private View rootView;
     ImageButton gallery, settings;
 
+    public  static  VideoMode newInstance() {
+        VideoMode fragment = new VideoMode();
+        return fragment;
+    }
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_videomode, container, false);
         gallery = rootView.findViewById(R.id.r_1);
         settings = rootView.findViewById(R.id.r_5);
+
         gallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -37,12 +43,15 @@ public class VideoMode extends Fragment {
                 showDialogSettingsMain();
             }
         });
+
+
+
         return rootView;
     }
 
     protected void showDialogSettingsMain() {
 
-        Dialog dialog = new Dialog(getActivity());
+        final Dialog dialog = new Dialog(getActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.fragment_settings);
@@ -54,11 +63,19 @@ public class VideoMode extends Fragment {
                 showDialogSettingsResolution();
             }
         });
+        RelativeLayout feedback=dialog.findViewById(R.id.con2);
+        feedback.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance());
+                dialog.dismiss();
+            }
+        });
 
         dialog.show();
     }
 
-    ;
+
 
     protected void showDialogSettingsResolution() {
 
@@ -70,5 +87,4 @@ public class VideoMode extends Fragment {
         dialog.show();
     }
 
-    ;
 }
