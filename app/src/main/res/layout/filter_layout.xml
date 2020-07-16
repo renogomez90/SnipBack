@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:background="@color/colorPrimary">
     <TextView
         android:id="@+id/filterlabel"
@@ -10,8 +11,7 @@
         android:text="FILTER"
         android:textColor="@color/colorPrimaryWhite"
         android:fontFamily="@font/barlow_semibold"
-        android:textSize="20dp"
-        android:layout_marginLeft="38dp"/>
+        android:textSize="20dp"/>
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -27,16 +27,14 @@
         android:textColor="@color/colorPrimaryWhite"
         android:fontFamily="@font/barlow_semibold"
         android:textSize="16dp"
-        android:layout_marginTop="45dp"
-        android:layout_marginLeft="38dp"/>
+        android:layout_marginTop="45dp" />
     <TextView
         android:id="@+id/color_one"
         android:layout_width="39dp"
         android:layout_height="39dp"
         android:layout_marginTop="12dp"
         android:layout_below="@+id/colorlabel"
-        android:background="@drawable/filtercolor_one"
-        android:layout_marginLeft="38dp"/>
+        android:background="@drawable/filtercolor_one" />
     <TextView
         android:id="@+id/color_two"
         android:layout_width="39dp"
@@ -82,8 +80,7 @@
         android:fontFamily="@font/barlow_semibold"
         android:text="AUDIO TAG"
         android:textSize="16dp"
-        android:textColor="@color/colorPrimaryWhite"
-        android:layout_marginLeft="38dp"/>
+        android:textColor="@color/colorPrimaryWhite" />
     <TextView
         android:id="@+id/audiotag"
         android:layout_width="102dp"
@@ -108,7 +105,7 @@
         android:text="TO DO TAG"
         android:textSize="16dp"
         android:textColor="@color/colorPrimaryWhite"
-        android:layout_marginLeft="38dp"/>
+       />
     <TextView
         android:id="@+id/todotag_share"
         android:layout_width="138dp"
@@ -121,7 +118,7 @@
         android:textSize="16dp"
         android:background="@drawable/tag_background"
         android:textColor="#707070"
-        android:layout_marginLeft="43dp"/>
+        android:layout_marginLeft="5dp"/>
     <TextView
         android:id="@+id/todotag_link"
         android:layout_width="138dp"
@@ -146,9 +143,7 @@
         android:fontFamily="@font/barlow_semibold"
         android:text="TEXT TAGS"
         android:textSize="16dp"
-        android:background="@drawable/tag_background"
-        android:textColor="@color/colorPrimaryWhite"
-        android:layout_marginLeft="38dp"/>
+        android:textColor="@color/colorPrimaryWhite" />
 
 
 </RelativeLayout>
