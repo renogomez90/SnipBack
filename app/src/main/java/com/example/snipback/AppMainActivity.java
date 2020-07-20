@@ -1,5 +1,6 @@
 package com.example.snipback;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +17,8 @@ public class AppMainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appmain_activity);
+
+
 
         RegisterFragment videoMode = new RegisterFragment();
         loadFragment(videoMode);
