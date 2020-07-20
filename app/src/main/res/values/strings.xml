@@ -47,6 +47,6 @@
     <string name="soon">● Crop Video for Social Media \n● Add Background Music \n● Add Voiceover</string>/
 
     <string name="savevideo">Remember, If you tap on <b>"'"Save \nthe video"'"</b> button, the ORIGINAL video will \noverwrite with this. You can save it as a \nnew video, tap  <b>"'"Save As "'"</b></string>
-    <string name="savevideo1"><font color="#000000"> <b>Have an account,</b></font><font color="#FA8421"> Sign In</font></string>
+    <string name="temsandcondtions"><font color="#ffffff"> By continuing, you agree to SnipBack"'"s </font><font color="#E7263A">Terms \nof Service, Privacy Policy </font><font color="#ffffff"> and </font><font color="#E7263A"> Cookie Use.</font></string>
 
 </resources>
