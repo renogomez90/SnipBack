@@ -23,11 +23,7 @@
             android:windowSoftInputMode="adjustResize">
         </activity>
 
-        <activity
-            android:name=".Activty_Register"
-            android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
+
     </application>
 
 </manifest>

@@ -4,32 +4,47 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
-public class Activty_Register extends AppCompatActivity {
+import com.example.snipback.fragment.FragmentGallery;
+import com.example.snipback.fragment.RegisterFragment;
+
+public class Activty_Register extends Fragment {
     Intent intent;
     Button button_register;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activty_register);
+    private View rootView;
 
-        button_register=findViewById(R.id.button_register);
+
+    public  static  Activty_Register newInstance() {
+        Activty_Register fragment = new Activty_Register();
+        return fragment;
+    }
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        rootView = inflater.inflate(R.layout.activty_register, container, false);
+        button_register=rootView.findViewById(R.id.button_register);
         button_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                intent= new Intent(getApplicationContext(),AppMainActivity.class);
-                startActivity(intent);
-                finish();
+                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance());
             }
         });
 
+        return rootView;
     }
-
 }
+
+
