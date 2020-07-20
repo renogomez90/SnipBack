@@ -56,7 +56,7 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_delete"/>
+            android:src="@drawable/ic_delete_white"/>
     </LinearLayout>
     <TextView
         android:layout_width="match_parent"
@@ -82,171 +82,16 @@
         android:id="@+id/label4"/>
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="35dp"
-        android:layout_marginTop="15dp"
-        android:layout_below="@+id/label4"
-        android:gravity="center"
-        android:padding="4dp"
-        android:id="@+id/layout_images"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="30dp"
-        android:background="@drawable/background_screentwo_editer_image">
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-        android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-        android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-        <ImageView
-            android:layout_width="32.64dp"
-            android:layout_height="27.18dp"
-            android:src="@drawable/tony_hawk_new"/>
-
-
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
+        android:layout_height="107dp"
         android:layout_marginTop="28dp"
+        android:layout_marginRight="27dp"
+        android:layout_marginLeft="27dp"
         android:id="@+id/layout_editor"
-        android:layout_below="@+id/layout_images">
-        <RelativeLayout
-            android:layout_width="wrap_content"
+        android:layout_below="@+id/label4">
+        <ImageView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="30dp">
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginRight="20dp"
-                android:orientation="vertical"
-                android:id="@+id/trim">
-                <ImageView
-                    android:layout_width="26dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/trim"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="EXTEND/TRIM"
-                    android:textSize="8dp"
-                    android:textColor="@color/colorDarkGreyDim"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:layout_marginRight="20dp"
-                android:id="@+id/cut"
-                android:layout_toRightOf="@+id/trim">
-                <ImageView
-                    android:layout_width="38dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/cut"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="CUT"
-                    android:textSize="8dp"
-                    android:textColor="@color/colorDarkGreyDim"/>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginRight="20dp"
-                android:orientation="vertical"
-                android:id="@+id/highlight"
-                android:layout_toRightOf="@+id/cut">
-                <ImageView
-                    android:layout_width="38dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/trim"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="HIGHLIGHT"
-                    android:textSize="8dp"
-                    android:textColor="@color/colorDarkGreyDim"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:layout_marginRight="20dp"
-                android:orientation="vertical"
-                android:id="@+id/slow"
-                android:layout_toRightOf="@+id/highlight">
-                <ImageView
-                    android:layout_width="38dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/slow"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SLOW"
-                    android:textSize="8dp"
-                    android:textColor="@color/colorDarkGreyDim"/>
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="vertical"
-                android:id="@+id/speed"
-                android:layout_toRightOf="@+id/slow">
-                <ImageView
-                    android:layout_width="38dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/speed"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="SPEED"
-                    android:textSize="8dp"
-                    android:textColor="@color/colorDarkGreyDim"/>
-            </LinearLayout>
-
-        </RelativeLayout>
-
+            android:src="@drawable/action_image"/>
     </LinearLayout>
     <TextView
         android:layout_width="match_parent"
