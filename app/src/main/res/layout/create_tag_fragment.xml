@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/colorPrimary">
 
     <TextView
@@ -132,11 +133,11 @@
 
         <ImageView
             android:id="@+id/img1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
         android:layout_marginTop="14dp"
         android:layout_marginLeft="15dp"
-        android:src="@drawable/ic_del"/>
+        android:src="@drawable/ic_play"/>
 
         <ImageView
             android:id="@+id/img2"
@@ -154,7 +155,7 @@
             android:layout_marginTop="14dp"
             android:layout_marginLeft="32dp"
             android:layout_toRightOf="@+id/img2"
-            android:src="@drawable/ic_del"/>
+            android:src="@drawable/ic_after"/>
 
         <ImageView
             android:id="@+id/img4"
@@ -163,7 +164,7 @@
             android:layout_marginTop="14dp"
             android:layout_marginLeft="32dp"
             android:layout_toRightOf="@+id/img3"
-            android:src="@drawable/ic_del"/>
+            android:src="@drawable/ic_before"/>
     </RelativeLayout>
 
 
@@ -180,9 +181,10 @@
         android:layout_marginLeft="37dp"/>
 <RelativeLayout
     android:id="@+id/con_2"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="12dp"
+    android:gravity="center"
     android:layout_below="@+id/color_label">
     <TextView
         android:id="@+id/color_one"
@@ -191,7 +193,7 @@
         android:layout_marginTop="12dp"
         android:layout_below="@+id/colorlabel"
         android:background="@drawable/filtercolor_one"
-        android:layout_marginLeft="38dp"/>
+       />
     <TextView
         android:id="@+id/color_two"
         android:layout_width="39dp"
@@ -235,38 +237,51 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginLeft="62dp"
-        android:layout_marginRight="62dp"
         android:gravity="center"
-        android:layout_marginBottom="44dp">
+        android:layout_marginBottom="44dp"
+        android:padding="12dp"
+        android:weightSum="10">
 
-        <ImageView
+        <ImageButton
             android:id="@+id/share"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="2.5"
             android:layout_marginLeft="30dp"
-            android:src="@drawable/ic_share"/>
+            android:background="@drawable/whire_border_round"
+            app:srcCompat="@drawable/ic_share"
+            tools:ignore="VectorDrawableCompat"/>
 
-        <ImageView
+        <ImageButton
             android:id="@+id/edit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="2.5"
             android:layout_marginLeft="30dp"
-            android:src="@drawable/white_circle"/>
+            android:background="@drawable/white_circle"
+            app:srcCompat="@drawable/ic_edit"
+            tools:ignore="VectorDrawableCompat"
+            />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/tick"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_weight="2.5"
             android:layout_marginLeft="30dp"
-            android:src="@drawable/rec_button"/>
+            android:background="@drawable/rec_button"
+            app:srcCompat="@drawable/ic_tick"
+            tools:ignore="VectorDrawableCompat"/>
 
-        <ImageView
+        <ImageButton
             android:id="@+id/delete"
             android:layout_width="wrap_content"
+            android:layout_weight="2.5"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
-            android:src="@drawable/ic_del"/>
+            android:background="@drawable/whire_border_round"
+            app:srcCompat="@drawable/ic_del"
+            tools:ignore="VectorDrawableCompat"/>
 
     </LinearLayout>
 
