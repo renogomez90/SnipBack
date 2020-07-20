@@ -15,10 +15,11 @@ import androidx.fragment.app.Fragment;
 
 import com.example.snipback.fragment.Feedback_fragment;
 import com.example.snipback.fragment.FragmentGallery;
+import com.example.snipback.fragment.TrialOver;
 
 public class VideoMode extends Fragment {
     private View rootView;
-    ImageButton gallery, settings;
+    ImageButton gallery, settings,record_two;
 
     public  static  VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
@@ -30,6 +31,7 @@ public class VideoMode extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_videomode, container, false);
         gallery = rootView.findViewById(R.id.r_1);
         settings = rootView.findViewById(R.id.r_5);
+        record_two = rootView.findViewById(R.id.r_2);
 
         gallery.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -37,6 +39,7 @@ public class VideoMode extends Fragment {
                 ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
             }
         });
+
         settings.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -44,7 +47,13 @@ public class VideoMode extends Fragment {
             }
         });
 
-
+        // for viewing & testing trial over fragment
+        record_two.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((AppMainActivity)getActivity()).loadFragment(TrialOver.newInstance());
+            }
+        });
 
         return rootView;
     }

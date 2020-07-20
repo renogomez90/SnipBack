@@ -19,8 +19,15 @@ import com.example.snipback.R;
 import butterknife.BindView;
 
 public class TrialOver extends Fragment {
-    private TextView tv_1, tv_2, tv_4, tv_6,tv_1_1;
+    private TextView tv_1, tv_2, tv_4, tv_6, tv_1_1;
     private Context mContext;
+
+    int proFeatures = 1;
+
+    public static TrialOver newInstance() {
+        TrialOver fragment = new TrialOver();
+        return fragment;
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -36,7 +43,7 @@ public class TrialOver extends Fragment {
         tv_2 = view.findViewById(R.id.tv_2);
         tv_4 = view.findViewById(R.id.tv_4);
         tv_6 = view.findViewById(R.id.tv_6);
-        tv_1_1=view.findViewById(R.id.tv_1_1);
+        tv_1_1 = view.findViewById(R.id.tv_1_1);
         return view;
     }
 
@@ -44,22 +51,42 @@ public class TrialOver extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
+        if (proFeatures==1){
 
-        String text1 = " <font color='#FFFFFF'>YOUR </font>" +"<font color='#EA3C2A'>FREE</font>";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            tv_1.setText(Html.fromHtml(text1, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
+            String text1 = " <font color='#FFFFFF'>UNLOCK OUR</font>";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                tv_1.setText(Html.fromHtml(text1, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
+            } else {
+                tv_1.setText(Html.fromHtml(text1), TextView.BufferType.SPANNABLE);
+            }
+
+            String text1_1 = "<font color='#EA3C2A'>PRO EDITING </font>" + "<font color='#FFFFFF'>FEATURES</font>";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                tv_1_1.setText(Html.fromHtml(text1_1, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
+            } else {
+                tv_1_1.setText(Html.fromHtml(text1_1), TextView.BufferType.SPANNABLE);
+            }
+
+
+
+
+
         } else {
-            tv_1.setText(Html.fromHtml(text1), TextView.BufferType.SPANNABLE);
+
+            String text1 = " <font color='#FFFFFF'>YOUR </font>" + "<font color='#EA3C2A'>FREE</font>";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                tv_1.setText(Html.fromHtml(text1, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
+            } else {
+                tv_1.setText(Html.fromHtml(text1), TextView.BufferType.SPANNABLE);
+            }
+
+            String text1_1 = "<font color='#EA3C2A'>TRIAL </font>" + "<font color='#FFFFFF'>IS OVER</font>";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                tv_1_1.setText(Html.fromHtml(text1_1, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
+            } else {
+                tv_1_1.setText(Html.fromHtml(text1_1), TextView.BufferType.SPANNABLE);
+            }
         }
-
-        String text1_1 = "<font color='#EA3C2A'>TRIAL </font>" + "<font color='#FFFFFF'>IS OVER</font>";
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            tv_1_1.setText(Html.fromHtml(text1_1, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
-        } else {
-            tv_1_1.setText(Html.fromHtml(text1_1), TextView.BufferType.SPANNABLE);
-        }
-
-
 
     }
 }
