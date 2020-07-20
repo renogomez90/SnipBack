@@ -22,7 +22,10 @@ public class IntroFragmentViewPager extends Fragment {
     private ViewPager viewPager;
     private ViewPagerAdapter adapter;
 
-
+    public  static  IntroFragmentViewPager newInstance() {
+        IntroFragmentViewPager fragment = new IntroFragmentViewPager();
+        return fragment;
+    }
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
