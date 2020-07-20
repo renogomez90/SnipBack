@@ -26,7 +26,7 @@ import com.example.snipback.adapter.AdapterPhotos;
 public class FragmentGallery extends Fragment  implements View.OnClickListener {
     private View rootView;
     ImageButton filter_button,view_button,menu_button;
-    TextView filter_label,view_label,menu_label;
+    TextView filter_label,view_label,menu_label,photolabel;
     ImageView autodelete_arrow;
     RecyclerView recycler_view;
     RelativeLayout relativeLayout_menu,relativeLayout_autodeleteactions,layout_autodelete,layout_filter,layout_multidelete;
@@ -38,6 +38,8 @@ public class FragmentGallery extends Fragment  implements View.OnClickListener {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
+
+        photolabel=rootView.findViewById(R.id.photolabel);
         recycler_view= rootView.findViewById(R.id.recycler_view);
         relativeLayout_menu= rootView.findViewById(R.id.layout_menu);
         layout_filter= rootView.findViewById(R.id.layout_filter);
@@ -50,6 +52,12 @@ public class FragmentGallery extends Fragment  implements View.OnClickListener {
         recycler_view.setAdapter(adapterPhotos);
         relativeLayout_menu.setOnClickListener(this);
         layout_filter.setOnClickListener(this);
+        photolabel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance());
+            }
+        });
         return rootView;
     }
 

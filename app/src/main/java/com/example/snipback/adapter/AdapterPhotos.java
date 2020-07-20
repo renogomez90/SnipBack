@@ -10,7 +10,9 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.snipback.AppMainActivity;
 import com.example.snipback.R;
+import com.example.snipback.fragment.FragmentMultiDeletePhoto;
 
 import java.util.List;
 
@@ -35,6 +37,7 @@ public class AdapterPhotos extends RecyclerView.Adapter<AdapterPhotos.ViewHolder
             datelabel = v.findViewById(R.id.datelabel);
             image1 = v.findViewById(R.id.image1);
 
+
         }
 
 
@@ -57,7 +60,6 @@ public class AdapterPhotos extends RecyclerView.Adapter<AdapterPhotos.ViewHolder
     public int getItemCount() {
         return 1;
     }
-
 
 
 }
