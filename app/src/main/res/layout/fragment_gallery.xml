@@ -31,8 +31,10 @@
 
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:layout_gravity="center"
+            android:layout_marginRight="2dp"
             android:layout_marginLeft="20dp"
             android:id="@+id/layout_camera"
             android:layout_weight="0.2">
@@ -58,8 +60,11 @@
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:layout_gravity="center"
+            android:layout_marginRight="2dp"
+            android:layout_marginLeft="2dp"
             android:id="@+id/layout_link"
             android:layout_weight="0.2">
 
@@ -84,8 +89,11 @@
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:layout_gravity="center"
+            android:layout_marginRight="2dp"
+            android:layout_marginLeft="2dp"
             android:id="@+id/layout_filter"
             android:layout_weight="0.2">
 
@@ -110,8 +118,11 @@
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:layout_gravity="center"
+            android:layout_marginRight="2dp"
+            android:layout_marginLeft="2dp"
             android:id="@+id/layout_view"
             android:layout_weight="0.2">
 
@@ -136,8 +147,10 @@
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
             android:layout_gravity="center"
+            android:layout_marginLeft="2dp"
             android:id="@+id/layout_menu"
             android:layout_marginRight="20dp"
             android:layout_weight="0.2">

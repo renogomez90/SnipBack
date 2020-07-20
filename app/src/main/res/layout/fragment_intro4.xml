@@ -15,7 +15,7 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/button_watchlater"
+        android:layout_above="@+id/watch_later"
         android:layout_below="@+id/title_text"
         android:layout_marginBottom="30dp">
         <LinearLayout
@@ -451,7 +451,6 @@
         android:layout_marginRight="37dp"
         android:layout_marginLeft="37dp"
         android:textSize="19dp"
-        android:id="@+id/button_watchlater"
         android:fontFamily="@font/barlow_bold"
         android:text="WATCH LATER"
         android:textColor="@color/colorPrimaryWhite"
