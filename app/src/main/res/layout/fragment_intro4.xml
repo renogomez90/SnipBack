@@ -3,6 +3,23 @@
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorAccent">
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:id="@+id/icon_time">
+
+    </RelativeLayout>
+    <RelativeLayout
+        android:layout_toRightOf="@+id/icon_time"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+
+    </RelativeLayout>
+</RelativeLayout>
+
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -25,12 +42,14 @@
         <CheckBox
             android:layout_width="34dp"
             android:layout_height="34dp"
-            android:button="@drawable/background_checkbox"/>
+            android:background="@drawable/background_checkbox"
+            android:button="@null"/>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Don't Show Again"
             android:textSize="13dp"
+            android:layout_marginLeft="10dp"
             android:fontFamily="@font/barlow_regular"
             android:textColor="@color/colorPrimaryWhite"/>
     </LinearLayout>

@@ -5,48 +5,81 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/sample_videomode_bg">
-    <ImageView
-        android:id="@+id/play_backbutton"
+    <RelativeLayout
         android:layout_width="41dp"
         android:layout_height="41dp"
-        android:layout_toLeftOf="@+id/play_pouse"
+        android:id="@+id/play_backbutton"
         android:layout_centerInParent="true"
-        android:src="@drawable/ic_play_back"
-        android:layout_marginLeft="37dp"/>
-    <ImageView
-        android:id="@+id/play_pouse"
+        android:layout_toLeftOf="@+id/play_pouse"
+        android:layout_marginLeft="37dp"
+        android:gravity="center"
+        android:background="@drawable/background_play_pouse">
+        <ImageView
+            android:layout_width="11dp"
+            android:layout_height="13dp"
+            android:src="@drawable/ic_play_back" />
+    </RelativeLayout>
+    <RelativeLayout
         android:layout_width="64dp"
         android:layout_height="64dp"
+        android:id="@+id/play_pouse"
         android:layout_centerInParent="true"
-        android:src="@drawable/ic_pause_white"
-        android:layout_marginLeft="37dp"/>
+        android:layout_marginLeft="37dp"
+        android:gravity="center"
+        android:background="@drawable/background_play_pouse">
+        <ImageView
+            android:layout_width="15dp"
+            android:layout_height="28dp"
+            android:src="@drawable/ic_pause_white" />
+    </RelativeLayout>
+<RelativeLayout
+    android:id="@+id/play_forwardbutton"
+    android:layout_width="41dp"
+    android:layout_height="41dp"
+    android:gravity="center"
+    android:layout_toRightOf="@+id/play_pouse"
+    android:layout_centerInParent="true"
+    android:layout_marginLeft="37dp"
+    android:background="@drawable/background_play_pouse">
     <ImageView
-        android:id="@+id/play_forwardbutton"
-        android:layout_width="41dp"
-        android:layout_height="41dp"
-        android:layout_toRightOf="@+id/play_pouse"
-        android:layout_centerInParent="true"
-        android:src="@drawable/ic_play_forward"
-        android:layout_marginLeft="37dp"/>
+        android:layout_width="11dp"
+        android:layout_height="13dp"
+        android:src="@drawable/ic_play_forward" />
+</RelativeLayout>
+
+<RelativeLayout
+    android:layout_width="43dp"
+    android:layout_height="43dp"
+    android:id="@+id/back_arrow"
+    android:layout_alignParentBottom="true"
+    android:layout_above="@+id/bottom_menu"
+    android:layout_marginBottom="86dp"
+    android:gravity="center"
+    android:layout_marginLeft="37dp"
+    android:background="@drawable/background_black_round">
     <ImageView
-        android:id="@+id/back_arrow"
-        android:layout_width="43dp"
-        android:layout_height="43dp"
-        android:layout_alignParentBottom="true"
-        android:layout_above="@+id/bottom_menu"
-        android:layout_marginBottom="86dp"
-        android:src="@drawable/ic_back_arrow"
-        android:layout_marginLeft="37dp"/>
-    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="12dp"
+        android:src="@drawable/ic_back_arrow"/>
+</RelativeLayout>
+    <RelativeLayout
         android:id="@+id/button_camera"
         android:layout_width="43dp"
         android:layout_height="43dp"
         android:layout_alignParentBottom="true"
         android:layout_above="@+id/bottom_menu"
         android:layout_marginBottom="86dp"
+        android:gravity="center"
         android:layout_toRightOf="@+id/back_arrow"
-        android:src="@drawable/ic_camera"
-        android:layout_marginLeft="24dp"/>
+        android:layout_marginLeft="24dp"
+        android:background="@drawable/background_black_round">
+        <ImageView
+            android:layout_width="19dp"
+            android:layout_height="13dp"
+            android:src="@drawable/ic_camera"/>
+    </RelativeLayout>
+
+
     <TextView
         android:layout_width="103dp"
         android:layout_height="32dp"
