@@ -17,11 +17,14 @@ import androidx.fragment.app.Fragment;
 
 import com.example.snipback.AppMainActivity;
 import com.example.snipback.R;
+import com.example.snipback.RegisterFragment1;
 import com.example.snipback.VideoMode;
 
 public class Introduction_Fragment_Four extends Fragment {
     LinearLayout dontshow;
     Button watch_later;
+
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -49,7 +52,7 @@ public class Introduction_Fragment_Four extends Fragment {
         watch_later.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(StartTrial.newInstance());
             }
         });
         return view;
