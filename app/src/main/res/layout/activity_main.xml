@@ -13,23 +13,12 @@
         android:layout_above="@+id/tv_version"
         android:gravity="center">
 
-        <TextView
-            android:id="@+id/tv_one"
+        <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="SNIP"
-            android:textColor="#FFFFFF"
-            android:textStyle="normal"
-            android:textSize="40dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/tv_one"
-            android:text="BACK"
-            android:textStyle="bold"
-            android:textColor="#EA3C2A"
-            android:textSize="40dp" />
+            android:layout_marginTop="60dp"
+            android:background="@drawable/ic_snipback_logo"
+            android:gravity="center" />
     </RelativeLayout>
 
     <TextView

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary">
@@ -18,7 +19,6 @@
         android:layout_marginRight="37dp"
         android:layout_marginBottom="7dp"
         android:background="@color/colorPrimary"
-
         android:gravity="center">
 
         <TextView
@@ -29,127 +29,138 @@
             android:textSize="15dp" />
     </RelativeLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/play_con"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_above="@+id/edit_cont"
-        android:background="@color/bottom_menu"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:weightSum="10">
-
-        <ImageView
-            android:id="@+id/back"
-            android:layout_width="wrap_content"
-            android:layout_height="28dp"
-            android:layout_weight="2.5"
-            android:src="@drawable/ic_back1" />
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/edit_cont">
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="2.5"
+            android:id="@+id/play_con2"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@color/bottom_menu"
             android:gravity="center"
-            android:weightSum="10">
+            android:orientation="horizontal"
+            android:weightSum="10"
+            android:visibility="visible">
 
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_prev"
-                    android:visibility="visible"/>
+            <ImageView
+                android:id="@+id/back"
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_weight="2.5"
+                android:src="@drawable/ic_back1" />
 
 
-                <TextView
-                    android:layout_width="123dp"
-                    android:layout_height="32dp"
-                    android:layout_weight="2.5"
-                    android:background="@drawable/end_curve"
-                    android:text="END  "
-                    android:textSize="10dp"
-                    android:textColor="@color/colorPrimaryWhite"
-                    android:gravity="right|center"
-                    android:paddingRight="20dp"
-                    android:fontFamily="@font/barlow_semibold"
-                    android:drawableEnd="@drawable/ic_next"
-                    android:visibility="gone"/>
-                <TextView
-                    android:layout_width="62dp"
-                    android:layout_height="32dp"
-                    android:text="BEGIN"
-                    android:textSize="10dp"
-                    android:gravity="center"
-                    android:fontFamily="@font/barlow_semibold"
-                    android:textColor="@color/colorPrimaryWhite"
-                    android:background="@drawable/start_curve"
-                    android:drawableStart="@drawable/ic_next_start"
-                    android:paddingLeft="10dp"
-                    android:visibility="invisible"/>
-
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:visibility="visible">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="28dp"
-                    android:layout_weight="2.5"
-                    android:src="@drawable/ic_play"
-                    />
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_weight="2.5"
+                android:src="@drawable/ic_prev"
+                android:visibility="visible" />
 
 
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_weight="2.5"
+                android:src="@drawable/ic_play" />
 
-            </RelativeLayout>
+
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="28dp"
+                android:layout_weight="2.5"
+                android:layout_toRightOf="@+id/close"
+                android:src="@drawable/ic_save"
+                android:visibility="visible" />
 
         </LinearLayout>
 
-
-<RelativeLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
-
-    <ImageView
-        android:id="@+id/close"
-        android:layout_width="wrap_content"
-        android:layout_height="28dp"
-        android:src="@drawable/ic_delete"
-        android:visibility="invisible"
-
-        />
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="9dp"
-            android:layout_toRightOf="@+id/close"
-            android:gravity="center">
-
-
+        <LinearLayout
+            android:id="@+id/play_con1"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@color/bottom_menu"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:weightSum="10"
+            android:visibility="gone">
 
             <ImageView
+                android:id="@+id/back1"
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
-                android:src="@drawable/ic_save"
-                android:visibility="visible"/>
+                android:layout_weight="2.5"
+                android:src="@drawable/ic_back1" />
 
-            <ImageView
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_tick_done"
-                android:visibility="gone" />
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:gravity="center"
+                android:weightSum="10">
 
-        </RelativeLayout>
-</RelativeLayout>
+                <RelativeLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center">
 
-    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/end"
+                        android:layout_width="123dp"
+                        android:layout_height="32dp"
+                        android:layout_weight="2.5"
+                        android:background="@drawable/end_curve"
+                        android:drawableEnd="@drawable/ic_next"
+                        android:fontFamily="@font/barlow_semibold"
+                        android:gravity="right|center"
+                        android:paddingRight="20dp"
+                        android:text="END  "
+                        android:textColor="@color/colorPrimaryWhite"
+                        android:textSize="10dp" />
+
+                    <TextView
+                        android:id="@+id/start"
+                        android:layout_width="62dp"
+                        android:layout_height="32dp"
+                        android:background="@drawable/start_curve"
+                        android:drawableStart="@drawable/ic_next_start"
+                        android:fontFamily="@font/barlow_semibold"
+                        android:gravity="center"
+                        android:paddingLeft="10dp"
+                        android:text="BEGIN"
+                        android:textColor="@color/colorPrimaryWhite"
+                        android:textSize="10dp" />
+
+                </RelativeLayout>
+
+
+            </LinearLayout>
+
+
+                <ImageView
+                    android:id="@+id/close"
+                    android:layout_width="wrap_content"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_delete"
+                    />
+
+
+                <ImageView
+                    android:id="@+id/save"
+                    android:layout_width="wrap_content"
+                    android:layout_height="28dp"
+                    android:layout_marginLeft="9dp"
+                    android:layout_toRightOf="@+id/close"
+                    android:src="@drawable/ic_tick_done"
+                   />
+
+        </LinearLayout>
+
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/edit_cont"
@@ -161,7 +172,6 @@
         <LinearLayout
             android:id="@+id/layout_images"
             android:layout_width="match_parent"
-
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
@@ -228,7 +238,6 @@
         </LinearLayout>
     </RelativeLayout>
 
-
     <LinearLayout
         android:id="@+id/layout_editor"
         android:layout_width="match_parent"
@@ -238,7 +247,7 @@
         android:gravity="center">
 
         <RelativeLayout
-            android:id="@+id/layout_camera"
+            android:id="@+id/layout_extent"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -246,17 +255,17 @@
             android:layout_weight="0.2">
 
             <ImageButton
-                android:id="@+id/camera"
+                android:id="@+id/extent"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_extend" />
 
             <TextView
-                android:id="@+id/camera_text"
+                android:id="@+id/extent_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/camera"
+                android:layout_below="@+id/extent"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
