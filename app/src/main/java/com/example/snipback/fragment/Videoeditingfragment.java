@@ -67,7 +67,7 @@ public class Videoeditingfragment extends Fragment {
         });
 
 
-        layout_extent.setOnClickListener(new View.OnClickListener() {
+        extent.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 extent.setImageResource(R.drawable.ic_extent_red);
