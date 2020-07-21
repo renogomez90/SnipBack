@@ -1,5 +1,6 @@
 package com.example.snipback;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,17 +18,30 @@ public class AppMainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appmain_activity);
 
+
         RegisterFragment videoMode = new RegisterFragment();
         loadFragment(videoMode);
 
     }
 
-    public   void loadFragment(Fragment fragment) {
+    public void loadFragment(Fragment fragment) {
         FragmentTransaction fts = getSupportFragmentManager().beginTransaction();
         if (fts != null) {
             fts.replace(R.id.mainFragment, fragment);
             fts.addToBackStack(null);
             fts.commit();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        int count = getSupportFragmentManager().getBackStackEntryCount();
+
+        if (count == 0) {
+            super.onBackPressed();
+        } else {
+            getSupportFragmentManager().popBackStack();
+
         }
     }
 

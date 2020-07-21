@@ -1,5 +1,6 @@
-package com.example.snipback.fragment;
+package com.example.snipback;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,31 +11,33 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.snipback.RegisterFragment1;
-import com.example.snipback.AppMainActivity;
-import com.example.snipback.R;
+import com.example.snipback.fragment.IntroFragment1;
+import com.example.snipback.fragment.IntroFragmentViewPager;
 
-public class RegisterFragment extends Fragment {
+public class RegisterFragment1 extends Fragment {
+    Intent intent;
+    Button button_register;
     private View rootView;
-    private Button button_register;
 
-    public  static  RegisterFragment newInstance() {
-        RegisterFragment fragment = new RegisterFragment();
+
+    public  static RegisterFragment1 newInstance() {
+        RegisterFragment1 fragment = new RegisterFragment1();
         return fragment;
     }
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.register_layout, container, false);
-
+        rootView = inflater.inflate(R.layout.activty_register, container, false);
         button_register=rootView.findViewById(R.id.button_register);
         button_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                ((AppMainActivity) getActivity()).loadFragment(RegisterFragment1.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(IntroFragmentViewPager.newInstance());
             }
         });
+
         return rootView;
     }
 }
+
+

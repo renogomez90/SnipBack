@@ -4,6 +4,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="540dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_gravity="center"
     android:background="@drawable/meu_bg">
 
@@ -39,9 +40,12 @@
             android:gravity="center">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_back_right" />
+                android:layout_width="8dp"
+                android:layout_height="13dp"
+                android:src="@drawable/ic_forward"
+                android:id="@+id/tutorial_arrow"/>
+
+
         </RelativeLayout>
 
 
@@ -88,9 +92,11 @@
             android:gravity="center">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_back_right" />
+                android:layout_width="8dp"
+                android:layout_height="13dp"
+                android:src="@drawable/ic_forward"
+                />
+
         </RelativeLayout>
 
 
@@ -128,6 +134,33 @@
             android:text="LIGHT"
             android:textColor="@color/colorAccent"
             android:textSize="15dp" />
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_marginRight="12dp"
+            android:gravity="center">
+
+<!--            <TextView-->
+<!--                android:layout_width="wrap_content"-->
+<!--                android:layout_height="wrap_content"-->
+<!--                android:text="5 SEC."-->
+<!--                android:textSize="15dp"-->
+<!--                android:fontFamily="@font/barlow_medium"-->
+<!--                android:textColor="@color/colorPrimaryRed"-->
+<!--                />-->
+
+            <Switch
+                android:id="@+id/booked"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:visibility="visible"
+                android:background="@null"
+                android:button="@drawable/toogle_button"
+                android:thumb="@null"
+                app:track="@null"/>
+        </RelativeLayout>
+
 
 
 
@@ -319,9 +352,10 @@
             android:gravity="center">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_back_right" />
+                android:layout_width="8dp"
+                android:layout_height="13dp"
+                android:src="@drawable/ic_forward"
+                />
         </RelativeLayout>
 
 

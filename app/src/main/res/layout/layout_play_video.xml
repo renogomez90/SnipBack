@@ -104,9 +104,11 @@
 
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
+            android:gravity="center"
             android:layout_marginLeft="20dp"
+            android:layout_marginRight="2dp"
             android:id="@+id/layout_edit"
             android:layout_weight="0.2">
 
@@ -131,8 +133,11 @@
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
+            android:layout_marginRight="2dp"
+            android:layout_marginLeft="2dp"
+            android:gravity="center"
             android:id="@+id/layout_tag"
             android:layout_weight="0.2">
 
@@ -157,8 +162,11 @@
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
+            android:layout_marginRight="2dp"
+            android:layout_marginLeft="2dp"
+            android:gravity="center"
             android:id="@+id/layout_shutter"
             android:layout_weight="0.2">
 
@@ -183,8 +191,11 @@
         </RelativeLayout>
         <RelativeLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center"
+            android:layout_marginRight="2dp"
+            android:layout_marginLeft="2dp"
+            android:gravity="center"
             android:id="@+id/layout_share"
             android:layout_weight="0.2">
 
@@ -212,6 +223,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:id="@+id/layout_delete"
+            android:layout_marginLeft="2dp"
+            android:gravity="center"
             android:layout_marginRight="20dp"
             android:layout_weight="0.2">
 

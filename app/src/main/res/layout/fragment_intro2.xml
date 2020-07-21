@@ -37,7 +37,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginRight="38.85dp"
-            android:src="@drawable/ic_edit"/>
+            android:src="@drawable/ic_edit_white"/>
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
