@@ -22,7 +22,7 @@ import com.example.snipback.R;
 import com.example.snipback.RegisterFragment1;
 import com.example.snipback.VideoMode;
 
-import butterknife.BindView;
+
 
 public class TrialOver extends Fragment {
     private TextView tv_1, tv_2, tv_4, tv_6,tv_1_1;
