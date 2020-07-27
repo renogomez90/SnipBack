@@ -1,6 +1,7 @@
 package com.example.snipback.fragment;
 
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
@@ -44,6 +45,8 @@ public class TrialOver extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.trial_over_fragment, null);
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+
         tv_1 = view.findViewById(R.id.tv_1);
         tv_2 = view.findViewById(R.id.tv_2);
         tv_4 = view.findViewById(R.id.tv_4);

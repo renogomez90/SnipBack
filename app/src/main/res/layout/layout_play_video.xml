@@ -1,10 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/sample_videomode_bg">
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/tools">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottom_menu">
+
+        <com.google.android.exoplayer2.ui.PlayerView
+            android:id="@+id/player_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/photolabel"
+            android:background="#FFF"
+            android:focusable="false"
+            android:visibility="visible"
+            app:use_controller="true"
+            app:surface_type="texture_view"
+            app:hide_on_touch="false"
+            app:show_buffering="never"
+            app:show_timeout="0"
+
+             />
+
+    </RelativeLayout>
     <RelativeLayout
         android:layout_width="41dp"
         android:layout_height="41dp"
@@ -13,24 +35,32 @@
         android:layout_toLeftOf="@+id/play_pouse"
         android:layout_marginLeft="37dp"
         android:gravity="center"
-        android:background="@drawable/background_play_pouse">
+        android:background="@drawable/background_play_pouse"
+        android:visibility="visible">
         <ImageView
             android:layout_width="11dp"
             android:layout_height="13dp"
             android:src="@drawable/ic_play_back" />
     </RelativeLayout>
     <RelativeLayout
+
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:id="@+id/play_pouse"
         android:layout_centerInParent="true"
         android:layout_marginLeft="37dp"
         android:gravity="center"
-        android:background="@drawable/background_play_pouse">
-        <ImageView
+        android:background="@drawable/background_play_pouse"
+        android:visibility="visible">
+        <Switch
+            android:id="@+id/play_pause"
             android:layout_width="15dp"
             android:layout_height="28dp"
-            android:src="@drawable/ic_pause_white" />
+            android:background="@null"
+            android:button="@drawable/switch_play_pause"
+            android:thumb="@null"
+            app:track="@null"
+             />
     </RelativeLayout>
 <RelativeLayout
     android:id="@+id/play_forwardbutton"
@@ -40,7 +70,8 @@
     android:layout_toRightOf="@+id/play_pouse"
     android:layout_centerInParent="true"
     android:layout_marginLeft="37dp"
-    android:background="@drawable/background_play_pouse">
+    android:background="@drawable/background_play_pouse"
+    android:visibility="visible">
     <ImageView
         android:layout_width="11dp"
         android:layout_height="13dp"
@@ -81,6 +112,7 @@
 
 
     <TextView
+        android:id="@+id/exo_duration"
         android:layout_width="103dp"
         android:layout_height="32dp"
         android:layout_alignParentBottom="true"
@@ -93,6 +125,7 @@
         android:layout_alignParentRight="true"
         android:layout_marginRight="32dp"
         android:textColor="@color/colorPrimaryWhite"
+        android:visibility="gone"
         android:text="00:00/00:08"/>
     <LinearLayout
         android:layout_width="match_parent"

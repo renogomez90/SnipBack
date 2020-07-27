@@ -1,6 +1,7 @@
 package com.example.snipback;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,8 @@ public class RegisterFragment1 extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.activty_register, container, false);
+
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         button_register=rootView.findViewById(R.id.button_register);
         button_register.setOnClickListener(new View.OnClickListener() {
             @Override

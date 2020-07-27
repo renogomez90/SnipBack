@@ -2,6 +2,7 @@ package com.example.snipback.fragment;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.Html;
@@ -41,6 +42,8 @@ public class StartTrial extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.trial_start, null);
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+
         bt1 = view.findViewById(R.id.bt1);
         close=view.findViewById(R.id.close);
         tv_1=view.findViewById(R.id.tv_1);

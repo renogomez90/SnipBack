@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:background="@color/colorPrimary"
+    >
     <TextView
         android:layout_width="101dp"
         android:layout_height="34dp"
@@ -21,7 +23,36 @@
         android:id="@+id/recycler_view"
         android:layout_marginLeft="44dp"
         android:layout_marginTop="24dp"
-        android:layout_below="@+id/photolabel"/>
+        android:layout_below="@+id/photolabel"
+        android:visibility="gone"/>
+<RelativeLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_below="@+id/photolabel">
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/player_view"
+        android:background="#FFF"
+        android:focusable="true"
+        android:layout_marginLeft="44dp"
+        android:layout_marginTop="24dp"
+        android:visibility="visible"
+        card_view:resize_mode="fixed_width"
+        android:layout_height="145dp"
+        android:hardwareAccelerated="true"
+        android:layout_width="145dp"/>
+
+    <RelativeLayout
+        android:id="@+id/click"
+        android:background="@android:color/transparent"
+        android:focusable="true"
+        android:layout_marginLeft="44dp"
+        android:layout_marginTop="24dp"
+        android:visibility="visible"
+        android:layout_height="145dp"
+        android:hardwareAccelerated="true"
+        android:layout_width="145dp"/>
+</RelativeLayout>
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="55dp"
