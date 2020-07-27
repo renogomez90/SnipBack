@@ -1,6 +1,7 @@
 package com.example.snipback;
 
 import android.app.Dialog;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,6 +29,8 @@ public class VideoMode extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_videomode, container, false);
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+
         gallery = rootView.findViewById(R.id.r_1);
         settings = rootView.findViewById(R.id.r_5);
 

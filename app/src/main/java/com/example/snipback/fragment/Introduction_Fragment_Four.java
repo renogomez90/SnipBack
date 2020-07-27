@@ -2,6 +2,7 @@ package com.example.snipback.fragment;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,6 +40,8 @@ public class Introduction_Fragment_Four extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_intro4, null);
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+
 
         dontshow=view.findViewById(R.id.dontshow);
         dontshow.setOnClickListener(new View.OnClickListener() {

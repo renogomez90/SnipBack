@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,6 +19,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        (this).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+
         Handler handler = new Handler();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             Window window = getWindow();
