@@ -60,7 +60,7 @@ import static com.facebook.share.internal.ShareConstants.CONTENT_URL;
 
 public class FragmentGallery extends Fragment {
     private View rootView;
-    ImageButton filter_button, view_button, menu_button;
+    ImageButton filter_button, view_button, menu_button,camera_button;
     TextView filter_label, view_label, menu_label, photolabel;
     ImageView autodelete_arrow;
     RecyclerView recycler_view;
@@ -94,6 +94,7 @@ public class FragmentGallery extends Fragment {
         recycler_view = rootView.findViewById(R.id.recycler_view);
         menu_button = rootView.findViewById(R.id.dropdown_menu);
         view_button = rootView.findViewById(R.id._button_view);
+        camera_button = rootView.findViewById(R.id.camera);
         filter_button = rootView.findViewById(R.id.filter);
         filter_label = rootView.findViewById(R.id.filter_text);
         view_label = rootView.findViewById(R.id._button_view_text);
@@ -107,54 +108,50 @@ public class FragmentGallery extends Fragment {
 
 
         //
-        menu_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Dialog dialog = new Dialog(getActivity());
-                view_button.setImageResource(R.drawable.ic_view_unselected);
-                view_label.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
-                Window window = dialog.getWindow();
-                WindowManager.LayoutParams wlp = window.getAttributes();
-                wlp.gravity = Gravity.BOTTOM;
-                wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-                window.setAttributes(wlp);
-                dialog.setContentView(R.layout.menu_layout);
-                WindowManager.LayoutParams params = dialog.getWindow().getAttributes(); // change this to your dialog.
-                params.y = 150;
-                dialog.getWindow().setAttributes(params);
-                layout_autodelete = dialog.findViewById(R.id.layout_autodelete);
-                relativeLayout_autodeleteactions = dialog.findViewById(R.id.layout_autodeleteactions);
-                autodelete_arrow = dialog.findViewById(R.id.autodelete_arrow);
-                layout_multidelete = dialog.findViewById(R.id.layout_multipledelete);
-                layout_autodelete.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        relativeLayout_autodeleteactions.setVisibility(View.VISIBLE);
-                        autodelete_arrow.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
+        camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentTrimVideo.newInstance()));
+        menu_button.setOnClickListener(v -> {
+            final Dialog dialog = new Dialog(getActivity());
+            view_button.setImageResource(R.drawable.ic_view_unselected);
+            view_label.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
+            Window window = dialog.getWindow();
+            WindowManager.LayoutParams wlp = window.getAttributes();
+            wlp.gravity = Gravity.BOTTOM;
+            wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
+            window.setAttributes(wlp);
+            dialog.setContentView(R.layout.menu_layout);
+            WindowManager.LayoutParams params = dialog.getWindow().getAttributes(); // change this to your dialog.
+            params.y = 150;
+            dialog.getWindow().setAttributes(params);
+            layout_autodelete = dialog.findViewById(R.id.layout_autodelete);
+            relativeLayout_autodeleteactions = dialog.findViewById(R.id.layout_autodeleteactions);
+            autodelete_arrow = dialog.findViewById(R.id.autodelete_arrow);
+            layout_multidelete = dialog.findViewById(R.id.layout_multipledelete);
+            layout_autodelete.setOnClickListener(v1 -> {
+                relativeLayout_autodeleteactions.setVisibility(View.VISIBLE);
+                autodelete_arrow.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
 
-                    }
-                });
-                layout_multidelete.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        relativeLayout_autodeleteactions.setVisibility(View.GONE);
-                        autodelete_arrow.setImageResource(R.drawable.ic_forward);
-                        dialog.cancel();
-                        ((AppMainActivity) getActivity()).loadFragment(FragmentMultiDeletePhoto.newInstance());
+            });
+            layout_multidelete.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    relativeLayout_autodeleteactions.setVisibility(View.GONE);
+                    autodelete_arrow.setImageResource(R.drawable.ic_forward);
+                    dialog.cancel();
+                    ((AppMainActivity) getActivity()).loadFragment(FragmentMultiDeletePhoto.newInstance());
 
 
-                    }
-                });
+                }
+            });
 
-                RelativeLayout layout_import = dialog.findViewById(R.id.layout_import);
-                layout_import.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
+            RelativeLayout layout_import = dialog.findViewById(R.id.layout_import);
+            layout_import.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
 
-                        Intent intent = new Intent();
-                        intent.setType("video/*");
-                        intent.setAction(Intent.ACTION_GET_CONTENT);
-                        startActivityForResult(Intent.createChooser(intent,"Select Video"),1111);
+                    Intent intent = new Intent();
+                    intent.setType("video/*");
+                    intent.setAction(Intent.ACTION_GET_CONTENT);
+                    startActivityForResult(Intent.createChooser(intent,"Select Video"),1111);
 //                        Matisse.from(FragmentGallery.this)
 ////                                .choose(MimeType.ofVideo())
 ////                                .countable(false)
@@ -167,12 +164,11 @@ public class FragmentGallery extends Fragment {
 ////                                .imageEngine(new PicassoEngine())
 ////                                .showSingleMediaType(true)
 ////                                .forResult(1111);
-                        dialog.dismiss();
-                    }
-                });
+                    dialog.dismiss();
+                }
+            });
 
-                dialog.show();
-            }
+            dialog.show();
         });
         filter_button.setOnClickListener(new View.OnClickListener() {
             @Override
