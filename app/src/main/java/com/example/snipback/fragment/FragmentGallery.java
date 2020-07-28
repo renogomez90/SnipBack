@@ -63,7 +63,7 @@ import static com.facebook.share.internal.ShareConstants.CONTENT_URL;
 
 public class FragmentGallery extends Fragment {
     private View rootView;
-    ImageButton filter_button, view_button, menu_button;
+    ImageButton filter_button, view_button, menu_button, camera_button;
     TextView filter_label, view_label, menu_label, photolabel;
     ImageView autodelete_arrow, player_view_image;
     RecyclerView recycler_view;
@@ -97,6 +97,7 @@ public class FragmentGallery extends Fragment {
         recycler_view = rootView.findViewById(R.id.recycler_view);
         menu_button = rootView.findViewById(R.id.dropdown_menu);
         view_button = rootView.findViewById(R.id._button_view);
+        camera_button = rootView.findViewById(R.id.camera);
         filter_button = rootView.findViewById(R.id.filter);
         filter_label = rootView.findViewById(R.id.filter_text);
         view_label = rootView.findViewById(R.id._button_view_text);
@@ -106,6 +107,7 @@ public class FragmentGallery extends Fragment {
         recycler_view.setLayoutManager(new LinearLayoutManager(getActivity()));
         AdapterPhotos adapterPhotos = new AdapterPhotos(getActivity());
         recycler_view.setAdapter(adapterPhotos);
+
 
         menu_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,6 +136,8 @@ public class FragmentGallery extends Fragment {
 
                     }
                 });
+
+
                 layout_multidelete.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -158,9 +162,10 @@ public class FragmentGallery extends Fragment {
                     }
                 });
 
-                dialog.show();
             }
         });
+
+
         filter_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
