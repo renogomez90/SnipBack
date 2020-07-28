@@ -29,6 +29,9 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.snipback.AppMainActivity;
 import com.example.snipback.R;
 import com.example.snipback.VideoMode;
@@ -62,7 +65,7 @@ public class FragmentGallery extends Fragment {
     private View rootView;
     ImageButton filter_button, view_button, menu_button;
     TextView filter_label, view_label, menu_label, photolabel;
-    ImageView autodelete_arrow;
+    ImageView autodelete_arrow, player_view_image;
     RecyclerView recycler_view;
 
     private BandwidthMeter bandwidthMeter;
@@ -77,7 +80,7 @@ public class FragmentGallery extends Fragment {
     private PlayerView simpleExoPlayerView;
 
 
-    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete,click;
+    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click;
 
     public static FragmentGallery newInstance() {
         FragmentGallery fragment = new FragmentGallery();
@@ -88,7 +91,7 @@ public class FragmentGallery extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
-        ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
         photolabel = rootView.findViewById(R.id.photolabel);
         recycler_view = rootView.findViewById(R.id.recycler_view);
@@ -97,16 +100,13 @@ public class FragmentGallery extends Fragment {
         filter_button = rootView.findViewById(R.id.filter);
         filter_label = rootView.findViewById(R.id.filter_text);
         view_label = rootView.findViewById(R.id._button_view_text);
-        click=rootView.findViewById(R.id.click);
+        click = rootView.findViewById(R.id.click);
+
+        player_view_image = rootView.findViewById(R.id.player_view_image);
         recycler_view.setLayoutManager(new LinearLayoutManager(getActivity()));
         AdapterPhotos adapterPhotos = new AdapterPhotos(getActivity());
         recycler_view.setAdapter(adapterPhotos);
 
-        // exo player
-
-
-
-        //
         menu_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -142,7 +142,6 @@ public class FragmentGallery extends Fragment {
                         dialog.cancel();
                         ((AppMainActivity) getActivity()).loadFragment(FragmentMultiDeletePhoto.newInstance());
 
-
                     }
                 });
 
@@ -154,19 +153,7 @@ public class FragmentGallery extends Fragment {
                         Intent intent = new Intent();
                         intent.setType("video/*");
                         intent.setAction(Intent.ACTION_GET_CONTENT);
-                        startActivityForResult(Intent.createChooser(intent,"Select Video"),1111);
-//                        Matisse.from(FragmentGallery.this)
-////                                .choose(MimeType.ofVideo())
-////                                .countable(false)
-//////                                    .capture(true)
-//////                                    .captureStrategy(
-//////                                            new CaptureStrategy(true, "com.zhihu.matisse.sample.fileprovider"))
-////                                .maxSelectable(1)
-////                                .gridExpectedSize(getResources().getDimensionPixelSize(R.dimen.grid_expected_size))//                                           .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-////                                .thumbnailScale(0.85f)
-////                                .imageEngine(new PicassoEngine())
-////                                .showSingleMediaType(true)
-////                                .forResult(1111);
+                        startActivityForResult(Intent.createChooser(intent, "Select Video"), 1111);
                         dialog.dismiss();
                     }
                 });
@@ -190,35 +177,32 @@ public class FragmentGallery extends Fragment {
             @Override
             public void onClick(View v) {
                 ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
-                player.release();
+//                player.release();
 
-//                Intent intent = new Intent(getActivity(), FragmentPlayVideo.class);
-//                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-//                intent.putExtra("uri", uri);
-//                startActivity(intent);
             }
         });
         return rootView;
     }
 
-//    @Override
-//    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        // get selected images from selector
-//        if (requestCode == 1111) {
-//            if (resultCode == RESULT_OK) {
-//                ContentResolver cr = getActivity().getContentResolver();
-//                String type = cr.getType(Matisse.obtainResult(data).get(0));
-//                type = type.substring(0, 5);
-//                Log.e("SampleActivity", "type: " + type.substring(0, 5));
-//                uri=Matisse.obtainResult(data).get(0);
-//
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            if (requestCode == 1111) {
+                uri = data.getData();
+                String videopath = uri.getPath();
+                File file = new File(videopath);
+                Log.e("path", file.getAbsolutePath());
+
+                Glide.with(getActivity())
+                        .load(uri)
+                        .override(145, 145) // set exact size
+                        .into(player_view_image);
+
+//                               player_view_image
+
 //                bandwidthMeter = new DefaultBandwidthMeter();
 //                extractorsFactory = new DefaultExtractorsFactory();
-//
 //                trackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
-//
 //                trackSelector = new DefaultTrackSelector(trackSelectionFactory);
-//
 //                defaultBandwidthMeter = new DefaultBandwidthMeter();
 //                dataSourceFactory = new DefaultDataSourceFactory(getActivity(),
 //                        Util.getUserAgent(getActivity(), "mediaPlayerSample"), defaultBandwidthMeter);
@@ -231,63 +215,11 @@ public class FragmentGallery extends Fragment {
 //
 //                player = ExoPlayerFactory.newSimpleInstance(getActivity(),trackSelector);
 //                simpleExoPlayerView = (PlayerView) getActivity().findViewById(R.id.player_view);
+//                simpleExoPlayerView.hideController();
 //                simpleExoPlayerView.setPlayer(player);
 //                player.prepare(mediaSource);
 //                player.setPlayWhenReady(true);
-//
-//
-//
-//            }
-//
-//        }
-//        super.onActivityResult(requestCode, resultCode, data);
-//    }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            if (requestCode == 1111) {
-                uri = data.getData();
-                String videopath = uri.getPath();
-                File file = new File(videopath);
-                Log.e("path",file.getAbsolutePath());
-
-
-
-                bandwidthMeter = new DefaultBandwidthMeter();
-
-                extractorsFactory = new DefaultExtractorsFactory();
-
-                trackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
-
-                trackSelector = new DefaultTrackSelector(trackSelectionFactory);
-
-                defaultBandwidthMeter = new DefaultBandwidthMeter();
-                dataSourceFactory = new DefaultDataSourceFactory(getActivity(),
-                        Util.getUserAgent(getActivity(), "mediaPlayerSample"), defaultBandwidthMeter);
-
-                mediaSource = new ExtractorMediaSource(uri,
-                        dataSourceFactory,
-                        extractorsFactory,
-                        null,
-                        null);
-
-                player = ExoPlayerFactory.newSimpleInstance(getActivity(),trackSelector);
-                simpleExoPlayerView = (PlayerView) getActivity().findViewById(R.id.player_view);
-                simpleExoPlayerView.hideController();
-                simpleExoPlayerView.setPlayer(player);
-                player.prepare(mediaSource);
-                player.setPlayWhenReady(true);
-
-                simpleExoPlayerView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(getActivity(), FragmentPlayVideo.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                        intent.putExtra("uri", uri);
-                        startActivity(intent);
-                    }
-                });
-//
             }
         }
     }

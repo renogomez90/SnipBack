@@ -26,7 +26,11 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         public boolean onDown(MotionEvent e) {
             return true;
         }
-
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+            // TODO Auto-generated method stub
+            return false;
+        }
         @Override
         public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
             boolean result = false;
@@ -36,7 +40,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                 if (Math.abs(diffX) > Math.abs(diffY)) {
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
-                            onSwipeRight();
+                            onSwipeRight(diffY,diffX);
                         } else {
                             onSwipeLeft();
                         }
@@ -58,7 +62,9 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         }
     }
 
-    public void onSwipeRight() {
+    public void onSwipeRight(float diffY,float diffX) {
+        float y=diffY;
+        float x=diffX;
     }
 
     public void onSwipeLeft() {

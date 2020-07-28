@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,7 +69,7 @@ import com.google.android.exoplayer2.util.Util;
 
 import static android.content.Context.WINDOW_SERVICE;
 
-public class FragmentPlayVideo extends Fragment {
+public class FragmentPlayVideo extends Fragment  {
     private View rootView;
     ImageView tag;
     private BandwidthMeter bandwidthMeter;
@@ -88,6 +89,7 @@ public class FragmentPlayVideo extends Fragment {
     private TextView exo_duration;
 
     private DefaultTimeBar exo_progress;
+    private long current_posi;
 
 
     public static FragmentPlayVideo newInstance(String uri) {
@@ -125,45 +127,69 @@ public class FragmentPlayVideo extends Fragment {
 
         player = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);
         exo_progress = rootView.findViewById(R.id.exo_progress);
-        exo_progress.addListener(new TimeBar.OnScrubListener() {
-            @Override
-            public void onScrubStart(TimeBar timeBar, long position) {
-
-            }
-
-            @Override
-            public void onScrubMove(TimeBar timeBar, long position) {
-
-            }
-
-            @Override
-            public void onScrubStop(TimeBar timeBar, long position, boolean canceled) {
-
-            }
-        });
+//        exo_progress.onTouchEvent()
+//        exo_progress.addListener(new TimeBar.OnScrubListener() {
+//            @Override
+//            public void onScrubStart(TimeBar timeBar, long position) {
+//
+//            }
+//
+//            @Override
+//            public void onScrubMove(TimeBar timeBar, long position) {
+//
+//            }
+//
+//            @Override
+//            public void onScrubStop(TimeBar timeBar, long position, boolean canceled) {
+//
+//            }
+//        });
         simpleExoPlayerView = (PlayerView) rootView.findViewById(R.id.player_view);
         simpleExoPlayerView.setOnTouchListener(new OnSwipeTouchListener(getActivity()) {
 
             public void onSwipeTop() {
                 Toast.makeText(getActivity(), "top", Toast.LENGTH_SHORT).show();
             }
+            public void onSwipeRight(float diffY,float diffX) {
 
-            public void onSwipeRight() {
-//                Toast.makeText(getActivity(), "right", Toast.LENGTH_SHORT).show();
-                player.seekTo(player.getCurrentPosition() + 10000);
-//                exo_progress.setPosition(player.getCurrentPosition()+10000);
+                if (player.getCurrentPosition() < player.getDuration()){
+
+                    player.seekTo((long) (player.getCurrentPosition()+diffY));
+                    simpleExoPlayerView.showController();
+                }else if (player.getCurrentPosition() == player.getDuration()){
+                    player.seekTo(0);
+                    simpleExoPlayerView.showController();
+                }else {
+                    player.seekTo(0);
+                    simpleExoPlayerView.showController();
+                }
+
             }
 
             public void onSwipeLeft() {
-//                Toast.makeText(getActivity(), "left", Toast.LENGTH_SHORT).show();
-                player.seekTo(player.getCurrentPosition() - 10000);
+                if (player.getCurrentPosition() == 0) {
+
+                } else {
+                    player.seekTo(player.getCurrentPosition() - 10000);
+                    simpleExoPlayerView.showController();
+                }
+
             }
 
             public void onSwipeBottom() {
                 Toast.makeText(getActivity(), "bottom", Toast.LENGTH_SHORT).show();
             }
 
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                simpleExoPlayerView.showController();
+                return super.onTouch(v, event);
+            }
+
+
         });
+
+
         simpleExoPlayerView.setPlayer(player);
         player.prepare(mediaSource);
         player.setPlayWhenReady(true);
@@ -196,9 +222,7 @@ public class FragmentPlayVideo extends Fragment {
             }
         };
 
-        if(mOrientationListener.canDetectOrientation())
-
-        {
+        if (mOrientationListener.canDetectOrientation()) {
             mOrientationListener.enable();
         }
 
@@ -210,12 +234,16 @@ public class FragmentPlayVideo extends Fragment {
                     if (player != null) {
                         player.setPlayWhenReady(false);
                         player.stop();
-                        player.seekTo(0);
+                        current_posi=player.getCurrentPosition();
 
                     }
                 } else {
                     player.prepare(mediaSource);
                     player.setPlayWhenReady(true);
+                    player.seekTo(current_posi+100);
+
+//////                    player.setPlayWhenReady(true);
+//                    player.setPlayWhenReady(!player.getPlayWhenReady());
 
                 }
             }
@@ -287,20 +315,17 @@ public class FragmentPlayVideo extends Fragment {
 
         rootView.setFocusableInTouchMode(true);
         rootView.requestFocus();
-        rootView.setOnKeyListener( new View.OnKeyListener()
-        {
+        rootView.setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public boolean onKey( View v, int keyCode, KeyEvent event )
-            {
-                if( keyCode == KeyEvent.KEYCODE_BACK )
-                {
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
                     player.release();
                     ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
                     return true;
                 }
                 return false;
             }
-        } );
+        });
 
         return rootView;
     }
@@ -324,7 +349,6 @@ public class FragmentPlayVideo extends Fragment {
 //            ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 //        }
 //    }
-
 
 
 }
