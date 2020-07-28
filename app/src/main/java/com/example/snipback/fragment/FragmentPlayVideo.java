@@ -150,11 +150,11 @@ public class FragmentPlayVideo extends Fragment  {
             public void onSwipeTop() {
                 Toast.makeText(getActivity(), "top", Toast.LENGTH_SHORT).show();
             }
-            public void onSwipeRight(float diffY,float diffX) {
+            public void onSwipeRight(float diffX) {
 
                 if (player.getCurrentPosition() < player.getDuration()){
 
-                    player.seekTo((long) (player.getCurrentPosition()+diffY));
+                    player.seekTo((long) (player.getCurrentPosition()+diffX));
                     simpleExoPlayerView.showController();
                 }else if (player.getCurrentPosition() == player.getDuration()){
                     player.seekTo(0);

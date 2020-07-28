@@ -40,7 +40,7 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
                 if (Math.abs(diffX) > Math.abs(diffY)) {
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
-                            onSwipeRight(diffY,diffX);
+                            onSwipeRight(diffX);
                         } else {
                             onSwipeLeft();
                         }
@@ -62,9 +62,9 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         }
     }
 
-    public void onSwipeRight(float diffY,float diffX) {
-        float y=diffY;
-        float x=diffX;
+    public void onSwipeRight(float diffX) {
+
+        
     }
 
     public void onSwipeLeft() {
