@@ -288,7 +288,7 @@ public class ActVideoTrimmer extends AppCompatActivity {
                     img.setImageBitmap(TrimmerUtils.getFrameBySec(ActVideoTrimmer.this, uri, diff * index));
                     index++;
                 }
-                seekbar.setVisibility(View.VISIBLE);
+                seekbar.setVisibility(View.INVISIBLE);
                 txtStartDuration.setVisibility(View.VISIBLE);
                 txtEndDuration.setVisibility(View.VISIBLE);
             }, 1000);
@@ -441,7 +441,7 @@ public class ActVideoTrimmer extends AppCompatActivity {
             //ffmpeg -ss 00:01:00 -i input.mp4 -to 00:02:00 -c copy output.mp4
             String[] complexCommand = {"ffmpeg","-i",String.valueOf(uri),"-ss",TrimmerUtils.formatCSeconds(lastMinValue),
                     "-to",TrimmerUtils.formatCSeconds(lastMaxValue),"-async","1",outputPath};
-           /* String[] complexCommand = {"ffmpeg","-ss",TrimmerUtils.formatCSeconds(lastMinValue)
+          /* String[] complexCommand = {"ffmpeg","-ss",TrimmerUtils.formatCSeconds(lastMinValue)
                     ,"-i",String.valueOf(uri),"-to",
                     TrimmerUtils.formatCSeconds(lastMaxValue),"-c","copy",outputPath};*/
             videoPlayer.setPlayWhenReady(false);

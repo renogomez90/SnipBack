@@ -18,6 +18,7 @@
         app:bar_highlight_color="@android:color/transparent"
         app:data_type="_integer"
         android:elevation="4dp"
+        android:visibility="invisible"
         android:layout_marginStart="25dp"
         android:layout_marginEnd="25dp"
         android:layout_alignParentTop="true"

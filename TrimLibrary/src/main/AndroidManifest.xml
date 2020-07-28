@@ -10,7 +10,7 @@
         <activity android:name=".ActVideoTrimmer"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
-            android:theme="@style/VideoTrimmerTheme"/>
+            android:theme="@style/AppTheme"/>
     </application>
 
 </manifest>
