@@ -64,7 +64,6 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
 
     public void onSwipeRight(float diffX) {
 
-        
     }
 
     public void onSwipeLeft() {

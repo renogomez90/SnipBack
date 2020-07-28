@@ -154,7 +154,7 @@ public class FragmentPlayVideo extends Fragment  {
 
                 if (player.getCurrentPosition() < player.getDuration()){
 
-                    player.seekTo((long) (player.getCurrentPosition()+diffX));
+                    player.seekTo((player.getCurrentPosition()+(long)diffX));
                     simpleExoPlayerView.showController();
                 }else if (player.getCurrentPosition() == player.getDuration()){
                     player.seekTo(0);
