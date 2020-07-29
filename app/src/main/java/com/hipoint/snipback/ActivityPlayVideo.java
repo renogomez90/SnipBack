@@ -8,7 +8,7 @@ import android.widget.VideoView;
 
 import com.hipoint.snipback.R;
 
-public class ActivityPlayVideo extends com.example.snipback.Swipper {
+public class ActivityPlayVideo extends Swipper {
     VideoView videoView;
     private String uri;
 
@@ -26,6 +26,7 @@ public class ActivityPlayVideo extends com.example.snipback.Swipper {
         videoView.setMediaController(mediaController);
         Uri video1 = Uri.parse(uri);
         videoView.setVideoURI(video1);
+        videoView.requestFocus();
         videoView.start();
 //        Brightness(Orientation.CIRCULAR);
 //        Volume(Orientation.VERTICAL);

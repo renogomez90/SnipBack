@@ -1,4 +1,4 @@
-package com.example.snipback;
+package com.hipoint.snipback;
 
 import android.app.Activity;
 import android.content.Context;
@@ -278,8 +278,8 @@ public class Swipper extends Activity {
                 seekCommon(-distance);
             }
         } else if (type == "X" && y == Y) {
-//            distance = distance / 200;
-            distance=distance / 400;
+            distance = distance / 200;
+//            distance=distance / 400;
             if (x > X) {
                 seekCommon(distance);
             } else {
