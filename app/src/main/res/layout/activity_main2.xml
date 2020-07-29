@@ -1,85 +1,199 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main2"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    >
-    <VideoView  android:layout_width="match_parent"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentBottom="true"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/bottom_menu"
-        android:id="@+id/videoView" />
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center">
 
     <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottom_menu"
+        android:gravity="center">
+
+        <VideoView
+            android:id="@+id/videoView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/back_arrow"
         android:layout_width="43dp"
         android:layout_height="43dp"
-        android:id="@+id/back_arrow"
-        android:layout_alignParentBottom="true"
         android:layout_above="@+id/bottom_menu"
-        android:layout_marginBottom="86dp"
-        android:gravity="center"
+        android:layout_alignParentBottom="true"
         android:layout_marginLeft="37dp"
-        android:background="@drawable/background_black_round">
+        android:layout_marginBottom="86dp"
+        android:background="@drawable/background_black_round"
+        android:gravity="center">
+
         <ImageView
             android:layout_width="20dp"
             android:layout_height="12dp"
-            android:src="@drawable/ic_back_arrow"/>
+            android:src="@drawable/ic_back_arrow" />
     </RelativeLayout>
+
     <RelativeLayout
         android:id="@+id/button_camera"
         android:layout_width="43dp"
         android:layout_height="43dp"
-        android:layout_alignParentBottom="true"
         android:layout_above="@+id/bottom_menu"
-        android:layout_marginBottom="86dp"
-        android:gravity="center"
-        android:layout_toRightOf="@+id/back_arrow"
+        android:layout_alignParentBottom="true"
         android:layout_marginLeft="24dp"
-        android:background="@drawable/background_black_round">
+        android:layout_marginBottom="86dp"
+        android:layout_toRightOf="@+id/back_arrow"
+        android:background="@drawable/background_black_round"
+        android:gravity="center">
+
         <ImageView
             android:layout_width="19dp"
             android:layout_height="13dp"
-            android:src="@drawable/ic_camera"/>
+            android:src="@drawable/ic_camera" />
     </RelativeLayout>
-<!--    <com.google.android.exoplayer2.ui.PlayerView-->
-<!--        android:id="@+id/videoView"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:layout_below="@+id/photolabel"-->
-<!--        android:background="#FFF"-->
-<!--        android:focusable="true"-->
-<!--        android:visibility="visible"-->
 
-<!--        />-->
+
+    <RelativeLayout
+        android:id="@+id/play_backbutton"
+        android:layout_width="41dp"
+        android:layout_height="41dp"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="37dp"
+        android:layout_toLeftOf="@+id/play_pouse"
+        android:background="@drawable/background_play_pouse"
+        android:gravity="center"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="11dp"
+            android:layout_height="13dp"
+            android:src="@drawable/ic_play_back" />
+    </RelativeLayout>
+
+    <RelativeLayout
+
+        android:id="@+id/play_pouse"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="37dp"
+        android:background="@drawable/background_play_pouse"
+        android:gravity="center"
+        android:visibility="visible">
+
+        <Switch
+            android:id="@+id/play_pause"
+            android:layout_width="15dp"
+            android:layout_height="28dp"
+            android:background="@null"
+            android:button="@drawable/switch_play_pause"
+            android:thumb="@null"
+            app:track="@null" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/play_forwardbutton"
+        android:layout_width="41dp"
+        android:layout_height="41dp"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="37dp"
+        android:layout_toRightOf="@+id/play_pouse"
+        android:background="@drawable/background_play_pouse"
+        android:gravity="center"
+        android:visibility="visible">
+
+        <ImageView
+            android:layout_width="11dp"
+            android:layout_height="13dp"
+            android:src="@drawable/ic_play_forward" />
+    </RelativeLayout>
+
+
+    <TextView
+        android:id="@+id/exo_duration"
+        android:layout_width="103dp"
+        android:layout_height="32dp"
+        android:layout_above="@+id/bottom_menu"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginRight="32dp"
+        android:layout_marginBottom="86dp"
+        android:background="@drawable/background_video_timer"
+        android:fontFamily="@font/barlow_semibold"
+        android:gravity="center"
+        android:text="00:00/00:08"
+        android:textColor="@color/colorPrimaryWhite"
+        android:textSize="15dp"
+        android:visibility="visible" />
+    <!--    <com.google.android.exoplayer2.ui.PlayerView-->
+    <!--        android:id="@+id/videoView"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent"-->
+    <!--        android:layout_below="@+id/photolabel"-->
+    <!--        android:background="#FFF"-->
+    <!--        android:focusable="true"-->
+    <!--        android:visibility="visible"-->
+
+    <!--        />-->
+
+    <SeekBar
+        android:id="@+id/seek"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/bottom_menu" />
+
+    <com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar
+        android:id="@+id/range_seek_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/bottom_menu"
+        android:elevation="4dp"
+        android:padding="4dp"
+        android:visibility="invisible"
+        app:bar_color="@color/colorWhiteLt"
+        app:bar_highlight_color="@color/colorThemeRed"
+        app:data_type="_integer"
+        app:left_thumb_image="@drawable/ic_min_seek"
+        app:right_thumb_image="@drawable/ic_max_seek" />
+
+    <com.crystal.crystalrangeseekbar.widgets.CrystalSeekbar
+        android:id="@+id/seekbar_controller"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/bottom_menu"
+        android:elevation="4dp"
+        android:padding="8dp"
+        android:visibility="invisible"
+        app:bar_color="@color/colorWhiteLt"
+        app:bar_highlight_color="@color/colorThemeRed"
+        app:left_thumb_image="@drawable/ic_vertical_line" />
+
     <FrameLayout
+        android:id="@+id/frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#000000"
         android:layout_above="@+id/bottom_menu"
-        android:id="@+id/frame">
-    </FrameLayout>
+        android:background="#000000"></FrameLayout>
 
     <LinearLayout
+        android:id="@+id/bottom_menu"
         android:layout_width="match_parent"
         android:layout_height="67dp"
-        android:id="@+id/bottom_menu"
         android:layout_alignParentBottom="true"
         android:background="@color/bottom_menu"
         android:gravity="center">
 
         <RelativeLayout
+            android:id="@+id/layout_edit"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:gravity="center"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="2dp"
-            android:id="@+id/layout_edit"
-            android:layout_weight="0.2">
+            android:layout_weight="0.2"
+            android:gravity="center">
 
             <ImageButton
                 android:id="@+id/edit"
@@ -100,15 +214,16 @@
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10dp" />
         </RelativeLayout>
+
         <RelativeLayout
+            android:id="@+id/layout_tag"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginRight="2dp"
             android:layout_marginLeft="2dp"
-            android:gravity="center"
-            android:id="@+id/layout_tag"
-            android:layout_weight="0.2">
+            android:layout_marginRight="2dp"
+            android:layout_weight="0.2"
+            android:gravity="center">
 
             <ImageButton
                 android:id="@+id/tag"
@@ -123,21 +238,22 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/tag"
                 android:layout_marginTop="4dp"
+                android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Tag"
-                android:fontFamily="@font/barlow_regular"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10dp" />
         </RelativeLayout>
+
         <RelativeLayout
+            android:id="@+id/layout_shutter"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginRight="2dp"
             android:layout_marginLeft="2dp"
-            android:gravity="center"
-            android:id="@+id/layout_shutter"
-            android:layout_weight="0.2">
+            android:layout_marginRight="2dp"
+            android:layout_weight="0.2"
+            android:gravity="center">
 
             <ImageButton
                 android:id="@+id/shutter"
@@ -152,21 +268,22 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/shutter"
                 android:layout_marginTop="4dp"
-                android:gravity="center"
                 android:fontFamily="@font/barlow_regular"
+                android:gravity="center"
                 android:text="Shutter"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10dp" />
         </RelativeLayout>
+
         <RelativeLayout
+            android:id="@+id/layout_share"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginRight="2dp"
             android:layout_marginLeft="2dp"
-            android:gravity="center"
-            android:id="@+id/layout_share"
-            android:layout_weight="0.2">
+            android:layout_marginRight="2dp"
+            android:layout_weight="0.2"
+            android:gravity="center">
 
             <ImageButton
                 android:id="@+id/_button_share"
@@ -181,21 +298,22 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/_button_share"
                 android:layout_marginTop="4dp"
+                android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Share"
-                android:fontFamily="@font/barlow_regular"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10dp" />
         </RelativeLayout>
+
         <RelativeLayout
+            android:id="@+id/layout_delete"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:id="@+id/layout_delete"
             android:layout_marginLeft="2dp"
-            android:gravity="center"
             android:layout_marginRight="20dp"
-            android:layout_weight="0.2">
+            android:layout_weight="0.2"
+            android:gravity="center">
 
             <ImageButton
                 android:id="@+id/button_delete"
@@ -210,9 +328,9 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/button_delete"
                 android:layout_marginTop="4dp"
+                android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Delete"
-                android:fontFamily="@font/barlow_regular"
 
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10dp" />

@@ -1,6 +1,7 @@
 package com.hipoint.snipback.Utils;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -38,17 +39,17 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
             try {
                 float diffY = e2.getY() - e1.getY();
                 float diffX = e2.getX() - e1.getX();
-                 float distanceCovered = getDistance(diffX, diffY, e1);;
-                if (Math.abs(diffX) > Math.abs(diffY)) {
+                Log.e("per", diffX + "");
+//                if (Math.abs(diffX) > Math.abs(diffY)) {
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
-                            onSwipeRight(diffX,diffY,distanceCovered);
+                            onSwipeRight(diffX);
                         } else {
-                            onSwipeLeft(diffX,diffY,distanceCovered);
+                            onSwipeLeft(diffX);
                         }
                         result = true;
                     }
-                }
+//                }
                 else if (Math.abs(diffY) > SWIPE_THRESHOLD && Math.abs(velocityY) > SWIPE_VELOCITY_THRESHOLD) {
                     if (diffY > 0) {
                         onSwipeBottom();
@@ -64,11 +65,11 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         }
     }
 
-    public void onSwipeRight(float diffX,float diffY,float distanceCovered) {
+    public void onSwipeRight(float diffX) {
 
     }
 
-    public void onSwipeLeft(float diffX,float diffY,float distanceCovered) {
+    public void onSwipeLeft(float diffX) {
 
 
     }

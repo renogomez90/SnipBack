@@ -1,6 +1,7 @@
 package com.hipoint.snipback.fragment;
 
 import android.content.pm.ActivityInfo;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -49,7 +50,7 @@ import com.google.android.exoplayer2.util.Util;
 
 import static android.content.Context.WINDOW_SERVICE;
 
-public class FragmentPlayVideo extends Fragment   {
+public class FragmentPlayVideo extends Fragment {
     private View rootView;
     ImageView tag;
     private BandwidthMeter bandwidthMeter;
@@ -73,6 +74,8 @@ public class FragmentPlayVideo extends Fragment   {
 
     // new
     private float seekdistance = 0;
+    float initialX, initialY, currentX, currentY;
+    float condition2;
 
 
     public static FragmentPlayVideo newInstance(String uri) {
@@ -89,19 +92,13 @@ public class FragmentPlayVideo extends Fragment   {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false);
 
         uri = Uri.parse(getArguments().getString("uri"));
-
         bandwidthMeter = new DefaultBandwidthMeter();
-
         extractorsFactory = new DefaultExtractorsFactory();
-
         trackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
-
         trackSelector = new DefaultTrackSelector(trackSelectionFactory);
-
         defaultBandwidthMeter = new DefaultBandwidthMeter();
         dataSourceFactory = new DefaultDataSourceFactory(getActivity(),
                 Util.getUserAgent(getActivity(), "mediaPlayerSample"), defaultBandwidthMeter);
-
         mediaSource = new ExtractorMediaSource(uri,
                 dataSourceFactory,
                 extractorsFactory,
@@ -110,56 +107,39 @@ public class FragmentPlayVideo extends Fragment   {
 
         player = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);
         exo_progress = rootView.findViewById(R.id.exo_progress);
-//        exo_progress.onTouchEvent()
-//        exo_progress.addListener(new TimeBar.OnScrubListener() {
-//            @Override
-//            public void onScrubStart(TimeBar timeBar, long position) {
-//
-//            }
-//
-//            @Override
-//            public void onScrubMove(TimeBar timeBar, long position) {
-//
-//            }
-//
-//            @Override
-//            public void onScrubStop(TimeBar timeBar, long position, boolean canceled) {
-//
-//            }
-//        });
+
         simpleExoPlayerView = (PlayerView) rootView.findViewById(R.id.player_view);
         simpleExoPlayerView.setOnTouchListener(new OnSwipeTouchListener(getActivity()) {
 
             public void onSwipeTop() {
                 Toast.makeText(getActivity(), "top", Toast.LENGTH_SHORT).show();
             }
-            public void onSwipeRight(float diffX,float diffY, float distanceCovered ) {
+            public void onSwipeRight(float diffX ) {
 
-//                if (player.getCurrentPosition() < player.getDuration()){
-//
-//                    player.seekTo((player.getCurrentPosition()+(long)diffX));
-//                    simpleExoPlayerView.showController();
-//                }else if (player.getCurrentPosition() == player.getDuration()){
-//                    player.seekTo(0);
-//                    simpleExoPlayerView.showController();
-//                }else {
-//                    player.seekTo(0);
-//                    simpleExoPlayerView.showController();
-//                }
-                seekCommon(distanceCovered);
+                if (player.getCurrentPosition() < player.getDuration()){
+
+                    player.seekTo((player.getCurrentPosition()+(long)diffX));
+                    simpleExoPlayerView.showController();
+                }else if (player.getCurrentPosition() == player.getDuration()){
+                    player.seekTo(0);
+                    simpleExoPlayerView.showController();
+                }else {
+                    player.seekTo(0);
+                    simpleExoPlayerView.showController();
+                }
+
 
             }
 
-            public void onSwipeLeft(float diffX,float diffY, float distanceCovered) {
-//                if (player.getCurrentPosition() == 0) {
-//
-//                } else {
-//                    player.seekTo((player.getCurrentPosition() - (long)diffX));
-//                    simpleExoPlayerView.showController();
-//                }
+            public void onSwipeLeft(float diffX) {
+                if (player.getCurrentPosition() == 0) {
+
+                } else {
+                    player.seekTo((player.getCurrentPosition() - (long)diffX));
+                    simpleExoPlayerView.showController();
+                }
 
                // changeSeek(diffX,diffY,distanceCovered,"X");
-                seekCommon(distanceCovered);
             }
 
             public void onSwipeBottom() {
@@ -174,8 +154,6 @@ public class FragmentPlayVideo extends Fragment   {
 
 
         });
-
-
         simpleExoPlayerView.setPlayer(player);
         player.prepare(mediaSource);
         player.setPlayWhenReady(true);
@@ -184,7 +162,7 @@ public class FragmentPlayVideo extends Fragment   {
 //        int h;
 //
 //        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-//        mediaMetadataRetriever.setDataSource(getActivity(), uri);
+//        mediaMetadataRetriever.setDataSource( uri);
 //        String height = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
 //        String width = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
 //        w = Integer.parseInt(width);
@@ -220,13 +198,13 @@ public class FragmentPlayVideo extends Fragment   {
                     if (player != null) {
                         player.setPlayWhenReady(false);
                         player.stop();
-                        current_posi=player.getCurrentPosition();
+                        current_posi = player.getCurrentPosition();
 
                     }
                 } else {
                     player.prepare(mediaSource);
                     player.setPlayWhenReady(true);
-                    player.seekTo(current_posi+100);
+                    player.seekTo(current_posi + 100);
 
 //////                    player.setPlayWhenReady(true);
 //                    player.setPlayWhenReady(!player.getPlayWhenReady());
@@ -314,38 +292,8 @@ public class FragmentPlayVideo extends Fragment   {
         });
 
         return rootView;
-    }
-    public void changeSeek(float X, float Y, float x, float y, float distance, String type) {
 
-        if (type == "Y" && x == X) {
-            distance = distance / 300;
-            if (y < Y) {
-                seekCommon(distance);
-            } else {
-                seekCommon(-distance);
-            }
-        } else if (type == "X" && y == Y) {
-            distance = distance / 200;
-            if (x > X) {
-                seekCommon(distance);
-            } else {
-                seekCommon(-distance);
-            }
-        }
-    }
-    public void seekCommon(float distance) {
-        seekdistance += distance * 60000;
-        if (player != null) {
 
-            if (player.getCurrentPosition() + (int) (distance * 60000) > 0 && player.getCurrentPosition() + (int) (distance * 60000) < player.getDuration() + 10) {
-                player.seekTo(player.getCurrentPosition() + (long) (distance * 60000));
-               // if (seekdistance > 0)
-                   // seekView.setText("+" + Math.abs((int) (seekdistance / 60000)) + ":" + String.valueOf(Math.abs((int) ((seekdistance) % 60000))).substring(0, 2) + "(" + (int) ((mediaPlayer.getCurrentPosition() + (int) (distance * 60000)) / 60000) + ":" + String.valueOf((int) ((mediaPlayer.getCurrentPosition() + (int) (distance * 60000)) % 60000)).substring(0, 2) + ")");
-                //else
-                  //  seekView.setText("-" + Math.abs((int) (seekdistance / 60000)) + ":" + String.valueOf(Math.abs((int) ((seekdistance) % 60000))).substring(0, 2) + "(" + (int) ((mediaPlayer.getCurrentPosition() + (int) (distance * 60000)) / 60000) + ":" + String.valueOf((int) ((mediaPlayer.getCurrentPosition() + (int) (distance * 60000)) % 60000)).substring(0, 2) + ")");
-            }
-
-        }
     }
 
 
