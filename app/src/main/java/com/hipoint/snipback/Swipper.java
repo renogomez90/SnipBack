@@ -13,6 +13,9 @@ import android.widget.VideoView;
 
 import androidx.core.view.MotionEventCompat;
 
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.ui.PlayerView;
+
 import static android.view.MotionEvent.INVALID_POINTER_ID;
 
 public class Swipper extends Activity {
@@ -23,6 +26,7 @@ public class Swipper extends Activity {
     private SeekView seekView;
     private VideoView videoView;
     private MediaPlayer mediaPlayer;
+    private PlayerView simpleExoPlayerView;
     private int maxVolume;
     private int currentVolume;
     private int numberOfTaps = 0;
@@ -322,6 +326,15 @@ public class Swipper extends Activity {
         else if (orientation.equals(Swipper.Orientation.HORIZONTAL))
             onHorizontal = "Seek";
         videoView = v;
+    }
+
+    public void Seek(Swipper.Orientation orientation, PlayerView v) {
+
+        if (orientation.equals(Swipper.Orientation.VERTICAL))
+            onVertical = "Seek";
+        else if (orientation.equals(Swipper.Orientation.HORIZONTAL))
+            onHorizontal = "Seek";
+        simpleExoPlayerView = v;
     }
 
     public void Seek(Swipper.Orientation orientation, MediaPlayer v) {
