@@ -21,8 +21,6 @@ public class AppMainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appmain_activity);
-
-
 //        RegisterFragment videoMode = new RegisterFragment();
 //        loadFragment(videoMode);
         loadFragment(VideoMode.newInstance());
@@ -45,12 +43,10 @@ public class AppMainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         int count = getSupportFragmentManager().getBackStackEntryCount();
-
         if (count == 0) {
             super.onBackPressed();
         } else {
             getSupportFragmentManager().popBackStack();
-
         }
     }
     public static boolean hasPermissions(Context context, String... permissions) {

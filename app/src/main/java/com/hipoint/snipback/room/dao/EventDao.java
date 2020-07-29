@@ -12,6 +12,10 @@ import java.util.List;
 public interface EventDao {
     @Insert
     void insert(Event event);
+    @Insert
+    void update(Event event);
+    @Insert
+    void delete(Event event);
 
     @Query("DELETE FROM EVENT")
     void deleteAll();
