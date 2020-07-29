@@ -7,7 +7,7 @@
     android:gravity="center"
     android:background="@color/colorAccent"
     android:layout_gravity="center_vertical"
-    tools:context=".MainActivity">
+    tools:context="com.hipoint.snipback.SplashScreen">
 
     <VideoView
         android:id="@+id/video_view"
