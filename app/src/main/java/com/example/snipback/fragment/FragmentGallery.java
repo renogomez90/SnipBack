@@ -32,6 +32,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
+import com.example.snipback.ActivityPlayVideo;
 import com.example.snipback.AppMainActivity;
 import com.example.snipback.R;
 import com.example.snipback.VideoMode;
@@ -178,7 +179,10 @@ public class FragmentGallery extends Fragment {
         click.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
+//                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
+                Intent intent =new Intent(getActivity(),ActivityPlayVideo.class);
+                intent.putExtra("uri",uri.toString());
+                startActivity(intent);
 
             }
         });
