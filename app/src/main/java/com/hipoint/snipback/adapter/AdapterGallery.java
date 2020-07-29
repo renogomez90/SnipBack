@@ -5,27 +5,30 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.R;
 
+import java.util.ArrayList;
+
 public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHolder> {
 
     private Context mContext;
-
-    public AdapterGallery(Context context) {
+    ArrayList<String> arrayList= new ArrayList<>();
+    public AdapterGallery(Context context, ArrayList<String> arrayList) {
         mContext = context;
+        this.arrayList=arrayList;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
-        ImageButton image1;
-
-
-        private LinearLayout llWrapper;
+        ImageView image1;
+        RecyclerView recyclerView;
 
         public ViewHolder(final View v) {
             super(v);
@@ -52,7 +55,7 @@ public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHold
 
     @Override
     public int getItemCount() {
-        return 5;
+        return arrayList.size();
     }
 
 

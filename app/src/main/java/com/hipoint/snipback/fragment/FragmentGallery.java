@@ -45,6 +45,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 
 
 import java.io.File;
+import java.util.ArrayList;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -92,7 +93,15 @@ public class FragmentGallery extends Fragment {
         click=rootView.findViewById(R.id.click);
         click.setVisibility(View.GONE);
         recycler_view.setLayoutManager(new LinearLayoutManager(getActivity()));
-        AdapterGallery adapterGallery = new AdapterGallery(getActivity());
+        ArrayList<String>arrayList = new ArrayList<>();
+        arrayList.add("test");
+        arrayList.add("test");
+        arrayList.add("test");
+        arrayList.add("test");
+        arrayList.add("test");
+        arrayList.add("test");
+        arrayList.add("test");
+        AdapterGallery adapterGallery = new AdapterGallery(getActivity(),arrayList);
         recycler_view.setAdapter(adapterGallery);
 
         // exo player

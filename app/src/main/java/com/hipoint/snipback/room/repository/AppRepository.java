@@ -37,7 +37,7 @@ public class AppRepository {
         return eventDao.getEventData();
     }
 //data insert
-    public void insert(@NonNull Event event){
+    public void insertEvent(@NonNull Event event){
         new InsertEventAsync(eventDao).execute(event);
     }
 
@@ -55,7 +55,7 @@ public class AppRepository {
         }
     }
 //data update
-    public void update(@NonNull Event event){
+    public void updateEvent(@NonNull Event event){
         new UpdateEventAsync(eventDao).execute(event);
     }
 
@@ -73,7 +73,7 @@ public class AppRepository {
         }
     }
     //data delete
-    public void delete(@NonNull Event event){
+    public void deleteEvent(@NonNull Event event){
         new DeleteEventAsync(eventDao).execute(event);
     }
 
@@ -90,7 +90,7 @@ public class AppRepository {
             return null;
         }
     }
-    public void deleteAll(){
+    public void deleteAllEvent(){
         new DeleteAllEventAsync(eventDao).execute();
     }
 
@@ -115,7 +115,7 @@ public class AppRepository {
         return hd_snipsDao.getHDSnipsData();
     }
 
-    public void insert(@NonNull Hd_snips hd_snips){
+    public void insertHd_snips(@NonNull Hd_snips hd_snips){
         new InsertHDSnipAsync(hd_snipsDao).execute(hd_snips);
     }
 
@@ -134,6 +134,60 @@ public class AppRepository {
 
     }
 
+    //data update
+    public void updateHDSnip(@NonNull Hd_snips hd_snips){
+        new UpdateHDSnipAsync(hd_snipsDao).execute(hd_snips);
+    }
+
+    private class UpdateHDSnipAsync extends AsyncTask<Hd_snips, Void, Void> {
+
+        private Hd_snipsDao dao;
+        public UpdateHDSnipAsync(Hd_snipsDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Hd_snips... hd_snips) {
+            dao.update(hd_snips[0]);
+            return null;
+        }
+    }
+    //data delete
+    public void deleteHDSnip(@NonNull Hd_snips hd_snips){
+        new DeleteHDSnipAsync(hd_snipsDao).execute(hd_snips);
+    }
+
+    private class DeleteHDSnipAsync extends AsyncTask<Hd_snips, Void, Void> {
+
+        private Hd_snipsDao dao;
+        public DeleteHDSnipAsync(Hd_snipsDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Hd_snips... hd_snips) {
+            dao.delete(hd_snips[0]);
+            return null;
+        }
+    }
+    public void deleteAllHDSnip(){
+        new DeleteAllHDSnipAsync(hd_snipsDao).execute();
+    }
+
+    private class DeleteAllHDSnipAsync extends AsyncTask<Void, Void, Void> {
+
+        private Hd_snipsDao dao;
+        public DeleteAllHDSnipAsync(Hd_snipsDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            dao.deleteAll();
+            return null;
+        }
+    }
+
 
     //HDSNIP Table Actions END//
 
@@ -142,7 +196,7 @@ public class AppRepository {
         return snipsDao.getSnipsData();
     }
 
-    public void insert(@NonNull Snips snips){
+    public void insertSnips(@NonNull Snips snips){
         new InsertSnipAsync(snipsDao).execute(snips);
     }
 
@@ -159,5 +213,62 @@ public class AppRepository {
             return null;
         }
     }
+
+    //data update
+    public void updateSnip(@NonNull Snips snips){
+        new UpdateSnipAsync(snipsDao).execute(snips);
+    }
+
+    private class UpdateSnipAsync extends AsyncTask<Snips, Void, Void> {
+
+        private SnipsDao dao;
+        public UpdateSnipAsync(SnipsDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Snips... snips) {
+            dao.update(snips[0]);
+            return null;
+        }
+    }
+    //data delete
+    public void deleteSnip(@NonNull Snips snips){
+        new DeleteSnipAsync(snipsDao).execute(snips);
+    }
+
+    private class DeleteSnipAsync extends AsyncTask<Snips, Void, Void> {
+
+        private SnipsDao dao;
+        public DeleteSnipAsync(SnipsDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Snips... snips) {
+            dao.delete(snips[0]);
+            return null;
+        }
+    }
+
+    public void deleteAllSnip(){
+        new DeleteAllSnipAsync(snipsDao).execute();
+    }
+
+    private class DeleteAllSnipAsync extends AsyncTask<Void, Void, Void> {
+
+        private SnipsDao dao;
+        public DeleteAllSnipAsync(SnipsDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            dao.deleteAll();
+            return null;
+        }
+    }
+
+
     //Snip Table Actions END//
 }

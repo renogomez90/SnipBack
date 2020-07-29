@@ -63,6 +63,8 @@ import com.hipoint.snipback.fragment.Feedback_fragment;
 import com.hipoint.snipback.fragment.FragmentGallery;
 import com.hipoint.snipback.room.db.RoomDB;
 import com.hipoint.snipback.room.entities.Event;
+import com.hipoint.snipback.room.entities.Hd_snips;
+import com.hipoint.snipback.room.entities.Snips;
 import com.hipoint.snipback.room.repository.AppRepository;
 import com.hipoint.snipback.room.repository.AppViewModel;
 import com.karumi.dexter.Dexter;
@@ -1024,13 +1026,15 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 
         //Inserting data to Table
         Event event = new Event();
+        Snips snips = new Snips();
+        Hd_snips hd_snips = new Hd_snips();
         event.setEvent_title("test data");
         event.setEvent_created("345678987");
         AppRepository appRepository = new AppRepository(getActivity());
         AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
 
         //Insert Data
-        appRepository.insert(event);
+        appRepository.insertEvent(event);
 
 
         //Retriving Data from table
@@ -1044,10 +1048,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         });
 
         //Updating Data
-        appRepository.update(event);
+        appRepository.updateEvent(event);
 
         //Delete data
-        appRepository.delete(event);
+        appRepository.deleteEvent(event);
 
     }
 
