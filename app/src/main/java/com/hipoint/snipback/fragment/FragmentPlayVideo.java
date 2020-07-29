@@ -47,7 +47,9 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
-public class FragmentPlayVideo extends Fragment  {
+import static android.content.Context.WINDOW_SERVICE;
+
+public class FragmentPlayVideo extends Fragment   {
     private View rootView;
     ImageView tag;
     private BandwidthMeter bandwidthMeter;
@@ -68,6 +70,9 @@ public class FragmentPlayVideo extends Fragment  {
 
     private DefaultTimeBar exo_progress;
     private long current_posi;
+
+    // new
+    private float seekdistance = 0;
 
 
     public static FragmentPlayVideo newInstance(String uri) {
@@ -128,30 +133,33 @@ public class FragmentPlayVideo extends Fragment  {
             public void onSwipeTop() {
                 Toast.makeText(getActivity(), "top", Toast.LENGTH_SHORT).show();
             }
-            public void onSwipeRight(float diffX) {
+            public void onSwipeRight(float diffX,float diffY, float distanceCovered ) {
 
-                if (player.getCurrentPosition() < player.getDuration()){
-
-                    player.seekTo((player.getCurrentPosition()+(long)diffX));
-                    simpleExoPlayerView.showController();
-                }else if (player.getCurrentPosition() == player.getDuration()){
-                    player.seekTo(0);
-                    simpleExoPlayerView.showController();
-                }else {
-                    player.seekTo(0);
-                    simpleExoPlayerView.showController();
-                }
+//                if (player.getCurrentPosition() < player.getDuration()){
+//
+//                    player.seekTo((player.getCurrentPosition()+(long)diffX));
+//                    simpleExoPlayerView.showController();
+//                }else if (player.getCurrentPosition() == player.getDuration()){
+//                    player.seekTo(0);
+//                    simpleExoPlayerView.showController();
+//                }else {
+//                    player.seekTo(0);
+//                    simpleExoPlayerView.showController();
+//                }
+                seekCommon(distanceCovered);
 
             }
 
-            public void onSwipeLeft() {
-                if (player.getCurrentPosition() == 0) {
+            public void onSwipeLeft(float diffX,float diffY, float distanceCovered) {
+//                if (player.getCurrentPosition() == 0) {
+//
+//                } else {
+//                    player.seekTo((player.getCurrentPosition() - (long)diffX));
+//                    simpleExoPlayerView.showController();
+//                }
 
-                } else {
-                    player.seekTo(player.getCurrentPosition() - 10000);
-                    simpleExoPlayerView.showController();
-                }
-
+               // changeSeek(diffX,diffY,distanceCovered,"X");
+                seekCommon(distanceCovered);
             }
 
             public void onSwipeBottom() {
@@ -307,26 +315,38 @@ public class FragmentPlayVideo extends Fragment  {
 
         return rootView;
     }
+    public void changeSeek(float X, float Y, float x, float y, float distance, String type) {
 
+        if (type == "Y" && x == X) {
+            distance = distance / 300;
+            if (y < Y) {
+                seekCommon(distance);
+            } else {
+                seekCommon(-distance);
+            }
+        } else if (type == "X" && y == Y) {
+            distance = distance / 200;
+            if (x > X) {
+                seekCommon(distance);
+            } else {
+                seekCommon(-distance);
+            }
+        }
+    }
+    public void seekCommon(float distance) {
+        seekdistance += distance * 60000;
+        if (player != null) {
 
-//    private void updateProgressBar() {
-//        long duration = player == null ? 0 : player.getDuration();
-//        long position = player == null ? 0 : player.getCurrentPosition();
-//        exo_duration=getActivity().findViewById(R.id.exo_duration);
-//        exo_duration.setText("00:"+position+"/00:"+duration);
-//    }
+            if (player.getCurrentPosition() + (int) (distance * 60000) > 0 && player.getCurrentPosition() + (int) (distance * 60000) < player.getDuration() + 10) {
+                player.seekTo(player.getCurrentPosition() + (long) (distance * 60000));
+               // if (seekdistance > 0)
+                   // seekView.setText("+" + Math.abs((int) (seekdistance / 60000)) + ":" + String.valueOf(Math.abs((int) ((seekdistance) % 60000))).substring(0, 2) + "(" + (int) ((mediaPlayer.getCurrentPosition() + (int) (distance * 60000)) / 60000) + ":" + String.valueOf((int) ((mediaPlayer.getCurrentPosition() + (int) (distance * 60000)) % 60000)).substring(0, 2) + ")");
+                //else
+                  //  seekView.setText("-" + Math.abs((int) (seekdistance / 60000)) + ":" + String.valueOf(Math.abs((int) ((seekdistance) % 60000))).substring(0, 2) + "(" + (int) ((mediaPlayer.getCurrentPosition() + (int) (distance * 60000)) / 60000) + ":" + String.valueOf((int) ((mediaPlayer.getCurrentPosition() + (int) (distance * 60000)) % 60000)).substring(0, 2) + ")");
+            }
 
-//    @Override
-//    public void onConfigurationChanged(Configuration newConfig) {
-//        super.onConfigurationChanged(newConfig);
-//
-//        // Checks the orientation of the screen
-//        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//            ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-//        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-//            ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-//        }
-//    }
+        }
+    }
 
 
 }

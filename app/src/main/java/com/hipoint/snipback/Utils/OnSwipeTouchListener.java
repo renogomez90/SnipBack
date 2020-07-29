@@ -8,6 +8,7 @@ import android.view.View;
 public class OnSwipeTouchListener implements View.OnTouchListener {
     private final GestureDetector gestureDetector;
 
+
     public OnSwipeTouchListener (Context ctx){
         gestureDetector = new GestureDetector(ctx, new GestureListener());
     }
@@ -37,12 +38,13 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
             try {
                 float diffY = e2.getY() - e1.getY();
                 float diffX = e2.getX() - e1.getX();
+                 float distanceCovered = getDistance(diffX, diffY, e1);;
                 if (Math.abs(diffX) > Math.abs(diffY)) {
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
                         if (diffX > 0) {
-                            onSwipeRight(diffX);
+                            onSwipeRight(diffX,diffY,distanceCovered);
                         } else {
-                            onSwipeLeft();
+                            onSwipeLeft(diffX,diffY,distanceCovered);
                         }
                         result = true;
                     }
@@ -62,11 +64,13 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
         }
     }
 
-    public void onSwipeRight(float diffX) {
+    public void onSwipeRight(float diffX,float diffY,float distanceCovered) {
 
     }
 
-    public void onSwipeLeft() {
+    public void onSwipeLeft(float diffX,float diffY,float distanceCovered) {
+
+
     }
 
     public void onSwipeTop() {
@@ -74,4 +78,24 @@ public class OnSwipeTouchListener implements View.OnTouchListener {
 
     public void onSwipeBottom() {
     }
+
+    float getDistance(float startX, float startY, MotionEvent ev) {
+        float distanceSum = 0;
+        final int historySize = ev.getHistorySize();
+        for (int h = 0; h < historySize; h++) {
+            float hx = ev.getHistoricalX(0, h);
+            float hy = ev.getHistoricalY(0, h);
+            float dx = (hx - startX);
+            float dy = (hy - startY);
+            distanceSum += Math.sqrt(dx * dx + dy * dy);
+            startX = hx;
+            startY = hy;
+        }
+        float dx = (ev.getX(0) - startX);
+        float dy = (ev.getY(0) - startY);
+        distanceSum += Math.sqrt(dx * dx + dy * dy);
+        return distanceSum;
+    }
+
+
 }

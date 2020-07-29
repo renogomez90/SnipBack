@@ -39,6 +39,13 @@
             android:windowSoftInputMode="adjustResize">
         </activity>
 
+        <activity
+            android:name=".ActivityPlayVideo"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:configChanges="orientation|screenSize|layoutDirection"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

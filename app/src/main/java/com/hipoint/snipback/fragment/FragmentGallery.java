@@ -27,6 +27,11 @@ import com.bumptech.glide.Glide;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.adapter.AdapterPhotos;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.request.RequestOptions;
+import com.hipoint.snipback.ActivityPlayVideo;
+import com.hipoint.snipback.VideoMode;
+import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -159,7 +164,10 @@ public class FragmentGallery extends Fragment {
         click.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
+//                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
+                Intent intent =new Intent(getActivity(),ActivityPlayVideo.class);
+                intent.putExtra("uri",uri.toString());
+                startActivity(intent);
 
             }
         });
