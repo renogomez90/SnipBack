@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.adapter.AdapterGallery;
 import com.hipoint.snipback.adapter.AdapterPhotos;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.request.RequestOptions;
@@ -89,9 +90,10 @@ public class FragmentGallery extends Fragment {
         filter_label = rootView.findViewById(R.id.filter_text);
         view_label = rootView.findViewById(R.id._button_view_text);
         click=rootView.findViewById(R.id.click);
+        click.setVisibility(View.GONE);
         recycler_view.setLayoutManager(new LinearLayoutManager(getActivity()));
-        AdapterPhotos adapterPhotos = new AdapterPhotos(getActivity());
-        recycler_view.setAdapter(adapterPhotos);
+        AdapterGallery adapterGallery = new AdapterGallery(getActivity());
+        recycler_view.setAdapter(adapterGallery);
 
         // exo player
 
@@ -183,7 +185,8 @@ public class FragmentGallery extends Fragment {
                 String videopath = uri.getPath();
                 File file = new File(videopath);
                 Log.e("path",file.getAbsolutePath());
-
+                click.setVisibility(View.VISIBLE);
+                recycler_view.setVisibility(View.GONE);
 Glide.with(getActivity())
         .load(uri)
         .override(145,145)
