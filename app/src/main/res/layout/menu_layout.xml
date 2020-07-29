@@ -186,7 +186,6 @@
                     android:textColor="@color/colorPrimaryRed"
                     android:textSize="15dp"
                     android:layout_below="@+id/auto_delete_button"
-                    android:background="@drawable/background_transparent"
                     android:id="@+id/auto_delete_button_all"/>
             </RelativeLayout>
             <View

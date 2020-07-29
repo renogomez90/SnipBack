@@ -26,6 +26,7 @@ public class ActivityPlayVideo extends Swipper {
         videoView.setMediaController(mediaController);
         Uri video1 = Uri.parse(uri);
         videoView.setVideoURI(video1);
+        videoView.requestFocus();
         videoView.start();
 //        Brightness(Orientation.CIRCULAR);
 //        Volume(Orientation.VERTICAL);
