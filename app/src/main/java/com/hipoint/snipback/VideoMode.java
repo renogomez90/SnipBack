@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
@@ -24,6 +25,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.CamcorderProfile;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
@@ -67,6 +69,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -971,6 +975,41 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             }
         }
         return timegap;
+    }
+
+    private void getVideoThumbnail(File videoFile,int snipId, int timeInSeconds){
+        try {
+            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
+                    VIDEO_DIRECTORY_NAME);
+            File fullThumbPath;
+
+            fullThumbPath = new File(mediaStorageDir.getPath() + File.separator
+                    + "snip_"+snipId+".png");
+            Log.d(TAG, "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.getAbsolutePath());
+            //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
+            FileOutputStream streamThumbnail = new FileOutputStream(fullThumbPath);
+
+            //Other method to get a thumbnail. The problem is that it doesn't allow to get at a specific time
+            Bitmap thumb; //= ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(),MediaStore.Images.Thumbnails.MINI_KIND);
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            try {
+                retriever.setDataSource(videoFile.getAbsolutePath());
+                thumb = retriever.getFrameAtTime(timeInSeconds * 1000000,
+                        MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+                thumb.compress(Bitmap.CompressFormat.PNG, 80, streamThumbnail);
+                thumb.recycle(); //ensure the image is freed;
+            } catch (Exception ex) {
+                Log.i(TAG, "MediaMetadataRetriever got exception:" + ex);
+            }
+            streamThumbnail.close();
+            Log.d(TAG, "thumbnail saved successfully");
+        } catch (FileNotFoundException e) {
+            Log.d(TAG, "File Not Found Exception : check directory path");
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.d(TAG, "IOException while closing the stream");
+            e.printStackTrace();
+        }
     }
 
 
