@@ -54,9 +54,12 @@ import androidx.fragment.app.Fragment;
 import androidx.legacy.app.FragmentCompat;
 
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.Utils.AppExecutors;
 import com.hipoint.snipback.Utils.AutoFitTextureView;
 import com.hipoint.snipback.fragment.Feedback_fragment;
 import com.hipoint.snipback.fragment.FragmentGallery;
+import com.hipoint.snipback.room.db.RoomDB;
+import com.hipoint.snipback.room.entities.Event;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -312,6 +315,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         mChronometer = rootView.findViewById(R.id.chronometer);
         recordButton.setOnClickListener(this);
         mTextureView = rootView.findViewById(R.id.texture);
+        accessRoomDatabase();
         mTextureView.setOnClickListener(this);
         gallery.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -973,6 +977,20 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         return timegap;
     }
 
+    public  void accessRoomDatabase(){
+        RoomDB roomDB = RoomDB.getDatabase(getActivity());
+        //Inserting data to Table
+        Event event = new Event();
+        event.setEvent_id(1);
+        event.setEvent_title("test data");
+        event.setEvent_created("345678987");
+        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                 roomDB.eventDao().insert(event);
+            }
+        });
+    }
 
 }
 
