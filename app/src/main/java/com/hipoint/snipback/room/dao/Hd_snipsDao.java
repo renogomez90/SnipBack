@@ -5,6 +5,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
 
+import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Hd_snips;
 
 import java.util.List;
@@ -12,6 +13,10 @@ import java.util.List;
 public interface Hd_snipsDao {
     @Insert
     void insert(Hd_snips hd_snips);
+    @Insert
+    void update(Hd_snips hd_snips);
+    @Insert
+    void delete(Hd_snips hd_snips);
 
     @Query("DELETE FROM HD_SNIPS")
     void deleteAll();

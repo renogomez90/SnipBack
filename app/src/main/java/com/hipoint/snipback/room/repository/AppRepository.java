@@ -1,6 +1,7 @@
 package com.hipoint.snipback.room.repository;
 
 import android.app.Application;
+import android.content.Context;
 import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
@@ -24,8 +25,8 @@ public class AppRepository {
     private SnipsDao snipsDao;
     private LiveData<Snips> SnipData;
 
-    public AppRepository(Application application){
-        RoomDB db = RoomDB.getDatabase(application);
+    public AppRepository(Context context){
+        RoomDB db = RoomDB.getDatabase(context);
         eventDao = db.eventDao();
         hd_snipsDao=db.hd_snipsDao();
         snipsDao= db.snipsDao();
@@ -35,7 +36,7 @@ public class AppRepository {
     public LiveData<List<Event>> getEventData(){
         return eventDao.getEventData();
     }
-
+//data insert
     public void insert(@NonNull Event event){
         new InsertEventAsync(eventDao).execute(event);
     }
@@ -53,6 +54,60 @@ public class AppRepository {
             return null;
         }
     }
+//data update
+    public void update(@NonNull Event event){
+        new UpdateEventAsync(eventDao).execute(event);
+    }
+
+    private class UpdateEventAsync extends AsyncTask<Event, Void, Void> {
+
+        private EventDao dao;
+        public UpdateEventAsync(EventDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Event... events) {
+            dao.update(events[0]);
+            return null;
+        }
+    }
+    //data delete
+    public void delete(@NonNull Event event){
+        new DeleteEventAsync(eventDao).execute(event);
+    }
+
+    private class DeleteEventAsync extends AsyncTask<Event, Void, Void> {
+
+        private EventDao dao;
+        public DeleteEventAsync(EventDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Event... events) {
+            dao.delete(events[0]);
+            return null;
+        }
+    }
+    public void deleteAll(){
+        new DeleteAllEventAsync(eventDao).execute();
+    }
+
+    private class DeleteAllEventAsync extends AsyncTask<Void, Void, Void> {
+
+        private EventDao dao;
+        public DeleteAllEventAsync(EventDao dao){
+            this.dao = dao;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            dao.deleteAll();
+            return null;
+        }
+    }
+
     //Event Table Actions END//
 
     //HDSNIP Table Actions START//
@@ -76,7 +131,10 @@ public class AppRepository {
             dao.insert(hd_snips[0]);
             return null;
         }
+
     }
+
+
     //HDSNIP Table Actions END//
 
     //SNIP table Actions START//

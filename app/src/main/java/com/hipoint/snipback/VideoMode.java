@@ -52,14 +52,17 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.legacy.app.FragmentCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 
 import com.hipoint.snipback.R;
-import com.hipoint.snipback.Utils.AppExecutors;
 import com.hipoint.snipback.Utils.AutoFitTextureView;
 import com.hipoint.snipback.fragment.Feedback_fragment;
 import com.hipoint.snipback.fragment.FragmentGallery;
 import com.hipoint.snipback.room.db.RoomDB;
 import com.hipoint.snipback.room.entities.Event;
+import com.hipoint.snipback.room.repository.AppRepository;
+import com.hipoint.snipback.room.repository.AppViewModel;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -978,18 +981,34 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     }
 
     public  void accessRoomDatabase(){
-        RoomDB roomDB = RoomDB.getDatabase(getActivity());
-        //Inserting data to Table
+
+   //Inserting data to Table
         Event event = new Event();
-        event.setEvent_id(1);
         event.setEvent_title("test data");
         event.setEvent_created("345678987");
-        AppExecutors.getInstance().diskIO().execute(new Runnable() {
+        AppRepository appRepository = new AppRepository(getActivity());
+        AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+
+       //Insert Data
+        appRepository.insert(event);
+
+
+        //Retriving Data from table
+        appViewModel.getEventLiveData().observe(this, new Observer<List<Event>>() {
             @Override
-            public void run() {
-                 roomDB.eventDao().insert(event);
+            public void onChanged(List<Event> events) {
+            Log.e("data loaded","data loaded");
+
+            ///Handle data here
             }
         });
+
+        //Updating Data
+            appRepository.update(event);
+
+        //Delete data
+            appRepository.delete(event);
+
     }
 
 }
