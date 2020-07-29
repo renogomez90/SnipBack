@@ -8,7 +8,7 @@ import android.widget.VideoView;
 
 import com.hipoint.snipback.R;
 
-public class ActivityPlayVideo extends com.example.snipback.Swipper {
+public class ActivityPlayVideo extends Swipper {
     VideoView videoView;
     private String uri;
 

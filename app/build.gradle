@@ -100,16 +100,14 @@ dependencies {
 
 
 
-<<<<<<< HEAD
+
     // Room Implemetation
     implementation 'androidx.room:room-runtime:2.3.0-alpha02'
     annotationProcessor 'androidx.room:room-compiler:2.3.0-alpha02'
     androidTestImplementation 'androidx.room:room-testing:2.3.0-alpha02'
-=======
+
     implementation 'com.github.bumptech.glide:glide:4.9.0'
     implementation 'com.karumi:dexter:4.2.0'
-
->>>>>>> 927346944a6b87a4b84827a75a02563bd4b8568c
 
 
 }

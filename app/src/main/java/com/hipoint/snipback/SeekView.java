@@ -1,4 +1,4 @@
-package com.example.snipback;
+package com.hipoint.snipback;
 
 import android.app.Activity;
 import android.content.Context;
