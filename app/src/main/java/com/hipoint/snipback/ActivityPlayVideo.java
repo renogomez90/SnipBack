@@ -1,5 +1,6 @@
 package com.hipoint.snipback;
 
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.media.MediaMetadataRetriever;
@@ -8,6 +9,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.CompoundButton;
 import android.widget.MediaController;
 import android.widget.SeekBar;
@@ -166,6 +168,7 @@ public class ActivityPlayVideo extends Swipper {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 videoView.seekTo((int) progress);
+
             }
 
             @Override
@@ -215,7 +218,12 @@ public class ActivityPlayVideo extends Swipper {
                     current_pos = videoView.getCurrentPosition();
                     total_duration = videoView.getDuration();
                     exo_duration.setText(timeConversion((long) current_pos)+"/"+timeConversion((long) total_duration));
-//                    current.setText(timeConversion((long) current_pos));
+                    if (current_pos > 0) {
+                        ObjectAnimator animation = ObjectAnimator.ofInt(seek, "progress", (int) current_pos);
+                        animation.setDuration(800);
+                        animation.setInterpolator(new DecelerateInterpolator());
+                        animation.start();
+                    }
                     seek.setProgress((int) current_pos);
                     handler.postDelayed(this, 1000);
                 } catch (IllegalStateException ed){
