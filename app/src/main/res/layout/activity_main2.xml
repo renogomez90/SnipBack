@@ -142,6 +142,7 @@
         android:id="@+id/seek"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:theme="@style/AppThemeTwo"
         android:layout_above="@+id/bottom_menu" />
 
     <com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar

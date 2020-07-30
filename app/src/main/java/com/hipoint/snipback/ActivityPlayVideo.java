@@ -8,8 +8,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.DisplayMetrics;
+import android.widget.CompoundButton;
 import android.widget.MediaController;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -46,6 +48,7 @@ public class ActivityPlayVideo extends Swipper {
     private SeekBar seek;
     double current_pos, total_duration;
     private TextView exo_duration;
+    private Switch play_pause;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,6 +57,7 @@ public class ActivityPlayVideo extends Swipper {
 
         seek=findViewById(R.id.seek);
         exo_duration=findViewById(R.id.exo_duration);
+        play_pause=findViewById(R.id.play_pause);
 
         Intent intent=getIntent();
         uri=intent.getStringExtra("uri");
@@ -108,6 +112,28 @@ public class ActivityPlayVideo extends Swipper {
         videoView.requestFocus();
         videoView.start();
 
+        current_pos = videoView.getCurrentPosition();
+        total_duration = videoView.getDuration();
+
+        play_pause.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    if (videoView.isPlaying()) {
+                        videoView.pause();
+
+                    }
+                } else {
+
+//                    setVideoProgress();
+                    videoView.start();
+                    seek.setProgress((int) current_pos);
+
+
+                }
+            }
+        });
+
 
         videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
@@ -116,8 +142,7 @@ public class ActivityPlayVideo extends Swipper {
             }
         });
 
-        current_pos = videoView.getCurrentPosition();
-        total_duration = videoView.getDuration();
+
 
         seek.setMax((int) total_duration);
 

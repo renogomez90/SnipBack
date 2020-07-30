@@ -18,6 +18,9 @@
     </style>
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-
+    <style name="AppThemeTwo" parent="Theme.AppCompat.Light">
+        <item name="android:colorControlActivated">#EA3C2A</item>
+        <item name="android:colorControlNormal">#f8f9fa</item>
+    </style>
 
 </resources>
