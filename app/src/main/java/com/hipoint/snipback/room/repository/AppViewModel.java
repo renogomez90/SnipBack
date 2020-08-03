@@ -14,21 +14,27 @@ import java.util.List;
 
 public class AppViewModel extends AndroidViewModel {
     AppRepository appRepository;
+    private LiveData<List<Event>> mAllEvents;
+    private LiveData<List<Hd_snips>> mAllHDSnip;
+    private LiveData<List<Snip>> mAllSnips;
 
     public AppViewModel(@NonNull Application application) {
         super(application);
-        appRepository = AppRepository.getInstance();
+        appRepository = new AppRepository(application);
+        mAllEvents = appRepository.getEventData();
+        mAllHDSnip = appRepository.getHDSnipsData();
+        mAllSnips = appRepository.getSnipsData();
     }
 
     public LiveData<List<Event>> getEventLiveData() {
-        return appRepository.getEventData();
+        return mAllEvents;
     }
 
     public LiveData<List<Hd_snips>> getHDSnipsLiveData() {
-        return appRepository.getHDSnipsData();
+        return mAllHDSnip;
     }
 
     public LiveData<List<Snip>> getSnipsLiveData() {
-        return appRepository.getSnipsData();
+        return mAllSnips;
     }
 }

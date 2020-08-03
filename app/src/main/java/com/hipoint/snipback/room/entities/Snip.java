@@ -1,12 +1,15 @@
 package com.hipoint.snipback.room.entities;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "Snip")
-public class Snip {
+public class Snip implements Parcelable {
     public final static String TABLE_NAME = "Snip";
     private final static String COLUMN_SNIP_ID = "snip_id";
     private final static String COLUMN_EVENT_ID = "event_id";
@@ -18,6 +21,37 @@ public class Snip {
     private final static String COLUMN_HAS_VERTUAL_VERSIONS = "has_virtual_versions";
     private final static String COLUMN_IS_VERTUALVERSION = "is_virtual_version";
     private final static String COLUMN_TOTAL_VIDEO_DURATION = "total_video_duration";
+
+    public Snip(){
+
+    }
+
+    protected Snip(Parcel in) {
+        snip_id = in.readInt();
+        event_id = in.readInt();
+        snip_duration = in.readDouble();
+        start_time = in.readDouble();
+        end_time = in.readDouble();
+        vid_creation_date = in.readLong();
+        parent_snip_id = in.readInt();
+        has_virtual_versions = in.readInt();
+        is_virtual_version = in.readInt();
+        total_video_duration = in.readInt();
+        videoFilePath = in.readString();
+        thumbnailPath = in.readString();
+    }
+
+    public static final Creator<Snip> CREATOR = new Creator<Snip>() {
+        @Override
+        public Snip createFromParcel(Parcel in) {
+            return new Snip(in);
+        }
+
+        @Override
+        public Snip[] newArray(int size) {
+            return new Snip[size];
+        }
+    };
 
     public int getSnip_id() {
         return snip_id;
@@ -142,4 +176,24 @@ public class Snip {
     private String videoFilePath;
     private String thumbnailPath;
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeInt(snip_id);
+        parcel.writeInt(event_id);
+        parcel.writeDouble(snip_duration);
+        parcel.writeDouble(start_time);
+        parcel.writeDouble(end_time);
+        parcel.writeLong(vid_creation_date);
+        parcel.writeInt(parent_snip_id);
+        parcel.writeInt(has_virtual_versions);
+        parcel.writeInt(is_virtual_version);
+        parcel.writeInt(total_video_duration);
+        parcel.writeString(videoFilePath);
+        parcel.writeString(thumbnailPath);
+    }
 }

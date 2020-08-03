@@ -8,12 +8,15 @@ import com.hipoint.snipback.room.entities.Snip;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AppClass extends Application {
+public class  AppClass extends Application {
 
     public RoomDB database;
     private List<Integer> snipDurations = new ArrayList<>();
     private static AppClass appInstance;
     private List<Snip> allSnips = new ArrayList<>();
+    private int lastEventId;
+    private int lastSnipId;
+    private long lastHDSnipId;
 
     public static AppClass getAppInsatnce(){
         if(appInstance == null)
@@ -32,13 +35,17 @@ public class AppClass extends Application {
     }
 
     public void saveAllSnips(Snip snip){
-        int index = allSnips.size() > 0 ? allSnips.indexOf(snip) : 0;
-        if(index > 0){
+        int index = allSnips.size() > 0 ? allSnips.indexOf(snip) : -1;
+        if(index >= 0){
             allSnips.remove(index);
-            allSnips.set(index,snip);
+            allSnips.add(index,snip);
         }else {
             allSnips.add(snip);
         }
+    }
+
+    public void clearAllSnips(){
+        allSnips.clear();
     }
 
     public List<Snip> getAllSnip() {
@@ -57,4 +64,27 @@ public class AppClass extends Application {
         snipDurations.clear();
     }
 
+    public int getLastEventId() {
+        return lastEventId;
+    }
+
+    public void setLastEventId(int lastEventId) {
+        this.lastEventId = lastEventId;
+    }
+
+    public int getLastSnipId() {
+        return lastSnipId;
+    }
+
+    public void setLastSnipId(int lastSnipId) {
+        this.lastSnipId = lastSnipId;
+    }
+
+    public long getLastHDSnipId() {
+        return lastHDSnipId;
+    }
+
+    public void setLastHDSnipId(long lastHDSnipId) {
+        this.lastHDSnipId = lastHDSnipId;
+    }
 }

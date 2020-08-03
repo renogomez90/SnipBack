@@ -204,12 +204,9 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
 
     @Override
     public void onItemClick(Snip snipvideopath) {
-
         Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
-        intent.putExtra("uri", snipvideopath.getVideoFilePath());
+        intent.putExtra("snip", snipvideopath);
         startActivity(intent);
-
-
     }
 }
 

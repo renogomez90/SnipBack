@@ -67,7 +67,7 @@ public class AppMainActivity extends AppCompatActivity {
         Event event = new Event();
         event.setEvent_title(currentDateandTime);
         event.setEvent_created(System.currentTimeMillis());
-        AppRepository appRepository = AppRepository.getInstance();
+        AppRepository appRepository = new AppRepository(AppClass.getAppInsatnce());
         appRepository.insertEvent(event);
     }
 
@@ -92,33 +92,35 @@ public class AppMainActivity extends AppCompatActivity {
         getFilePathFromInternalStorage();
         List<Hd_snips> hdSnips = new ArrayList<>();
         appViewModel.getHDSnipsLiveData().observe(this, hd_snips -> {
-            if (hd_snips != null && hdSnips.size() > 0) {
+            if (hd_snips != null && hd_snips.size() > 0) {
                 hdSnips.addAll(hd_snips);
             }
         });
         appViewModel.getSnipsLiveData().observe(this, snips -> {
             if (snips != null && snips.size() > 0) {
+                AppClass.getAppInsatnce().clearAllSnips();
                 for (Snip snip : snips) {
                     for (Hd_snips hdSnip : hdSnips) {
-                        if (hdSnip.getSnip_id() == snip.getSnip_id()) {
+                        if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {
                             snip.setVideoFilePath(hdSnip.getVideo_path_processed());
                             if(thumbs.size() > 0) {
                                 for (String filePath : thumbs) {
                                     File file = new File(filePath);
                                     String[] snipNameWithExtension = file.getName().split("_");
                                     if(snipNameWithExtension.length > 0){
-                                        String[] snipName = snipNameWithExtension[1].split(".");
+                                        String[] snipName = snipNameWithExtension[1].split("\\.");
                                         if(snipName.length > 0) {
                                             int snipId = Integer.parseInt(snipName[0]);
                                             if(snipId == snip.getSnip_id()){
                                                 snip.setThumbnailPath(filePath);
+                                                AppClass.getAppInsatnce().saveAllSnips(snip);
                                             }
                                         }
 
                                     }
                                 }
                             }
-                            AppClass.getAppInsatnce().saveAllSnips(snip);
+
                         }
                     }
                 }

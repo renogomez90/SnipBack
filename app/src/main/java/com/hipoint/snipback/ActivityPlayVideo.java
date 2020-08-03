@@ -2,42 +2,30 @@ package com.hipoint.snipback;
 
 import android.animation.ObjectAnimator;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.DisplayMetrics;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.CompoundButton;
-import android.widget.MediaController;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.VideoView;
 
-import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
-import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.util.Util;
-import com.hipoint.snipback.R;
+import com.hipoint.snipback.room.entities.Snip;
 
 public class ActivityPlayVideo extends Swipper {
     VideoView videoView;
-    private String uri;
+    private Snip snip;
     PlayerView simpleExoPlayerView;
     private SimpleExoPlayer player;
     private TrackSelector trackSelector;
@@ -51,18 +39,19 @@ public class ActivityPlayVideo extends Swipper {
     double current_pos, total_duration;
     private TextView exo_duration;
     private Switch play_pause;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
 //        setContentView(R.layout.layout_play_video);
 
-        seek=findViewById(R.id.seek);
-        exo_duration=findViewById(R.id.exo_duration);
-        play_pause=findViewById(R.id.play_pause);
+        seek = findViewById(R.id.seek);
+        exo_duration = findViewById(R.id.exo_duration);
+        play_pause = findViewById(R.id.play_pause);
 
-        Intent intent=getIntent();
-        uri=intent.getStringExtra("uri");
+        Intent intent = getIntent();
+        snip = intent.getParcelableExtra("snip");
 
 
 //        bandwidthMeter = new DefaultBandwidthMeter();
@@ -85,83 +74,33 @@ public class ActivityPlayVideo extends Swipper {
 //
 //        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
 
-
-        int w;
-        int h;
-
         MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(this,Uri.parse(uri));
-        String height = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
-        String width = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
-        w = Integer.parseInt(width);
-        h = Integer.parseInt(height);
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int height1 = displayMetrics.heightPixels;
-        int width1 = displayMetrics.widthPixels;
-
-
+        mediaMetadataRetriever.setDataSource(this, Uri.parse(snip.getVideoFilePath()));
 
         videoView = (VideoView) findViewById(R.id.videoView);
-//        MediaController mediaController = new MediaController(this);
-//        mediaController.setAnchorView(videoView);
-//        videoView.setMediaController(mediaController);
-        Uri video1 = Uri.parse(uri);
+        Uri video1 = Uri.parse(snip.getVideoFilePath());
         videoView.setVideoURI(video1);
-//        videoView.setMinimumWidth(width1);
-//        videoView.setMinimumHeight(h);
-        videoView.requestFocus();
-        videoView.start();
+        videoView.setOnPreparedListener(mp -> setVideoProgress());
 
-        current_pos = videoView.getCurrentPosition();
-        total_duration = videoView.getDuration();
-
-// video finish listener
-        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                // not playVideo
-                // playVideo();
-
-                mp.start();
-                mp.stop();
-            }
+        videoView.setOnCompletionListener(mp -> {
+            // not playVideo
+            // playVideo();
+            mp.start();
+            mp.stop();
         });
-
-
-        play_pause.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    if (videoView.isPlaying()) {
-                        videoView.pause();
-
-                    }
-                } else {
-
-//                    setVideoProgress();
-                    videoView.start();
-                    seek.setProgress((int) current_pos);
-
-
+        play_pause.setOnCheckedChangeListener((compoundButton, b) -> {
+            if (b) {
+                if (videoView.isPlaying()) {
+                    videoView.pause();
                 }
+            } else {
+                videoView.start();
+                seek.setProgress((int) current_pos);
             }
         });
-
-
-        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(MediaPlayer mp) {
-                setVideoProgress();
-            }
-        });
-
-
-
         seek.setMax((int) total_duration);
-
+        //TODO
+//        seek.setMax((int) snip.getSnip_duration());
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -180,7 +119,8 @@ public class ActivityPlayVideo extends Swipper {
                 videoView.seekTo((int) current_pos);
             }
         });
-
+        videoView.requestFocus();
+        videoView.start();
 
 //        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
 //        simpleExoPlayerView = (PlayerView)findViewById(R.id.player_view);
@@ -197,13 +137,21 @@ public class ActivityPlayVideo extends Swipper {
     // display video progress
     public void setVideoProgress() {
         //get the video duration
+        //TODO
         current_pos = videoView.getCurrentPosition();
-        total_duration = videoView.getDuration();
+        if (snip.getIs_virtual_version() == 1) {
+            total_duration = 5 * 1000;
+        } else {
+            total_duration = videoView.getDuration();
+        }
 
         //display video duration
-        exo_duration.setText(timeConversion((long) current_pos)+"/"+timeConversion((long) total_duration));
+        exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
 //        total.setText(timeConversion((long) total_duration));
 //        current.setText(timeConversion((long) current_pos));
+        if (snip.getIs_virtual_version() == 1) {
+            videoView.seekTo((int) snip.getStart_time() * 1000);
+        }
         seek.setMax((int) total_duration);
         final Handler handler = new Handler();
 
@@ -212,8 +160,12 @@ public class ActivityPlayVideo extends Swipper {
             public void run() {
                 try {
                     current_pos = videoView.getCurrentPosition();
-                    total_duration = videoView.getDuration();
-                    exo_duration.setText(timeConversion((long) current_pos)+"/"+timeConversion((long) total_duration));
+                    if (snip.getIs_virtual_version() == 1) {
+                        total_duration = 5 * 1000;
+                    } else {
+                        total_duration = videoView.getDuration();
+                    }
+                    exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
                     if (current_pos > 0) {
                         ObjectAnimator animation = ObjectAnimator.ofInt(seek, "progress", (int) current_pos);
                         animation.setDuration(400);
@@ -222,12 +174,12 @@ public class ActivityPlayVideo extends Swipper {
                     }
                     seek.setProgress((int) current_pos);
                     handler.postDelayed(this, 1000);
-                } catch (IllegalStateException ed){
+                } catch (IllegalStateException ed) {
                     ed.printStackTrace();
                 }
             }
         };
-        handler.postDelayed(runnable, 1000);
+        handler.postDelayed(runnable, 500);
 
         //seekbar change listner
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {

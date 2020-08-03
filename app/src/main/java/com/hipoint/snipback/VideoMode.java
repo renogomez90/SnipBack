@@ -28,6 +28,7 @@ import android.media.CamcorderProfile;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -92,7 +93,7 @@ import java.util.Locale;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-public class VideoMode extends Fragment implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
+public class VideoMode extends Fragment implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted {
 
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
@@ -246,6 +247,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         }
 
     };
+    private Hd_snips hdSnips;
+
     /**
      * In this sample, we choose a video size with 3x4 aspect ratio. Also, we don't use sizes
      * larger than 1080p, since MediaRecorder cannot handle such a high-resolution video.
@@ -315,6 +318,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private TextView tvTimer;
     private Chronometer mChronometer;
     private int timerSecond = 0;
+    private AppRepository appRepository;
 
     public  static  VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
@@ -347,6 +351,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 showDialogSettingsMain();
             }
         });
+        appRepository = AppRepository.getInstance();
+        appRepository.getLastInsertedEventId(this);
+
+
         startRecordingVideo();
 
 //        countUpTimer = new CountUpTimer(1000) {
@@ -901,31 +909,37 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             Toast.makeText(activity, "Video saved: " + outputFilePath,
                     Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Video saved: " + outputFilePath);
-            AppRepository appRepository = AppRepository.getInstance();
             Snip parentSnip = new Snip();
             parentSnip.setStart_time(0);
             parentSnip.setEnd_time(0);
             parentSnip.setIs_virtual_version(0);
             parentSnip.setHas_virtual_versions(0);
             parentSnip.setParent_snip_id(0);
-            parentSnip.setSnip_duration(5);
+            parentSnip.setSnip_duration(0);
             parentSnip.setTotal_video_duration(timerSecond);
             parentSnip.setVid_creation_date(System.currentTimeMillis());
-            parentSnip.setEvent_id(appRepository.getLastInsertedEventId(this));
-            appRepository.insertSnip(parentSnip);
-            parentSnip.setSnip_id(appRepository.getLastInsertedSnipId(this));
+            parentSnip.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
+            appRepository.insertSnip(this,parentSnip);
 
-            Hd_snips hdSnips = new Hd_snips();
+            hdSnips = new Hd_snips();
             hdSnips.setVideo_path_processed(outputFilePath);
-            hdSnips.setSnip_id(appRepository.getLastInsertedSnipId(this));
-
-            saveSnipToDB(parentSnip,outputFilePath);
-            parentSnip.setVideoFilePath(outputFilePath);
-            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
+//            parentSnip.setVideoFilePath(outputFilePath);
+//            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
             //TODO
         }
         outputFilePath = null;
         startPreview();
+    }
+
+    @Override
+    public void onTaskCompleted(Snip snip) {
+        if(snip.getIs_virtual_version() == 0){
+            snip.setSnip_id(AppClass.getAppInsatnce().getLastSnipId());
+            hdSnips.setSnip_id(AppClass.getAppInsatnce().getLastSnipId());
+            appRepository.insertHd_snips(hdSnips);
+            saveSnipToDB(snip,hdSnips.getVideo_path_processed());
+        }
+
     }
 
 
@@ -997,10 +1011,9 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 
     }
     public void saveSnipToDB(Snip parentSnip, String filePath){
-        String chronoText = mChronometer.getText().toString();
-        Log.e("chrono m reading",chronoText);
+//        String chronoText = mChronometer.getText().toString();
+//        Log.e("chrono m reading",chronoText);
 
-        AppRepository appRepository = AppRepository.getInstance();
         List<Integer> snipDurations = AppClass.getAppInsatnce().getSnipDurations();
         if(snipDurations.size() > 0) {
             for (int endSecond : snipDurations) {
@@ -1013,13 +1026,14 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 snip.setParent_snip_id(parentSnip.getSnip_id());
                 snip.setSnip_duration(5);
                 snip.setVid_creation_date(System.currentTimeMillis());
-                snip.setEvent_id(appRepository.getLastInsertedEventId(this));
-                appRepository.insertSnip(snip);
-                parentSnip.setHas_virtual_versions(0);
+                snip.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
+                appRepository.insertSnip(this,snip);
+                parentSnip.setHas_virtual_versions(1);
                 appRepository.updateSnip(parentSnip);
+                parentSnip.setVideoFilePath(filePath);
                 snip.setVideoFilePath(filePath);
+                AppClass.getAppInsatnce().saveAllSnips(parentSnip);
                 AppClass.getAppInsatnce().saveAllSnips(snip);
-
             }
             AppClass.getAppInsatnce().clearSnipDurations();
         }
@@ -1028,15 +1042,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         appViewModel.getSnipsLiveData().observe(this, snips -> {
             for(Snip snip : snips){
                 if(snip.getParent_snip_id() == parentSnip.getSnip_id()) {
-                    String thumbnailPath;
-                    thumbnailPath = getVideoThumbnail(new File(filePath), snip.getSnip_id(), (int) snip.getStart_time());
-                    snip.setThumbnailPath(thumbnailPath);
-                    //update Snip
-                    AppClass.getAppInsatnce().saveAllSnips(snip);
+                    getVideoThumbnail(snip,new File(filePath));
                 }
-
-                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
             }
+            getVideoThumbnail(parentSnip,new File(filePath));
         });
 
 //        ArrayList<String> timegap = getStringArrayPref(getActivity(), "TIMEGAP");
@@ -1053,58 +1062,60 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     }
 
     private void saveSnipTimeToLocal(){
-        int endSecond = timerSecond;
-        AppClass.getAppInsatnce().setSnipDurations(endSecond);
+        if(timerSecond != 0) {
+            int endSecond = timerSecond;
+            AppClass.getAppInsatnce().setSnipDurations(endSecond);
+        }
 //        Log.i("snap: "+endSecond);
 //        Toast.makeText(getActivity(), endSecond, Toast.LENGTH_LONG).show();
 
     }
 
-    private void addSnip(){
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd z");
-        String currentDateandTime = sdf.format(new Date());
-        Event event = new Event();
-        event.setEvent_title(currentDateandTime);
-        event.setEvent_created(System.currentTimeMillis());
-        AppRepository appRepository = AppRepository.getInstance();
-        appRepository.insertEvent(event);
-    }
+//    private void addSnip(){
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd z");
+//        String currentDateandTime = sdf.format(new Date());
+//        Event event = new Event();
+//        event.setEvent_title(currentDateandTime);
+//        event.setEvent_created(System.currentTimeMillis());
+//        AppRepository appRepository = AppRepository.getInstance();
+//        appRepository.insertEvent(event);
+//    }
+//
+//
+//    public static void setStringArrayPref(Context context, String key, ArrayList<String> values) {
+//        SharedPreferences prefs = context.getSharedPreferences(key,Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = prefs.edit();
+//        JSONArray a = new JSONArray();
+//        for (int i = 0; i < values.size(); i++) {
+//            a.put(values.get(i));
+//        }
+//        if (!values.isEmpty()) {
+//            editor.putString(key, a.toString());
+//        } else {
+//            editor.putString(key, null);
+//        }
+//        editor.commit();
+//    }
 
+//    public static ArrayList<String> getStringArrayPref(Context context, String key) {
+//        SharedPreferences prefs = context.getSharedPreferences(key,Context.MODE_PRIVATE);
+//        String json = prefs.getString(key, null);
+//        ArrayList<String> timegap = new ArrayList<String>();
+//        if (json != null) {
+//            try {
+//                JSONArray a = new JSONArray(json);
+//                for (int i = 0; i < a.length(); i++) {
+//                    String url = a.optString(i);
+//                    timegap.add(url);
+//                }
+//            } catch (JSONException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        return timegap;
+//    }
 
-    public static void setStringArrayPref(Context context, String key, ArrayList<String> values) {
-        SharedPreferences prefs = context.getSharedPreferences(key,Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        JSONArray a = new JSONArray();
-        for (int i = 0; i < values.size(); i++) {
-            a.put(values.get(i));
-        }
-        if (!values.isEmpty()) {
-            editor.putString(key, a.toString());
-        } else {
-            editor.putString(key, null);
-        }
-        editor.commit();
-    }
-
-    public static ArrayList<String> getStringArrayPref(Context context, String key) {
-        SharedPreferences prefs = context.getSharedPreferences(key,Context.MODE_PRIVATE);
-        String json = prefs.getString(key, null);
-        ArrayList<String> timegap = new ArrayList<String>();
-        if (json != null) {
-            try {
-                JSONArray a = new JSONArray(json);
-                for (int i = 0; i < a.length(); i++) {
-                    String url = a.optString(i);
-                    timegap.add(url);
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        return timegap;
-    }
-
-    private String getVideoThumbnail(File videoFile,int snipId, int timeInSeconds){
+    private void getVideoThumbnail(Snip snip,File videoFile){
         try {
 //            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
 //                    VIDEO_DIRECTORY_NAME);
@@ -1115,13 +1126,13 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 if (!thumbsStorageDir.mkdirs()) {
                     Log.d(TAG, "Oops! Failed create "
                             + VIDEO_DIRECTORY_NAME + " directory");
-                    return null;
+                    return;
                 }
             }
             File fullThumbPath;
 
             fullThumbPath = new File(thumbsStorageDir.getPath() + File.separator
-                    + "snip_"+snipId+".png");
+                    + "snip_"+snip.getSnip_id()+".png");
             Log.d(TAG, "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.getAbsolutePath());
             //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
             FileOutputStream streamThumbnail = new FileOutputStream(fullThumbPath);
@@ -1131,16 +1142,31 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             MediaMetadataRetriever retriever = new MediaMetadataRetriever();
             try {
                 retriever.setDataSource(videoFile.getAbsolutePath());
-                thumb = retriever.getFrameAtTime(timeInSeconds * 1000000,
-                        MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+                if(snip.getIs_virtual_version() != 0) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                        thumb = retriever.getScaledFrameAtTime((int) snip.getStart_time() * 1000000,
+                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100);
+                    } else {
+                        thumb = retriever.getFrameAtTime((int) snip.getStart_time() * 1000000,
+                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+                    }
+                }else{
+                    thumb = retriever.getFrameAtTime();
+                }
                 thumb.compress(Bitmap.CompressFormat.PNG, 80, streamThumbnail);
                 thumb.recycle(); //ensure the image is freed;
             } catch (Exception ex) {
                 Log.i(TAG, "MediaMetadataRetriever got exception:" + ex);
             }
             streamThumbnail.close();
+            snip.setThumbnailPath(fullThumbPath.getAbsolutePath());
+            //update Snip
+            AppClass.getAppInsatnce().saveAllSnips(snip);
+
+            if(snip.getIs_virtual_version() == 0) {
+                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
+            }
             Log.d(TAG, "thumbnail saved successfully");
-            return fullThumbPath.getAbsolutePath();
         } catch (FileNotFoundException e) {
             Log.d(TAG, "File Not Found Exception : check directory path");
             e.printStackTrace();
@@ -1148,7 +1174,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             Log.d(TAG, "IOException while closing the stream");
             e.printStackTrace();
         }
-        return null;
     }
 
 

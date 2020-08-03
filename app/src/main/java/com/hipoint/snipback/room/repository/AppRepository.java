@@ -29,6 +29,10 @@ public class AppRepository {
     private LiveData<Snip> SnipData;
     private static AppRepository instance;
 
+    public interface OnTaskCompleted{
+        void onTaskCompleted(Snip snip);
+    }
+
     public AppRepository(Context context){
 //        RoomDB db = AppClass.getAppInsatnce().database;
         RoomDB db = RoomDB.getDatabase(context);
@@ -55,7 +59,6 @@ public class AppRepository {
     }
 
     private class InsertEventAsync extends AsyncTask<Event, Void, Void> {
-
         private EventDao dao;
         public InsertEventAsync(EventDao dao){
             this.dao = dao;
@@ -63,9 +66,10 @@ public class AppRepository {
 
         @Override
         protected Void doInBackground(Event... events) {
-            dao.insert(events[0]);
+            AppClass.getAppInsatnce().setLastEventId((int) dao.insert(events[0]));
             return null;
         }
+
     }
 //data update
     public void updateEvent(@NonNull Event event){
@@ -141,7 +145,7 @@ public class AppRepository {
 
         @Override
         protected Void doInBackground(Hd_snips... hd_snips) {
-            dao.insert(hd_snips[0]);
+            AppClass.getAppInsatnce().setLastHDSnipId(dao.insert(hd_snips[0]));
             return null;
         }
 
@@ -209,21 +213,28 @@ public class AppRepository {
         return snipsDao.getSnipsData();
     }
 
-    public void insertSnip(@NonNull Snip snip){
-        new InsertSnipAsync(snipsDao).execute(snip);
+    public void insertSnip(OnTaskCompleted listener,@NonNull Snip snip){
+        new InsertSnipAsync(listener,snipsDao).execute(snip);
     }
 
-    private class InsertSnipAsync extends AsyncTask<Snip, Void, Void> {
-
+    private class InsertSnipAsync extends AsyncTask<Snip, Void, Snip> {
+        private OnTaskCompleted listener;
         private SnipsDao dao;
-        public InsertSnipAsync(SnipsDao dao){
+        public InsertSnipAsync(OnTaskCompleted listener,SnipsDao dao){
+            this.listener = listener;
             this.dao = dao;
         }
 
         @Override
-        protected Void doInBackground(Snip... snips) {
-            dao.insert(snips[0]);
-            return null;
+        protected Snip doInBackground(Snip... snips) {
+            AppClass.getAppInsatnce().setLastSnipId((int)dao.insert(snips[0]));
+            return snips[0];
+        }
+
+        @Override
+        protected void onPostExecute(Snip aVoid) {
+            listener.onTaskCompleted(aVoid);
+            super.onPostExecute(aVoid);
         }
     }
 
@@ -288,6 +299,7 @@ public class AppRepository {
             if(events.size() > 0) {
                 Event lastEvent = events.get(events.size() - 1);
                 eventId = lastEvent.getEvent_id();
+                AppClass.getAppInsatnce().setLastEventId(eventId);
             }
         });
         return eventId;
@@ -300,6 +312,7 @@ public class AppRepository {
             if(snips.size() > 0) {
                 Snip lastSnip = snips.get(snips.size() - 1);
                 snipId = lastSnip.getSnip_id();
+                AppClass.getAppInsatnce().setLastSnipId(snipId);
             }
         });
         return snipId;
