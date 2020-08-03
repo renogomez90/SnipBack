@@ -53,11 +53,11 @@ import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
-public class FragmentGallery extends Fragment {
+public class FragmentGallery extends Fragment implements AdapterGallery.ItemListener {
     private View rootView;
-    ImageButton filter_button, view_button, menu_button,camera_button;
+    ImageButton filter_button, view_button, menu_button, camera_button;
     TextView filter_label, view_label, menu_label, photolabel;
-    ImageView autodelete_arrow,player_view_image;
+    ImageView autodelete_arrow, player_view_image;
     RecyclerView recycler_view;
 
     private BandwidthMeter bandwidthMeter;
@@ -72,7 +72,7 @@ public class FragmentGallery extends Fragment {
     private PlayerView simpleExoPlayerView;
 
 
-    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete,click;
+    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click,import_con;
 
     public static FragmentGallery newInstance() {
         FragmentGallery fragment = new FragmentGallery();
@@ -83,9 +83,10 @@ public class FragmentGallery extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
-        ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
-        player_view_image=rootView.findViewById(R.id.player_view_image);
+        import_con=rootView.findViewById(R.id.import_con);
+        player_view_image = rootView.findViewById(R.id.player_view_image);
         photolabel = rootView.findViewById(R.id.photolabel);
         recycler_view = rootView.findViewById(R.id.recycler_view);
         menu_button = rootView.findViewById(R.id.dropdown_menu);
@@ -94,12 +95,12 @@ public class FragmentGallery extends Fragment {
         filter_button = rootView.findViewById(R.id.filter);
         filter_label = rootView.findViewById(R.id.filter_text);
         view_label = rootView.findViewById(R.id._button_view_text);
-        click=rootView.findViewById(R.id.click);
+        click = rootView.findViewById(R.id.click);
         click.setVisibility(View.GONE);
         recycler_view.setLayoutManager(new GridLayoutManager(getActivity(), 3));
 
         List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
-        AdapterGallery adapterGallery = new AdapterGallery(getActivity(),allSnips);
+        AdapterGallery adapterGallery = new AdapterGallery(getActivity(), allSnips, FragmentGallery.this);
         recycler_view.setAdapter(adapterGallery);
 
         // exo player
@@ -147,7 +148,7 @@ public class FragmentGallery extends Fragment {
                     Intent intent = new Intent();
                     intent.setType("video/*");
                     intent.setAction(Intent.ACTION_GET_CONTENT);
-                    startActivityForResult(Intent.createChooser(intent,"Select Video"),1111);
+                    startActivityForResult(Intent.createChooser(intent, "Select Video"), 1111);
 
                     dialog.dismiss();
                 }
@@ -171,8 +172,8 @@ public class FragmentGallery extends Fragment {
             @Override
             public void onClick(View v) {
 //                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
-                Intent intent =new Intent(getActivity(),ActivityPlayVideo.class);
-                intent.putExtra("uri",uri.toString());
+                Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+                intent.putExtra("uri", uri.toString());
                 startActivity(intent);
 
             }
@@ -181,26 +182,35 @@ public class FragmentGallery extends Fragment {
     }
 
 
-
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK) {
             if (requestCode == 1111) {
                 uri = data.getData();
                 String videopath = uri.getPath();
                 File file = new File(videopath);
-                Log.e("path",file.getAbsolutePath());
-                click.setVisibility(View.VISIBLE);
+                Log.e("path", file.getAbsolutePath());
                 recycler_view.setVisibility(View.GONE);
-Glide.with(getActivity())
-        .load(uri)
-        .override(145,145)
-        .into(player_view_image);
+                import_con.setVisibility(View.VISIBLE);
+                click.setVisibility(View.VISIBLE);
+                Glide.with(getActivity())
+                        .load(uri)
+                        .override(145, 145)
+                        .into(player_view_image);
 
 
             }
         }
     }
 
+    @Override
+    public void onItemClick(Snip snipvideopath) {
+
+        Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+        intent.putExtra("uri", snipvideopath.getVideoFilePath());
+        startActivity(intent);
+
+
+    }
 }
 
 

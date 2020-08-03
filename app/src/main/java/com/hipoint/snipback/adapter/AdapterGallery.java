@@ -26,21 +26,23 @@ public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHold
 
     private Context mContext;
     List<Snip> snipArrayList= new ArrayList<>();
+    private ItemListener mListener;
 
-    public AdapterGallery(Context context, List<Snip> allSnips) {
+    public AdapterGallery(Context context, List<Snip> allSnips,ItemListener itemListener) {
         mContext = context;
         this.snipArrayList = allSnips;
+        mListener = itemListener;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         ImageView image1;
-        RecyclerView recyclerView;
+//        RecyclerView recyclerView;
 
         public ViewHolder(final View v) {
             super(v);
             image1 = v.findViewById(R.id.image);
-            recyclerView = v.findViewById(R.id.rv_horizontal);
+//            recyclerView = v.findViewById(R.id.rv_horizontal);
         }
 
     }
@@ -63,16 +65,18 @@ public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHold
             options.inPreferredConfig = Bitmap.Config.ARGB_8888;
             bitmap = BitmapFactory.decodeStream(new FileInputStream(f), null, options);
             holder.image1.setImageBitmap(bitmap);
+            holder.image1.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     @Override
     public int getItemCount() {
         return snipArrayList.size();
     }
-
+    public interface ItemListener {
+        void onItemClick(Snip snipvideopath);
+    }
 
 }
