@@ -117,6 +117,20 @@ public class ActivityPlayVideo extends Swipper {
         current_pos = videoView.getCurrentPosition();
         total_duration = videoView.getDuration();
 
+// video finish listener
+        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                // not playVideo
+                // playVideo();
+
+                mp.start();
+                mp.stop();
+            }
+        });
+
+
         play_pause.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -147,22 +161,6 @@ public class ActivityPlayVideo extends Swipper {
 
 
         seek.setMax((int) total_duration);
-
-        final Handler handler = new Handler();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-//                    current_pos = videoView.getCurrentPosition();
-
-//                    seek.setProgress((int) current_pos);
-                    handler.postDelayed(this, 1000);
-                } catch (IllegalStateException ed){
-                    ed.printStackTrace();
-                }
-            }
-        };
-        handler.postDelayed(runnable, 1000);
 
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -203,9 +201,7 @@ public class ActivityPlayVideo extends Swipper {
         total_duration = videoView.getDuration();
 
         //display video duration
-        double m1=(current_pos / 60000) % 60000;
-        double m2=(total_duration / 60000) % 60000;
-        exo_duration.setText(m1+"/"+m2);
+        exo_duration.setText(timeConversion((long) current_pos)+"/"+timeConversion((long) total_duration));
 //        total.setText(timeConversion((long) total_duration));
 //        current.setText(timeConversion((long) current_pos));
         seek.setMax((int) total_duration);
@@ -254,18 +250,18 @@ public class ActivityPlayVideo extends Swipper {
     }
 
     public String timeConversion(long value) {
-        String songTime;
+        String videoTime;
         int dur = (int) value;
         int hrs = (dur / 3600000);
         int mns = (dur / 60000) % 60000;
         int scs = dur % 60000 / 1000;
 
         if (hrs > 0) {
-            songTime = String.format("%02d:%02d:%02d", hrs, mns, scs);
+            videoTime = String.format("%02d:%02d:%02d", hrs, mns, scs);
         } else {
-            songTime = String.format("%02d:%02d", mns, scs);
+            videoTime = String.format("%02d:%02d", mns, scs);
         }
-        return songTime;
+        return videoTime;
     }
 
 }
