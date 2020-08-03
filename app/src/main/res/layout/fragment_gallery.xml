@@ -23,6 +23,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/photolabel"
+        android:layout_above="@+id/llfooter"
         android:layout_marginLeft="44dp"
         android:layout_marginRight="44dp"
         android:layout_marginTop="24dp"
@@ -57,6 +58,7 @@
     </RelativeLayout>
 
     <LinearLayout
+        android:id="@+id/llfooter"
         android:layout_width="match_parent"
         android:layout_height="55dp"
         android:layout_alignParentBottom="true"

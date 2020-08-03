@@ -5,9 +5,9 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "Snips")
-public class Snips {
-    public final static String TABLE_NAME = "Snips";
+@Entity(tableName = "Snip")
+public class Snip {
+    public final static String TABLE_NAME = "Snip";
     private final static String COLUMN_SNIP_ID = "snip_id";
     private final static String COLUMN_EVENT_ID = "event_id";
     private final static String COLUMN_SNIP_DURATION = "snip_duration";
@@ -59,11 +59,11 @@ public class Snips {
         this.end_time = end_time;
     }
 
-    public String getVid_creation_date() {
+    public long getVid_creation_date() {
         return vid_creation_date;
     }
 
-    public void setVid_creation_date(String vid_creation_date) {
+    public void setVid_creation_date(long vid_creation_date) {
         this.vid_creation_date = vid_creation_date;
     }
 
@@ -99,6 +99,22 @@ public class Snips {
         this.total_video_duration = total_video_duration;
     }
 
+    public String getVideoFilePath() {
+        return videoFilePath;
+    }
+
+    public void setVideoFilePath(String videoFilePath) {
+        this.videoFilePath = videoFilePath;
+    }
+
+    public String getThumbnailPath() {
+        return thumbnailPath;
+    }
+
+    public void setThumbnailPath(String thumbnailPath) {
+        this.thumbnailPath = thumbnailPath;
+    }
+
     @PrimaryKey(autoGenerate = true)
     @NonNull
     @ColumnInfo(name = COLUMN_SNIP_ID)
@@ -113,7 +129,7 @@ public class Snips {
     @ColumnInfo(name = COLUMN_ENDTIME,typeAffinity = ColumnInfo.REAL)
     private double end_time;
     @ColumnInfo(name = COLUMN_VID_CREATION_DATE)
-    private String vid_creation_date;
+    private long vid_creation_date;
     @ColumnInfo(name = COLUMN_PARENT_SNIP_ID)
     private int parent_snip_id;
     @ColumnInfo(name = COLUMN_HAS_VERTUAL_VERSIONS)
@@ -122,5 +138,8 @@ public class Snips {
     private int is_virtual_version;
     @ColumnInfo(name = COLUMN_TOTAL_VIDEO_DURATION)
     private int total_video_duration;
+
+    private String videoFilePath;
+    private String thumbnailPath;
 
 }

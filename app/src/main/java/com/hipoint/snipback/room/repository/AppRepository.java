@@ -1,19 +1,22 @@
 package com.hipoint.snipback.room.repository;
 
-import android.app.Application;
+import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProviders;
 
+import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.dao.EventDao;
 import com.hipoint.snipback.room.dao.Hd_snipsDao;
 import com.hipoint.snipback.room.dao.SnipsDao;
 import com.hipoint.snipback.room.db.RoomDB;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Hd_snips;
-import com.hipoint.snipback.room.entities.Snips;
+import com.hipoint.snipback.room.entities.Snip;
 
 import java.util.List;
 
@@ -23,14 +26,24 @@ public class AppRepository {
     private Hd_snipsDao hd_snipsDao;
     private LiveData<Hd_snips> HdSnipsData;
     private SnipsDao snipsDao;
-    private LiveData<Snips> SnipData;
+    private LiveData<Snip> SnipData;
+    private static AppRepository instance;
 
     public AppRepository(Context context){
+//        RoomDB db = AppClass.getAppInsatnce().database;
         RoomDB db = RoomDB.getDatabase(context);
         eventDao = db.eventDao();
         hd_snipsDao=db.hd_snipsDao();
         snipsDao= db.snipsDao();
     }
+
+    public static AppRepository getInstance(){
+        if(instance == null) {
+            instance = new AppRepository(AppClass.getAppInsatnce().getContext());
+        }
+        return instance;
+    }
+
 
 //Event Table Actions START//
     public LiveData<List<Event>> getEventData(){
@@ -192,15 +205,15 @@ public class AppRepository {
     //HDSNIP Table Actions END//
 
     //SNIP table Actions START//
-    public LiveData<List<Snips>> getSnipsData(){
+    public LiveData<List<Snip>> getSnipsData(){
         return snipsDao.getSnipsData();
     }
 
-    public void insertSnips(@NonNull Snips snips){
-        new InsertSnipAsync(snipsDao).execute(snips);
+    public void insertSnip(@NonNull Snip snip){
+        new InsertSnipAsync(snipsDao).execute(snip);
     }
 
-    private class InsertSnipAsync extends AsyncTask<Snips, Void, Void> {
+    private class InsertSnipAsync extends AsyncTask<Snip, Void, Void> {
 
         private SnipsDao dao;
         public InsertSnipAsync(SnipsDao dao){
@@ -208,18 +221,18 @@ public class AppRepository {
         }
 
         @Override
-        protected Void doInBackground(Snips... snips) {
+        protected Void doInBackground(Snip... snips) {
             dao.insert(snips[0]);
             return null;
         }
     }
 
     //data update
-    public void updateSnip(@NonNull Snips snips){
-        new UpdateSnipAsync(snipsDao).execute(snips);
+    public void updateSnip(@NonNull Snip snip){
+        new UpdateSnipAsync(snipsDao).execute(snip);
     }
 
-    private class UpdateSnipAsync extends AsyncTask<Snips, Void, Void> {
+    private class UpdateSnipAsync extends AsyncTask<Snip, Void, Void> {
 
         private SnipsDao dao;
         public UpdateSnipAsync(SnipsDao dao){
@@ -227,17 +240,17 @@ public class AppRepository {
         }
 
         @Override
-        protected Void doInBackground(Snips... snips) {
+        protected Void doInBackground(Snip... snips) {
             dao.update(snips[0]);
             return null;
         }
     }
     //data delete
-    public void deleteSnip(@NonNull Snips snips){
-        new DeleteSnipAsync(snipsDao).execute(snips);
+    public void deleteSnip(@NonNull Snip snip){
+        new DeleteSnipAsync(snipsDao).execute(snip);
     }
 
-    private class DeleteSnipAsync extends AsyncTask<Snips, Void, Void> {
+    private class DeleteSnipAsync extends AsyncTask<Snip, Void, Void> {
 
         private SnipsDao dao;
         public DeleteSnipAsync(SnipsDao dao){
@@ -245,7 +258,7 @@ public class AppRepository {
         }
 
         @Override
-        protected Void doInBackground(Snips... snips) {
+        protected Void doInBackground(Snip... snips) {
             dao.delete(snips[0]);
             return null;
         }
@@ -267,6 +280,29 @@ public class AppRepository {
             dao.deleteAll();
             return null;
         }
+    }
+    int eventId = 0;
+    public int getLastInsertedEventId(Fragment activity){
+        AppViewModel appViewModel = ViewModelProviders.of(activity).get(AppViewModel.class);
+        appViewModel.getEventLiveData().observe(activity, events -> {
+            if(events.size() > 0) {
+                Event lastEvent = events.get(events.size() - 1);
+                eventId = lastEvent.getEvent_id();
+            }
+        });
+        return eventId;
+    }
+
+    int snipId = 0;
+    public int getLastInsertedSnipId(Fragment activity){
+        AppViewModel appViewModel = ViewModelProviders.of(activity).get(AppViewModel.class);
+        appViewModel.getSnipsLiveData().observe(activity, snips -> {
+            if(snips.size() > 0) {
+                Snip lastSnip = snips.get(snips.size() - 1);
+                snipId = lastSnip.getSnip_id();
+            }
+        });
+        return snipId;
     }
 
 

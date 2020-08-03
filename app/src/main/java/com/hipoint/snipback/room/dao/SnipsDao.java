@@ -6,23 +6,22 @@ import androidx.room.Insert;
 import androidx.room.Query;
 
 
-import com.hipoint.snipback.room.entities.Event;
-import com.hipoint.snipback.room.entities.Snips;
+import com.hipoint.snipback.room.entities.Snip;
 
 import java.util.List;
 @Dao
 public interface SnipsDao {
     @Insert
-    void insert(Snips snips);
+    void insert(Snip snip);
 
     @Insert
-    void update(Snips snips);
+    void update(Snip snip);
     @Insert
-    void delete(Snips snips);
+    void delete(Snip snip);
 
-    @Query("DELETE FROM SNIPS")
+    @Query("DELETE FROM Snip")
     void deleteAll();
 
-    @Query("SELECT * from SNIPS")
-    LiveData<List<Snips>> getSnipsData();
+    @Query("SELECT * from Snip")
+    LiveData<List<Snip>> getSnipsData();
 }

@@ -1,12 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_width="match_parent"
+        android:id="@+id/rv_horizontal"
+        android:orientation="horizontal"
+        tools:listitem="@layout/layout_adater_gallery"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
     <ImageView
-        android:layout_width="145dp"
-        android:layout_height="88dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
         android:id="@+id/image"
+        android:scaleType="fitXY"
+        android:layout_margin="5dp"
         android:src="@drawable/wallpaper_beach"/>
 
 </RelativeLayout>

@@ -22,7 +22,7 @@ public class Event {
     @ColumnInfo(name = COLUMN_EVENT_TITLE)
     private String event_title;
     @ColumnInfo(name = COLUMN_EVENT_CREATED)
-    private String event_created;
+    private long event_created;
 
     public int getEvent_id() {
         return event_id;
@@ -40,11 +40,11 @@ public class Event {
         this.event_title = event_title;
     }
 
-    public String getEvent_created() {
+    public long getEvent_created() {
         return event_created;
     }
 
-    public void setEvent_created(String event_created) {
+    public void setEvent_created(long event_created) {
         this.event_created = event_created;
     }
 }
