@@ -1,6 +1,8 @@
 package com.hipoint.snipback.adapter;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,16 +15,21 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.room.entities.Snip;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHolder> {
 
     private Context mContext;
-    ArrayList<String> arrayList= new ArrayList<>();
-    public AdapterGallery(Context context, ArrayList<String> arrayList) {
+    List<Snip> snipArrayList= new ArrayList<>();
+
+    public AdapterGallery(Context context, List<Snip> allSnips) {
         mContext = context;
-        this.arrayList=arrayList;
+        this.snipArrayList = allSnips;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -32,11 +39,9 @@ public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHold
 
         public ViewHolder(final View v) {
             super(v);
-            image1 = v.findViewById(R.id.image1);
-
-
+            image1 = v.findViewById(R.id.image);
+            recyclerView = v.findViewById(R.id.rv_horizontal);
         }
-
 
     }
 
@@ -50,12 +55,23 @@ public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHold
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
+        Snip snip = snipArrayList.get(position);
+        Bitmap bitmap;
+        try {
+            File f= new File(snip.getThumbnailPath());
+            BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            bitmap = BitmapFactory.decodeStream(new FileInputStream(f), null, options);
+            holder.image1.setImageBitmap(bitmap);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
     @Override
     public int getItemCount() {
-        return arrayList.size();
+        return snipArrayList.size();
     }
 
 

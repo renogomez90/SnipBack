@@ -20,6 +20,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,10 +43,13 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.room.entities.Snip;
 
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -92,22 +96,13 @@ public class FragmentGallery extends Fragment {
         view_label = rootView.findViewById(R.id._button_view_text);
         click=rootView.findViewById(R.id.click);
         click.setVisibility(View.GONE);
-        recycler_view.setLayoutManager(new LinearLayoutManager(getActivity()));
-        ArrayList<String>arrayList = new ArrayList<>();
-        arrayList.add("test");
-        arrayList.add("test");
-        arrayList.add("test");
-        arrayList.add("test");
-        arrayList.add("test");
-        arrayList.add("test");
-        arrayList.add("test");
-        AdapterGallery adapterGallery = new AdapterGallery(getActivity(),arrayList);
+        recycler_view.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+
+        List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
+        AdapterGallery adapterGallery = new AdapterGallery(getActivity(),allSnips);
         recycler_view.setAdapter(adapterGallery);
 
         // exo player
-
-
-
         //
         camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentTrimVideo.newInstance()));
         menu_button.setOnClickListener(v -> {
