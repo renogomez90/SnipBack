@@ -67,6 +67,7 @@ import com.hipoint.snipback.Utils.CountUpTimer;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.Feedback_fragment;
 import com.hipoint.snipback.fragment.FragmentGallery;
+import com.hipoint.snipback.fragment.FragmentGalleryNew;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
@@ -350,7 +351,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         gallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance());
             }
         });
         settings.setOnClickListener(new View.OnClickListener() {
@@ -1176,7 +1177,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             AppClass.getAppInsatnce().saveAllSnips(snip);
 
             if(snip.getIs_virtual_version() == 0) {
-                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
+//                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance());
             }
             Log.d(TAG, "thumbnail saved successfully");
         } catch (FileNotFoundException e) {

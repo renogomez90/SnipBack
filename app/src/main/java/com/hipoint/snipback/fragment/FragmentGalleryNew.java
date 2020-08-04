@@ -4,8 +4,9 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+import android.text.format.DateFormat;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,15 +20,11 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
-import com.hipoint.snipback.AppMainActivity;
-import com.hipoint.snipback.R;
-import com.hipoint.snipback.adapter.AdapterGallery;
-import com.hipoint.snipback.ActivityPlayVideo;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -37,17 +34,33 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
+import com.hipoint.snipback.ActivityPlayVideo;
+import com.hipoint.snipback.AppMainActivity;
+import com.hipoint.snipback.R;
+import com.hipoint.snipback.adapter.AdapterGallery;
+import com.hipoint.snipback.adapter.CategoryItemRecyclerAdapter;
+import com.hipoint.snipback.adapter.MainRecyclerAdapter;
 import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.room.entities.AllCategory;
+import com.hipoint.snipback.room.entities.CategoryItem;
 import com.hipoint.snipback.room.entities.Snip;
 
-
-import java.io.File;
+import java.time.Month;
+import java.time.Year;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
-import static android.app.Activity.RESULT_OK;
-
-public class FragmentGallery extends Fragment implements AdapterGallery.ItemListener {
+public class FragmentGalleryNew extends Fragment  {
     private View rootView;
+    RecyclerView mainCategoryRecycler;
+    MainRecyclerAdapter mainRecyclerAdapter;
+
     ImageButton filter_button, view_button, menu_button, camera_button;
     TextView filter_label, view_label, menu_label, photolabel;
     ImageView autodelete_arrow, player_view_image;
@@ -67,15 +80,19 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
 
     RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con;
 
-    public static FragmentGallery newInstance() {
-        FragmentGallery fragment = new FragmentGallery();
+    List<Snip> snipArrayList= new ArrayList<>();
+
+    public static FragmentGalleryNew newInstance() {
+        FragmentGalleryNew fragment = new FragmentGalleryNew();
         return fragment;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
+        rootView = inflater.inflate(R.layout.fragment_gallery_new, container, false);
+
         (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
         import_con = rootView.findViewById(R.id.import_con);
@@ -91,6 +108,7 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
         click = rootView.findViewById(R.id.click);
         click.setVisibility(View.GONE);
 
+
         // direct to gallery to view
 
         photolabel.setOnClickListener(new View.OnClickListener() {
@@ -103,15 +121,6 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
                 startActivity(intent);
             }
         });
-
-        List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
-
-        recycler_view.setHasFixedSize(true);
-        recycler_view.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-        AdapterGallery adapterGallery = new AdapterGallery(getActivity(), allSnips, FragmentGallery.this);
-
-        recycler_view.setAdapter(adapterGallery);
-
 
         camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentTrimVideo.newInstance()));
         menu_button.setOnClickListener(v -> {
@@ -186,36 +195,33 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
 
             }
         });
+
+        mainCategoryRecycler=rootView.findViewById(R.id.main_recycler);
+
+        List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
+
+        for (final Snip snip : allSnips) {
+            List<AllCategory> allCategoryList=new ArrayList<>();
+            allCategoryList.add(new AllCategory(snip.getVid_creation_date()));
+            allCategoryList.add(new AllCategory(snip.getVid_creation_date()));
+            setMainCategoryRecycler(allCategoryList);
+        }
+
         return rootView;
     }
+    private void setMainCategoryRecycler(List<AllCategory> allCategoriesList){
 
-
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            if (requestCode == 1111) {
-                uri = data.getData();
-                String videopath = uri.getPath();
-                File file = new File(videopath);
-                Log.e("path", file.getAbsolutePath());
-                recycler_view.setVisibility(View.GONE);
-                import_con.setVisibility(View.VISIBLE);
-                click.setVisibility(View.VISIBLE);
-                Glide.with(getActivity())
-                        .load(uri)
-                        .override(145, 145)
-                        .into(player_view_image);
-
-
-            }
-        }
+        RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
+        mainCategoryRecycler.setLayoutManager(layoutManager);
+        mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allCategoriesList);
+        mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
     }
 
-    @Override
-    public void onItemClick(Snip snipvideopath) {
-        Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
-        intent.putExtra("snip", snipvideopath);
-        startActivity(intent);
-    }
+
+//    @Override
+//    public void onItemClick(Snip snipvideopath) {
+//
+//    }
 }
 
 
