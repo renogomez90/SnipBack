@@ -58,13 +58,9 @@ public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHold
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         Snip snip = snipArrayList.get(position);
-        Bitmap bitmap;
         try {
-            File f= new File(snip.getThumbnailPath());
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-            bitmap = BitmapFactory.decodeStream(new FileInputStream(f), null, options);
-            holder.image1.setImageBitmap(bitmap);
+            Bitmap myBitmap = BitmapFactory.decodeFile(snip.getThumbnailPath());
+            holder.image1.setImageBitmap(myBitmap);
             holder.image1.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));
         } catch (Exception e) {
             e.printStackTrace();
