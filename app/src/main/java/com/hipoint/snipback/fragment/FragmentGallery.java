@@ -21,19 +21,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.adapter.AdapterGallery;
-import com.hipoint.snipback.adapter.AdapterPhotos;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
 import com.hipoint.snipback.ActivityPlayVideo;
-import com.hipoint.snipback.VideoMode;
-import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.MediaSource;
@@ -48,7 +42,6 @@ import com.hipoint.snipback.room.entities.Snip;
 
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
@@ -72,7 +65,7 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
     private PlayerView simpleExoPlayerView;
 
 
-    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click,import_con;
+    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con;
 
     public static FragmentGallery newInstance() {
         FragmentGallery fragment = new FragmentGallery();
@@ -85,7 +78,7 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
         rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
         (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
-        import_con=rootView.findViewById(R.id.import_con);
+        import_con = rootView.findViewById(R.id.import_con);
         player_view_image = rootView.findViewById(R.id.player_view_image);
         photolabel = rootView.findViewById(R.id.photolabel);
         recycler_view = rootView.findViewById(R.id.recycler_view);
@@ -115,12 +108,11 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
 
         recycler_view.setHasFixedSize(true);
         recycler_view.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-
         AdapterGallery adapterGallery = new AdapterGallery(getActivity(), allSnips, FragmentGallery.this);
+
         recycler_view.setAdapter(adapterGallery);
 
-        // exo player
-        //
+
         camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentTrimVideo.newInstance()));
         menu_button.setOnClickListener(v -> {
             final Dialog dialog = new Dialog(getActivity());
