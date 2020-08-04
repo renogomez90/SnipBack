@@ -74,8 +74,8 @@ public class ActivityPlayVideo extends Swipper {
 //
 //        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
 
-        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-        mediaMetadataRetriever.setDataSource(this, Uri.parse(snip.getVideoFilePath()));
+//        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+//        mediaMetadataRetriever.setDataSource(this, Uri.parse(snip.getVideoFilePath()));
 
         videoView = (VideoView) findViewById(R.id.videoView);
         Uri video1 = Uri.parse(snip.getVideoFilePath());

@@ -97,9 +97,25 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
         view_label = rootView.findViewById(R.id._button_view_text);
         click = rootView.findViewById(R.id.click);
         click.setVisibility(View.GONE);
-        recycler_view.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+
+        // direct to gallery to view
+
+        photolabel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setAction(android.content.Intent.ACTION_GET_CONTENT);
+                intent.setType("video/*");
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+        });
 
         List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
+
+        recycler_view.setHasFixedSize(true);
+        recycler_view.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+
         AdapterGallery adapterGallery = new AdapterGallery(getActivity(), allSnips, FragmentGallery.this);
         recycler_view.setAdapter(adapterGallery);
 
