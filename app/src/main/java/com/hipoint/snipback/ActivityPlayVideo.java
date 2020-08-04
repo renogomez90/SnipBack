@@ -5,8 +5,12 @@ import android.content.Intent;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.SystemClock;
+import android.util.Log;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.Chronometer;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -22,6 +26,8 @@ import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.hipoint.snipback.room.entities.Snip;
+
+import java.util.concurrent.TimeUnit;
 
 public class ActivityPlayVideo extends Swipper {
     VideoView videoView;
@@ -89,6 +95,7 @@ public class ActivityPlayVideo extends Swipper {
             mp.stop();
         });
         play_pause.setOnCheckedChangeListener((compoundButton, b) -> {
+            play_pause.setChecked(b);
             if (b) {
                 if (videoView.isPlaying()) {
                     videoView.pause();
@@ -105,7 +112,6 @@ public class ActivityPlayVideo extends Swipper {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 videoView.seekTo((int) progress);
-
             }
 
             @Override
@@ -121,6 +127,20 @@ public class ActivityPlayVideo extends Swipper {
         });
         videoView.requestFocus();
         videoView.start();
+
+        if (snip.getIs_virtual_version() == 1) {
+            new CountDownTimer(6000,1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+
+                }
+                @Override
+                public void onFinish() {
+                    videoView.stopPlayback();
+                    play_pause.setChecked(true);
+                }
+            }.start();
+        }
 
 //        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
 //        simpleExoPlayerView = (PlayerView)findViewById(R.id.player_view);

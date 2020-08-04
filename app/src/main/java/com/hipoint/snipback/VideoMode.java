@@ -44,6 +44,8 @@ import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ImageButton;
@@ -319,6 +321,9 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private Chronometer mChronometer;
     private int timerSecond = 0;
     private AppRepository appRepository;
+    private View blinkEffect;
+    private Animation animBlink;
+    private RelativeLayout rlVideo;
 
     public  static  VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
@@ -330,12 +335,15 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         rootView = inflater.inflate(R.layout.fragment_videomode, container, false);
         (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
+        animBlink = AnimationUtils.loadAnimation(getContext(),R.anim.blink);
+        rlVideo = rootView.findViewById(R.id.rl_video);
         gallery = rootView.findViewById(R.id.r_1);
         settings = rootView.findViewById(R.id.r_5);
         recordButton = rootView.findViewById(R.id.rec);
         mChronometer = rootView.findViewById(R.id.chronometer);
         recordButton.setOnClickListener(this);
         mTextureView = rootView.findViewById(R.id.texture);
+        blinkEffect = rootView.findViewById(R.id.overlay);
 
 //        accessRoomDatabase();
         mTextureView.setOnClickListener(this);
@@ -1041,11 +1049,11 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
         appViewModel.getSnipsLiveData().observe(this, snips -> {
             for(Snip snip : snips){
-                if(snip.getParent_snip_id() == parentSnip.getSnip_id()) {
+                if(snip.getParent_snip_id() == parentSnip.getSnip_id() || snip.getSnip_id() == parentSnip.getSnip_id()) {
                     getVideoThumbnail(snip,new File(filePath));
                 }
             }
-            getVideoThumbnail(parentSnip,new File(filePath));
+//            getVideoThumbnail(parentSnip,new File(filePath));
         });
 
 //        ArrayList<String> timegap = getStringArrayPref(getActivity(), "TIMEGAP");
@@ -1063,8 +1071,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 
     private void saveSnipTimeToLocal(){
         if(timerSecond != 0) {
+            rlVideo.startAnimation(animBlink);
+//            blinkEffect.setVisibility(View.VISIBLE);
             int endSecond = timerSecond;
             AppClass.getAppInsatnce().setSnipDurations(endSecond);
+//            blinkEffect.setVisibility(View.GONE);
+            rlVideo.clearAnimation();
         }
 //        Log.i("snap: "+endSecond);
 //        Toast.makeText(getActivity(), endSecond, Toast.LENGTH_LONG).show();
