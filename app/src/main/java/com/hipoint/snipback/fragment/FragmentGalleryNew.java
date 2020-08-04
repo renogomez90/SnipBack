@@ -1,5 +1,6 @@
 package com.hipoint.snipback.fragment;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,7 +15,10 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.adapter.AdapterGallery;
+import com.hipoint.snipback.adapter.CategoryItemRecyclerAdapter;
 import com.hipoint.snipback.adapter.MainRecyclerAdapter;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.AllCategory;
@@ -32,7 +36,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
-public class FragmentGalleryNew extends Fragment {
+public class FragmentGalleryNew extends Fragment  {
     private View rootView;
     RecyclerView mainCategoryRecycler;
     MainRecyclerAdapter mainRecyclerAdapter;
@@ -73,7 +77,10 @@ public class FragmentGalleryNew extends Fragment {
     }
 
 
-
+//    @Override
+//    public void onItemClick(Snip snipvideopath) {
+//
+//    }
 }
 
 

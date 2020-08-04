@@ -1,6 +1,7 @@
 package com.hipoint.snipback.adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
@@ -11,6 +12,7 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.room.entities.CategoryItem;
 import com.hipoint.snipback.room.entities.Snip;
@@ -20,13 +22,12 @@ import java.util.List;
 
 public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryItemRecyclerAdapter.CategoryItemViewHolder> {
     private Context context;
-
+    private ItemListener mListener;
     List<Snip> snipArrayList= new ArrayList<>();
 
-    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips) {
+    public CategoryItemRecyclerAdapter(Context context, List<Snip> snipArrayList) {
         this.context = context;
-
-        this.snipArrayList = allSnips;
+        this.snipArrayList = snipArrayList;
     }
 
     @NonNull
@@ -43,7 +44,15 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
             try {
                 Bitmap myBitmap = BitmapFactory.decodeFile(snip.getThumbnailPath());
                 holder.itemImage.setImageBitmap(myBitmap);
-//            holder.itemImage.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));
+                holder.itemImage.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        Intent intent = new Intent(context, ActivityPlayVideo.class);
+                        intent.putExtra("snip", snip);
+                        context.startActivity(intent);
+                    }
+                });
+//                holder.itemImage.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -64,5 +73,9 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
 
             itemImage=itemView.findViewById(R.id.image);
         }
+    }
+
+    public interface ItemListener {
+        void onItemClick(Snip snipvideopath);
     }
 }
