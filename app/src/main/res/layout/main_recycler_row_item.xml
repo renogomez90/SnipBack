@@ -11,7 +11,7 @@
         android:textColor="@color/colorWhite"
         android:padding="12dp"
         android:textSize="16dp"
-        android:background="#000"/>
+        android:background="@color/colorPrimary"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/item_recycler"
