@@ -45,6 +45,7 @@ public class ActivityPlayVideo extends Swipper {
     double current_pos, total_duration;
     private TextView exo_duration;
     private Switch play_pause;
+    boolean paused=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,8 +60,7 @@ public class ActivityPlayVideo extends Swipper {
         Intent intent = getIntent();
         snip = intent.getParcelableExtra("snip");
 
-
-//        bandwidthMeter = new DefaultBandwidthMeter();
+        //        bandwidthMeter = new DefaultBandwidthMeter();
 //
 //        extractorsFactory = new DefaultExtractorsFactory();
 //
@@ -89,22 +89,45 @@ public class ActivityPlayVideo extends Swipper {
         videoView.setOnPreparedListener(mp -> setVideoProgress());
 
         videoView.setOnCompletionListener(mp -> {
-            // not playVideo
-            // playVideo();
-            mp.start();
-            mp.stop();
+            videoView.stopPlayback();
+            videoView.resume();
+            play_pause.setChecked(true);
         });
         play_pause.setOnCheckedChangeListener((compoundButton, b) -> {
             play_pause.setChecked(b);
             if (b) {
-                if (videoView.isPlaying()) {
-                    videoView.pause();
-                }
+                videoView.pause();
+                paused=true;
+
             } else {
+                paused=false;
                 videoView.start();
                 seek.setProgress((int) current_pos);
+
+                if (snip.getIs_virtual_version() == 1) {
+                    long AUTO_DISMISS_MILLIS = 6000-(long)current_pos;
+                    new CountDownTimer(AUTO_DISMISS_MILLIS, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+
+                        }
+
+                        @Override
+                        public void onFinish() {
+
+                            if (!paused){
+                                videoView.stopPlayback();
+                                videoView.resume();
+                                play_pause.setChecked(true);
+                            }
+
+                        }
+                    }.start();
+                }
+
             }
         });
+
         seek.setMax((int) total_duration);
         //TODO
 //        seek.setMax((int) snip.getSnip_duration());
@@ -129,18 +152,24 @@ public class ActivityPlayVideo extends Swipper {
         videoView.start();
 
         if (snip.getIs_virtual_version() == 1) {
-            new CountDownTimer(6000,1000) {
+            new CountDownTimer(6000, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
 
                 }
+
                 @Override
                 public void onFinish() {
-                    videoView.stopPlayback();
-                    play_pause.setChecked(true);
+                    if (!paused){
+                        videoView.stopPlayback();
+                        videoView.resume();
+                        play_pause.setChecked(true);
+                    }
                 }
             }.start();
         }
+
+
 
 //        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
 //        simpleExoPlayerView = (PlayerView)findViewById(R.id.player_view);
@@ -165,16 +194,25 @@ public class ActivityPlayVideo extends Swipper {
             total_duration = videoView.getDuration();
         }
 
+
         //display video duration
         exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
-//        total.setText(timeConversion((long) total_duration));
-//        current.setText(timeConversion((long) current_pos));
+
         if (snip.getIs_virtual_version() == 1) {
-            videoView.seekTo((int) snip.getStart_time() * 1000);
+            if (current_pos==total_duration){
+                videoView.stopPlayback();
+                videoView.resume();
+                play_pause.setChecked(true);
+            }
+        }
+
+
+        if (snip.getIs_virtual_version() == 1) {
+            videoView.seekTo((int) snip.getStart_time());
         }
         seek.setMax((int) total_duration);
-        final Handler handler = new Handler();
 
+        final Handler handler = new Handler();
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
@@ -185,6 +223,8 @@ public class ActivityPlayVideo extends Swipper {
                     } else {
                         total_duration = videoView.getDuration();
                     }
+
+
                     exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
                     if (current_pos > 0) {
                         ObjectAnimator animation = ObjectAnimator.ofInt(seek, "progress", (int) current_pos);
