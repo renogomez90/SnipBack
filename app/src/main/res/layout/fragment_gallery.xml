@@ -24,9 +24,9 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/photolabel"
         android:layout_above="@+id/llfooter"
-        android:layout_marginLeft="44dp"
-        android:layout_marginRight="44dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="14dp"
         android:visibility="visible" />
 
     <RelativeLayout

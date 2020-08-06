@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.text.format.DateFormat;
 import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,6 +26,7 @@ import com.hipoint.snipback.room.repository.AppViewModel;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -63,10 +65,37 @@ public class AppMainActivity extends AppCompatActivity {
     }
 
     private void addDailyEvent() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
+        String day = "";
+        switch (dayOfWeek) {
+            case Calendar.SUNDAY:
+                day = "Sunday";
+                break;
+            case Calendar.MONDAY:
+                day = "Monday";
+                break;
+            case Calendar.TUESDAY:
+                day = "Tuesday";
+                break;
+            case Calendar.WEDNESDAY:
+                day = "Wednesday";
+                break;
+            case Calendar.THURSDAY:
+                day = "Thurday";
+                break;
+            case Calendar.FRIDAY:
+                day = "Friday";
+                break;
+            case Calendar.SATURDAY:
+                day = "Saturday";
+                break;
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
         String currentDateandTime = sdf.format(new Date());
         Event event = new Event();
-        event.setEvent_title(currentDateandTime);
+        event.setEvent_title(day+", "+currentDateandTime);
         event.setEvent_created(System.currentTimeMillis());
         AppRepository appRepository = new AppRepository(AppClass.getAppInsatnce());
         appRepository.insertEvent(event);

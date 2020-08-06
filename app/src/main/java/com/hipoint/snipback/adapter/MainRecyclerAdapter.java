@@ -27,6 +27,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private Context context;
     private List<EventData> parentSnips;
     private List<EventData> allSnips;
+    private int eventId = -1;
 
     public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip) {
         this.context = context;
@@ -43,7 +44,14 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     @Override
     public void onBindViewHolder(@NonNull MainViewHolder holder, int position) {
 //        holder.categoryTitle.setText(getDate(parentSnips.get(position).getEvent_created()));
-        holder.categoryTitle.setText(parentSnips.get(position).getEvent_title());
+        if(parentSnips.get(position).getEvent_id() != eventId){
+            holder.categoryTitle.setVisibility(View.VISIBLE);
+            holder.categoryTitle.setText(parentSnips.get(position).getEvent_title());
+        }else{
+            holder.categoryTitle.setVisibility(View.GONE);
+        }
+        eventId = parentSnips.get(position).getEvent_id();
+
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
         List<Integer> parentId = new ArrayList<>();
         for(int i = 0; i < allParentSnip.size(); i++){

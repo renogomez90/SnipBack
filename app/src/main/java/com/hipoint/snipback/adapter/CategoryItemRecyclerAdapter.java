@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -39,9 +40,16 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
 
     @Override
     public void onBindViewHolder(@NonNull CategoryItemViewHolder holder, int position) {
-        if (snipArrayList !=null){
+        if (snipArrayList != null){
             Snip snip = snipArrayList.get(position);
             try {
+                if(snip.getIs_virtual_version() == 1){
+                    holder.tvVersionLabel.setVisibility(View.VISIBLE);
+                    holder.tvVersionLabel.setText("VERSION "+position);
+                }else{
+                    holder.tvVersionLabel.setVisibility(View.INVISIBLE);
+                }
+
                 Bitmap myBitmap = BitmapFactory.decodeFile(snip.getThumbnailPath());
                 holder.itemImage.setImageBitmap(myBitmap);
                 holder.itemImage.setOnClickListener(new View.OnClickListener() {
@@ -68,10 +76,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
 
     public class CategoryItemViewHolder extends RecyclerView.ViewHolder {
         ImageView itemImage;
+        TextView tvVersionLabel;
+        TextView tvDuration;
         public CategoryItemViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            itemImage=itemView.findViewById(R.id.image);
+            itemImage = itemView.findViewById(R.id.image);
+            tvVersionLabel = itemView.findViewById(R.id.tvVersionLabel);
+            tvDuration = itemView.findViewById(R.id.tvDuration);
         }
     }
 
