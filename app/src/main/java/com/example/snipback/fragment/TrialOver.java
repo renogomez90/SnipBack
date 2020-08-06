@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -28,8 +29,7 @@ public class TrialOver extends Fragment {
     private TextView tv_1, tv_2, tv_4, tv_6,tv_1_1;
     private Context mContext;
     private ImageView close;
-    private Button bt1,bt2;
-
+    RelativeLayout rL1,rL2;
     public  static TrialOver newInstance() {
         TrialOver fragment = new TrialOver();
         return fragment;
@@ -51,8 +51,8 @@ public class TrialOver extends Fragment {
         tv_1_1=view.findViewById(R.id.tv_1_1);
 
         close=view.findViewById(R.id.close);
-        bt1=view.findViewById(R.id.bt1);
-        bt2=view.findViewById(R.id.bt2);
+        rL1=view.findViewById(R.id.rlAmtChange1);
+        rL2=view.findViewById(R.id.rlAmtChange2);
         return view;
     }
 
@@ -80,13 +80,13 @@ public class TrialOver extends Fragment {
                 getActivity().onBackPressed();
             }
         });
-        bt1.setOnClickListener(new OnClickListener() {
+        rL1.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance());
             }
         });
-        bt2.setOnClickListener(new OnClickListener() {
+        rL2.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance());
