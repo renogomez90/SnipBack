@@ -64,7 +64,7 @@
         android:layout_toLeftOf="@+id/play_pouse"
         android:background="@drawable/background_play_pouse"
         android:gravity="center"
-        android:visibility="visible">
+        android:visibility="invisible">
 
         <ImageView
             android:layout_width="11dp"
@@ -102,7 +102,7 @@
         android:layout_toRightOf="@+id/play_pouse"
         android:background="@drawable/background_play_pouse"
         android:gravity="center"
-        android:visibility="visible">
+        android:visibility="invisible">
 
         <ImageView
             android:layout_width="11dp"

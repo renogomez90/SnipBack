@@ -10,7 +10,6 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
@@ -41,6 +40,7 @@ import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
@@ -60,16 +60,15 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.legacy.app.FragmentCompat;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
-import com.hipoint.snipback.R;
 import com.hipoint.snipback.Utils.AutoFitTextureView;
 import com.hipoint.snipback.Utils.CountUpTimer;
+import com.hipoint.snipback.Utils.OnSwipeTouchListener;
+import com.hipoint.snipback.Utils.gesture.GestureFilter;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.Feedback_fragment;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
-import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
@@ -80,9 +79,6 @@ import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
-
-import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -100,7 +96,7 @@ import java.util.concurrent.TimeUnit;
 
 import static android.view.View.VISIBLE;
 
-public class VideoMode extends Fragment implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted {
+public class VideoMode extends Fragment implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted{
 
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
@@ -112,6 +108,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private static final String FRAGMENT_DIALOG = "dialog";
     private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
+//    private GestureFilter detector;
 
     private static final String[] VIDEO_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -152,6 +149,15 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
      * preview.
      */
     private CameraCaptureSession mPreviewSession;
+
+//    AppMainActivity.MyOnTouchListener onTouchListener;
+//
+//    private OnSwipeTouchListener touchListener=new OnSwipeTouchListener(getActivity()) {
+//        public void impelinfragment() {
+//            //do what you want:D
+//            Log.i("swipe","swipe left");
+//        }
+//    };
 
     /**
      * {@link TextureView.SurfaceTextureListener} handles several lifecycle events on a
@@ -352,33 +358,32 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         mTextureView = rootView.findViewById(R.id.texture);
         blinkEffect = rootView.findViewById(R.id.overlay);
 
+//        detector = new GestureFilter(getActivity(), this);
+
+//        ((AppMainActivity)getActivity()).registerMyOnTouchListener(new AppMainActivity.MyOnTouchListener() {
+//            @Override
+//            public void onTouch(MotionEvent ev) {
+//                touchListener.onTouch(ev);
+//            }
+//        });
+
+//        rlVideo.setOnTouchListener((view, motionEvent) -> mTextureView.onTouch(view, motionEvent));
 //        accessRoomDatabase();
         mTextureView.setOnClickListener(this);
-        gallery.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance());
-            }
-        });
-        settings.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDialogSettingsMain();
-            }
-        });
+        gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance()));
+        settings.setOnClickListener(v -> showDialogSettingsMain());
         appRepository = AppRepository.getInstance();
         appRepository.getLastInsertedEventId(this);
 
-//        countUpTimer = new CountUpTimer(1000) {
-//            public void onTick(int second) {
-//                timerSecond = second;
-//                String hms = String.format("%02d:%02d", TimeUnit.MILLISECONDS.toMinutes(second), TimeUnit.MILLISECONDS.toSeconds(second) - TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(second)));
-//                tvTimer.setText(hms);
-//            }
-//        };
-
         mChronometer.setOnChronometerTickListener(arg0 -> {
 //                if (!resume) {
+            long time = SystemClock.elapsedRealtime() - mChronometer.getBase();
+            int h   = (int)(time /3600000);
+            int m = (int)(time - h*3600000)/60000;
+            int s= (int)(time - h*3600000- m*60000)/1000 ;
+            String t = (h < 10 ? "0"+h: h)+":"+(m < 10 ? "0"+m: m)+":"+ (s < 10 ? "0"+s: s);
+            mChronometer.setText(t);
+
             long minutes = ((SystemClock.elapsedRealtime() - mChronometer.getBase()) / 1000) / 60;
             long seconds = ((SystemClock.elapsedRealtime() - mChronometer.getBase()) / 1000) % 60;
             int elapsedMillis = (int) (SystemClock.elapsedRealtime() - mChronometer.getBase());
@@ -917,6 +922,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         mMediaRecorder.stop();
         mMediaRecorder.reset();
         mChronometer.stop();
+        mChronometer.setVisibility(View.INVISIBLE);
         mChronometer.setText("");
         Activity activity = getActivity();
         if (null != activity) {
@@ -1211,6 +1217,36 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             e.printStackTrace();
         }
     }
+
+//    public void dispatchTouchEvent(MotionEvent me) {
+//        // Call onTouchEvent of SimpleGestureFilter class
+//        this.detector.onTouchEvent(me);
+//    }
+
+//    @Override
+//    public void onSwipe(int direction) {
+//
+//        //Detect the swipe gestures and display toast
+//        String showToastMessage = "";
+//
+//        switch (direction) {
+//
+//            case GestureFilter.SWIPE_RIGHT:
+//                showToastMessage = "You have Swiped Right.";
+//                break;
+//            case GestureFilter.SWIPE_LEFT:
+//                showToastMessage = "You have Swiped Left.";
+//                break;
+//            case GestureFilter.SWIPE_DOWN:
+//                showToastMessage = "You have Swiped Down.";
+//                break;
+//            case GestureFilter.SWIPE_UP:
+//                showToastMessage = "You have Swiped Up.";
+//                break;
+//
+//        }
+//        Toast.makeText(getActivity(), showToastMessage, Toast.LENGTH_SHORT).show();
+//    }
 
 
 //    public  void accessRoomDatabase(){

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.MotionEvent;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -15,7 +16,9 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.Utils.gesture.GestureFilter;
 import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.fragment.FragmentGalleryNew;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
@@ -39,6 +42,7 @@ public class AppMainActivity extends AppCompatActivity {
 
     private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
+    private List<MyOnTouchListener> onTouchListeners;
 
     AppViewModel appViewModel;
     private ArrayList<String> thumbs = new ArrayList<>();
@@ -47,6 +51,11 @@ public class AppMainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appmain_activity);
+
+        if(onTouchListeners==null)
+        {
+            onTouchListeners=new ArrayList<>();
+        }
 
         appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
 
@@ -62,6 +71,10 @@ public class AppMainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
 
+    }
+
+    public void registerMyOnTouchListener(MyOnTouchListener listener){
+        onTouchListeners.add(listener);
     }
 
     private void addDailyEvent() {
@@ -229,18 +242,27 @@ public class AppMainActivity extends AppCompatActivity {
         }
     }
 
-
+//    public void loadFragment(Fragment fragment,boolean addtoBackStack) {
     public void loadFragment(Fragment fragment) {
-        FragmentTransaction fts = getSupportFragmentManager().beginTransaction();
-        if (fts != null) {
-            fts.replace(R.id.mainFragment, fragment);
-            fts.addToBackStack(null);
-            fts.commit();
+        boolean addtoBackStack = false;
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.mainFragment, fragment);
+        if (addtoBackStack || fragment instanceof FragmentGalleryNew) {
+            ft.addToBackStack(null);
         }
+        ft.commitAllowingStateLoss();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        for(MyOnTouchListener listener:onTouchListeners)
+            listener.onTouch(ev);
+        return super.dispatchTouchEvent(ev);
     }
 
     @Override
     public void onBackPressed() {
+//        Fragment myFragment = getSupportFragmentManager().findFragmentById(R.id.mainFragment);
         int count = getSupportFragmentManager().getBackStackEntryCount();
         if (count == 0) {
             super.onBackPressed();
@@ -258,6 +280,10 @@ public class AppMainActivity extends AppCompatActivity {
             }
         }
         return true;
+    }
+
+    public interface MyOnTouchListener {
+        public void onTouch(MotionEvent ev);
     }
 
 
