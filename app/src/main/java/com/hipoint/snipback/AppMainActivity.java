@@ -16,6 +16,7 @@ import androidx.lifecycle.ViewModelProviders;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.Event;
+import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
 import com.hipoint.snipback.room.repository.AppRepository;
@@ -62,7 +63,7 @@ public class AppMainActivity extends AppCompatActivity {
     }
 
     private void addDailyEvent() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd z");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
         String currentDateandTime = sdf.format(new Date());
         Event event = new Event();
         event.setEvent_title(currentDateandTime);
@@ -90,6 +91,12 @@ public class AppMainActivity extends AppCompatActivity {
 
     private void loadGalleryDataFromDB() {
         getFilePathFromInternalStorage();
+        List<Event> allEvents = new ArrayList<>();
+        appViewModel.getEventLiveData().observe(this, events -> {
+            if(events != null && events.size() > 0){
+                allEvents.addAll(events);
+            }
+        });
         List<Hd_snips> hdSnips = new ArrayList<>();
         appViewModel.getHDSnipsLiveData().observe(this, hd_snips -> {
             if (hd_snips != null && hd_snips.size() > 0) {
@@ -99,6 +106,7 @@ public class AppMainActivity extends AppCompatActivity {
         appViewModel.getSnipsLiveData().observe(this, snips -> {
             if (snips != null && snips.size() > 0) {
                 AppClass.getAppInsatnce().clearAllSnips();
+                AppClass.getAppInsatnce().clearAllParentSnips();
                 for (Snip snip : snips) {
                     for (Hd_snips hdSnip : hdSnips) {
                         if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {
@@ -113,16 +121,34 @@ public class AppMainActivity extends AppCompatActivity {
                                             int snipId = Integer.parseInt(snipName[0]);
                                             if(snipId == snip.getSnip_id()){
                                                 snip.setThumbnailPath(filePath);
-                                                AppClass.getAppInsatnce().saveAllSnips(snip);
+                                                for(Event event : allEvents){
+                                                    if(event.getEvent_id() == snip.getEvent_id()){
+                                                        EventData eventData = new EventData();
+                                                        eventData.setEvent_id(event.getEvent_id());
+                                                        eventData.setEvent_created(event.getEvent_created());
+                                                        eventData.setEvent_title(event.getEvent_title());
+                                                        eventData.addEventSnip(snip);
+                                                        AppClass.getAppInsatnce().saveAllEventSnips(eventData);
+                                                    }
+                                                    if(event.getEvent_id() == snip.getEvent_id() && snip.getParent_snip_id() == 0){
+                                                        EventData eventData = new EventData();
+                                                        eventData.setEvent_id(event.getEvent_id());
+                                                        eventData.setEvent_created(event.getEvent_created());
+                                                        eventData.setEvent_title(event.getEvent_title());
+                                                        eventData.addEventParentSnip(snip);
+                                                        AppClass.getAppInsatnce().setEventParentSnips(eventData);
+                                                    }
+                                                }
                                             }
                                         }
 
                                     }
                                 }
                             }
-
+                            Log.i("HOME","LOOPING COMPLETED");
                         }
                     }
+
                 }
 
             }

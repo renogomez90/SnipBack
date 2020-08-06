@@ -284,7 +284,7 @@ public class FragmentPlayVideo extends Fragment {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
                     player.release();
-                    ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
+                    ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance());
                     return true;
                 }
                 return false;

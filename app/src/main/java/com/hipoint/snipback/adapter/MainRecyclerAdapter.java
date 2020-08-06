@@ -13,6 +13,8 @@ import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.AllCategory;
 import com.hipoint.snipback.room.entities.CategoryItem;
+import com.hipoint.snipback.room.entities.Event;
+import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.util.ArrayList;
@@ -23,11 +25,13 @@ import java.util.Locale;
 public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapter.MainViewHolder> {
 
     private Context context;
-    private List<AllCategory> allCategoriesList;
+    private List<EventData> parentSnips;
+    private List<EventData> allSnips;
 
-    public MainRecyclerAdapter(Context context, List<AllCategory> allCategoriesList) {
+    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip) {
         this.context = context;
-        this.allCategoriesList = allCategoriesList;
+        this.allSnips = allEventSnip;
+        this.parentSnips = allParentSnip;
     }
 
     @NonNull
@@ -38,13 +42,20 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 
     @Override
     public void onBindViewHolder(@NonNull MainViewHolder holder, int position) {
-        holder.categoryTitle.setText(getDate(allCategoriesList.get(position).getCategoryTitle()));
-        setCatItemRecycler(holder.itemRecycler);
+//        holder.categoryTitle.setText(getDate(parentSnips.get(position).getEvent_created()));
+        holder.categoryTitle.setText(parentSnips.get(position).getEvent_title());
+        List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
+        List<Integer> parentId = new ArrayList<>();
+        for(int i = 0; i < allParentSnip.size(); i++){
+            parentId.add(allParentSnip.get(0).getSnip_id());
+        }
+        List<Snip> childSnip = AppClass.getAppInsatnce().getChildSnipsByParentSnipId(parentId);
+        setCatItemRecycler(holder.itemRecycler,childSnip);
     }
 
     @Override
     public int getItemCount() {
-        return allCategoriesList.size();
+        return parentSnips.size();
     }
 
     public class MainViewHolder extends RecyclerView.ViewHolder {
@@ -58,9 +69,9 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         }
     }
 
-    private void setCatItemRecycler(RecyclerView recyclerView){
-        List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
-        CategoryItemRecyclerAdapter itemRecyclerAdapter=new CategoryItemRecyclerAdapter(context,allSnips);
+    private void setCatItemRecycler(RecyclerView recyclerView,List<Snip> allEventSnips){
+
+        CategoryItemRecyclerAdapter itemRecyclerAdapter=new CategoryItemRecyclerAdapter(context,allEventSnips);
         recyclerView.setLayoutManager(new LinearLayoutManager(context,RecyclerView.HORIZONTAL,false));
         recyclerView.setAdapter(itemRecyclerAdapter);
     }
