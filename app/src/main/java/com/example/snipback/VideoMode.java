@@ -13,9 +13,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.example.snipback.fragment.Feedback_fragment;
-import com.example.snipback.fragment.FragmentGallery;
-import com.example.snipback.fragment.TrialOver;
+
+import com.hipoint.snipback.AppMainActivity;
+import com.hipoint.snipback.R;
+import com.hipoint.snipback.fragment.Feedback_fragment;
+import com.hipoint.snipback.fragment.FragmentGallery;
+import com.hipoint.snipback.fragment.TrialOver;
 
 public class VideoMode extends Fragment {
     private View rootView;
