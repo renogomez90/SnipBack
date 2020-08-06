@@ -1085,7 +1085,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             rlVideo.clearAnimation();
 
             // on screen tap blinking starts
-            
+
             blinkEffect.setVisibility(VISIBLE);
             blinkEffect.animate()
                     .alpha(02f)

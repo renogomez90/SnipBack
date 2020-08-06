@@ -14,6 +14,7 @@ import android.widget.Chronometer;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -45,7 +46,7 @@ public class ActivityPlayVideo extends Swipper {
     double current_pos, total_duration;
     private TextView exo_duration;
     private Switch play_pause;
-    boolean paused=false;
+    boolean paused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,15 +98,18 @@ public class ActivityPlayVideo extends Swipper {
             play_pause.setChecked(b);
             if (b) {
                 videoView.pause();
-                paused=true;
+                paused = true;
 
             } else {
-                paused=false;
+                paused = false;
                 videoView.start();
                 seek.setProgress((int) current_pos);
 
+
                 if (snip.getIs_virtual_version() == 1) {
-                    long AUTO_DISMISS_MILLIS = 6000-(long)current_pos;
+
+
+                    long AUTO_DISMISS_MILLIS = 6000 - (long) current_pos;
                     new CountDownTimer(AUTO_DISMISS_MILLIS, 1000) {
                         @Override
                         public void onTick(long millisUntilFinished) {
@@ -115,7 +119,7 @@ public class ActivityPlayVideo extends Swipper {
                         @Override
                         public void onFinish() {
 
-                            if (!paused){
+                            if (!paused) {
                                 videoView.stopPlayback();
                                 videoView.resume();
                                 play_pause.setChecked(true);
@@ -135,6 +139,7 @@ public class ActivityPlayVideo extends Swipper {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 videoView.seekTo((int) progress);
+
             }
 
             @Override
@@ -146,6 +151,8 @@ public class ActivityPlayVideo extends Swipper {
             public void onStopTrackingTouch(SeekBar seekBar) {
                 current_pos = seekBar.getProgress();
                 videoView.seekTo((int) current_pos);
+
+
             }
         });
         videoView.requestFocus();
@@ -156,11 +163,12 @@ public class ActivityPlayVideo extends Swipper {
                 @Override
                 public void onTick(long millisUntilFinished) {
 
+
                 }
 
                 @Override
                 public void onFinish() {
-                    if (!paused){
+                    if (!paused) {
                         videoView.stopPlayback();
                         videoView.resume();
                         play_pause.setChecked(true);
@@ -168,7 +176,6 @@ public class ActivityPlayVideo extends Swipper {
                 }
             }.start();
         }
-
 
 
 //        player = ExoPlayerFactory.newSimpleInstance(this, trackSelector);
@@ -187,9 +194,15 @@ public class ActivityPlayVideo extends Swipper {
     public void setVideoProgress() {
         //get the video duration
         //TODO
+
         current_pos = videoView.getCurrentPosition();
+
+
+
         if (snip.getIs_virtual_version() == 1) {
             total_duration = 5 * 1000;
+
+
         } else {
             total_duration = videoView.getDuration();
         }
@@ -199,7 +212,7 @@ public class ActivityPlayVideo extends Swipper {
         exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
 
         if (snip.getIs_virtual_version() == 1) {
-            if (current_pos==total_duration){
+            if (current_pos == total_duration) {
                 videoView.stopPlayback();
                 videoView.resume();
                 play_pause.setChecked(true);
@@ -218,8 +231,19 @@ public class ActivityPlayVideo extends Swipper {
             public void run() {
                 try {
                     current_pos = videoView.getCurrentPosition();
-                    if (snip.getIs_virtual_version() == 1) {
+                    Log.d("position", String.valueOf(current_pos));
+
+
+                    if (snip.getIs_virtual_version() == 1 ) {
                         total_duration = 5 * 1000;
+//                        if (current_pos > total_duration){
+//                            disableSeek();
+//                            seek.setMax((int) total_duration);
+//                        } else
+//                        {
+//                            enableSeek();
+//                        }
+
                     } else {
                         total_duration = videoView.getDuration();
                     }
@@ -246,10 +270,12 @@ public class ActivityPlayVideo extends Swipper {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
+
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
+
 
             }
 
