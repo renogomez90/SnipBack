@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.format.DateFormat;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -43,8 +45,13 @@ import com.hipoint.snipback.adapter.MainRecyclerAdapter;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.AllCategory;
 import com.hipoint.snipback.room.entities.CategoryItem;
+import com.hipoint.snipback.room.entities.Event;
+import com.hipoint.snipback.room.entities.EventData;
+import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
+import com.hipoint.snipback.room.repository.AppViewModel;
 
+import java.io.File;
 import java.time.Month;
 import java.time.Year;
 import java.time.ZoneId;
@@ -196,32 +203,140 @@ public class FragmentGalleryNew extends Fragment  {
             }
         });
 
-        mainCategoryRecycler=rootView.findViewById(R.id.main_recycler);
-
-        List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
-
-        for (final Snip snip : allSnips) {
-            List<AllCategory> allCategoryList=new ArrayList<>();
-            allCategoryList.add(new AllCategory(snip.getVid_creation_date()));
-            allCategoryList.add(new AllCategory(snip.getVid_creation_date()));
-            setMainCategoryRecycler(allCategoryList);
+        mainCategoryRecycler = rootView.findViewById(R.id.main_recycler);
+        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
+            loadGalleryDataFromDB();
+        }else{
+            List<EventData> allSnipEvent = AppClass.getAppInsatnce().getAllSnip();
+            List<EventData> allParentSnipEvent = AppClass.getAppInsatnce().getAllParentSnip();
+            RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
+            mainCategoryRecycler.setLayoutManager(layoutManager);
+            mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allParentSnipEvent,allSnipEvent);
+            mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
         }
 
         return rootView;
     }
-    private void setMainCategoryRecycler(List<AllCategory> allCategoriesList){
 
-        RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
-        mainCategoryRecycler.setLayoutManager(layoutManager);
-        mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allCategoriesList);
-        mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+    private void loadGalleryDataFromDB() {
+        AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        getFilePathFromInternalStorage();
+        List<Event> allEvents = new ArrayList<>();
+        appViewModel.getEventLiveData().observe(this, events -> {
+            if(events != null && events.size() > 0){
+                allEvents.addAll(events);
+            }
+        });
+        List<Hd_snips> hdSnips = new ArrayList<>();
+        appViewModel.getHDSnipsLiveData().observe(this, hd_snips -> {
+            if (hd_snips != null && hd_snips.size() > 0) {
+                hdSnips.addAll(hd_snips);
+            }
+        });
+        appViewModel.getSnipsLiveData().observe(this, snips -> {
+            if (snips != null && snips.size() > 0) {
+                AppClass.getAppInsatnce().clearAllSnips();
+                AppClass.getAppInsatnce().clearAllParentSnips();
+                for (Snip snip : snips) {
+                    for (Hd_snips hdSnip : hdSnips) {
+                        if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {
+                            snip.setVideoFilePath(hdSnip.getVideo_path_processed());
+                            if(thumbs.size() > 0) {
+                                for (String filePath : thumbs) {
+                                    File file = new File(filePath);
+                                    String[] snipNameWithExtension = file.getName().split("_");
+                                    if(snipNameWithExtension.length > 0){
+                                        String[] snipName = snipNameWithExtension[1].split("\\.");
+                                        if(snipName.length > 0) {
+                                            int snipId = Integer.parseInt(snipName[0]);
+                                            if(snipId == snip.getSnip_id()){
+                                                snip.setThumbnailPath(filePath);
+                                                for(Event event : allEvents){
+                                                    if(event.getEvent_id() == snip.getEvent_id()){
+                                                        EventData eventData = new EventData();
+                                                        eventData.setEvent_id(event.getEvent_id());
+                                                        eventData.setEvent_created(event.getEvent_created());
+                                                        eventData.setEvent_title(event.getEvent_title());
+                                                        eventData.addEventSnip(snip);
+                                                        AppClass.getAppInsatnce().saveAllEventSnips(eventData);
+                                                    }
+                                                    if(event.getEvent_id() == snip.getEvent_id() && snip.getParent_snip_id() == 0){
+                                                        EventData eventData = new EventData();
+                                                        eventData.setEvent_id(event.getEvent_id());
+                                                        eventData.setEvent_created(event.getEvent_created());
+                                                        eventData.setEvent_title(event.getEvent_title());
+                                                        eventData.addEventParentSnip(snip);
+                                                        AppClass.getAppInsatnce().setEventParentSnips(eventData);
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                }
+                List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
+                List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
+                RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
+                mainCategoryRecycler.setLayoutManager(layoutManager);
+                mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allParentSnip,allSnips);
+                mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+            }
+        });
+    }
+    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
+    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
+    private ArrayList<String> thumbs = new ArrayList<>();
+
+    private void getFilePathFromInternalStorage() {
+        File directory;
+        File photoDirectory;
+        if (Environment.getExternalStorageState() == null) {
+            //create new file directory object
+            directory = new File(Environment.getDataDirectory()
+                    + "/" + VIDEO_DIRECTORY_NAME + "/");
+            photoDirectory = new File(Environment.getDataDirectory()
+                    + "/" + VIDEO_DIRECTORY_NAME + "/" + THUMBS_DIRECTORY_NAME + "/");
+            if (photoDirectory.exists()) {
+                File[] dirFiles = photoDirectory.listFiles();
+                if (dirFiles != null && dirFiles.length != 0) {
+                    for (int ii = 0; ii <= dirFiles.length; ii++) {
+                        thumbs.add(dirFiles[ii].getAbsolutePath());
+                    }
+                }
+            }
+            // if no directory exists, create new directory
+            if (!directory.exists()) {
+                directory.mkdir();
+            }
+        } else if (Environment.getExternalStorageState() != null) {
+            // search for directory on SD card
+            directory = new File(Environment.getExternalStorageDirectory()
+                    + "/" + VIDEO_DIRECTORY_NAME + "/");
+            photoDirectory = new File(
+                    Environment.getExternalStorageDirectory()
+                            + "/" + VIDEO_DIRECTORY_NAME + "/" + THUMBS_DIRECTORY_NAME + "/");
+            if (photoDirectory.exists()) {
+                File[] dirFiles = photoDirectory.listFiles();
+                if (dirFiles != null && dirFiles.length > 0) {
+                    for (File dirFile : dirFiles) {
+                        thumbs.add(dirFile.getAbsolutePath());
+                    }
+                    dirFiles = null;
+                }
+            }
+            // if no directory exists, create new directory to store test
+            // results
+            if (!directory.exists()) {
+                directory.mkdir();
+            }
+        }
     }
 
-
-//    @Override
-//    public void onItemClick(Snip snipvideopath) {
-//
-//    }
 }
 
 
