@@ -59,16 +59,18 @@ public class ActivityPlayVideo extends Swipper {
         snip = intent.getParcelableExtra("snip");
         Uri video1 = Uri.parse(snip.getVideoFilePath());
         videoView.setVideoURI(video1);
+        videoView.requestFocus();
+        videoView.start();
 
         // play forward and backward
         play_forwardbutton=findViewById(R.id.play_forwardbutton);
         play_forwardbutton.setOnClickListener(v -> {
 //            videoView.stopPlayback();
 //            videoView.resume();
-            List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
+//            List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
 
-                Uri video = Uri.parse(allSnips.get(1)+"");
-                videoView.setVideoURI(video);
+//                Uri video = Uri.parse(allSnips.get(1)+"");
+//                videoView.setVideoURI(video);
 
         });
 
@@ -88,6 +90,7 @@ public class ActivityPlayVideo extends Swipper {
 
             } else {
                 paused=false;
+                videoView.seekTo((int) snip.getStart_time()*1000);
                 videoView.start();
                 seek.setProgress((int) current_pos);
 
@@ -114,33 +117,14 @@ public class ActivityPlayVideo extends Swipper {
             }
         });
 
-        seek.setMax((int) total_duration);
+
         //TODO
-//        seek.setMax((int) snip.getSnip_duration());
+        if (snip.getIs_virtual_version() == 1) {
+            seek.setMax((int) snip.getSnip_duration()*1000);
+        }else {
+            seek.setMax((int) total_duration);
+        }
 
-        seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                videoView.seekTo((int) progress);
-
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                paused=true;
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                paused=false;
-                current_pos = seekBar.getProgress();
-                videoView.seekTo((int) current_pos);
-
-            }
-        });
-
-        videoView.requestFocus();
-        videoView.start();
 
         if (snip.getIs_virtual_version() == 1) {
             new CountDownTimer(6000, 1000) {
@@ -168,26 +152,35 @@ public class ActivityPlayVideo extends Swipper {
     public void setVideoProgress() {
         //get the video duration
         //TODO
-        current_pos = videoView.getCurrentPosition();
+
         if (snip.getIs_virtual_version() == 1) {
             total_duration = 5 * 1000;
         } else {
             total_duration = videoView.getDuration();
+            current_pos = videoView.getCurrentPosition();
         }
         //display video duration
         exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
 
         if (snip.getIs_virtual_version() == 1) {
-            videoView.seekTo((int) snip.getStart_time());
+            videoView.seekTo((int) snip.getStart_time()*1000);
         }
-        seek.setMax((int) total_duration);
+        if (snip.getIs_virtual_version() == 1) {
+            seek.setMax((int) snip.getSnip_duration()*1000);
+        }else {
+            seek.setMax((int) total_duration);
+        }
 
         final Handler handler = new Handler();
         Runnable runnable = new Runnable() {
             @Override
             public void run() {
                 try {
-                    current_pos = videoView.getCurrentPosition();
+                    if (snip.getIs_virtual_version() == 1) {
+                        current_pos =videoView.getCurrentPosition()-(snip.getStart_time()*1000);
+                    }else {
+                        current_pos = videoView.getCurrentPosition();
+                    }
                     if (snip.getIs_virtual_version() == 1) {
                         total_duration = 5 * 1000;
                     } else {
@@ -201,17 +194,7 @@ public class ActivityPlayVideo extends Swipper {
                         animation.setInterpolator(new DecelerateInterpolator());
                         animation.start();
                     }
-//                    if (snip.getIs_virtual_version() == 1){
-////                        seek.setProgress((int) snip.getStart_time());
-////                    }else {
-////                        seek.setProgress((int) current_pos);
-////                    }
 
-                    if (snip.getIs_virtual_version() == 1){
-                        seek.setProgress((int) snip.getStart_time());
-                    }else {
-                        seek.setProgress((int) current_pos);
-                    }
 
                     handler.postDelayed(this, 1000);
                 } catch (IllegalStateException ed) {
