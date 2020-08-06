@@ -1,6 +1,8 @@
 package com.hipoint.snipback;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -95,6 +97,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
+import static android.view.View.VISIBLE;
 
 public class VideoMode extends Fragment implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted {
 
@@ -874,9 +878,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                             // UI
                            // mButtonVideo.setText(R.string.stop);
                             mIsRecordingVideo = true;
-
                             // Start recording
                             mMediaRecorder.start();
+
+
                         }
                     });
                 }
@@ -1078,6 +1083,21 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             AppClass.getAppInsatnce().setSnipDurations(endSecond);
 //            blinkEffect.setVisibility(View.GONE);
             rlVideo.clearAnimation();
+
+            // on screen tap blinking starts
+            
+            blinkEffect.setVisibility(VISIBLE);
+            blinkEffect.animate()
+                    .alpha(02f)
+                    .setDuration(100)
+                    .setListener(new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animation) {
+                            blinkEffect.setVisibility(View.GONE);
+                            blinkEffect.clearAnimation();
+                        }
+                    });
+
         }
 //        Log.i("snap: "+endSecond);
 //        Toast.makeText(getActivity(), endSecond, Toast.LENGTH_LONG).show();
