@@ -13,5 +13,18 @@
     <color name="colorPrimaryGrey">#989DA5</color>
     <color name="progress_color">#C1C1C1</color>
 
+    <color name="colorTheme">#000000</color>
+    <color name="colorSkyTheme">#000000</color>
+    <color name="colorWhite">#fff</color>
+    <color name="colorBlack">#000</color>
+    <color name="colorTxt">#212121</color>
+    <color name="colorHint">#707070</color>
+    <color name="colorPrimaryLt">#615C5585</color>
+    <color name="colorBlackLt">#80000000</color>
+    <color name="colorWhiteLt">#80FFFFFF</color>
+    <color name="colorThemeRed">#F00606</color>
+    <color name="colorDefaultBg">#f8f9fa</color>
+    <color name="colorGreyLt">#AD87868A</color>
+
 
 </resources>

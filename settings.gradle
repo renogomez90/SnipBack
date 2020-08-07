@@ -1,3 +1,2 @@
-include ':TrimLibrary'
 rootProject.name='SnipBack'
 include ':app'

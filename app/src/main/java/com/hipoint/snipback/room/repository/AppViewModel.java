@@ -17,6 +17,7 @@ public class AppViewModel extends AndroidViewModel {
     private LiveData<List<Event>> mAllEvents;
     private LiveData<List<Hd_snips>> mAllHDSnip;
     private LiveData<List<Snip>> mAllSnips;
+    private LiveData<Event> mEventById;
 
     public AppViewModel(@NonNull Application application) {
         super(application);
@@ -30,6 +31,11 @@ public class AppViewModel extends AndroidViewModel {
         return mAllEvents;
     }
 
+    public LiveData<Event> getEventByIdLiveData(int eventId) {
+        mEventById = appRepository.getEventById(eventId);
+        return mEventById;
+    }
+
     public LiveData<List<Hd_snips>> getHDSnipsLiveData() {
         return mAllHDSnip;
     }
@@ -37,4 +43,5 @@ public class AppViewModel extends AndroidViewModel {
     public LiveData<List<Snip>> getSnipsLiveData() {
         return mAllSnips;
     }
+
 }

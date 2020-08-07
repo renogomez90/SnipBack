@@ -22,4 +22,7 @@ public interface EventDao {
 
     @Query("SELECT * from EVENT")
     LiveData<List<Event>> getEventData();
+
+    @Query("SELECT * from EVENT WHERE event_id=:eventId")
+    LiveData<Event> getEventByEventId(int eventId);
 }

@@ -91,6 +91,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -851,7 +852,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private File getOutputMediaFile() {
 
         // External sdcard file location
-        File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
+        File mediaStorageDir = new File(Objects.requireNonNull(getActivity()).getDataDir(),
                 VIDEO_DIRECTORY_NAME);
         // Create storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
@@ -1184,7 +1185,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         try {
 //            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
 //                    VIDEO_DIRECTORY_NAME);
-            File thumbsStorageDir = new File(Environment.getExternalStorageDirectory() + "/" + VIDEO_DIRECTORY_NAME,
+            File thumbsStorageDir = new File(Objects.requireNonNull(getActivity()).getDataDir() + "/" + VIDEO_DIRECTORY_NAME,
                     THUMBS_DIRECTORY_NAME);
 
             if (!thumbsStorageDir.exists()) {

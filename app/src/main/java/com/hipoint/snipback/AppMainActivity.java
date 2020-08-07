@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class AppMainActivity extends AppCompatActivity {
     int PERMISSION_ALL = 1;
@@ -200,16 +201,16 @@ public class AppMainActivity extends AppCompatActivity {
     private void getFilePathFromInternalStorage() {
         File directory;
         File photoDirectory;
-        if (Environment.getExternalStorageState() == null) {
+//        if (Environment.getExternalStorageState() == null) {
             //create new file directory object
-            directory = new File(Environment.getDataDirectory()
+            directory = new File(getDataDir()
                     + "/" + VIDEO_DIRECTORY_NAME + "/");
-            photoDirectory = new File(Environment.getDataDirectory()
+            photoDirectory = new File(getDataDir()
                     + "/" + VIDEO_DIRECTORY_NAME + "/" + THUMBS_DIRECTORY_NAME + "/");
             if (photoDirectory.exists()) {
                 File[] dirFiles = photoDirectory.listFiles();
                 if (dirFiles != null && dirFiles.length != 0) {
-                    for (int ii = 0; ii <= dirFiles.length; ii++) {
+                    for (int ii = 0; ii < dirFiles.length; ii++) {
                         thumbs.add(dirFiles[ii].getAbsolutePath());
                     }
                 }
@@ -218,28 +219,29 @@ public class AppMainActivity extends AppCompatActivity {
             if (!directory.exists()) {
                 directory.mkdir();
             }
-        } else if (Environment.getExternalStorageState() != null) {
-            // search for directory on SD card
-            directory = new File(Environment.getExternalStorageDirectory()
-                    + "/" + VIDEO_DIRECTORY_NAME + "/");
-            photoDirectory = new File(
-                    Environment.getExternalStorageDirectory()
-                            + "/" + VIDEO_DIRECTORY_NAME + "/" + THUMBS_DIRECTORY_NAME + "/");
-            if (photoDirectory.exists()) {
-                File[] dirFiles = photoDirectory.listFiles();
-                if (dirFiles != null && dirFiles.length > 0) {
-                    for (File dirFile : dirFiles) {
-                        thumbs.add(dirFile.getAbsolutePath());
-                    }
-                    dirFiles = null;
-                }
-            }
-            // if no directory exists, create new directory to store test
-            // results
-            if (!directory.exists()) {
-                directory.mkdir();
-            }
-        }
+//        }
+//        else if (Environment.getExternalStorageState() != null) {
+//            // search for directory on SD card
+//            directory = new File(Environment.getExternalStorageDirectory()
+//                    + "/" + VIDEO_DIRECTORY_NAME + "/");
+//            photoDirectory = new File(
+//                    Environment.getExternalStorageDirectory()
+//                            + "/" + VIDEO_DIRECTORY_NAME + "/" + THUMBS_DIRECTORY_NAME + "/");
+//            if (photoDirectory.exists()) {
+//                File[] dirFiles = photoDirectory.listFiles();
+//                if (dirFiles != null && dirFiles.length > 0) {
+//                    for (File dirFile : dirFiles) {
+//                        thumbs.add(dirFile.getAbsolutePath());
+//                    }
+//                    dirFiles = null;
+//                }
+//            }
+//            // if no directory exists, create new directory to store test
+//            // results
+//            if (!directory.exists()) {
+//                directory.mkdir();
+//            }
+//        }
     }
 
 //    public void loadFragment(Fragment fragment,boolean addtoBackStack) {

@@ -53,6 +53,10 @@ public class AppRepository {
     public LiveData<List<Event>> getEventData(){
         return eventDao.getEventData();
     }
+
+    public LiveData<Event> getEventById(int eventId){
+        return eventDao.getEventByEventId(eventId);
+    }
 //data insert
     public void insertEvent(@NonNull Event event){
         new InsertEventAsync(eventDao).execute(event);
