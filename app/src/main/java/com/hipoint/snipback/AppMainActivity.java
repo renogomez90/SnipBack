@@ -65,7 +65,7 @@ public class AppMainActivity extends AppCompatActivity {
 
         loadGalleryDataFromDB();
 
-        loadFragment(VideoMode.newInstance());
+        loadFragment(VideoMode.newInstance(),true);
 
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
@@ -243,15 +243,14 @@ public class AppMainActivity extends AppCompatActivity {
     }
 
 //    public void loadFragment(Fragment fragment,boolean addtoBackStack) {
-    public void loadFragment(Fragment fragment) {
-        boolean addtoBackStack = false;
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.replace(R.id.mainFragment, fragment);
-        if (addtoBackStack || fragment instanceof FragmentGalleryNew) {
-            ft.addToBackStack(null);
-        }
-        ft.commitAllowingStateLoss();
+public void loadFragment(Fragment fragment, boolean addtoBackStack) {
+    FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+    ft.replace(R.id.mainFragment, fragment);
+    if (addtoBackStack || fragment instanceof FragmentGalleryNew) {
+        ft.addToBackStack(null);
     }
+    ft.commitAllowingStateLoss();
+}
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {

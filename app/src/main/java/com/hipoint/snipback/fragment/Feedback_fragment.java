@@ -30,7 +30,7 @@ public class Feedback_fragment extends Fragment {
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance(),true);
             }
         });
         return rootView;

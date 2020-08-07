@@ -39,7 +39,7 @@ public class VideoMode extends Fragment {
         gallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance(),true);
             }
         });
 
@@ -54,7 +54,7 @@ public class VideoMode extends Fragment {
         record_two.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity)getActivity()).loadFragment(TrialOver.newInstance());
+                ((AppMainActivity)getActivity()).loadFragment(TrialOver.newInstance(),true);
             }
         });
 
@@ -79,7 +79,7 @@ public class VideoMode extends Fragment {
         feedback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance(),true);
                 dialog.dismiss();
             }
         });

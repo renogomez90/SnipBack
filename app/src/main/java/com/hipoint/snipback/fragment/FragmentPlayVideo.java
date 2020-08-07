@@ -273,7 +273,7 @@ public class FragmentPlayVideo extends Fragment {
         tag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(CreateTag.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(CreateTag.newInstance(),true);
             }
         });
 
@@ -284,7 +284,7 @@ public class FragmentPlayVideo extends Fragment {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
                     player.release();
-                    ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance());
+                    ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(),true);
                     return true;
                 }
                 return false;
