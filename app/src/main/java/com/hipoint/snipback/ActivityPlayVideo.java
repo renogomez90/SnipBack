@@ -158,7 +158,6 @@ public class ActivityPlayVideo extends Swipper {
                 try {
                     if (snip.getIs_virtual_version() == 1) {
                         current_pos =videoView.getCurrentPosition()-(snip.getStart_time()*1000);
-                        Log.d("current_pos", String.valueOf(current_pos));
                     }else {
                         current_pos = videoView.getCurrentPosition();
                     }
