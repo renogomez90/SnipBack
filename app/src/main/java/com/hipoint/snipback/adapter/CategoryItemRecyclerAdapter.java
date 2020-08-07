@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,8 +19,10 @@ import com.hipoint.snipback.room.entities.CategoryItem;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Snip;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryItemRecyclerAdapter.CategoryItemViewHolder> {
     private Context context;
@@ -39,9 +42,27 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
 
     @Override
     public void onBindViewHolder(@NonNull CategoryItemViewHolder holder, int position) {
-        if (snipArrayList !=null){
+        if (snipArrayList != null){
             Snip snip = snipArrayList.get(position);
             try {
+                int duration;
+                if(snip.getIs_virtual_version() == 1){
+                    holder.tvVersionLabel.setVisibility(View.VISIBLE);
+                    holder.tvVersionLabel.setText("VERSION "+position);
+                    duration =  (int) snipArrayList.get(position).getSnip_duration();
+                }else{
+                    holder.tvVersionLabel.setVisibility(View.INVISIBLE);
+                    duration =  (int) snipArrayList.get(position).getTotal_video_duration();
+                }
+                int hours = duration / 3600;
+                int minutes = (duration % 3600) / 60;
+                int seconds = duration % 60;
+
+                if(hours > 0) {
+                    holder.tvDuration.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+                }else{
+                    holder.tvDuration.setText(String.format("%02d:%02d", minutes, seconds));
+                }
                 Bitmap myBitmap = BitmapFactory.decodeFile(snip.getThumbnailPath());
                 holder.itemImage.setImageBitmap(myBitmap);
                 holder.itemImage.setOnClickListener(new View.OnClickListener() {
@@ -68,10 +89,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
 
     public class CategoryItemViewHolder extends RecyclerView.ViewHolder {
         ImageView itemImage;
+        TextView tvVersionLabel;
+        TextView tvDuration;
         public CategoryItemViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            itemImage=itemView.findViewById(R.id.image);
+            itemImage = itemView.findViewById(R.id.image);
+            tvVersionLabel = itemView.findViewById(R.id.tvVersionLabel);
+            tvDuration = itemView.findViewById(R.id.tvDuration);
         }
     }
 

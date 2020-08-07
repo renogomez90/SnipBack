@@ -25,6 +25,23 @@
         android:visibility="gone"
         />
 
+    <Chronometer
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/chronometer"
+        android:visibility="invisible"
+        android:layout_centerHorizontal="true"
+        android:textColor="#fff"
+        android:textSize="14sp"
+        android:paddingEnd="6dp"
+        android:paddingStart="6dp"
+        android:paddingTop="3dp"
+        android:paddingBottom="3dp"
+        android:drawablePadding="3dp"
+        android:drawableStart="@drawable/rec_button_small"
+        android:layout_marginTop="25dp"
+        android:background="@color/colorBlack"/>
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -34,20 +51,14 @@
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/ic_remove_black_24dp" />
-        <Chronometer
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/chronometer"
             android:visibility="invisible"
-            android:layout_marginStart="50dp"
-            android:textColor="#fff"
-            android:textSize="18sp"/>
+            android:background="@drawable/ic_remove_black_24dp" />
 
         <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
+            android:visibility="invisible"
             android:background="@drawable/ic_add_black_24dp" />
 
     </RelativeLayout>
