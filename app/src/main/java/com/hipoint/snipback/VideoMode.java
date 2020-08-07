@@ -68,9 +68,9 @@ import com.hipoint.snipback.Utils.AutoFitTextureView;
 import com.hipoint.snipback.Utils.CountUpTimer;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.Feedback_fragment;
-import com.hipoint.snipback.fragment.FragmentGallery;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
 import com.hipoint.snipback.room.entities.Event;
+import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
 import com.hipoint.snipback.room.repository.AppRepository;
@@ -1030,6 +1030,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 
         List<Integer> snipDurations = AppClass.getAppInsatnce().getSnipDurations();
         if(snipDurations.size() > 0) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
+            String currentDateandTime = sdf.format(new Date());
+            EventData eventData = new EventData();
+            eventData.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
+            eventData.setEvent_title(currentDateandTime);
+
             for (int endSecond : snipDurations) {
                 int startSecond = Math.max((endSecond - 5), 0);
                 Snip snip = new Snip();
@@ -1046,8 +1052,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 appRepository.updateSnip(parentSnip);
                 parentSnip.setVideoFilePath(filePath);
                 snip.setVideoFilePath(filePath);
-                AppClass.getAppInsatnce().saveAllSnips(parentSnip);
-                AppClass.getAppInsatnce().saveAllSnips(snip);
+                eventData.addEventSnip(snip);
+                AppClass.getAppInsatnce().saveAllEventSnips(eventData);
+                eventData.addEventSnip(parentSnip);
+                AppClass.getAppInsatnce().saveAllEventSnips(eventData);
             }
             AppClass.getAppInsatnce().clearSnipDurations();
         }
@@ -1194,7 +1202,13 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             streamThumbnail.close();
             snip.setThumbnailPath(fullThumbPath.getAbsolutePath());
             //update Snip
-            AppClass.getAppInsatnce().saveAllSnips(snip);
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
+            String currentDateandTime = sdf.format(new Date());
+            EventData eventData = new EventData();
+            eventData.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
+            eventData.setEvent_title(currentDateandTime);
+            eventData.addEventSnip(snip);
+            AppClass.getAppInsatnce().saveAllEventSnips(eventData);
 
             if(snip.getIs_virtual_version() == 0) {
 //                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance());

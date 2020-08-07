@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.room.entities.CategoryItem;
+import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.util.ArrayList;
@@ -23,11 +24,11 @@ import java.util.List;
 public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryItemRecyclerAdapter.CategoryItemViewHolder> {
     private Context context;
     private ItemListener mListener;
-    List<Snip> snipArrayList= new ArrayList<>();
+    List<Snip> snipArrayList;
 
-    public CategoryItemRecyclerAdapter(Context context, List<Snip> snipArrayList) {
+    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips) {
         this.context = context;
-        this.snipArrayList = snipArrayList;
+        this.snipArrayList = allSnips;
     }
 
     @NonNull
@@ -40,7 +41,6 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     public void onBindViewHolder(@NonNull CategoryItemViewHolder holder, int position) {
         if (snipArrayList !=null){
             Snip snip = snipArrayList.get(position);
-
             try {
                 Bitmap myBitmap = BitmapFactory.decodeFile(snip.getThumbnailPath());
                 holder.itemImage.setImageBitmap(myBitmap);

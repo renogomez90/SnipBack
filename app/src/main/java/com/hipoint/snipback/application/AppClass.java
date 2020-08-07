@@ -3,6 +3,8 @@ package com.hipoint.snipback.application;
 import android.app.Application;
 
 import com.hipoint.snipback.room.db.RoomDB;
+import com.hipoint.snipback.room.entities.Event;
+import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.util.ArrayList;
@@ -13,7 +15,8 @@ public class  AppClass extends Application {
     public RoomDB database;
     private List<Integer> snipDurations = new ArrayList<>();
     private static AppClass appInstance;
-    private List<Snip> allSnips = new ArrayList<>();
+    private List<EventData> allEventSnips = new ArrayList<>();
+    private List<EventData> eventParentSnips = new ArrayList<>();
     private int lastEventId;
     private int lastSnipId;
     private long lastHDSnipId;
@@ -34,22 +37,30 @@ public class  AppClass extends Application {
         database = RoomDB.getDatabase(this);
     }
 
-    public void saveAllSnips(Snip snip){
-        int index = allSnips.size() > 0 ? allSnips.indexOf(snip) : -1;
+    public void saveAllEventSnips(EventData snip){
+        int index = allEventSnips.size() > 0 ? allEventSnips.indexOf(snip) : -1;
         if(index >= 0){
-            allSnips.remove(index);
-            allSnips.add(index,snip);
+            allEventSnips.remove(index);
+            allEventSnips.add(index,snip);
         }else {
-            allSnips.add(snip);
+            allEventSnips.add(snip);
         }
     }
 
     public void clearAllSnips(){
-        allSnips.clear();
+        allEventSnips.clear();
     }
 
-    public List<Snip> getAllSnip() {
-        return allSnips;
+    public List<EventData> getAllSnip() {
+        return allEventSnips;
+    }
+
+    public void clearAllParentSnips(){
+        eventParentSnips.clear();
+    }
+
+    public List<EventData> getAllParentSnip() {
+        return eventParentSnips;
     }
 
     public void setSnipDurations(int duration){
@@ -86,5 +97,33 @@ public class  AppClass extends Application {
 
     public void setLastHDSnipId(long lastHDSnipId) {
         this.lastHDSnipId = lastHDSnipId;
+    }
+
+    public List<EventData> getEventParentSnips() {
+        return eventParentSnips;
+    }
+
+    public void setEventParentSnips(EventData eventParentSnip) {
+        int index = eventParentSnips.size() > 0 ? eventParentSnips.indexOf(eventParentSnips) : -1;
+        if(index >= 0){
+            eventParentSnips.remove(index);
+            eventParentSnips.add(index,eventParentSnip);
+        }else {
+            eventParentSnips.add(eventParentSnip);
+        }
+    }
+
+    public List<Snip> getChildSnipsByParentSnipId(List<Integer> parentId){
+        List<Snip> childSnips = new ArrayList<>();
+        for(EventData eventData : getAllSnip()){
+            for(Snip snip : eventData.getSnips()){
+                for(int parentSnipId : parentId) {
+                    if (snip.getParent_snip_id() == parentSnipId || snip.getSnip_id() == parentSnipId) {
+                        childSnips.add(snip);
+                    }
+                }
+            }
+        }
+        return childSnips;
     }
 }
