@@ -85,13 +85,13 @@ public class TrialOver extends Fragment {
         rL1.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance(),true);
             }
         });
         rL2.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance(),true);
             }
         });
 

@@ -53,7 +53,7 @@ public class Introduction_Fragment_Four extends Fragment {
         watch_later.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(StartTrial.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(StartTrial.newInstance(),true);
             }
         });
         return view;

@@ -35,7 +35,7 @@ public class RegisterFragment1 extends Fragment {
         button_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(IntroFragmentViewPager.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(IntroFragmentViewPager.newInstance(),true);
             }
         });
 

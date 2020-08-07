@@ -110,7 +110,7 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
 //        recycler_view.setAdapter(adapterGallery);
 
 
-        camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentTrimVideo.newInstance()));
+        camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentTrimVideo.newInstance(),true));
         menu_button.setOnClickListener(v -> {
             final Dialog dialog = new Dialog(getActivity());
             view_button.setImageResource(R.drawable.ic_view_unselected);
@@ -139,7 +139,7 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
                     relativeLayout_autodeleteactions.setVisibility(View.GONE);
                     autodelete_arrow.setImageResource(R.drawable.ic_forward);
                     dialog.cancel();
-                    ((AppMainActivity) getActivity()).loadFragment(FragmentMultiDeletePhoto.newInstance());
+                    ((AppMainActivity) getActivity()).loadFragment(FragmentMultiDeletePhoto.newInstance(),true);
 
 
                 }

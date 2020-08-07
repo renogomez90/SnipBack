@@ -35,7 +35,7 @@ public class RegisterFragment extends Fragment {
             @Override
             public void onClick(View v) {
 
-                ((AppMainActivity) getActivity()).loadFragment(RegisterFragment1.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(RegisterFragment1.newInstance(),true);
             }
         });
         return rootView;

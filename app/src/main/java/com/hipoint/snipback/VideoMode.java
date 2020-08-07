@@ -329,14 +329,14 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private String outputFilePath;
     private CaptureRequest.Builder mPreviewBuilder;
     private View rootView;
-    private ImageButton gallery, settings, recordButton;
+    private ImageButton gallery, settings, recordButton,recordStopButton;
     private TextView tvTimer;
     private Chronometer mChronometer;
     private int timerSecond = 0;
     private AppRepository appRepository;
     private View blinkEffect;
     private Animation animBlink;
-    private RelativeLayout rlVideo;
+    private RelativeLayout rlVideo,recStartLayout,bottomContainer;
 
     public static VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
@@ -359,6 +359,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         mTextureView = rootView.findViewById(R.id.texture);
         blinkEffect = rootView.findViewById(R.id.overlay);
 
+        recStartLayout =rootView.findViewById(R.id.rec_start_container);
+        bottomContainer =rootView.findViewById(R.id.bottom_cont);
+        recordStopButton = rootView.findViewById(R.id.rec_stop);
+        recordStopButton.setOnClickListener(this);
+
+
 //        detector = new GestureFilter(getActivity(), this);
 
 //        ((AppMainActivity)getActivity()).registerMyOnTouchListener(new AppMainActivity.MyOnTouchListener() {
@@ -371,7 +377,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //        rlVideo.setOnTouchListener((view, motionEvent) -> mTextureView.onTouch(view, motionEvent));
 //        accessRoomDatabase();
         mTextureView.setOnClickListener(this);
-        gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance()));
+        gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(),true));
         settings.setOnClickListener(v -> showDialogSettingsMain());
         appRepository = AppRepository.getInstance();
         appRepository.getLastInsertedEventId(this);
@@ -424,14 +430,25 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.rec: {
-                if (mIsRecordingVideo) {
-                    stopRecordingVideo();
-                } else {
+
+                    bottomContainer.setVisibility(View.GONE);
+                    recStartLayout.setVisibility(VISIBLE);
                     startRecordingVideo();
-                }
+
                 break;
 
             }
+            case R.id.rec_stop: {
+
+                    bottomContainer.setVisibility(VISIBLE);
+                    recStartLayout.setVisibility(View.GONE);
+                    stopRecordingVideo();
+
+                break;
+
+            }
+
+
             case R.id.texture: {
                 saveSnipTimeToLocal();
             }
@@ -456,7 +473,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         feedback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance(),true);
                 dialog.dismiss();
             }
         });

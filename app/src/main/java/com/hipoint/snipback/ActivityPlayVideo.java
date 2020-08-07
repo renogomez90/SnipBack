@@ -43,7 +43,7 @@ public class ActivityPlayVideo extends Swipper {
     private TextView exo_duration;
     private Switch play_pause;
     boolean paused = false;
-    private RelativeLayout play_forwardbutton;
+    private RelativeLayout play_forwardbutton,back_arrow,button_camera;
     private ImageButton tvConvertToReal;
     private Event event;
     private AppRepository appRepository;
@@ -59,9 +59,11 @@ public class ActivityPlayVideo extends Swipper {
         exo_duration = findViewById(R.id.exo_duration);
         play_pause = findViewById(R.id.play_pause);
         videoView = (VideoView) findViewById(R.id.videoView);
-        tvConvertToReal = findViewById(R.id.tvConvertToReal);
 
+        tvConvertToReal = findViewById(R.id.tvConvertToReal);
         appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        back_arrow=findViewById(R.id.back_arrow);
+        button_camera=findViewById(R.id.button_camera);
 
         Intent intent = getIntent();
         snip = intent.getParcelableExtra("snip");
@@ -73,6 +75,17 @@ public class ActivityPlayVideo extends Swipper {
         videoView.setVideoURI(video1);
         videoView.requestFocus();
         videoView.start();
+
+        back_arrow.setOnClickListener(v -> {
+            onBackPressed();
+        });
+
+        button_camera.setOnClickListener(v -> {
+//            (AppMainActivity).loadFragment(VideoMode.newInstance(),true);
+            Intent intent1 = new Intent(this, AppMainActivity.class);
+            startActivity(intent1);
+            finishAffinity();
+        });
 
         // play forward and backward
         play_forwardbutton = findViewById(R.id.play_forwardbutton);
@@ -166,12 +179,12 @@ public class ActivityPlayVideo extends Swipper {
     public void setVideoProgress() {
         //get the video duration
         //TODO
-
         if (snip.getIs_virtual_version() == 1) {
             total_duration = 5 * 1000;
         } else {
             total_duration = videoView.getDuration();
             current_pos = videoView.getCurrentPosition();
+
         }
         //display video duration
         exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
@@ -313,14 +326,6 @@ public class ActivityPlayVideo extends Swipper {
             public void onProgress(float progress) {
             }
         });
-    }
-
-    private void showProcessingDialog() {
-        try {
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
 }
