@@ -28,6 +28,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.CamcorderProfile;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,6 +36,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.Size;
@@ -108,8 +110,11 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private static final int REQUEST_VIDEO_PERMISSIONS = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
     private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
+    private String VIDEO_DIRECTORY_NAME1 = "Snipback";
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
 //    private GestureFilter detector;
+
+    Bitmap thumb;
 
     private static final String[] VIDEO_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -452,8 +457,80 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             }
 
             case R.id.r_2_shutter: {
+                rlVideo.startAnimation(animBlink);
+                blinkEffect.setVisibility(VISIBLE);
+                blinkEffect.animate()
+                        .alpha(02f)
+                        .setDuration(100)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                blinkEffect.setVisibility(View.GONE);
+                                blinkEffect.clearAnimation();
+                            }
+                        });
 
+//                File filevideopath = new File(outputFilePath);
+//
+//                try {
+//
+//                    File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
+//                            VIDEO_DIRECTORY_NAME1);
+//                    // Create storage directory if it does not exist
+//                    if (!mediaStorageDir.exists()) {
+//                        if (!mediaStorageDir.mkdirs()) {
+//                            return;
+//                        }
+//                    }
+//                    File mediaFile = new File(mediaStorageDir.getPath() + File.separator
+//                            + "PhotoTHUM_" + System.currentTimeMillis() + ".png");
+//
+//
+//                    if (!mediaStorageDir.exists()) {
+//                        if (!mediaStorageDir.mkdirs()) {
+//                            Log.d(TAG, "Oops! Failed create "
+//                                    + VIDEO_DIRECTORY_NAME1 + " directory");
+//                            return;
+//                        }
+//                    }
+//
+//
+//                    Log.d(TAG, "saving video thumbnail at path: " + mediaFile + ", video path: " + filevideopath.getAbsolutePath());
+//                    //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
+//                    FileOutputStream streamThumbnail = new FileOutputStream(mediaFile);
+//
+//                    //Other method to get a thumbnail. The problem is that it doesn't allow to get at a specific time
+//                    ; //= ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(),MediaStore.Images.Thumbnails.MINI_KIND)
+//
+//                    thumb=ThumbnailUtils.createVideoThumbnail(filevideopath.getAbsolutePath(), MediaStore.Images.Thumbnails.MICRO_KIND);
+//
+//
+//
+//
+////                    MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+////                    try {
+////                        retriever.setDataSource(filevideopath.getAbsolutePath());
+////                        thumb = retriever.getFrameAtTime((int)  1000000,
+////                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+////                        thumb.compress(Bitmap.CompressFormat.PNG, 80, streamThumbnail);
+////                        thumb.recycle(); //ensure the image is freed;
+////                    } catch (Exception ex) {
+////                        Log.i(TAG, "MediaMetadataRetriever got exception:" + ex);
+////                    }
+////                    streamThumbnail.close();
+//                    //update Snip
+//
+//                    Log.d(TAG, "thumbnail saved successfully");
+//                } catch (FileNotFoundException e) {
+//                    Log.d(TAG, "File Not Found Exception : check directory path");
+//                    e.printStackTrace();
+//                } catch (IOException e) {
+//                    Log.d(TAG, "IOException while closing the stream");
+//                    e.printStackTrace();
+//                }
 
+                getVideoThumbnailclick(new File(outputFilePath));
+                rlVideo.clearAnimation();
                 break;
             }
 
@@ -1061,7 +1138,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     public void saveSnipToDB(Snip parentSnip, String filePath) {
 //        String chronoText = mChronometer.getText().toString();
 //        Log.e("chrono m reading",chronoText);
-
         List<Integer> snipDurations = AppClass.getAppInsatnce().getSnipDurations();
         if (snipDurations.size() > 0) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
@@ -1244,6 +1320,68 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         }
     }
 
+    private void getVideoThumbnailclick(File videoFile) {
+        try {
+
+            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
+                    VIDEO_DIRECTORY_NAME1);
+            // Create storage directory if it does not exist
+            if (!mediaStorageDir.exists()) {
+                if (!mediaStorageDir.mkdirs()) {
+                    return;
+                }
+            }
+            File mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                    + "PhotoTHUM_" + System.currentTimeMillis() + ".png");
+
+
+            if (!mediaStorageDir.exists()) {
+                if (!mediaStorageDir.mkdirs()) {
+                    Log.d(TAG, "Oops! Failed create "
+                            + VIDEO_DIRECTORY_NAME1 + " directory");
+                    return;
+                }
+            }
+
+            Log.d(TAG, "saving video thumbnail at path: " + mediaFile + ", video path: " + videoFile.getAbsolutePath());
+            //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
+            FileOutputStream streamThumbnail = new FileOutputStream(mediaFile);
+
+            //Other method to get a thumbnail. The problem is that it doesn't allow to get at a specific time
+            Bitmap thumb; //= ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(),MediaStore.Images.Thumbnails.MINI_KIND);
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            try {
+                retriever.setDataSource(videoFile.getAbsolutePath());
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    thumb = retriever.getScaledFrameAtTime((int) 1 * 1000000,
+                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100);
+                } else {
+                    thumb = retriever.getFrameAtTime((int) 1 * 1000000,
+                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+                }
+
+
+               //     thumb = retriever.getFrameAtTime();
+
+
+                thumb.compress(Bitmap.CompressFormat.PNG, 80, streamThumbnail);
+                thumb.recycle(); //ensure the image is freed;
+            } catch (Exception ex) {
+                Log.i(TAG, "MediaMetadataRetriever got exception:" + ex);
+            }
+            streamThumbnail.close();
+
+            Log.d(TAG, "thumbnail saved successfully");
+        } catch (FileNotFoundException e) {
+            Log.d(TAG, "File Not Found Exception : check directory path");
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.d(TAG, "IOException while closing the stream");
+            e.printStackTrace();
+        }
+    }
+
 //    public void dispatchTouchEvent(MotionEvent me) {
 //        // Call onTouchEvent of SimpleGestureFilter class
 //        this.detector.onTouchEvent(me);
@@ -1303,6 +1441,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //        appRepository.deleteEvent(event);
 //
 //    }
+
 
 }
 
