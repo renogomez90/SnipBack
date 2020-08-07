@@ -28,6 +28,7 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.CamcorderProfile;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -35,6 +36,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.Size;
@@ -99,7 +101,7 @@ import java.util.concurrent.TimeUnit;
 
 import static android.view.View.VISIBLE;
 
-public class VideoMode extends Fragment implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted{
+public class VideoMode extends Fragment implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted {
 
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
@@ -110,8 +112,11 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private static final int REQUEST_VIDEO_PERMISSIONS = 1;
     private static final String FRAGMENT_DIALOG = "dialog";
     private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
+    private String VIDEO_DIRECTORY_NAME1 = "Snipback";
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
 //    private GestureFilter detector;
+
+    Bitmap thumb;
 
     private static final String[] VIDEO_PERMISSIONS = {
             Manifest.permission.CAMERA,
@@ -331,14 +336,14 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private String outputFilePath;
     private CaptureRequest.Builder mPreviewBuilder;
     private View rootView;
-    private ImageButton gallery, settings, recordButton,recordStopButton;
+    private ImageButton gallery, settings, recordButton, recordStopButton, r_3_bookmark, r_2_shutter;
     private TextView tvTimer;
     private Chronometer mChronometer;
     private int timerSecond = 0;
     private AppRepository appRepository;
     private View blinkEffect;
     private Animation animBlink;
-    private RelativeLayout rlVideo,recStartLayout,bottomContainer;
+    private RelativeLayout rlVideo, recStartLayout, bottomContainer;
 
     public static VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
@@ -361,11 +366,14 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         mTextureView = rootView.findViewById(R.id.texture);
         blinkEffect = rootView.findViewById(R.id.overlay);
 
-        recStartLayout =rootView.findViewById(R.id.rec_start_container);
-        bottomContainer =rootView.findViewById(R.id.bottom_cont);
+        recStartLayout = rootView.findViewById(R.id.rec_start_container);
+        bottomContainer = rootView.findViewById(R.id.bottom_cont);
         recordStopButton = rootView.findViewById(R.id.rec_stop);
         recordStopButton.setOnClickListener(this);
-
+        r_3_bookmark = rootView.findViewById(R.id.r_3_bookmark);
+        r_3_bookmark.setOnClickListener(this);
+        r_2_shutter = rootView.findViewById(R.id.r_2_shutter);
+        r_2_shutter.setOnClickListener(this);
 
 //        detector = new GestureFilter(getActivity(), this);
 
@@ -379,7 +387,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //        rlVideo.setOnTouchListener((view, motionEvent) -> mTextureView.onTouch(view, motionEvent));
 //        accessRoomDatabase();
         mTextureView.setOnClickListener(this);
-        gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(),true));
+        gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(), true));
         settings.setOnClickListener(v -> showDialogSettingsMain());
         appRepository = AppRepository.getInstance();
         appRepository.getLastInsertedEventId(this);
@@ -387,10 +395,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         mChronometer.setOnChronometerTickListener(arg0 -> {
 //                if (!resume) {
             long time = SystemClock.elapsedRealtime() - mChronometer.getBase();
-            int h   = (int)(time /3600000);
-            int m = (int)(time - h*3600000)/60000;
-            int s= (int)(time - h*3600000- m*60000)/1000 ;
-            String t = (h < 10 ? "0"+h: h)+":"+(m < 10 ? "0"+m: m)+":"+ (s < 10 ? "0"+s: s);
+            int h = (int) (time / 3600000);
+            int m = (int) (time - h * 3600000) / 60000;
+            int s = (int) (time - h * 3600000 - m * 60000) / 1000;
+            String t = (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
             mChronometer.setText(t);
 
             long minutes = ((SystemClock.elapsedRealtime() - mChronometer.getBase()) / 1000) / 60;
@@ -432,24 +440,101 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.rec: {
-
-                    bottomContainer.setVisibility(View.GONE);
-                    recStartLayout.setVisibility(VISIBLE);
-                    startRecordingVideo();
-
+                bottomContainer.setVisibility(View.GONE);
+                recStartLayout.setVisibility(VISIBLE);
+                startRecordingVideo();
                 break;
-
             }
+
             case R.id.rec_stop: {
-
-                    bottomContainer.setVisibility(VISIBLE);
-                    recStartLayout.setVisibility(View.GONE);
-                    stopRecordingVideo();
-
+                bottomContainer.setVisibility(VISIBLE);
+                recStartLayout.setVisibility(View.GONE);
+                stopRecordingVideo();
                 break;
-
             }
 
+            case R.id.r_3_bookmark: {
+                saveSnipTimeToLocal();
+                break;
+            }
+
+            case R.id.r_2_shutter: {
+                rlVideo.startAnimation(animBlink);
+                blinkEffect.setVisibility(VISIBLE);
+                blinkEffect.animate()
+                        .alpha(02f)
+                        .setDuration(100)
+                        .setListener(new AnimatorListenerAdapter() {
+                            @Override
+                            public void onAnimationEnd(Animator animation) {
+                                blinkEffect.setVisibility(View.GONE);
+                                blinkEffect.clearAnimation();
+                            }
+                        });
+
+//                File filevideopath = new File(outputFilePath);
+//
+//                try {
+//
+//                    File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
+//                            VIDEO_DIRECTORY_NAME1);
+//                    // Create storage directory if it does not exist
+//                    if (!mediaStorageDir.exists()) {
+//                        if (!mediaStorageDir.mkdirs()) {
+//                            return;
+//                        }
+//                    }
+//                    File mediaFile = new File(mediaStorageDir.getPath() + File.separator
+//                            + "PhotoTHUM_" + System.currentTimeMillis() + ".png");
+//
+//
+//                    if (!mediaStorageDir.exists()) {
+//                        if (!mediaStorageDir.mkdirs()) {
+//                            Log.d(TAG, "Oops! Failed create "
+//                                    + VIDEO_DIRECTORY_NAME1 + " directory");
+//                            return;
+//                        }
+//                    }
+//
+//
+//                    Log.d(TAG, "saving video thumbnail at path: " + mediaFile + ", video path: " + filevideopath.getAbsolutePath());
+//                    //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
+//                    FileOutputStream streamThumbnail = new FileOutputStream(mediaFile);
+//
+//                    //Other method to get a thumbnail. The problem is that it doesn't allow to get at a specific time
+//                    ; //= ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(),MediaStore.Images.Thumbnails.MINI_KIND)
+//
+//                    thumb=ThumbnailUtils.createVideoThumbnail(filevideopath.getAbsolutePath(), MediaStore.Images.Thumbnails.MICRO_KIND);
+//
+//
+//
+//
+////                    MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+////                    try {
+////                        retriever.setDataSource(filevideopath.getAbsolutePath());
+////                        thumb = retriever.getFrameAtTime((int)  1000000,
+////                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+////                        thumb.compress(Bitmap.CompressFormat.PNG, 80, streamThumbnail);
+////                        thumb.recycle(); //ensure the image is freed;
+////                    } catch (Exception ex) {
+////                        Log.i(TAG, "MediaMetadataRetriever got exception:" + ex);
+////                    }
+////                    streamThumbnail.close();
+//                    //update Snip
+//
+//                    Log.d(TAG, "thumbnail saved successfully");
+//                } catch (FileNotFoundException e) {
+//                    Log.d(TAG, "File Not Found Exception : check directory path");
+//                    e.printStackTrace();
+//                } catch (IOException e) {
+//                    Log.d(TAG, "IOException while closing the stream");
+//                    e.printStackTrace();
+//                }
+
+                getVideoThumbnailclick(new File(outputFilePath));
+                rlVideo.clearAnimation();
+                break;
+            }
 
             case R.id.texture: {
                 saveSnipTimeToLocal();
@@ -475,7 +560,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         feedback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance(),true);
+                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance(), true);
                 dialog.dismiss();
             }
         });
@@ -1055,7 +1140,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     public void saveSnipToDB(Snip parentSnip, String filePath) {
 //        String chronoText = mChronometer.getText().toString();
 //        Log.e("chrono m reading",chronoText);
-
         List<Integer> snipDurations = AppClass.getAppInsatnce().getSnipDurations();
         if (snipDurations.size() > 0) {
             Event event = AppClass.getAppInsatnce().getLastCreatedEvent();
@@ -1196,6 +1280,68 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         }
     }
 
+    private void getVideoThumbnailclick(File videoFile) {
+        try {
+
+            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
+                    VIDEO_DIRECTORY_NAME1);
+            // Create storage directory if it does not exist
+            if (!mediaStorageDir.exists()) {
+                if (!mediaStorageDir.mkdirs()) {
+                    return;
+                }
+            }
+            File mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                    + "PhotoTHUM_" + System.currentTimeMillis() + ".png");
+
+
+            if (!mediaStorageDir.exists()) {
+                if (!mediaStorageDir.mkdirs()) {
+                    Log.d(TAG, "Oops! Failed create "
+                            + VIDEO_DIRECTORY_NAME1 + " directory");
+                    return;
+                }
+            }
+
+            Log.d(TAG, "saving video thumbnail at path: " + mediaFile + ", video path: " + videoFile.getAbsolutePath());
+            //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
+            FileOutputStream streamThumbnail = new FileOutputStream(mediaFile);
+
+            //Other method to get a thumbnail. The problem is that it doesn't allow to get at a specific time
+            Bitmap thumb; //= ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(),MediaStore.Images.Thumbnails.MINI_KIND);
+            MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+            try {
+                retriever.setDataSource(videoFile.getAbsolutePath());
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                    thumb = retriever.getScaledFrameAtTime((int) 1 * 1000000,
+                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100);
+                } else {
+                    thumb = retriever.getFrameAtTime((int) 1 * 1000000,
+                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+                }
+
+
+               //     thumb = retriever.getFrameAtTime();
+
+
+                thumb.compress(Bitmap.CompressFormat.PNG, 80, streamThumbnail);
+                thumb.recycle(); //ensure the image is freed;
+            } catch (Exception ex) {
+                Log.i(TAG, "MediaMetadataRetriever got exception:" + ex);
+            }
+            streamThumbnail.close();
+
+            Log.d(TAG, "thumbnail saved successfully");
+        } catch (FileNotFoundException e) {
+            Log.d(TAG, "File Not Found Exception : check directory path");
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.d(TAG, "IOException while closing the stream");
+            e.printStackTrace();
+        }
+    }
+
 //    public void dispatchTouchEvent(MotionEvent me) {
 //        // Call onTouchEvent of SimpleGestureFilter class
 //        this.detector.onTouchEvent(me);
@@ -1255,6 +1401,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //        appRepository.deleteEvent(event);
 //
 //    }
+
 
 }
 

@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -228,7 +229,7 @@ public class ActivityPlayVideo extends Swipper {
                     exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
                     if (current_pos > 0) {
                         ObjectAnimator animation = ObjectAnimator.ofInt(seek, "progress", (int) current_pos);
-                        animation.setDuration(400);
+                        animation.setDuration(300);
                         animation.setInterpolator(new DecelerateInterpolator());
                         animation.start();
                     }

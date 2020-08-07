@@ -16,7 +16,11 @@
         <VideoView
             android:id="@+id/videoView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentBottom="true"/>
     </RelativeLayout>
 
     <ImageButton
@@ -153,7 +157,7 @@
         android:layout_height="wrap_content"
         android:theme="@style/AppThemeTwo"
         android:layout_above="@+id/bottom_menu" />
-
+    
     <com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar
         android:id="@+id/range_seek_bar"
         android:layout_width="match_parent"
