@@ -2,6 +2,7 @@ package com.hipoint.snipback;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.ViewModelProviders;
 
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -15,16 +16,21 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.room.repository.AppViewModel;
 
 public class SplashScreen extends AppCompatActivity {
     Intent intent;
     private TextView tv_version;
+    private AppViewModel appViewModel;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         (this).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         tv_version=findViewById(R.id.tv_version);
+        appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        appViewModel.loadGalleryDataFromDB(this);
         try {
             PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
             String version = pInfo.versionName;
@@ -34,20 +40,17 @@ public class SplashScreen extends AppCompatActivity {
         }
 
         Handler handler = new Handler();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-            window.setStatusBarColor(ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary));
-        }
+        Window window = getWindow();
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+        window.setStatusBarColor(ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary));
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 intent= new Intent(getApplicationContext(),AppMainActivity.class);
                 startActivity(intent);
                 finish();
-
             }
-        }, 5000);
+        }, 3000);
     }
 
 

@@ -21,6 +21,17 @@ public class  AppClass extends Application {
     private int lastSnipId;
     private long lastHDSnipId;
 
+    public Event getLastCreatedEvent() {
+        return lastCreatedEvent;
+    }
+
+    public void setLastCreatedEvent(Event lastCreatedEvent) {
+        lastCreatedEvent.setEvent_id(getLastEventId());
+        this.lastCreatedEvent = lastCreatedEvent;
+    }
+
+    public Event lastCreatedEvent;
+
     public static AppClass getAppInsatnce(){
         if(appInstance == null)
             appInstance = new AppClass();
@@ -44,6 +55,19 @@ public class  AppClass extends Application {
             allEventSnips.add(index,snip);
         }else {
             allEventSnips.add(snip);
+        }
+    }
+
+    public void updateVirtualToRealInAllSnipEvent(Snip snip){
+        for(EventData eventData : allEventSnips){
+            int eventSnipIndex = eventData.getSnips().size() > 0 ? eventData.getSnips().indexOf(snip) : -1;
+            if(eventSnipIndex >= 0){
+                allEventSnips.remove(eventData);
+                eventData.getSnips().remove(eventSnipIndex);
+                snip.setIs_virtual_version(0);
+                eventData.addEventSnip(snip);
+                allEventSnips.add(eventData);
+            }
         }
     }
 

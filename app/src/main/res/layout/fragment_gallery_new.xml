@@ -18,15 +18,23 @@
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="13sp" />
 
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/main_recycler"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/pullToRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_above="@+id/llfooter"
-        android:layout_below="@+id/photolabel"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
         android:layout_marginTop="5dp"
-        android:visibility="visible" />
+        android:layout_above="@+id/llfooter"
+        android:layout_below="@+id/photolabel">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/main_recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="visible" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
 
 
     <RelativeLayout
@@ -163,14 +171,15 @@
             android:layout_marginLeft="2dp"
             android:layout_marginRight="2dp"
             android:layout_weight="0.2"
-            android:gravity="center">
+            android:gravity="center"
+            android:clickable="false">
 
             <ImageButton
                 android:id="@+id/_button_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
-                android:src="@drawable/ic_view" />
+                android:src="@drawable/ic_view_unselected" />
 
             <TextView
                 android:id="@+id/_button_view_text"
@@ -181,7 +190,7 @@
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="View"
-                android:textColor="@color/colorPrimaryRed"
+                android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10dp" />
         </RelativeLayout>
 

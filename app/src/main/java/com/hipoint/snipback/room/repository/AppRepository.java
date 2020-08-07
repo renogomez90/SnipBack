@@ -71,6 +71,7 @@ public class AppRepository {
         @Override
         protected Void doInBackground(Event... events) {
             AppClass.getAppInsatnce().setLastEventId((int) dao.insert(events[0]));
+            AppClass.getAppInsatnce().setLastCreatedEvent(events[0]);
             return null;
         }
 
@@ -304,6 +305,7 @@ public class AppRepository {
                 Event lastEvent = events.get(events.size() - 1);
                 eventId = lastEvent.getEvent_id();
                 AppClass.getAppInsatnce().setLastEventId(eventId);
+                AppClass.getAppInsatnce().setLastCreatedEvent(lastEvent);
             }
         });
         return eventId;

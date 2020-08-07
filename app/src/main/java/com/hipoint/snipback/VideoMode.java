@@ -63,12 +63,14 @@ import androidx.legacy.app.FragmentCompat;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.hipoint.snipback.Utils.AutoFitTextureView;
+import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.CountUpTimer;
 import com.hipoint.snipback.Utils.OnSwipeTouchListener;
 import com.hipoint.snipback.Utils.gesture.GestureFilter;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.Feedback_fragment;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
+import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
@@ -944,8 +946,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         mChronometer.setText("");
         Activity activity = getActivity();
         if (null != activity) {
-            Toast.makeText(activity, "Video saved: " + outputFilePath,
-                    Toast.LENGTH_SHORT).show();
+//            Toast.makeText(activity, "Video saved: " + outputFilePath,
+//                    Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Video saved: " + outputFilePath);
             Snip parentSnip = new Snip();
             parentSnip.setStart_time(0);
@@ -1056,11 +1058,13 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 
         List<Integer> snipDurations = AppClass.getAppInsatnce().getSnipDurations();
         if (snipDurations.size() > 0) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
-            String currentDateandTime = sdf.format(new Date());
+            Event event = AppClass.getAppInsatnce().getLastCreatedEvent();
+//            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
+//            String currentDateandTime = sdf.format(new Date());
             EventData eventData = new EventData();
-            eventData.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
-            eventData.setEvent_title(currentDateandTime);
+            eventData.setEvent_id(event.getEvent_id());
+            eventData.setEvent_title(event.getEvent_title());
+            eventData.setEvent_created(event.getEvent_created());
 
             for (int endSecond : snipDurations) {
                 int startSecond = Math.max((endSecond - 5), 0);
@@ -1072,7 +1076,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 snip.setParent_snip_id(parentSnip.getSnip_id());
                 snip.setSnip_duration(5);
                 snip.setVid_creation_date(System.currentTimeMillis());
-                snip.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
+                snip.setEvent_id(event.getEvent_id());
                 appRepository.insertSnip(this, snip);
                 parentSnip.setHas_virtual_versions(1);
                 appRepository.updateSnip(parentSnip);
@@ -1128,50 +1132,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //        Toast.makeText(getActivity(), endSecond, Toast.LENGTH_LONG).show();
 
     }
-
-//    private void addSnip(){
-//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd z");
-//        String currentDateandTime = sdf.format(new Date());
-//        Event event = new Event();
-//        event.setEvent_title(currentDateandTime);
-//        event.setEvent_created(System.currentTimeMillis());
-//        AppRepository appRepository = AppRepository.getInstance();
-//        appRepository.insertEvent(event);
-//    }
-//
-//
-//    public static void setStringArrayPref(Context context, String key, ArrayList<String> values) {
-//        SharedPreferences prefs = context.getSharedPreferences(key,Context.MODE_PRIVATE);
-//        SharedPreferences.Editor editor = prefs.edit();
-//        JSONArray a = new JSONArray();
-//        for (int i = 0; i < values.size(); i++) {
-//            a.put(values.get(i));
-//        }
-//        if (!values.isEmpty()) {
-//            editor.putString(key, a.toString());
-//        } else {
-//            editor.putString(key, null);
-//        }
-//        editor.commit();
-//    }
-
-//    public static ArrayList<String> getStringArrayPref(Context context, String key) {
-//        SharedPreferences prefs = context.getSharedPreferences(key,Context.MODE_PRIVATE);
-//        String json = prefs.getString(key, null);
-//        ArrayList<String> timegap = new ArrayList<String>();
-//        if (json != null) {
-//            try {
-//                JSONArray a = new JSONArray(json);
-//                for (int i = 0; i < a.length(); i++) {
-//                    String url = a.optString(i);
-//                    timegap.add(url);
-//                }
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        return timegap;
-//    }
 
     private void getVideoThumbnail(Snip snip, File videoFile) {
         try {

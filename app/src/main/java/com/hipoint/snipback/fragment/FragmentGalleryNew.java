@@ -22,10 +22,12 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
@@ -39,6 +41,8 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.Utils.CommonUtils;
+import com.hipoint.snipback.VideoMode;
 import com.hipoint.snipback.adapter.AdapterGallery;
 import com.hipoint.snipback.adapter.CategoryItemRecyclerAdapter;
 import com.hipoint.snipback.adapter.MainRecyclerAdapter;
@@ -50,6 +54,7 @@ import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
 import com.hipoint.snipback.room.repository.AppViewModel;
+import com.kaopiz.kprogresshud.KProgressHUD;
 
 import java.io.File;
 import java.time.Month;
@@ -68,7 +73,7 @@ public class FragmentGalleryNew extends Fragment  {
     private View rootView;
     RecyclerView mainCategoryRecycler;
     MainRecyclerAdapter mainRecyclerAdapter;
-
+    SwipeRefreshLayout pullToRefresh;
     ImageButton filter_button, view_button, menu_button, camera_button;
     TextView filter_label, view_label, menu_label, photolabel;
     ImageView autodelete_arrow, player_view_image;
@@ -114,6 +119,7 @@ public class FragmentGalleryNew extends Fragment  {
         filter_label = rootView.findViewById(R.id.filter_text);
         view_label = rootView.findViewById(R.id._button_view_text);
         click = rootView.findViewById(R.id.click);
+        pullToRefresh = rootView.findViewById(R.id.pullToRefresh);
         click.setVisibility(View.GONE);
 
 
@@ -130,7 +136,7 @@ public class FragmentGalleryNew extends Fragment  {
             }
         });
 
-        camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentTrimVideo.newInstance(),true));
+        camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance(), false));
         menu_button.setOnClickListener(v -> {
             final Dialog dialog = new Dialog(getActivity());
             view_button.setImageResource(R.drawable.ic_view_unselected);
@@ -205,6 +211,8 @@ public class FragmentGalleryNew extends Fragment  {
         });
 
         mainCategoryRecycler = rootView.findViewById(R.id.main_recycler);
+
+//        AppViewModel appViewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
         if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
             loadGalleryDataFromDB();
         }else{
@@ -215,11 +223,21 @@ public class FragmentGalleryNew extends Fragment  {
             mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allParentSnipEvent,allSnipEvent);
             mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
         }
+        pulltoRefresh();
 
         return rootView;
     }
 
+    private void pulltoRefresh() {
+        pullToRefresh.setOnRefreshListener(() -> {
+            pullToRefresh.setRefreshing(true);
+            loadGalleryDataFromDB();
+        });
+    }
+
     private void loadGalleryDataFromDB() {
+        AppClass.getAppInsatnce().clearAllParentSnips();
+        AppClass.getAppInsatnce().clearAllSnips();
         AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
         getFilePathFromInternalStorage();
         List<Event> allEvents = new ArrayList<>();
@@ -236,8 +254,6 @@ public class FragmentGalleryNew extends Fragment  {
         });
         appViewModel.getSnipsLiveData().observe(this, snips -> {
             if (snips != null && snips.size() > 0) {
-                AppClass.getAppInsatnce().clearAllSnips();
-                AppClass.getAppInsatnce().clearAllParentSnips();
                 for (Snip snip : snips) {
                     for (Hd_snips hdSnip : hdSnips) {
                         if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {
@@ -280,12 +296,17 @@ public class FragmentGalleryNew extends Fragment  {
                         }
                     }
                 }
+                pullToRefresh.setRefreshing(false);
                 List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
                 List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
-                RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
-                mainCategoryRecycler.setLayoutManager(layoutManager);
-                mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allParentSnip,allSnips);
-                mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+                if(mainRecyclerAdapter == null) {
+                    RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
+                    mainCategoryRecycler.setLayoutManager(layoutManager);
+                    mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips);
+                    mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+                }else {
+                    mainRecyclerAdapter.notifyDataSetChanged();
+                }
             }
         });
     }

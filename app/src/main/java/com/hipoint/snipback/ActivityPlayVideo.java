@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.os.Handler;
+import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
@@ -17,9 +18,12 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import androidx.lifecycle.ViewModelProviders;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.TrimmerUtils;
+import com.hipoint.snipback.adapter.MainRecyclerAdapter;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.EventData;
@@ -30,6 +34,9 @@ import com.hipoint.snipback.room.repository.AppViewModel;
 import com.kaopiz.kprogresshud.KProgressHUD;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import Jni.FFmpegCmd;
 import VideoHandle.OnEditorListener;
@@ -144,6 +151,11 @@ public class ActivityPlayVideo extends Swipper {
             }
         });
 
+        if (snip.getIs_virtual_version() == 1) {
+            tvConvertToReal.setVisibility(View.VISIBLE);
+        }else{
+            tvConvertToReal.setVisibility(View.GONE);
+        }
 
         //TODO
         if (snip.getIs_virtual_version() == 1) {
@@ -151,7 +163,6 @@ public class ActivityPlayVideo extends Swipper {
         } else {
             seek.setMax((int) total_duration);
         }
-
 
         if (snip.getIs_virtual_version() == 1) {
             new CountDownTimer(6000, 1000) {
@@ -281,37 +292,30 @@ public class ActivityPlayVideo extends Swipper {
         File mediaFile = new File(mediaStorageDir.getPath() + File.separator
                 + "VID_" + System.currentTimeMillis() + ".mp4");
 
-        //ffmpeg -i movie.mp4 -ss 00:00:03 -t 00:00:08 -async 1 cut.mp4
-        //ffmpeg -ss 00:01:00 -i input.mp4 -to 00:02:00 -c copy output.mp4
         String[] complexCommand = {"ffmpeg", "-i", String.valueOf(destinationPath), "-ss", TrimmerUtils.formatCSeconds((long) snip.getStart_time()),
                 "-to", TrimmerUtils.formatCSeconds((long) snip.getEnd_time()), "-async", "1", String.valueOf(mediaFile)};
-          /* String[] complexCommand = {"ffmpeg","-ss",TrimmerUtils.formatCSeconds(lastMinValue)
-                    ,"-i",String.valueOf(uri),"-to",
-                    TrimmerUtils.formatCSeconds(lastMaxValue),"-c","copy",outputPath};*/
         KProgressHUD hud = CommonUtils.showProgressDialog(this);
         FFmpegCmd.exec(complexCommand, 0, new OnEditorListener() {
             @Override
             public void onSuccess() {
-                EventData eventData= new EventData();
-                eventData.setEvent_id(event.getEvent_id());
-                eventData.setEvent_title(event.getEvent_title());
-                eventData.setEvent_created(event.getEvent_created());
+//                EventData eventData= new EventData();
+//                eventData.setEvent_id(event.getEvent_id());
+//                eventData.setEvent_title(event.getEvent_title());
+//                eventData.setEvent_created(event.getEvent_created());
+//                eventData.addEventSnip(snip);
+                AppClass.getAppInsatnce().updateVirtualToRealInAllSnipEvent(snip);
                 snip.setIs_virtual_version(0);
-                eventData.addEventSnip(snip);
-                AppClass.getAppInsatnce().saveAllEventSnips(eventData);
                 appRepository.updateSnip(snip);
                 Hd_snips hdSnips = new Hd_snips();
                 hdSnips.setVideo_path_processed(mediaFile.getAbsolutePath());
                 hdSnips.setSnip_id(snip.getSnip_id());
                 appRepository.insertHd_snips(hdSnips);
+
+                appViewModel.loadGalleryDataFromDB(ActivityPlayVideo.this);
+
                 if (hud.isShowing())
                     hud.dismiss();
-
-                runOnUiThread(() -> Toast.makeText(getApplicationContext(), "Video saved to your gallery", Toast.LENGTH_SHORT).show());
-                       /* Intent intent = new Intent();
-                        intent.putExtra(TrimmerConstants.TRIMMED_VIDEO_PATH, outputPath);
-                        setResult(RESULT_OK, intent);
-                        finish();*/
+                runOnUiThread(() -> Toast.makeText(getApplicationContext(), "Video saved to gallery", Toast.LENGTH_SHORT).show());
             }
 
             @Override
@@ -328,4 +332,9 @@ public class ActivityPlayVideo extends Swipper {
         });
     }
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
 }
