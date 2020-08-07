@@ -1,9 +1,7 @@
 package com.hipoint.snipback.fragment;
 
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,11 +17,6 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.hipoint.snipback.R;
-import com.hipoint.videotrim.ActVideoTrimmer;
-import com.hipoint.videotrim.LogMessage;
-import com.hipoint.videotrim.TrimmerConstants;
-
-import static android.app.Activity.RESULT_OK;
 
 public class FragmentTrimVideo extends  Fragment implements View.OnClickListener {
     public  static  FragmentTrimVideo newInstance() {
@@ -74,26 +67,26 @@ public class FragmentTrimVideo extends  Fragment implements View.OnClickListener
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         try {
-            if (requestCode == TrimmerConstants.REQ_CODE_VIDEO_TRIMMER && data != null) {
-                Uri uri = Uri.parse(data.getStringExtra(TrimmerConstants.TRIMMED_VIDEO_PATH));
-                Log.d(TAG,"Trimmed path:: "+uri);
-                videoView.setMediaController(mediaController);
-                videoView.setVideoURI(uri);
-                videoView.requestFocus();
-                videoView.start();
-            }else if (requestCode == REQUEST_TAKE_VIDEO && resultCode == RESULT_OK) {
-            /*    //check video duration if needed
-                if (TrimmerUtils.getVideoDuration(this,data.getData())<=30){
-                    Toast.makeText(this,"Video should be larger than 30 sec",Toast.LENGTH_SHORT).show();
-                    return;
-                }*/
-                if (data.getData()!=null){
-                    LogMessage.v("Video path:: "+data.getData());
-                    openTrimActivity(String.valueOf(data.getData()));
-                }else{
-                    Toast.makeText(getActivity(),"video uri is null",Toast.LENGTH_SHORT).show();
-                }
-            }
+//            if (requestCode == TrimmerConstants.REQ_CODE_VIDEO_TRIMMER && data != null) {
+//                Uri uri = Uri.parse(data.getStringExtra(TrimmerConstants.TRIMMED_VIDEO_PATH));
+//                Log.d(TAG,"Trimmed path:: "+uri);
+//                videoView.setMediaController(mediaController);
+//                videoView.setVideoURI(uri);
+//                videoView.requestFocus();
+//                videoView.start();
+//            }else if (requestCode == REQUEST_TAKE_VIDEO && resultCode == RESULT_OK) {
+//            /*    //check video duration if needed
+//                if (TrimmerUtils.getVideoDuration(this,data.getData())<=30){
+//                    Toast.makeText(this,"Video should be larger than 30 sec",Toast.LENGTH_SHORT).show();
+//                    return;
+//                }*/
+//                if (data.getData()!=null){
+//                    LogMessage.v("Video path:: "+data.getData());
+////                    openTrimActivity(String.valueOf(data.getData()));
+//                }else{
+//                    Toast.makeText(getActivity(),"video uri is null",Toast.LENGTH_SHORT).show();
+//                }
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -137,12 +130,12 @@ public class FragmentTrimVideo extends  Fragment implements View.OnClickListener
 
     private void openTrimActivity(String data) {
 
-        Intent intent=new Intent(getActivity(), ActVideoTrimmer.class);
-        intent.putExtra(TrimmerConstants.TRIM_VIDEO_URI,data);
-        intent.putExtra(TrimmerConstants.TRIM_TYPE,3);
-        intent.putExtra(TrimmerConstants.MIN_FROM_DURATION,getEdtValueLong(edtMinFrom));
-        intent.putExtra(TrimmerConstants.MAX_TO_DURATION,getEdtValueLong(edtMAxTo));
-        startActivityForResult(intent, TrimmerConstants.REQ_CODE_VIDEO_TRIMMER);
+//        Intent intent=new Intent(getActivity(), ActVideoTrimmer.class);
+//        intent.putExtra(TrimmerConstants.TRIM_VIDEO_URI,data);
+//        intent.putExtra(TrimmerConstants.TRIM_TYPE,3);
+//        intent.putExtra(TrimmerConstants.MIN_FROM_DURATION,getEdtValueLong(edtMinFrom));
+//        intent.putExtra(TrimmerConstants.MAX_TO_DURATION,getEdtValueLong(edtMAxTo));
+//        startActivityForResult(intent, TrimmerConstants.REQ_CODE_VIDEO_TRIMMER);
 
     }
 }

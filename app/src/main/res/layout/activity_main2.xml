@@ -19,6 +19,15 @@
             android:layout_height="match_parent" />
     </RelativeLayout>
 
+    <ImageButton
+        android:id="@+id/tvConvertToReal"
+        android:layout_width="135dp"
+        android:layout_height="50dp"
+        android:background="@drawable/virtual_real"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="10dp"
+        android:contentDescription="TODO" />
+
     <RelativeLayout
         android:id="@+id/back_arrow"
         android:layout_width="43dp"
@@ -155,9 +164,10 @@
         android:visibility="invisible"
         app:bar_color="@color/colorWhiteLt"
         app:bar_highlight_color="@color/colorThemeRed"
-        app:data_type="_integer"
-        app:left_thumb_image="@drawable/ic_min_seek"
-        app:right_thumb_image="@drawable/ic_max_seek" />
+        app:data_type="_integer"/>
+<!--        app:left_thumb_image="@drawable/ic_min_seek"-->
+<!--        app:right_thumb_image="@drawable/ic_max_seek"-->
+<!--        />-->
 
     <com.crystal.crystalrangeseekbar.widgets.CrystalSeekbar
         android:id="@+id/seekbar_controller"
@@ -168,8 +178,9 @@
         android:padding="8dp"
         android:visibility="invisible"
         app:bar_color="@color/colorWhiteLt"
-        app:bar_highlight_color="@color/colorThemeRed"
-        app:left_thumb_image="@drawable/ic_vertical_line" />
+        app:bar_highlight_color="@color/colorThemeRed"/>
+<!--        app:left_thumb_image="@drawable/ic_vertical_line"-->
+<!--        />-->
 
     <FrameLayout
         android:id="@+id/frame"

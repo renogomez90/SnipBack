@@ -46,9 +46,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
             Snip snip = snipArrayList.get(position);
             try {
                 int duration;
-                if(snip.getIs_virtual_version() == 1){
+                if(snip.getParent_snip_id() != 0 && snip.getIs_virtual_version() == 1){
                     holder.tvVersionLabel.setVisibility(View.VISIBLE);
                     holder.tvVersionLabel.setText("VERSION "+position);
+                    duration =  (int) snipArrayList.get(position).getSnip_duration();
+                }else if(snip.getParent_snip_id() != 0 && snip.getIs_virtual_version() == 0){
+                    holder.tvVersionLabel.setVisibility(View.VISIBLE);
+                    holder.tvVersionLabel.setText("V.VERSION "+position);
                     duration =  (int) snipArrayList.get(position).getSnip_duration();
                 }else{
                     holder.tvVersionLabel.setVisibility(View.INVISIBLE);

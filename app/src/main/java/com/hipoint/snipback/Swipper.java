@@ -11,6 +11,7 @@ import android.view.ViewConfiguration;
 import android.view.WindowManager;
 import android.widget.VideoView;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.MotionEventCompat;
 
 import com.google.android.exoplayer2.ExoPlayer;
@@ -18,7 +19,7 @@ import com.google.android.exoplayer2.ui.PlayerView;
 
 import static android.view.MotionEvent.INVALID_POINTER_ID;
 
-public class Swipper extends Activity {
+public class Swipper extends AppCompatActivity {
     private int mActivePointerId = INVALID_POINTER_ID;
     private AudioManager audio;
     private CustomView customView;
