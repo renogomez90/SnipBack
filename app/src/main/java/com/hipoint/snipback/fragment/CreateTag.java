@@ -29,7 +29,7 @@ public class CreateTag extends Fragment {
         edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(Videoeditingfragment.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(Videoeditingfragment.newInstance(),true);
             }
         });
 

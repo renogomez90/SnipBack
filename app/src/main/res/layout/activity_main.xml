@@ -28,7 +28,6 @@
         android:layout_alignParentBottom="true"
         android:gravity="center"
         android:padding="12dp"
-        android:text="v9.0.7 (1) \n © 2020 SNIPBACK. ALL RIGHTS RESERVED"
         android:textColor="#FFFFFF"
         android:textSize="13dp" />
 

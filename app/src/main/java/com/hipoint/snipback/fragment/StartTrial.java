@@ -110,7 +110,7 @@ public class StartTrial extends Fragment {
         dialog_ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(TrialOver.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(TrialOver.newInstance(),true);
                 dialog.dismiss();
             }
         });

@@ -370,7 +370,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //        rlVideo.setOnTouchListener((view, motionEvent) -> mTextureView.onTouch(view, motionEvent));
 //        accessRoomDatabase();
         mTextureView.setOnClickListener(this);
-        gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance()));
+        gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(),true));
         settings.setOnClickListener(v -> showDialogSettingsMain());
         appRepository = AppRepository.getInstance();
         appRepository.getLastInsertedEventId(this);
@@ -455,7 +455,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         feedback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance());
+                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance(),true);
                 dialog.dismiss();
             }
         });
