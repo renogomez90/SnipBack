@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
@@ -165,11 +166,16 @@ public class FragmentPlayVideo extends Fragment {
 
         });
         simpleExoPlayerView.setPlayer(player);
+        simpleExoPlayerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
         player.prepare(mediaSource);
         player.setPlayWhenReady(true);
 
 
+        // can hide seekbar in exoplayer
+//        exo_progress.setVisibility(View.INVISIBLE);
+
         if (snip.getIs_virtual_version() == 1) {
+
             exo_progress.setDuration(5000);
             player.seekTo(player.getCurrentPosition() +(long) snip.getStart_time()*1000);
             new CountDownTimer( (long) snip.getSnip_duration() * 1000, 1000) {
