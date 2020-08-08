@@ -16,7 +16,11 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.repository.AppViewModel;
+
+import java.io.File;
+import java.util.Objects;
 
 public class SplashScreen extends AppCompatActivity {
     Intent intent;
@@ -30,6 +34,8 @@ public class SplashScreen extends AppCompatActivity {
         (this).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
         tv_version=findViewById(R.id.tv_version);
         appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        appViewModel.loadLastInsertedEvent(this);
+        getThumbnailPath();
         appViewModel.loadGalleryDataFromDB(this);
         try {
             PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
@@ -51,6 +57,16 @@ public class SplashScreen extends AppCompatActivity {
                 finish();
             }
         }, 3000);
+    }
+
+    private void getThumbnailPath(){
+        String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
+        String THUMBS_DIRECTORY_NAME = "Thumbs";
+        File thumbsStorageDir = new File(getDataDir() + "/" + VIDEO_DIRECTORY_NAME,
+                THUMBS_DIRECTORY_NAME);
+        File fullThumbPath = new File(thumbsStorageDir.getPath() + File.separator
+                + "snip_");
+        AppClass.getAppInsatnce().setThumbFilePathRoot(fullThumbPath.getAbsolutePath());
     }
 
 

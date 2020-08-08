@@ -69,7 +69,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class FragmentGalleryNew extends Fragment  {
+public class FragmentGalleryNew extends Fragment{
     private View rootView;
     RecyclerView mainCategoryRecycler;
     MainRecyclerAdapter mainRecyclerAdapter;
@@ -89,6 +89,7 @@ public class FragmentGalleryNew extends Fragment  {
     private MediaSource mediaSource;
     private Uri uri;
     private PlayerView simpleExoPlayerView;
+    private RelativeLayout rlLoader;
 
 
     RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con;
@@ -119,9 +120,15 @@ public class FragmentGalleryNew extends Fragment  {
         filter_label = rootView.findViewById(R.id.filter_text);
         view_label = rootView.findViewById(R.id._button_view_text);
         click = rootView.findViewById(R.id.click);
+        rlLoader = rootView.findViewById(R.id.showLoader);
         pullToRefresh = rootView.findViewById(R.id.pullToRefresh);
         click.setVisibility(View.GONE);
 
+        if(AppClass.getAppInsatnce().isInsertionInProgress()){
+            rlLoader.setVisibility(View.VISIBLE);
+        }else{
+            rlLoader.setVisibility(View.INVISIBLE);
+        }
 
         // direct to gallery to view
 
@@ -213,8 +220,25 @@ public class FragmentGalleryNew extends Fragment  {
         mainCategoryRecycler = rootView.findViewById(R.id.main_recycler);
 
 //        AppViewModel appViewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
+        pulltoRefresh();
+        pullToRefresh.setRefreshing(false);
+
+        return rootView;
+    }
+
+    private void pulltoRefresh() {
+        pullToRefresh.setOnRefreshListener(() -> {
+            pullToRefresh.setRefreshing(false);
+            loadGalleryDataFromDB();
+        });
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
         if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
             loadGalleryDataFromDB();
+            AppClass.getAppInsatnce().setInsertionInProgress(false);
         }else{
             List<EventData> allSnipEvent = AppClass.getAppInsatnce().getAllSnip();
             List<EventData> allParentSnipEvent = AppClass.getAppInsatnce().getAllParentSnip();
@@ -223,90 +247,53 @@ public class FragmentGalleryNew extends Fragment  {
             mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allParentSnipEvent,allSnipEvent);
             mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
         }
-        pulltoRefresh();
-
-        return rootView;
-    }
-
-    private void pulltoRefresh() {
-        pullToRefresh.setOnRefreshListener(() -> {
-            pullToRefresh.setRefreshing(true);
-            loadGalleryDataFromDB();
-        });
     }
 
     private void loadGalleryDataFromDB() {
         AppClass.getAppInsatnce().clearAllParentSnips();
         AppClass.getAppInsatnce().clearAllSnips();
         AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-        getFilePathFromInternalStorage();
+//        getFilePathFromInternalStorage();
         List<Event> allEvents = new ArrayList<>();
         appViewModel.getEventLiveData().observe(this, events -> {
             if(events != null && events.size() > 0){
                 allEvents.addAll(events);
-            }
-        });
-        List<Hd_snips> hdSnips = new ArrayList<>();
-        appViewModel.getHDSnipsLiveData().observe(this, hd_snips -> {
-            if (hd_snips != null && hd_snips.size() > 0) {
-                hdSnips.addAll(hd_snips);
-            }
-        });
-        appViewModel.getSnipsLiveData().observe(this, snips -> {
-            if (snips != null && snips.size() > 0) {
-                for (Snip snip : snips) {
-                    for (Hd_snips hdSnip : hdSnips) {
-                        if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {
-                            snip.setVideoFilePath(hdSnip.getVideo_path_processed());
-                            if(thumbs.size() > 0) {
-                                for (String filePath : thumbs) {
-                                    File file = new File(filePath);
-                                    String[] snipNameWithExtension = file.getName().split("_");
-                                    if(snipNameWithExtension.length > 0){
-                                        String[] snipName = snipNameWithExtension[1].split("\\.");
-                                        if(snipName.length > 0) {
-                                            int snipId = Integer.parseInt(snipName[0]);
-                                            if(snipId == snip.getSnip_id()){
-                                                snip.setThumbnailPath(filePath);
-                                                for(Event event : allEvents){
-                                                    if(event.getEvent_id() == snip.getEvent_id()){
-                                                        EventData eventData = new EventData();
-                                                        eventData.setEvent_id(event.getEvent_id());
-                                                        eventData.setEvent_created(event.getEvent_created());
-                                                        eventData.setEvent_title(event.getEvent_title());
-                                                        eventData.addEventSnip(snip);
-                                                        AppClass.getAppInsatnce().saveAllEventSnips(eventData);
-                                                    }
-                                                    if(event.getEvent_id() == snip.getEvent_id() && snip.getParent_snip_id() == 0){
-                                                        EventData eventData = new EventData();
-                                                        eventData.setEvent_id(event.getEvent_id());
-                                                        eventData.setEvent_created(event.getEvent_created());
-                                                        eventData.setEvent_title(event.getEvent_title());
-                                                        eventData.addEventParentSnip(snip);
-                                                        AppClass.getAppInsatnce().setEventParentSnips(eventData);
+                List<Hd_snips> hdSnips = new ArrayList<>();
+                appViewModel.getHDSnipsLiveData().observe(this, hd_snips -> {
+                    if (hd_snips != null && hd_snips.size() > 0) {
+                        hdSnips.addAll(hd_snips);
+                        appViewModel.getSnipsLiveData().observe(this, snips -> {
+                            if (snips != null && snips.size() > 0) {
+                                for (Snip snip : snips) {
+                                    for (Hd_snips hdSnip : hdSnips) {
+                                        if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {
+                                            snip.setVideoFilePath(hdSnip.getVideo_path_processed());
+                                            for(Event event : allEvents){
+                                                if(event.getEvent_id() == snip.getEvent_id()){
+                                                    AppClass.getAppInsatnce().setEventSnipsFromDb(event,snip);
+                                                    if(snip.getParent_snip_id() == 0){
+                                                        AppClass.getAppInsatnce().setEventParentSnipsFromDb(event,snip);
                                                     }
                                                 }
                                             }
                                         }
-
                                     }
                                 }
+                                pullToRefresh.setRefreshing(false);
+                                List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
+                                List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
+                                if(mainRecyclerAdapter == null) {
+                                    RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
+                                    mainCategoryRecycler.setLayoutManager(layoutManager);
+                                    mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips);
+                                    mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+                                }else {
+                                    mainRecyclerAdapter.notifyDataSetChanged();
+                                }
                             }
-
-                        }
+                        });
                     }
-                }
-                pullToRefresh.setRefreshing(false);
-                List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
-                List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
-                if(mainRecyclerAdapter == null) {
-                    RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
-                    mainCategoryRecycler.setLayoutManager(layoutManager);
-                    mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips);
-                    mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-                }else {
-                    mainRecyclerAdapter.notifyDataSetChanged();
-                }
+                });
             }
         });
     }
@@ -359,6 +346,21 @@ public class FragmentGalleryNew extends Fragment  {
 //        }
     }
 
+    public void onLoadingCompleted(boolean success) {
+        if(success){
+            rlLoader.setVisibility(View.INVISIBLE);
+            List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
+            List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
+            if(mainRecyclerAdapter == null) {
+                RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
+                mainCategoryRecycler.setLayoutManager(layoutManager);
+                mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips);
+                mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+            }else {
+                mainRecyclerAdapter.notifyDataSetChanged();
+            }
+        }
+    }
 }
 
 

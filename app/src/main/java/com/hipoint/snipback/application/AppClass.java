@@ -1,6 +1,7 @@
 package com.hipoint.snipback.application;
 
 import android.app.Application;
+import android.util.Log;
 
 import com.hipoint.snipback.room.db.RoomDB;
 import com.hipoint.snipback.room.entities.Event;
@@ -10,7 +11,7 @@ import com.hipoint.snipback.room.entities.Snip;
 import java.util.ArrayList;
 import java.util.List;
 
-public class  AppClass extends Application {
+public class AppClass extends Application {
 
     public RoomDB database;
     private List<Integer> snipDurations = new ArrayList<>();
@@ -20,6 +21,8 @@ public class  AppClass extends Application {
     private int lastEventId;
     private int lastSnipId;
     private long lastHDSnipId;
+    private boolean isInsertionInProgress = false;
+    private String thumbFilePathRoot;
 
     public Event getLastCreatedEvent() {
         return lastCreatedEvent;
@@ -32,13 +35,13 @@ public class  AppClass extends Application {
 
     public Event lastCreatedEvent;
 
-    public static AppClass getAppInsatnce(){
-        if(appInstance == null)
+    public static AppClass getAppInsatnce() {
+        if (appInstance == null)
             appInstance = new AppClass();
         return appInstance;
     }
 
-    public AppClass getContext(){
+    public AppClass getContext() {
         return this;
     }
 
@@ -48,54 +51,192 @@ public class  AppClass extends Application {
         database = RoomDB.getDatabase(this);
     }
 
-    public void saveAllEventSnips(EventData snip){
-        int index = allEventSnips.size() > 0 ? allEventSnips.indexOf(snip) : -1;
-        if(index >= 0){
-            allEventSnips.remove(index);
-            allEventSnips.add(index,snip);
-        }else {
-            allEventSnips.add(snip);
-        }
+    List<Snip> snipList = new ArrayList<>();
+
+    public void saveAllSnips(Snip snip) {
+        snipList.add(snip);
     }
 
-    public void updateVirtualToRealInAllSnipEvent(Snip snip){
-        for(EventData eventData : allEventSnips){
-            int eventSnipIndex = eventData.getSnips().size() > 0 ? eventData.getSnips().indexOf(snip) : -1;
-            if(eventSnipIndex >= 0){
-                allEventSnips.remove(eventData);
-                eventData.getSnips().remove(eventSnipIndex);
-                snip.setIs_virtual_version(0);
+    public List<Snip> getSnips() {
+        return snipList;
+    }
+
+    public void saveAllEventSnips() {
+        EventData newEvent = new EventData();
+        newEvent.setEvent(getLastCreatedEvent());
+        newEvent.addEventAllSnip(getSnips());
+        allEventSnips.add(newEvent);
+
+//        if (allEventSnips.size() > 0) {
+//            for (EventData eventData : allEventSnips) {
+//                Log.i("eventId",eventData.getEvent().getEvent_id()+"");
+//                Log.i("New Snip Event Id",snip.getEvent_id()+"");
+//                if (eventData.getEvent().getEvent_id() == snip.getEvent_id()) {
+//                    eventData.addEventSnip(snip);
+////                    allEventSnips.set(allEventSnips.indexOf(eventData), eventData);
+//                } else {
+//                    EventData newEvent = new EventData();
+//                    newEvent.setEvent(getLastCreatedEvent());
+//                    newEvent.addEventSnip(snip);
+//                    allEventSnips.add(newEvent);
+//                }
+//            }
+//        } else {
+//            EventData newEvent = new EventData();
+//            newEvent.setEvent(getLastCreatedEvent());
+//            newEvent.addEventSnip(snip);
+//            allEventSnips.add(newEvent);
+//        }
+    }
+
+    List<Snip> parentsnipList = new ArrayList<>();
+
+    public void saveAllParentSnips(Snip snip) {
+        parentsnipList.add(snip);
+    }
+
+    public List<Snip> getParentSnips() {
+        return parentsnipList;
+    }
+
+    public void setEventParentSnips() {
+
+        EventData newEvent = new EventData();
+        newEvent.setEvent(getLastCreatedEvent());
+        newEvent.addEventAllParentSnip(getParentSnips());
+        eventParentSnips.add(newEvent);
+//
+//        if (eventParentSnips.size() > 0) {
+//            for (EventData eventData : eventParentSnips) {
+//                if (eventData.getEvent().getEvent_id() == parentSnip.getEvent_id()) {
+//                    eventData.addEventParentSnip(parentSnip);
+////                    eventParentSnips.set(eventParentSnips.indexOf(eventData), eventData);
+//                } else {
+//                    EventData newEvent = new EventData();
+//                    newEvent.setEvent(getLastCreatedEvent());
+//                    newEvent.addEventParentSnip(parentSnip);
+//                    eventParentSnips.add(newEvent);
+//                }
+//            }
+//        } else {
+//            EventData newEvent = new EventData();
+//            newEvent.setEvent(getLastCreatedEvent());
+//            newEvent.addEventParentSnip(parentSnip);
+//            eventParentSnips.add(newEvent);
+//        }
+    }
+
+    public void setEventSnipsFromDb(Event event, Snip snip) {
+        boolean eventStatus = false;
+
+        for (EventData eventData : allEventSnips) {
+            if (eventData.getEvent().getEvent_id() == snip.getEvent_id()) {
+                eventStatus = true;
+                break;
+            }
+        }
+        if (!eventStatus) {
+            EventData newEvent = new EventData();
+            newEvent.setEvent(event);
+            newEvent.addEventSnip(snip);
+            allEventSnips.add(newEvent);
+        }
+
+        for (EventData eventData : allEventSnips) {
+            if (eventData.getEvent().getEvent_id() == snip.getEvent_id()) {
                 eventData.addEventSnip(snip);
-                allEventSnips.add(eventData);
+                int index = allEventSnips.indexOf(eventData);
+                allEventSnips.get(index).addEventSnip(snip);
+            }
+        }
+
+    }
+
+    public void setEventParentSnipsFromDb(Event event, Snip parentSnip) {
+        boolean eventStatus = false;
+
+        for (EventData eventData : eventParentSnips) {
+            if (eventData.getEvent().getEvent_id() == parentSnip.getEvent_id()) {
+                eventStatus = true;
+                break;
+            }
+        }
+        if (!eventStatus) {
+            EventData newEvent = new EventData();
+            newEvent.setEvent(event);
+            newEvent.addEventParentSnip(parentSnip);
+            eventParentSnips.add(newEvent);
+        }
+
+        for (EventData eventData : eventParentSnips) {
+            if (eventData.getEvent().getEvent_id() == parentSnip.getEvent_id()) {
+                eventData.addEventParentSnip(parentSnip);
+                int index = eventParentSnips.indexOf(eventData);
+                eventParentSnips.get(index).addEventParentSnip(parentSnip);
             }
         }
     }
 
-    public void clearAllSnips(){
+    public void updateVirtualToRealInAllSnipEvent(Snip snip) {
+        snip.setIs_virtual_version(0);
+        if (allEventSnips.size() > 0) {
+            for (EventData eventData : allEventSnips) {
+                if (eventData.getEvent().getEvent_id() == snip.getEvent_id()) {
+                    eventData.addEventSnip(snip);
+                    allEventSnips.set(allEventSnips.indexOf(eventData), eventData);
+                } else {
+                    EventData newEvent = new EventData();
+                    newEvent.setEvent(getLastCreatedEvent());
+                    newEvent.addEventSnip(snip);
+                    allEventSnips.add(newEvent);
+                }
+            }
+        } else {
+            EventData newEvent = new EventData();
+            newEvent.setEvent(getLastCreatedEvent());
+            newEvent.addEventSnip(snip);
+            allEventSnips.add(newEvent);
+        }
+
+//        for (EventData eventData : allEventSnips) {
+//            int eventSnipIndex = eventData.getSnips().size() > 0 ? eventData.getSnips().indexOf(snip) : -1;
+//            if (eventSnipIndex >= 0) {
+//                allEventSnips.remove(eventData);
+//                eventData.getSnips().remove(eventSnipIndex);
+//                snip.setIs_virtual_version(0);
+//                eventData.addEventSnip(snip);
+//                allEventSnips.add(eventData);
+//            }
+//        }
+    }
+
+    public void clearAllSnips() {
         allEventSnips.clear();
+        snipList.clear();
     }
 
     public List<EventData> getAllSnip() {
         return allEventSnips;
     }
 
-    public void clearAllParentSnips(){
+    public void clearAllParentSnips() {
         eventParentSnips.clear();
+        parentsnipList.clear();
     }
 
     public List<EventData> getAllParentSnip() {
         return eventParentSnips;
     }
 
-    public void setSnipDurations(int duration){
+    public void setSnipDurations(int duration) {
         snipDurations.add(duration);
     }
 
-    public List<Integer> getSnipDurations(){
+    public List<Integer> getSnipDurations() {
         return snipDurations;
     }
 
-    public void clearSnipDurations(){
+    public void clearSnipDurations() {
         snipDurations.clear();
     }
 
@@ -127,27 +268,38 @@ public class  AppClass extends Application {
         return eventParentSnips;
     }
 
-    public void setEventParentSnips(EventData eventParentSnip) {
-        int index = eventParentSnips.size() > 0 ? eventParentSnips.indexOf(eventParentSnips) : -1;
-        if(index >= 0){
-            eventParentSnips.remove(index);
-            eventParentSnips.add(index,eventParentSnip);
-        }else {
-            eventParentSnips.add(eventParentSnip);
-        }
-    }
-
-    public List<Snip> getChildSnipsByParentSnipId(List<Integer> parentId){
+    public List<Snip> getChildSnipsByParentSnipId(int eventId, int parentId) {
         List<Snip> childSnips = new ArrayList<>();
-        for(EventData eventData : getAllSnip()){
-            for(Snip snip : eventData.getSnips()){
-                for(int parentSnipId : parentId) {
-                    if (snip.getParent_snip_id() == parentSnipId || snip.getSnip_id() == parentSnipId) {
+        for (EventData eventData : getAllSnip()) {
+            if (eventId == eventData.getEvent().getEvent_id()) {
+                for (Snip snip : eventData.getParentSnip()) {
+                    if (snip.getSnip_id() == parentId) {
+                        childSnips.add(snip);
+                    }
+                }
+                for (Snip snip : eventData.getSnips()) {
+                    if (snip.getParent_snip_id() == parentId || snip.getSnip_id() == parentId) {
                         childSnips.add(snip);
                     }
                 }
             }
         }
         return childSnips;
+    }
+
+    public boolean isInsertionInProgress() {
+        return isInsertionInProgress;
+    }
+
+    public void setInsertionInProgress(boolean insertionInProgress) {
+        isInsertionInProgress = insertionInProgress;
+    }
+
+    public String getThumbFilePathRoot() {
+        return thumbFilePathRoot;
+    }
+
+    public void setThumbFilePathRoot(String thumbFilePathRoot) {
+        this.thumbFilePathRoot = thumbFilePathRoot;
     }
 }

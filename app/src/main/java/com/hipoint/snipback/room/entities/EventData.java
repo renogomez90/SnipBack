@@ -1,5 +1,7 @@
 package com.hipoint.snipback.room.entities;
 
+import android.util.Log;
+
 import androidx.room.ColumnInfo;
 
 import java.util.ArrayList;
@@ -7,35 +9,17 @@ import java.util.List;
 
 public class EventData {
 
-    private int event_id;
-    private String event_title;
-    private long event_created;
+    private Event event;
 
     private List<Snip> snips = new ArrayList<>();
     private List<Snip> parentSnip = new ArrayList<>();
 
-    public int getEvent_id() {
-        return event_id;
+    public Event getEvent() {
+        return event;
     }
 
-    public void setEvent_id(int event_id) {
-        this.event_id = event_id;
-    }
-
-    public String getEvent_title() {
-        return event_title;
-    }
-
-    public void setEvent_title(String event_title) {
-        this.event_title = event_title;
-    }
-
-    public long getEvent_created() {
-        return event_created;
-    }
-
-    public void setEvent_created(long event_created) {
-        this.event_created = event_created;
+    public void setEvent(Event event) {
+        this.event = event;
     }
 
     public List<Snip> getSnips() {
@@ -46,11 +30,55 @@ public class EventData {
         return parentSnip;
     }
 
-    public void addEventSnip(Snip snip) {
-        this.snips.add(snip);
+    public void addEventAllSnip(List<Snip> newSnip) {
+        snips.addAll(newSnip);
+    }
+    public void addEventAllParentSnip(List<Snip> newSnip) {
+        parentSnip.addAll(newSnip);
+    }
+
+    public void addEventSnip(Snip newSnip) {
+        boolean snipStatus = false;
+
+        for (Snip snip : snips) {
+            if (snip.getSnip_id() == newSnip.getSnip_id()) {
+                snipStatus = true;
+                break;
+            }
+        }
+        if (!snipStatus) {
+            this.snips.add(newSnip);
+        }
+        for (Snip snip : snips) {
+            if (snip.getSnip_id() == newSnip.getSnip_id()) {
+                int index = snips.indexOf(newSnip);
+                if(index >= 0) {
+                    snips.set(index,newSnip);
+                }
+            }
+        }
+//        Log.i("Snip Update","Success");
+//        int index = snips.size() > 0 ? snips.indexOf(newSnip) : -1;
+//        if(index >= 0){
+//            this.snips.remove(index);
+//            this.snips.add(index,newSnip);
+//        }else {
+//            this.snips.add(newSnip);
+//        }
+    }
+
+    public void clearSnip(){
+        if(snips.size() > 0) snips.clear();
     }
 
     public void addEventParentSnip(Snip snip) {
-        this.parentSnip.add(snip);
+        int index = parentSnip.size() > 0 ? parentSnip.indexOf(snip) : -1;
+        if(index >= 0){
+            this.parentSnip.remove(index);
+            this.parentSnip.add(index,snip);
+        }else {
+            this.parentSnip.add(snip);
+        }
     }
+
 }

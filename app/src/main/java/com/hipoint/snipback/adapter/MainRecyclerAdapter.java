@@ -44,21 +44,18 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     @Override
     public void onBindViewHolder(@NonNull MainViewHolder holder, int position) {
 //        holder.categoryTitle.setText(getDate(parentSnips.get(position).getEvent_created()));
-        if(parentSnips.get(position).getEvent_id() != eventId){
-            holder.categoryTitle.setVisibility(View.VISIBLE);
-            holder.categoryTitle.setText(parentSnips.get(position).getEvent_title());
-        }else{
-            holder.categoryTitle.setVisibility(View.GONE);
-        }
-        eventId = parentSnips.get(position).getEvent_id();
+//        if(parentSnips.get(position).getEvent().getEvent_id() != eventId){
+//            holder.categoryTitle.setVisibility(View.VISIBLE);
+//            holder.categoryTitle.setText(parentSnips.get(position).getEvent().getEvent_title());
+//        }else{
+//            holder.categoryTitle.setVisibility(View.GONE);
+//        }
+        holder.categoryTitle.setVisibility(View.VISIBLE);
+        holder.categoryTitle.setText(parentSnips.get(position).getEvent().getEvent_title());
+        eventId = parentSnips.get(position).getEvent().getEvent_id();
 
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
-        List<Integer> parentId = new ArrayList<>();
-        for(int i = 0; i < allParentSnip.size(); i++){
-            parentId.add(allParentSnip.get(0).getSnip_id());
-        }
-        List<Snip> childSnip = AppClass.getAppInsatnce().getChildSnipsByParentSnipId(parentId);
-        setCatItemRecycler(holder.itemRecycler,childSnip);
+        setCatItemRecycler(holder.itemRecycler,allParentSnip);
     }
 
     @Override
@@ -78,9 +75,8 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     }
 
     private void setCatItemRecycler(RecyclerView recyclerView,List<Snip> allEventSnips){
-
-        CategoryItemRecyclerAdapter itemRecyclerAdapter=new CategoryItemRecyclerAdapter(context,allEventSnips);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context,RecyclerView.HORIZONTAL,false));
+        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context,allEventSnips);
+        recyclerView.setLayoutManager(new LinearLayoutManager(context,RecyclerView.VERTICAL,false));
         recyclerView.setAdapter(itemRecyclerAdapter);
     }
 

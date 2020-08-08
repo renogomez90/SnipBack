@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.ViewModelProviders;
@@ -238,6 +239,7 @@ public class AppRepository {
 
         @Override
         protected void onPostExecute(Snip aVoid) {
+            aVoid.setSnip_id(AppClass.getAppInsatnce().getLastSnipId());
             listener.onTaskCompleted(aVoid);
             super.onPostExecute(aVoid);
         }
@@ -298,7 +300,7 @@ public class AppRepository {
         }
     }
     int eventId = 0;
-    public int getLastInsertedEventId(Fragment activity){
+    public int getLastInsertedEventId(AppCompatActivity activity){
         AppViewModel appViewModel = ViewModelProviders.of(activity).get(AppViewModel.class);
         appViewModel.getEventLiveData().observe(activity, events -> {
             if(events.size() > 0) {

@@ -196,4 +196,18 @@ public class Snip implements Parcelable {
         parcel.writeString(videoFilePath);
         parcel.writeString(thumbnailPath);
     }
+
+    @Override()
+    public boolean equals(Object other) {
+        // This is unavoidable, since equals() must accept an Object and not something more derived
+        if (other instanceof Snip) {
+            // Note that I use equals() here too, otherwise, again, we will check for referential equality.
+            // Using equals() here allows the Model class to implement it's own version of equality, rather than
+            // us always checking for referential equality.
+            Snip otherProduct = (Snip) other;
+            return otherProduct.getSnip_id() == this.getSnip_id();
+        }
+
+        return false;
+    }
 }

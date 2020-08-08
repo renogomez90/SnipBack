@@ -15,13 +15,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.CategoryItem;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Snip;
 
+import java.io.File;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 
 public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryItemRecyclerAdapter.CategoryItemViewHolder> {
@@ -67,15 +70,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                 }else{
                     holder.tvDuration.setText(String.format("%02d:%02d", minutes, seconds));
                 }
-                Bitmap myBitmap = BitmapFactory.decodeFile(snip.getThumbnailPath());
+                String filePath = AppClass.getAppInsatnce().getThumbFilePathRoot()+snip.getSnip_id()+".png";
+                Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
                 holder.itemImage.setImageBitmap(myBitmap);
-                holder.itemImage.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent(context, ActivityPlayVideo.class);
-                        intent.putExtra("snip", snip);
-                        context.startActivity(intent);
-                    }
+                holder.itemImage.setOnClickListener(v -> {
+                    Intent intent = new Intent(context, ActivityPlayVideo.class);
+                    intent.putExtra("snip", snip);
+                    context.startActivity(intent);
                 });
 //                holder.itemImage.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));
             } catch (Exception e) {
@@ -85,6 +86,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
 
 //        holder.itemImage.setImageResource(categoryItemList.get(position).getImageUrl());
     }
+
 
     @Override
     public int getItemCount() {

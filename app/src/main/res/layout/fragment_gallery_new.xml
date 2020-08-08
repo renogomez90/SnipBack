@@ -25,7 +25,8 @@
         android:layout_marginBottom="5dp"
         android:layout_marginTop="5dp"
         android:layout_above="@+id/llfooter"
-        android:layout_below="@+id/photolabel">
+        android:layout_below="@+id/photolabel"
+        >
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/main_recycler"
@@ -35,6 +36,26 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
+    <RelativeLayout
+        android:id="@+id/showLoader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pullToRefresh"
+        android:visibility="invisible">
+
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:adjustViewBounds="true"/>
+
+        <ProgressBar
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:visibility="visible"/>
+
+    </RelativeLayout>
 
 
     <RelativeLayout

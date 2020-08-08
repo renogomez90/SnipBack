@@ -118,6 +118,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 
     Bitmap thumb;
 
+    public interface OnTaskCompleted{
+        void onTaskCompleted(boolean success);
+    }
+
     private static final String[] VIDEO_PERMISSIONS = {
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
@@ -344,6 +348,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private View blinkEffect;
     private Animation animBlink;
     private RelativeLayout rlVideo, recStartLayout, bottomContainer;
+    private OnTaskCompleted thumbnailProcesingCompleted;
 
     public static VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
@@ -390,7 +395,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(), true));
         settings.setOnClickListener(v -> showDialogSettingsMain());
         appRepository = AppRepository.getInstance();
-        appRepository.getLastInsertedEventId(this);
 
         mChronometer.setOnChronometerTickListener(arg0 -> {
 //                if (!resume) {
@@ -1038,14 +1042,22 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             parentSnip.setStart_time(0);
             parentSnip.setEnd_time(0);
             parentSnip.setIs_virtual_version(0);
-            parentSnip.setHas_virtual_versions(0);
             parentSnip.setParent_snip_id(0);
             parentSnip.setSnip_duration(0);
             parentSnip.setTotal_video_duration(timerSecond);
             parentSnip.setVid_creation_date(System.currentTimeMillis());
             parentSnip.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
+            if(AppClass.getAppInsatnce().getSnipDurations().size() > 0){
+                parentSnip.setHas_virtual_versions(1);
+            }else{
+                parentSnip.setHas_virtual_versions(0);
+            }
+            AppClass.getAppInsatnce().setInsertionInProgress(true);
             appRepository.insertSnip(this, parentSnip);
-
+            parentSnip.setVideoFilePath(outputFilePath);
+            AppClass.getAppInsatnce().saveAllParentSnips(parentSnip);
+            AppClass.getAppInsatnce().setEventParentSnips();
+            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
             hdSnips = new Hd_snips();
             hdSnips.setVideo_path_processed(outputFilePath);
 //            parentSnip.setVideoFilePath(outputFilePath);
@@ -1065,6 +1077,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             appRepository.insertHd_snips(hdSnips);
             saveSnipToDB(snip, hdSnips.getVideo_path_processed());
         }
+        getVideoThumbnail(snip, new File(hdSnips.getVideo_path_processed()));
 
     }
 
@@ -1145,10 +1158,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             Event event = AppClass.getAppInsatnce().getLastCreatedEvent();
 //            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
 //            String currentDateandTime = sdf.format(new Date());
-            EventData eventData = new EventData();
-            eventData.setEvent_id(event.getEvent_id());
-            eventData.setEvent_title(event.getEvent_title());
-            eventData.setEvent_created(event.getEvent_created());
+//            EventData eventData = new EventData();
+//            eventData.setEvent_id(event.getEvent_id());
+//            eventData.setEvent_title(event.getEvent_title());
+//            eventData.setEvent_created(event.getEvent_created());
 
             for (int endSecond : snipDurations) {
                 int startSecond = Math.max((endSecond - 5), 0);
@@ -1158,32 +1171,33 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 snip.setIs_virtual_version(1);
                 snip.setHas_virtual_versions(0);
                 snip.setParent_snip_id(parentSnip.getSnip_id());
-                snip.setSnip_duration(5);
+                snip.setSnip_duration(endSecond-startSecond);
                 snip.setVid_creation_date(System.currentTimeMillis());
                 snip.setEvent_id(event.getEvent_id());
                 appRepository.insertSnip(this, snip);
-                parentSnip.setHas_virtual_versions(1);
-                appRepository.updateSnip(parentSnip);
-                parentSnip.setVideoFilePath(filePath);
+//                parentSnip.setHas_virtual_versions(1);
+//                appRepository.updateSnip(parentSnip);
                 snip.setVideoFilePath(filePath);
-                eventData.addEventSnip(snip);
-                AppClass.getAppInsatnce().saveAllEventSnips(eventData);
-                eventData.addEventSnip(parentSnip);
-                AppClass.getAppInsatnce().saveAllEventSnips(eventData);
+//                eventData.addEventSnip(snip);
+                AppClass.getAppInsatnce().saveAllSnips(snip);
+//                eventData.addEventSnip(parentSnip);
             }
+            AppClass.getAppInsatnce().saveAllEventSnips();
             AppClass.getAppInsatnce().clearSnipDurations();
         }
 
-        AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-        appViewModel.getSnipsLiveData().observe(this, snips -> {
-            for (Snip snip : snips) {
-                if (snip.getParent_snip_id() == parentSnip.getSnip_id() || snip.getSnip_id() == parentSnip.getSnip_id()) {
-                    getVideoThumbnail(snip, new File(filePath));
-                }
-            }
+//        AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+//        appViewModel.getSnipsLiveData().observe(this, snips -> {
+//            if(snips.size() > 0) {
+//                for (Snip snip : snips) {
+//                    if (snip.getParent_snip_id() == parentSnip.getSnip_id() || snip.getSnip_id() == parentSnip.getSnip_id()) {
+//                        getVideoThumbnail(snip, new File(filePath), snips.indexOf(snip) == snips.size() - 1);
+//                    }
+//                }
+//            }
 //            ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance());
 
-        });
+//        });
 
         //TODO
     }
@@ -1261,15 +1275,19 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 Log.i(TAG, "MediaMetadataRetriever got exception:" + ex);
             }
             streamThumbnail.close();
-            snip.setThumbnailPath(fullThumbPath.getAbsolutePath());
+//            snip.setThumbnailPath(fullThumbPath.getAbsolutePath());
             //update Snip
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
-            String currentDateandTime = sdf.format(new Date());
-            EventData eventData = new EventData();
-            eventData.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
-            eventData.setEvent_title(currentDateandTime);
-            eventData.addEventSnip(snip);
-            AppClass.getAppInsatnce().saveAllEventSnips(eventData);
+//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
+//            String currentDateandTime = sdf.format(new Date());
+//            EventData eventData = new EventData();
+//            eventData.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
+//            eventData.setEvent_title(currentDateandTime);
+//            eventData.addEventSnip(snip);
+//            AppClass.getAppInsatnce().saveAllEventSnips(snip);
+//            if(isLast){
+//                AppClass.getAppInsatnce().setInsertionInProgress(false);
+//                thumbnailProcesingCompleted.onTaskCompleted(true);
+//            }
             Log.d(TAG, "thumbnail saved successfully");
         } catch (FileNotFoundException e) {
             Log.d(TAG, "File Not Found Exception : check directory path");
@@ -1402,6 +1420,22 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //
 //    }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof OnTaskCompleted) {
+            thumbnailProcesingCompleted = (OnTaskCompleted) context;
+        } else {
+            throw new RuntimeException(context.toString()
+                    + " must implement OnGreenFragmentListener");
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        thumbnailProcesingCompleted = null;
+    }
 
 }
 
