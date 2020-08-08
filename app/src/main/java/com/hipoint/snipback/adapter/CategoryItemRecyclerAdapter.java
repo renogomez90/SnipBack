@@ -11,11 +11,18 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.ActivityPlayVideo;
+import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.fragment.FragmentGallery;
+import com.hipoint.snipback.fragment.FragmentGalleryNew;
+import com.hipoint.snipback.fragment.FragmentPlayVideo;
+import com.hipoint.snipback.fragment.Videoeditingfragment;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.util.List;
@@ -67,9 +74,12 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                 Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
                 holder.itemImage.setImageBitmap(myBitmap);
                 holder.itemImage.setOnClickListener(v -> {
-                    Intent intent = new Intent(context, ActivityPlayVideo.class);
-                    intent.putExtra("snip", snip);
-                    context.startActivity(intent);
+//                    Intent intent = new Intent(context, ActivityPlayVideo.class);
+//                    intent.putExtra("snip", snip);
+//                    context.startActivity(intent);
+
+                    ((AppMainActivity) context).loadFragment(FragmentPlayVideo.newInstance(snip),true);
+
                 });
 //                holder.itemImage.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));
             } catch (Exception e) {
@@ -101,4 +111,5 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     public interface ItemListener {
         void onItemClick(Snip snipvideopath);
     }
+
 }

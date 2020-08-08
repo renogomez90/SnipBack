@@ -27,7 +27,6 @@ import com.bumptech.glide.Glide;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.adapter.AdapterGallery;
-import com.hipoint.snipback.ActivityPlayVideo;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.MediaSource;

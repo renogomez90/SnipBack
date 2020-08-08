@@ -25,11 +25,11 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:gravity="center"
-        android:paddingTop="4dp"
+       android:layout_centerHorizontal="true"
         android:orientation="horizontal"
-        android:visibility="gone">
+        android:visibility="visible">
 
 
         <ImageView
@@ -47,6 +47,9 @@
 
 
     </LinearLayout>
+
+
+
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -85,6 +88,8 @@
                 android:textColor="@color/colorPrimaryWhite"
                 android:text="00:00/00:08"/>
         </LinearLayout>
+
+
     </RelativeLayout>
 
 
@@ -117,7 +122,7 @@
            app:unplayed_color="#FFBEBEBE"
             app:buffered_color="#FFBEBEBE"
             app:played_color="@color/colorPrimaryAccentRed"
-            android:layout_height="2dp"/>
+            android:layout_height="wrap_content"/>
 
         <TextView android:id="@id/exo_duration"
             android:layout_width="wrap_content"
