@@ -16,16 +16,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
-import com.hipoint.snipback.room.entities.CategoryItem;
-import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Snip;
 
-import java.io.File;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Scanner;
 
 public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryItemRecyclerAdapter.CategoryItemViewHolder> {
     private Context context;

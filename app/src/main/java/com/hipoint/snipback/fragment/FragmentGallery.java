@@ -177,9 +177,9 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
             @Override
             public void onClick(View v) {
 //                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
-                Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
-                intent.putExtra("uri", uri.toString());
-                startActivity(intent);
+//                Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+//                intent.putExtra("uri", uri.toString());
+//                startActivity(intent);
 
             }
         });
@@ -209,9 +209,9 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
 
     @Override
     public void onItemClick(Snip snipvideopath) {
-        Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
-        intent.putExtra("snip", snipvideopath);
-        startActivity(intent);
+//        Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+//        intent.putExtra("snip", snipvideopath);
+//        startActivity(intent);
     }
 }
 

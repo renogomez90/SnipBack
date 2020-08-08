@@ -9,7 +9,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
-import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -19,15 +18,11 @@ import android.widget.Toast;
 import android.widget.VideoView;
 
 import androidx.lifecycle.ViewModelProviders;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.TrimmerUtils;
-import com.hipoint.snipback.adapter.MainRecyclerAdapter;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.Event;
-import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
 import com.hipoint.snipback.room.repository.AppRepository;
@@ -35,9 +30,6 @@ import com.hipoint.snipback.room.repository.AppViewModel;
 import com.kaopiz.kprogresshud.KProgressHUD;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
 
 import Jni.FFmpegCmd;
 import VideoHandle.OnEditorListener;
@@ -130,7 +122,7 @@ public class ActivityPlayVideo extends Swipper {
                 seek.setProgress((int) current_pos);
 
                 if (snip.getIs_virtual_version() == 1) {
-                    long AUTO_DISMISS_MILLIS = 6000 - (long) current_pos;
+                    long AUTO_DISMISS_MILLIS = (long) snip.getSnip_duration() * 1000 - (long) current_pos;
                     new CountDownTimer(AUTO_DISMISS_MILLIS, 1000) {
                         @Override
                         public void onTick(long millisUntilFinished) {
@@ -166,7 +158,7 @@ public class ActivityPlayVideo extends Swipper {
         }
 
         if (snip.getIs_virtual_version() == 1) {
-            new CountDownTimer(6000, 1000) {
+            new CountDownTimer((long) snip.getSnip_duration() * 1000, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
 
@@ -192,7 +184,7 @@ public class ActivityPlayVideo extends Swipper {
         //get the video duration
         //TODO
         if (snip.getIs_virtual_version() == 1) {
-            total_duration = 5 * 1000;
+            total_duration = snip.getSnip_duration() * 1000;
         } else {
             total_duration = videoView.getDuration();
             current_pos = videoView.getCurrentPosition();
@@ -221,7 +213,7 @@ public class ActivityPlayVideo extends Swipper {
                         current_pos = videoView.getCurrentPosition();
                     }
                     if (snip.getIs_virtual_version() == 1) {
-                        total_duration = 5 * 1000;
+                        total_duration = snip.getSnip_duration() * 1000;
                     } else {
                         total_duration = videoView.getDuration();
                     }
@@ -241,7 +233,7 @@ public class ActivityPlayVideo extends Swipper {
                 }
             }
         };
-        handler.postDelayed(runnable, 500);
+        handler.postDelayed(runnable, 50);
 
 //        seekbar change listner
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -304,19 +296,21 @@ public class ActivityPlayVideo extends Swipper {
 //                eventData.setEvent_title(event.getEvent_title());
 //                eventData.setEvent_created(event.getEvent_created());
 //                eventData.addEventSnip(snip);
-                AppClass.getAppInsatnce().updateVirtualToRealInAllSnipEvent(snip);
                 snip.setIs_virtual_version(0);
+                snip.setVideoFilePath(mediaFile.getAbsolutePath());
+                AppClass.getAppInsatnce().setEventSnipsFromDb(event,snip);
                 appRepository.updateSnip(snip);
                 Hd_snips hdSnips = new Hd_snips();
                 hdSnips.setVideo_path_processed(mediaFile.getAbsolutePath());
                 hdSnips.setSnip_id(snip.getSnip_id());
                 appRepository.insertHd_snips(hdSnips);
-
-                appViewModel.loadGalleryDataFromDB(ActivityPlayVideo.this);
-
+                AppClass.getAppInsatnce().setInsertionInProgress(true);
                 if (hud.isShowing())
                     hud.dismiss();
                 runOnUiThread(() -> Toast.makeText(getApplicationContext(), "Video saved to gallery", Toast.LENGTH_SHORT).show());
+
+//                appViewModel.loadGalleryDataFromDB(ActivityPlayVideo.this);
+
             }
 
             @Override
