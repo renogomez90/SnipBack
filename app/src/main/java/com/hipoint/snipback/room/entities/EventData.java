@@ -1,9 +1,5 @@
 package com.hipoint.snipback.room.entities;
 
-import android.util.Log;
-
-import androidx.room.ColumnInfo;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,6 +75,20 @@ public class EventData {
         }else {
             this.parentSnip.add(snip);
         }
+    }
+
+    @Override()
+    public boolean equals(Object other) {
+        // This is unavoidable, since equals() must accept an Object and not something more derived
+        if (other instanceof EventData) {
+            // Note that I use equals() here too, otherwise, again, we will check for referential equality.
+            // Using equals() here allows the Model class to implement it's own version of equality, rather than
+            // us always checking for referential equality.
+            EventData otherProduct = (EventData) other;
+            return otherProduct.getEvent().getEvent_id() == this.getEvent().getEvent_id();
+        }
+
+        return false;
     }
 
 }

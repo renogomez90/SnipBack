@@ -1,5 +1,6 @@
 package com.hipoint.snipback;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -7,7 +8,9 @@ import android.view.MotionEvent;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
 
@@ -59,6 +62,10 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
         if (!hasPermissions(this, PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL);
         }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA},
+                    50); }
 
     }
 
@@ -77,16 +84,21 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
     }
 
     private void if24HoursCompleted() {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
+        String currentDateandTime = sdf.format(new Date());
         appViewModel.getEventLiveData().observe(this, events -> {
             if (events != null && events.size() > 0) {
                 Event lastEvent = events.get(events.size() - 1);
-                long diff = System.currentTimeMillis() - lastEvent.getEvent_created();
-//                long seconds = diff / 1000;
-//                long minutes = diff / 1000 / 60;
-                long hours = diff / 1000 / 60 / 60;
-                if (hours >= 8) {
+                if(!lastEvent.getEvent_title().equals(CommonUtils.today() + ", " + currentDateandTime)){
                     addDailyEvent();
                 }
+//                long diff = System.currentTimeMillis() - lastEvent.getEvent_created();
+////                long seconds = diff / 1000;
+////                long minutes = diff / 1000 / 60;
+//                long hours = diff / 1000 / 60 / 60;
+//                if (hours >= 8) {
+//                    addDailyEvent();
+//                }
             } else {
                 addDailyEvent();
             }
@@ -112,12 +124,16 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
 
     @Override
     public void onBackPressed() {
-//        Fragment myFragment = getSupportFragmentManager().findFragmentById(R.id.mainFragment);
+        Fragment myFragment = getSupportFragmentManager().findFragmentById(R.id.mainFragment);
         int count = getSupportFragmentManager().getBackStackEntryCount();
         if (count == 0) {
             super.onBackPressed();
         } else {
-            getSupportFragmentManager().popBackStack();
+            if(myFragment instanceof FragmentGalleryNew){
+                getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            }else{
+                getSupportFragmentManager().popBackStack();
+            }
         }
     }
 

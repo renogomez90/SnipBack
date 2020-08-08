@@ -3,6 +3,10 @@ package com.hipoint.snipback.room.repository;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.media.MediaMetadataRetriever;
+import android.os.Build;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,8 +21,12 @@ import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class AppViewModel extends AndroidViewModel {
     AppRepository appRepository;
@@ -103,45 +111,6 @@ public class AppViewModel extends AndroidViewModel {
                 });
             }
         });
-
-        //                            if(thumbs.size() > 0) {
-//                                for (String filePath : thumbs) {
-//                                    File file = new File(filePath);
-//                                    String[] snipNameWithExtension = file.getName().split("_");
-//                                    if(snipNameWithExtension.length > 0){
-//                                        String[] snipName = snipNameWithExtension[1].split("\\.");
-//                                        if(snipName.length > 0) {
-//                                            int snipId = Integer.parseInt(snipName[0]);
-//                                            if(snipId == snip.getSnip_id()){
-//                                                snip.setThumbnailPath(filePath);
-//                                                AppClass.getAppInsatnce().saveAllEventSnips(snip);
-//                                                if(snip.getParent_snip_id() == 0){
-//                                                    AppClass.getAppInsatnce().setEventParentSnips(snip);
-//                                                }
-////                                                for(Event event : allEvents){
-////                                                    if(event.getEvent_id() == snip.getEvent_id()){
-////                                                        EventData eventData = new EventData();
-////                                                        eventData.setEvent_id(event.getEvent_id());
-////                                                        eventData.setEvent_created(event.getEvent_created());
-////                                                        eventData.setEvent_title(event.getEvent_title());
-////                                                        eventData.addEventSnip(snip);
-////                                                        AppClass.getAppInsatnce().saveAllEventSnips(eventData);
-////                                                    }
-////                                                    if(event.getEvent_id() == snip.getEvent_id() && snip.getParent_snip_id() == 0){
-////                                                        EventData eventData = new EventData();
-////                                                        eventData.setEvent_id(event.getEvent_id());
-////                                                        eventData.setEvent_created(event.getEvent_created());
-////                                                        eventData.setEvent_title(event.getEvent_title());
-////                                                        eventData.addEventParentSnip(snip);
-////                                                        AppClass.getAppInsatnce().setEventParentSnips(eventData);
-////                                                    }
-////                                                }
-//                                            }
-//                                        }
-//
-//                                    }
-//                                }
-//                            }
 
     }
     private static String VIDEO_DIRECTORY_NAME_VIRTUAL = "SnipBackVirtual";

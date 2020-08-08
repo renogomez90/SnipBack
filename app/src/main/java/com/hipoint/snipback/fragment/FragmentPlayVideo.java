@@ -5,6 +5,7 @@ import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -13,6 +14,7 @@ import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -21,11 +23,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.OnSwipeTouchListener;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
@@ -50,7 +54,20 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.hipoint.snipback.Utils.TrimmerUtils;
+import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.room.entities.Event;
+import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
+import com.hipoint.snipback.room.repository.AppRepository;
+import com.hipoint.snipback.room.repository.AppViewModel;
+import com.kaopiz.kprogresshud.KProgressHUD;
+
+import java.io.File;
+import java.util.Objects;
+
+import Jni.FFmpegCmd;
+import VideoHandle.OnEditorListener;
 
 import static android.content.Context.WINDOW_SERVICE;
 
@@ -81,6 +98,11 @@ public class FragmentPlayVideo extends Fragment {
     float initialX, initialY, currentX, currentY;
     float condition2;
 
+    private Event event;
+    private AppRepository appRepository;
+    private AppViewModel appViewModel;
+    private ImageButton tvConvertToReal;
+
     // new added
     private Snip snip;
 
@@ -98,7 +120,12 @@ public class FragmentPlayVideo extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false);
 
-        snip = getArguments().getParcelable("snip");
+        appRepository = new AppRepository(Objects.requireNonNull(getActivity()).getApplicationContext());
+        appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        snip = Objects.requireNonNull(getArguments()).getParcelable("snip");
+        appViewModel.getEventByIdLiveData(Objects.requireNonNull(snip).getEvent_id()).observe(this, snipevent -> {
+            event = snipevent;
+        });
         exo_duration = rootView.findViewById(R.id.exo_duration);
 
 //        uri = Uri.parse(getArguments().getString("uri"));
@@ -118,11 +145,18 @@ public class FragmentPlayVideo extends Fragment {
         player = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);
         exo_progress = rootView.findViewById(R.id.exo_progress);
 
+        tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal);
+        tvConvertToReal.setOnClickListener(view -> validateVideo(snip));
+        if ((snip != null ? snip.getIs_virtual_version() : 0) == 1) {
+            tvConvertToReal.setVisibility(View.VISIBLE);
+        }else{
+            tvConvertToReal.setVisibility(View.GONE);
+        }
         simpleExoPlayerView = (PlayerView) rootView.findViewById(R.id.player_view);
         simpleExoPlayerView.setOnTouchListener(new OnSwipeTouchListener(getActivity()) {
 
             public void onSwipeTop() {
-                Toast.makeText(getActivity(), "top", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(getActivity(), "top", Toast.LENGTH_SHORT).show();
             }
 
             public void onSwipeRight(float diffX) {
@@ -176,7 +210,7 @@ public class FragmentPlayVideo extends Fragment {
 
         if (snip.getIs_virtual_version() == 1) {
 
-            exo_progress.setDuration(5000);
+            exo_progress.setDuration((long)snip.getSnip_duration() * 1000);
             player.seekTo(player.getCurrentPosition() +(long) snip.getStart_time()*1000);
             new CountDownTimer( (long) snip.getSnip_duration() * 1000, 1000) {
                 @Override
@@ -223,10 +257,12 @@ public class FragmentPlayVideo extends Fragment {
                 getActivity()) {
             @Override
             public void onOrientationChanged(int orientation) {
-                if (orientation == 0 || orientation == 180) {
-                    (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-                } else if (orientation == 90 || orientation == 270) {
-                    (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                if(!getActivity().isFinishing()) {
+                    if (orientation == 0 || orientation == 180) {
+                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+                    } else if (orientation == 90 || orientation == 270) {
+                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+                    }
                 }
             }
         };
@@ -346,7 +382,7 @@ public class FragmentPlayVideo extends Fragment {
         tag.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(CreateTag.newInstance(), true);
+//                ((AppMainActivity) getActivity()).loadFragment(CreateTag.newInstance(), true);
             }
         });
 
@@ -365,8 +401,63 @@ public class FragmentPlayVideo extends Fragment {
         });
 
         return rootView;
+    }
 
+    private String VIDEO_DIRECTORY_NAME = "Snipback";
+    private void validateVideo(Snip snip) {
+        String destinationPath = snip.getVideoFilePath();
 
+        File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
+                VIDEO_DIRECTORY_NAME);
+        // Create storage directory if it does not exist
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                return;
+            }
+        }
+        File mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                + "VID_" + System.currentTimeMillis() + ".mp4");
+
+        String[] complexCommand = {"ffmpeg", "-i", String.valueOf(destinationPath), "-ss", TrimmerUtils.formatCSeconds((long) snip.getStart_time()),
+                "-to", TrimmerUtils.formatCSeconds((long) snip.getEnd_time()), "-async", "1", String.valueOf(mediaFile)};
+        KProgressHUD hud = CommonUtils.showProgressDialog(getActivity());
+        FFmpegCmd.exec(complexCommand, 0, new OnEditorListener() {
+            @Override
+            public void onSuccess() {
+//                EventData eventData= new EventData();
+//                eventData.setEvent_id(event.getEvent_id());
+//                eventData.setEvent_title(event.getEvent_title());
+//                eventData.setEvent_created(event.getEvent_created());
+//                eventData.addEventSnip(snip);
+                snip.setIs_virtual_version(0);
+                snip.setVideoFilePath(mediaFile.getAbsolutePath());
+                AppClass.getAppInsatnce().setEventSnipsFromDb(event,snip);
+                appRepository.updateSnip(snip);
+                Hd_snips hdSnips = new Hd_snips();
+                hdSnips.setVideo_path_processed(mediaFile.getAbsolutePath());
+                hdSnips.setSnip_id(snip.getSnip_id());
+                appRepository.insertHd_snips(hdSnips);
+                AppClass.getAppInsatnce().setInsertionInProgress(true);
+                if (hud.isShowing())
+                    hud.dismiss();
+                getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), "Video saved to gallery", Toast.LENGTH_SHORT).show());
+
+//                appViewModel.loadGalleryDataFromDB(ActivityPlayVideo.this);
+
+            }
+
+            @Override
+            public void onFailure() {
+                if (hud.isShowing())
+                    hud.dismiss();
+                getActivity().runOnUiThread(() ->
+                        Toast.makeText(getActivity(), "Failed to trim", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onProgress(float progress) {
+            }
+        });
     }
 
 

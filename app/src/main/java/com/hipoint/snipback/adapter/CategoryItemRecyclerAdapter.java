@@ -1,5 +1,6 @@
 package com.hipoint.snipback.adapter;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -18,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.FragmentGallery;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
@@ -25,6 +27,7 @@ import com.hipoint.snipback.fragment.FragmentPlayVideo;
 import com.hipoint.snipback.fragment.Videoeditingfragment;
 import com.hipoint.snipback.room.entities.Snip;
 
+import java.io.File;
 import java.util.List;
 
 public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryItemRecyclerAdapter.CategoryItemViewHolder> {
@@ -71,8 +74,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     holder.tvDuration.setText(String.format("%02d:%02d", minutes, seconds));
                 }
                 String filePath = AppClass.getAppInsatnce().getThumbFilePathRoot()+snip.getSnip_id()+".png";
-                Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
-                holder.itemImage.setImageBitmap(myBitmap);
+                File file = new File(filePath);
+                if(file.exists()) {
+                    Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
+                    holder.itemImage.setImageBitmap(myBitmap);
+                }else{
+                    CommonUtils.getVideoThumbnail(context,snip);
+                }
                 holder.itemImage.setOnClickListener(v -> {
 //                    Intent intent = new Intent(context, ActivityPlayVideo.class);
 //                    intent.putExtra("snip", snip);
