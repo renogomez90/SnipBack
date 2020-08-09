@@ -1,5 +1,6 @@
 package com.hipoint.snipback.fragment;
 
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
@@ -16,6 +17,7 @@ import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -105,6 +107,8 @@ public class FragmentPlayVideo extends Fragment {
 
     // new added
     private Snip snip;
+    private RelativeLayout back_arrow, button_camera;
+    boolean paused = false;
 
 
     public static FragmentPlayVideo newInstance(Snip snip) {
@@ -127,6 +131,9 @@ public class FragmentPlayVideo extends Fragment {
             event = snipevent;
         });
         exo_duration = rootView.findViewById(R.id.exo_duration);
+        button_camera = rootView.findViewById(R.id.button_camera);
+        back_arrow = rootView.findViewById(R.id.back_arrow);
+
 
 //        uri = Uri.parse(getArguments().getString("uri"));
         bandwidthMeter = new DefaultBandwidthMeter();
@@ -205,14 +212,28 @@ public class FragmentPlayVideo extends Fragment {
         player.setPlayWhenReady(true);
 
 
+        back_arrow.setOnClickListener(v -> {
+            player.release();
+            getActivity().onBackPressed();
+        });
+
+        button_camera.setOnClickListener(v -> {
+//            (AppMainActivity).loadFragment(VideoMode.newInstance(),true);
+            player.release();
+            Intent intent1 = new Intent(getActivity(), AppMainActivity.class);
+            startActivity(intent1);
+            getActivity().finishAffinity();
+        });
+
+        exo_progress.setVisibility(View.INVISIBLE);
+
         // can hide seekbar in exoplayer
 //        exo_progress.setVisibility(View.INVISIBLE);
 
         if (snip.getIs_virtual_version() == 1) {
-
             exo_progress.setDuration((long)snip.getSnip_duration() * 1000);
-            player.seekTo(player.getCurrentPosition() +(long) snip.getStart_time()*1000);
-            new CountDownTimer( (long) snip.getSnip_duration() * 1000, 1000) {
+            player.seekTo(player.getCurrentPosition() + (long) snip.getStart_time() * 1000);
+            new CountDownTimer((long) snip.getSnip_duration() * 1000, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
 
@@ -253,23 +274,23 @@ public class FragmentPlayVideo extends Fragment {
 //            ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 //        }
 
-        OrientationEventListener mOrientationListener = new OrientationEventListener(
-                getActivity()) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                if(!getActivity().isFinishing()) {
-                    if (orientation == 0 || orientation == 180) {
-                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-                    } else if (orientation == 90 || orientation == 270) {
-                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-                    }
-                }
-            }
-        };
-
-        if (mOrientationListener.canDetectOrientation()) {
-            mOrientationListener.enable();
-        }
+//        OrientationEventListener mOrientationListener = new OrientationEventListener(
+//                getActivity()) {
+//            @Override
+//            public void onOrientationChanged(int orientation) {
+//                if(!getActivity().isFinishing()) {
+//                    if (orientation == 0 || orientation == 180) {
+//                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+//                    } else if (orientation == 90 || orientation == 270) {
+//                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+//                    }
+//                }
+//            }
+//        };
+//
+//        if (mOrientationListener.canDetectOrientation()) {
+//            mOrientationListener.enable();
+//        }
 
         play_pause = rootView.findViewById(R.id.play_pause);
         play_pause.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -278,18 +299,18 @@ public class FragmentPlayVideo extends Fragment {
                 if (b) {
                     if (player != null) {
                         player.setPlayWhenReady(false);
-                        player.stop();
+                        player.getPlaybackState();
+                        paused = true;
 //                        current_posi = player.getCurrentPosition();
-
                     }
                 } else {
-
-
+                    paused = false;
                     if (snip.getIs_virtual_version() == 1) {
-
-                        player.prepare(mediaSource);
+//                        player.prepare(mediaSource);
+//                        player.setPlayWhenReady(true);
                         player.setPlayWhenReady(true);
-                        player.seekTo(player.getCurrentPosition());
+                        player.getPlaybackState();
+                        player.seekTo(player.getCurrentPosition()+(long) snip.getStart_time());
                         current_posi = player.getCurrentPosition();
                         new CountDownTimer((long) snip.getSnip_duration() * 1000 - current_posi, 1000) {
                             @Override
@@ -300,7 +321,7 @@ public class FragmentPlayVideo extends Fragment {
                             @Override
                             public void onFinish() {
 
-                                if (player != null) {
+                                if (player != null && paused==false) {
                                     player.setPlayWhenReady(false);
                                     player.stop();
                                     current_posi = player.getCurrentPosition();
@@ -309,11 +330,12 @@ public class FragmentPlayVideo extends Fragment {
 
                             }
                         }.start();
-                    } else {
-                        player.prepare(mediaSource);
-                        player.setPlayWhenReady(true);
-                        player.seekTo(current_posi + 100);
                     }
+//                    player.prepare(mediaSource);
+                    player.setPlayWhenReady(true);
+                    player.getPlaybackState();
+                    player.seekTo(player.getCurrentPosition() + 100);
+
 
 //////                    player.setPlayWhenReady(true);
 //                    player.setPlayWhenReady(!player.getPlayWhenReady());
@@ -393,7 +415,9 @@ public class FragmentPlayVideo extends Fragment {
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
                     player.release();
-                    ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(), true);
+                    getActivity().onBackPressed();
+//                    ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(), true);
+
                     return true;
                 }
                 return false;
@@ -424,11 +448,6 @@ public class FragmentPlayVideo extends Fragment {
         FFmpegCmd.exec(complexCommand, 0, new OnEditorListener() {
             @Override
             public void onSuccess() {
-//                EventData eventData= new EventData();
-//                eventData.setEvent_id(event.getEvent_id());
-//                eventData.setEvent_title(event.getEvent_title());
-//                eventData.setEvent_created(event.getEvent_created());
-//                eventData.addEventSnip(snip);
                 snip.setIs_virtual_version(0);
                 snip.setVideoFilePath(mediaFile.getAbsolutePath());
                 AppClass.getAppInsatnce().setEventSnipsFromDb(event,snip);

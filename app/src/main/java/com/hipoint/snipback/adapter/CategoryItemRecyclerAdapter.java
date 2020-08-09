@@ -82,11 +82,11 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     CommonUtils.getVideoThumbnail(context,snip);
                 }
                 holder.itemImage.setOnClickListener(v -> {
-//                    Intent intent = new Intent(context, ActivityPlayVideo.class);
-//                    intent.putExtra("snip", snip);
-//                    context.startActivity(intent);
+                    Intent intent = new Intent(context, ActivityPlayVideo.class);
+                    intent.putExtra("snip", snip);
+                    context.startActivity(intent);
 
-                    ((AppMainActivity) context).loadFragment(FragmentPlayVideo.newInstance(snip),true);
+//                    ((AppMainActivity) context).loadFragment(FragmentPlayVideo.newInstance(snip),true);
 
                 });
 //                holder.itemImage.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));

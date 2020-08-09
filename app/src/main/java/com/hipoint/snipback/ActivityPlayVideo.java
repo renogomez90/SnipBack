@@ -41,6 +41,7 @@ public class ActivityPlayVideo extends Swipper {
     private SeekBar seek;
     double current_pos, total_duration;
     private TextView exo_duration;
+    private RelativeLayout rlPlayPause;
     private Switch play_pause;
     boolean paused = false;
     private RelativeLayout play_forwardbutton,back_arrow,button_camera;
@@ -58,6 +59,7 @@ public class ActivityPlayVideo extends Swipper {
         seek = findViewById(R.id.seek);
         exo_duration = findViewById(R.id.exo_duration);
         play_pause = findViewById(R.id.play_pause);
+        rlPlayPause = findViewById(R.id.play_pouse);
         videoView = (VideoView) findViewById(R.id.videoView);
 
         tvConvertToReal = findViewById(R.id.tvConvertToReal);
@@ -74,7 +76,7 @@ public class ActivityPlayVideo extends Swipper {
         Uri video1 = Uri.parse(snip.getVideoFilePath());
         videoView.setVideoURI(video1);
         videoView.requestFocus();
-        videoView.start();
+        play_pause.setChecked(true);
 
         back_arrow.setOnClickListener(v -> {
             onBackPressed();
@@ -98,6 +100,7 @@ public class ActivityPlayVideo extends Swipper {
 //                videoView.setVideoURI(video);
 
         });
+        seek.setVisibility(View.VISIBLE);
 
         tvConvertToReal.setOnClickListener(view -> validateVideo(snip));
 
@@ -108,7 +111,7 @@ public class ActivityPlayVideo extends Swipper {
             videoView.resume();
             play_pause.setChecked(true);
         });
-
+        rlPlayPause.setOnClickListener(view -> play_pause.setChecked(true));
         play_pause.setOnCheckedChangeListener((compoundButton, b) -> {
             play_pause.setChecked(b);
             if (b) {
@@ -117,29 +120,66 @@ public class ActivityPlayVideo extends Swipper {
 
             } else {
                 paused = false;
-                videoView.seekTo((int) snip.getStart_time() * 1000);
+                seek.setProgress(0);
                 videoView.start();
-                seek.setProgress((int) current_pos);
-
-                if (snip.getIs_virtual_version() == 1) {
-                    long AUTO_DISMISS_MILLIS = (long) snip.getSnip_duration() * 1000 - (long) current_pos;
-                    new CountDownTimer(AUTO_DISMISS_MILLIS, 1000) {
+                if (snip.getIs_virtual_version() == 1 || snip.getParent_snip_id() != 0) {
+                    new CountDownTimer((long) snip.getSnip_duration() * 1000, 1000) {
                         @Override
                         public void onTick(long millisUntilFinished) {
-
+                            exo_duration.setText(timeConversion((long) 1000+ ((int)snip.getSnip_duration() * 1000) - (int)millisUntilFinished) + "/" + timeConversion((long) total_duration));
+                            seek.setProgress(1000+ ((int)snip.getSnip_duration() * 1000) - (int)millisUntilFinished);
                         }
 
                         @Override
                         public void onFinish() {
-
                             if (!paused) {
                                 videoView.stopPlayback();
                                 videoView.resume();
                                 play_pause.setChecked(true);
                             }
+                            seek.setProgress(0);
+                        }
+                    }.start();
+                }else{
+                    new CountDownTimer((long) snip.getTotal_video_duration() * 1000, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            exo_duration.setText(timeConversion((long) 1000+ ((int)snip.getTotal_video_duration() * 1000) - (int)millisUntilFinished) + "/" + timeConversion((long) total_duration));
+                            seek.setProgress(1000+ ((int)total_duration) - (int)millisUntilFinished);
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            if (!paused) {
+                                videoView.stopPlayback();
+                                videoView.resume();
+                                play_pause.setChecked(true);
+                            }
+//                            exo_duration.setText(timeConversion(videoView.getCurrentPosition() * 1000) + "/" + timeConversion((long) snip.getTotal_video_duration() * 1000));
+
                         }
                     }.start();
                 }
+
+//                if (snip.getIs_virtual_version() == 1) {
+//                    long AUTO_DISMISS_MILLIS = (long) snip.getSnip_duration() * 1000 - (long) current_pos;
+//                    new CountDownTimer(AUTO_DISMISS_MILLIS, 1000) {
+//                        @Override
+//                        public void onTick(long millisUntilFinished) {
+//
+//                        }
+//
+//                        @Override
+//                        public void onFinish() {
+//
+//                            if (!paused) {
+//                                videoView.stopPlayback();
+//                                videoView.resume();
+//                                play_pause.setChecked(true);
+//                            }
+//                        }
+//                    }.start();
+//                }
 
             }
         });
@@ -152,89 +192,37 @@ public class ActivityPlayVideo extends Swipper {
 
         //TODO
         if (snip.getIs_virtual_version() == 1) {
-            seek.setMax((int) snip.getSnip_duration() * 1000);
+            seek.setMax((int) snip.getSnip_duration() * 1000 );
         } else {
             seek.setMax((int) total_duration);
         }
-
-        if (snip.getIs_virtual_version() == 1) {
-            new CountDownTimer((long) snip.getSnip_duration() * 1000, 1000) {
-                @Override
-                public void onTick(long millisUntilFinished) {
-
-                }
-
-                @Override
-                public void onFinish() {
-                    if (!paused) {
-                        videoView.stopPlayback();
-                        videoView.resume();
-                        play_pause.setChecked(true);
-                    }
-                }
-            }.start();
-        }
-
         Seek(Orientation.HORIZONTAL, videoView);
         set(this);
     }
 
     // display video progress
     public void setVideoProgress() {
+        if (snip.getIs_virtual_version() == 1 || snip.getParent_snip_id() != 0) {
+            videoView.seekTo((int) snip.getStart_time() * 1000);
+        }else{
+            videoView.seekTo(100);
+        }
         //get the video duration
         //TODO
         if (snip.getIs_virtual_version() == 1) {
             total_duration = snip.getSnip_duration() * 1000;
         } else {
-            total_duration = videoView.getDuration();
+            total_duration = snip.getTotal_video_duration() * 1000;
             current_pos = videoView.getCurrentPosition();
-
         }
         //display video duration
         exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
 
         if (snip.getIs_virtual_version() == 1) {
-            videoView.seekTo((int) snip.getStart_time() * 1000);
-        }
-        if (snip.getIs_virtual_version() == 1) {
             seek.setMax((int) snip.getSnip_duration() * 1000);
         } else {
             seek.setMax((int) total_duration);
         }
-
-        final Handler handler = new Handler();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (snip.getIs_virtual_version() == 1) {
-                        current_pos = videoView.getCurrentPosition() - (snip.getStart_time() * 1000);
-                    } else {
-                        current_pos = videoView.getCurrentPosition();
-                    }
-                    if (snip.getIs_virtual_version() == 1) {
-                        total_duration = snip.getSnip_duration() * 1000;
-                    } else {
-                        total_duration = videoView.getDuration();
-                    }
-
-                    exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
-                    if (current_pos > 0) {
-                        ObjectAnimator animation = ObjectAnimator.ofInt(seek, "progress", (int) current_pos);
-                        animation.setDuration(300);
-                        animation.setInterpolator(new DecelerateInterpolator());
-                        animation.start();
-                    }
-
-
-                    handler.postDelayed(this, 1000);
-                } catch (IllegalStateException ed) {
-                    ed.printStackTrace();
-                }
-            }
-        };
-        handler.postDelayed(runnable, 50);
-
 //        seekbar change listner
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override

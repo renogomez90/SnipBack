@@ -1055,9 +1055,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             AppClass.getAppInsatnce().setInsertionInProgress(true);
             appRepository.insertSnip(this, parentSnip);
             parentSnip.setVideoFilePath(outputFilePath);
-            AppClass.getAppInsatnce().saveAllParentSnips(parentSnip);
-            AppClass.getAppInsatnce().setEventParentSnips();
-            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
+//            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
+//            AppClass.getAppInsatnce().saveAllEventSnips();
+//            AppClass.getAppInsatnce().saveAllParentSnips(parentSnip);
+//            AppClass.getAppInsatnce().setEventParentSnips();
             hdSnips = new Hd_snips();
             hdSnips.setVideo_path_processed(outputFilePath);
 //            parentSnip.setVideoFilePath(outputFilePath);
@@ -1179,10 +1180,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //                appRepository.updateSnip(parentSnip);
                 snip.setVideoFilePath(filePath);
 //                eventData.addEventSnip(snip);
-                AppClass.getAppInsatnce().saveAllSnips(snip);
+//                AppClass.getAppInsatnce().saveAllSnips(snip);
 //                eventData.addEventSnip(parentSnip);
             }
-            AppClass.getAppInsatnce().saveAllEventSnips();
+//            AppClass.getAppInsatnce().saveAllEventSnips();
             AppClass.getAppInsatnce().clearSnipDurations();
         }
 

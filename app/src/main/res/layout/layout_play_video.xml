@@ -54,7 +54,7 @@
         android:layout_marginLeft="37dp"
         android:background="@drawable/background_play_pouse"
         android:gravity="center"
-        android:visibility="visible">
+        android:visibility="invisible">
 
         <Switch
             android:id="@+id/play_pause"

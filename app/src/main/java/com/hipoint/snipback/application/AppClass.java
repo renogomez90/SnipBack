@@ -31,6 +31,7 @@ public class AppClass extends Application {
     public void setLastCreatedEvent(Event lastCreatedEvent) {
         lastCreatedEvent.setEvent_id(getLastEventId());
         this.lastCreatedEvent = lastCreatedEvent;
+        saveLastEvent(lastCreatedEvent);
     }
 
     public Event lastCreatedEvent;
@@ -61,11 +62,24 @@ public class AppClass extends Application {
         return snipList;
     }
 
+    public void saveLastEvent(Event event){
+        EventData eventData = new EventData();
+        eventData.setEvent(event);
+        allEventSnips.add(eventData);
+    }
+
     public void saveAllEventSnips() {
-        EventData newEvent = new EventData();
-        newEvent.setEvent(getLastCreatedEvent());
-        newEvent.addEventAllSnip(getSnips());
-        allEventSnips.add(newEvent);
+        int eventId = getLastEventId();
+        List<EventData> tempAllSnips = allEventSnips;
+        for (EventData eventData : allEventSnips) {
+            if (eventData.getEvent().getEvent_id() == eventId) {
+//                eventData.setEvent(eventData.getEvent());
+                eventData.addEventAllSnip(getSnips());
+                tempAllSnips.set(tempAllSnips.indexOf(eventData),eventData);
+            }
+        }
+        allEventSnips = tempAllSnips;
+
 
 //        if (allEventSnips.size() > 0) {
 //            for (EventData eventData : allEventSnips) {
@@ -100,11 +114,16 @@ public class AppClass extends Application {
     }
 
     public void setEventParentSnips() {
-
-        EventData newEvent = new EventData();
-        newEvent.setEvent(getLastCreatedEvent());
-        newEvent.addEventAllParentSnip(getParentSnips());
-        eventParentSnips.add(newEvent);
+        int eventId = getLastEventId();
+        List<EventData> tempAllParents = eventParentSnips;
+        for (EventData eventData : allEventSnips) {
+            if (eventData.getEvent().getEvent_id() == eventId) {
+//                eventData.setEvent(eventData.getEvent());
+                eventData.addEventAllParentSnip(getParentSnips());
+                tempAllParents.set(tempAllParents.indexOf(eventData),eventData);
+            }
+        }
+        eventParentSnips = tempAllParents;
 //
 //        if (eventParentSnips.size() > 0) {
 //            for (EventData eventData : eventParentSnips) {

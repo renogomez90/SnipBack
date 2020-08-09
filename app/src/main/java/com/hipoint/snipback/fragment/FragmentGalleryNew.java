@@ -236,17 +236,18 @@ public class FragmentGalleryNew extends Fragment{
     @Override
     public void onResume() {
         super.onResume();
-        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
-            loadGalleryDataFromDB();
-            AppClass.getAppInsatnce().setInsertionInProgress(false);
-        }else{
-            List<EventData> allSnipEvent = AppClass.getAppInsatnce().getAllSnip();
-            List<EventData> allParentSnipEvent = AppClass.getAppInsatnce().getAllParentSnip();
-            RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
-            mainCategoryRecycler.setLayoutManager(layoutManager);
-            mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allParentSnipEvent,allSnipEvent);
-            mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-        }
+        loadGalleryDataFromDB();
+//        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
+//            loadGalleryDataFromDB();
+//            AppClass.getAppInsatnce().setInsertionInProgress(false);
+//        }else{
+//            List<EventData> allSnipEvent = AppClass.getAppInsatnce().getAllSnip();
+//            List<EventData> allParentSnipEvent = AppClass.getAppInsatnce().getAllParentSnip();
+//            RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(getActivity());
+//            mainCategoryRecycler.setLayoutManager(layoutManager);
+//            mainRecyclerAdapter=new MainRecyclerAdapter(getActivity(),allParentSnipEvent,allSnipEvent);
+//            mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+//        }
     }
 
     private void loadGalleryDataFromDB() {
