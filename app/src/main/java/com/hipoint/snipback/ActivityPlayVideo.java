@@ -190,12 +190,6 @@ public class ActivityPlayVideo extends Swipper {
             tvConvertToReal.setVisibility(View.GONE);
         }
 
-        //TODO
-        if (snip.getIs_virtual_version() == 1) {
-            seek.setMax((int) snip.getSnip_duration() * 1000 );
-        } else {
-            seek.setMax((int) total_duration);
-        }
         Seek(Orientation.HORIZONTAL, videoView);
         set(this);
     }
@@ -209,7 +203,7 @@ public class ActivityPlayVideo extends Swipper {
         }
         //get the video duration
         //TODO
-        if (snip.getIs_virtual_version() == 1) {
+        if (snip.getIs_virtual_version() == 1 || snip.getParent_snip_id() != 0) {
             total_duration = snip.getSnip_duration() * 1000;
         } else {
             total_duration = snip.getTotal_video_duration() * 1000;
@@ -218,7 +212,7 @@ public class ActivityPlayVideo extends Swipper {
         //display video duration
         exo_duration.setText(timeConversion((long) current_pos) + "/" + timeConversion((long) total_duration));
 
-        if (snip.getIs_virtual_version() == 1) {
+        if (snip.getIs_virtual_version() == 1 || snip.getParent_snip_id() != 0) {
             seek.setMax((int) snip.getSnip_duration() * 1000);
         } else {
             seek.setMax((int) total_duration);
@@ -295,7 +289,11 @@ public class ActivityPlayVideo extends Swipper {
                 AppClass.getAppInsatnce().setInsertionInProgress(true);
                 if (hud.isShowing())
                     hud.dismiss();
-                runOnUiThread(() -> Toast.makeText(getApplicationContext(), "Video saved to gallery", Toast.LENGTH_SHORT).show());
+
+                runOnUiThread(() -> {
+                    tvConvertToReal.setVisibility(View.GONE);
+                    Toast.makeText(getApplicationContext(), "Video saved to gallery", Toast.LENGTH_SHORT).show();
+                });
 
 //                appViewModel.loadGalleryDataFromDB(ActivityPlayVideo.this);
 
