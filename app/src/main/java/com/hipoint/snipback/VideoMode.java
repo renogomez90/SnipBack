@@ -3,6 +3,7 @@ package com.hipoint.snipback;
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -15,6 +16,7 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
@@ -28,7 +30,6 @@ import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.CamcorderProfile;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,7 +37,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.SystemClock;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.util.Size;
@@ -54,6 +54,7 @@ import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.ImageButton;
 import android.widget.RelativeLayout;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -62,22 +63,16 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.legacy.app.FragmentCompat;
-import androidx.lifecycle.ViewModelProviders;
 
 import com.hipoint.snipback.Utils.AutoFitTextureView;
-import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.CountUpTimer;
-import com.hipoint.snipback.Utils.OnSwipeTouchListener;
-import com.hipoint.snipback.Utils.gesture.GestureFilter;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.Feedback_fragment;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
 import com.hipoint.snipback.room.entities.Event;
-import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
 import com.hipoint.snipback.room.repository.AppRepository;
-import com.hipoint.snipback.room.repository.AppViewModel;
 import com.karumi.dexter.Dexter;
 import com.karumi.dexter.MultiplePermissionsReport;
 import com.karumi.dexter.PermissionToken;
@@ -101,7 +96,7 @@ import java.util.concurrent.TimeUnit;
 
 import static android.view.View.VISIBLE;
 
-public class VideoMode extends Fragment implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted {
+public class VideoMode extends Fragment implements View.OnClickListener, View.OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted {
 
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
@@ -116,9 +111,89 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
 //    private GestureFilter detector;
 
-    Bitmap thumb;
+    public float finger_spacing = 0;
+    public int zoom_level = 1;
 
-    public interface OnTaskCompleted{
+    int mProgress, minZoom, maxZoom;
+    private int zoomLevel;
+    final int zoomStep = 1;
+
+
+    /**
+     * Called when a touch event is dispatched to a view. This allows listeners to
+     * get a chance to respond before the target view.
+     *
+     * @param v     The view the touch event has been dispatched to.
+     * @param event The MotionEvent object containing full information about
+     *              the event.
+     * @return True if the listener has consumed the event, false otherwise.
+     */
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        try {
+            CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+
+            String mCameraId = manager.getCameraIdList()[0];
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraId);
+            float maxZoom = (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) * 10;
+
+            Rect m = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+            int action = event.getAction();
+            float current_finger_spacing;
+            setUpCaptureRequestBuilder(mPreviewBuilder);
+
+            if (event.getPointerCount() > 1) {
+                // Multi touch logic
+                current_finger_spacing = getFingerSpacing(event);
+
+                if (finger_spacing != 0) {
+                    if (current_finger_spacing > finger_spacing && maxZoom > zoom_level) {
+                        zoom_level++;
+
+                    } else if (current_finger_spacing < finger_spacing && zoom_level > 1) {
+                        zoom_level--;
+
+                    }
+                    assert m != null;
+                    int minW = (int) (m.width() / maxZoom);
+                    int minH = (int) (m.height() / maxZoom);
+                    int difW = m.width() - minW;
+                    int difH = m.height() - minH;
+                    int cropW = difW / 100 * (int) zoom_level;
+                    int cropH = difH / 100 * (int) zoom_level;
+                    cropW -= cropW & 3;
+                    cropH -= cropH & 3;
+                    Rect zoom = new Rect(cropW, cropH, m.width() - cropW, m.height() - cropH);
+                    mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+                }
+                finger_spacing = current_finger_spacing;
+            } else {
+                if (action == MotionEvent.ACTION_UP) {
+                    //single touch logic
+                }
+            }
+
+            try {
+                mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null,
+                        mBackgroundHandler);
+            } catch (CameraAccessException | NullPointerException e) {
+                e.printStackTrace();
+            }
+        } catch (CameraAccessException e) {
+            throw new RuntimeException("can not access camera.", e);
+        }
+
+        return true;
+    }
+
+    private float getFingerSpacing(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
+    }
+
+
+    public interface OnTaskCompleted {
         void onTaskCompleted(boolean success);
     }
 
@@ -347,14 +422,17 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     private AppRepository appRepository;
     private View blinkEffect;
     private Animation animBlink;
-    private RelativeLayout rlVideo, recStartLayout, bottomContainer;
+    private RelativeLayout rlVideo, recStartLayout, bottomContainer, zoomControlLayout;
     private OnTaskCompleted thumbnailProcesingCompleted;
+    private SeekBar seekBar;
+    ImageButton zoomOut,zoomIn;
 
     public static VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
         return fragment;
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -374,11 +452,22 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         recStartLayout = rootView.findViewById(R.id.rec_start_container);
         bottomContainer = rootView.findViewById(R.id.bottom_cont);
         recordStopButton = rootView.findViewById(R.id.rec_stop);
+
+        zoomControlLayout = rootView.findViewById(R.id.zoom_control_layout);
+        seekBar = rootView.findViewById(R.id.zoom_controller);
+        zoomOut = rootView.findViewById(R.id.zoom_out_btn);
+        zoomIn = rootView.findViewById(R.id.zoom_in_btn);
+
         recordStopButton.setOnClickListener(this);
         r_3_bookmark = rootView.findViewById(R.id.r_3_bookmark);
         r_3_bookmark.setOnClickListener(this);
         r_2_shutter = rootView.findViewById(R.id.r_2_shutter);
         r_2_shutter.setOnClickListener(this);
+
+        zoomControlLayout.setOnClickListener(this);
+        zoomIn.setOnClickListener(this);
+        zoomOut.setOnClickListener(this);
+
 
 //        detector = new GestureFilter(getActivity(), this);
 
@@ -392,6 +481,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //        rlVideo.setOnTouchListener((view, motionEvent) -> mTextureView.onTouch(view, motionEvent));
 //        accessRoomDatabase();
         mTextureView.setOnClickListener(this);
+        mTextureView.setOnTouchListener(this);
         gallery.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(), true));
         settings.setOnClickListener(v -> showDialogSettingsMain());
         appRepository = AppRepository.getInstance();
@@ -419,8 +509,99 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
 //                }
         });
 
+
+        minZoom = getMinZoom();
+        maxZoom = (int) (getMaxZoom() - 1);
+
+
+        seekBar.setMax(Math.round(maxZoom - minZoom));
+        seekBar.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {
+                        setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));//not tested
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {
+                    }
+
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        setCurrentZoom(Math.round(minZoom + (progress * zoomStep)));
+                        if (fromUser) mProgress = progress;
+                    }
+                }
+        );
+
+
         return rootView;
     }
+
+    private int getMinZoom() {
+        return 0;
+    }
+
+
+    public float getCurrentZoom(int zoomLevel) {
+        return zoomLevel;
+    }
+
+    public int setCurrentZoom(float zoomLevel) {
+        Rect zoomRect = getZoomRect(zoomLevel);
+        if (zoomRect != null) {
+            try {
+                //you can try to add the synchronized object here
+                mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoomRect);
+                mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
+            } catch (Exception e) {
+                Log.e(TAG, "Error updating preview: ", e);
+            }
+            this.zoomLevel = (int) zoomLevel;
+        }
+        return 0;
+    }
+
+    private Rect getZoomRect(float zoomLevel) {
+        try {
+            CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+
+            String mCameraId = manager.getCameraIdList()[0];
+            CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraId);
+            float maxZoom = (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) * 10;
+            Rect activeRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+            if ((zoomLevel <= maxZoom) && (zoomLevel > 1)) {
+                int minW = (int) (activeRect.width() / maxZoom);
+                int minH = (int) (activeRect.height() / maxZoom);
+                int difW = activeRect.width() - minW;
+                int difH = activeRect.height() - minH;
+                int cropW = difW / 100 * (int) zoomLevel;
+                int cropH = difH / 100 * (int) zoomLevel;
+                cropW -= cropW & 3;
+                cropH -= cropH & 3;
+                return new Rect(cropW, cropH, activeRect.width() - cropW, activeRect.height() - cropH);
+            } else if (zoomLevel == 0) {
+                return new Rect(0, 0, activeRect.width(), activeRect.height());
+            }
+            return null;
+        } catch (Exception e) {
+            Log.e(TAG, "Error during camera init");
+            return null;
+        }
+    }
+
+
+    public float getMaxZoom() {
+        try {
+            CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
+            String mCameraId = manager.getCameraIdList()[0];
+            return (manager.getCameraCharacteristics(mCameraId).get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) * 10;
+        } catch (Exception e) {
+            Log.e(TAG, "Error during camera init");
+            return -1;
+        }
+    }
+
 
     @Override
     public void onResume() {
@@ -433,6 +614,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         }
     }
 
+
     @Override
     public void onPause() {
         closeCamera();
@@ -444,15 +626,17 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.rec: {
-                bottomContainer.setVisibility(View.GONE);
+                bottomContainer.setVisibility(View.INVISIBLE);
                 recStartLayout.setVisibility(VISIBLE);
+//                zoomControlLayout.setVisibility(VISIBLE);
                 startRecordingVideo();
                 break;
             }
 
             case R.id.rec_stop: {
                 bottomContainer.setVisibility(VISIBLE);
-                recStartLayout.setVisibility(View.GONE);
+                recStartLayout.setVisibility(View.INVISIBLE);
+//                zoomControlLayout.setVisibility(View.GONE);
                 stopRecordingVideo();
                 break;
             }
@@ -461,6 +645,15 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 saveSnipTimeToLocal();
                 break;
             }
+//            case R.id.zoom_out_btn:{
+//                    break;
+//                }
+//
+//                case R.id.zoom_in_btn:{
+//                    Toast.makeText(getActivity(), "this", Toast.LENGTH_SHORT).show();
+//                    break;
+//            }
+
 
             case R.id.r_2_shutter: {
                 rlVideo.startAnimation(animBlink);
@@ -665,6 +858,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         return true;
     }
 
+
     /**
      * Tries to open a {@link CameraDevice}. The result is listened by `mStateCallback`.
      */
@@ -811,6 +1005,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             texture.setDefaultBufferSize(mPreviewSize.getWidth(), mPreviewSize.getHeight());
             mPreviewBuilder = mCameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
 
+
             Surface previewSurface = new Surface(texture);
             mPreviewBuilder.addTarget(previewSurface);
 
@@ -853,8 +1048,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         }
     }
 
-    private void setUpCaptureRequestBuilder(CaptureRequest.Builder builder) {
+    private void setUpCaptureRequestBuilder(final CaptureRequest.Builder builder) {
         builder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+
+
     }
 
     /**
@@ -931,6 +1128,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
         return (dir == null ? "" : (dir.getAbsolutePath() + "/"))
                 + System.currentTimeMillis() + ".mp4";
     }
+
 
     private File getOutputMediaFile() {
 
@@ -1047,9 +1245,9 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
             parentSnip.setTotal_video_duration(timerSecond);
             parentSnip.setVid_creation_date(System.currentTimeMillis());
             parentSnip.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
-            if(AppClass.getAppInsatnce().getSnipDurations().size() > 0){
+            if (AppClass.getAppInsatnce().getSnipDurations().size() > 0) {
                 parentSnip.setHas_virtual_versions(1);
-            }else{
+            } else {
                 parentSnip.setHas_virtual_versions(0);
             }
             AppClass.getAppInsatnce().setInsertionInProgress(true);
@@ -1172,7 +1370,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 snip.setIs_virtual_version(1);
                 snip.setHas_virtual_versions(0);
                 snip.setParent_snip_id(parentSnip.getSnip_id());
-                snip.setSnip_duration(endSecond-startSecond);
+                snip.setSnip_duration(endSecond - startSecond);
                 snip.setVid_creation_date(System.currentTimeMillis());
                 snip.setEvent_id(event.getEvent_id());
                 appRepository.insertSnip(this, snip);
@@ -1341,7 +1539,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, Activit
                 }
 
 
-               //     thumb = retriever.getFrameAtTime();
+                //     thumb = retriever.getFrameAtTime();
 
 
                 thumb.compress(Bitmap.CompressFormat.PNG, 80, streamThumbnail);
