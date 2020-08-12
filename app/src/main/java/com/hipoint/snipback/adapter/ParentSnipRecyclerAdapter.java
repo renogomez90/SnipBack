@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,11 +27,17 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     private Context context;
     private ItemListener mListener;
     List<Snip> snipArrayList;
+    private  String viewChangeValue;
 
-    public ParentSnipRecyclerAdapter(Context context, List<Snip> allParentSnips) {
+
+    public ParentSnipRecyclerAdapter(Context context, List<Snip> allParentSnips,String viewChange) {
         this.context = context;
         this.snipArrayList = allParentSnips;
+        this.viewChangeValue = viewChange;
+
     }
+
+
 
     @NonNull
     @Override
@@ -42,16 +49,21 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     public void onBindViewHolder(@NonNull ParentItemViewHolder holder, int position) {
 
         if (snipArrayList != null) {
+//            Log.d("action2",viewChangeValue+"");
+
             int parentId = snipArrayList.get(position).getSnip_id();
+            String viewChange = viewChangeValue;
             List<Snip> childSnip = AppClass.getAppInsatnce().getChildSnipsByParentSnipId(snipArrayList.get(position).getEvent_id(), parentId);
-            setCatItemRecycler(holder.itemRecycler, childSnip);
+            setCatItemRecycler(holder.itemRecycler, childSnip,viewChange);
+
         }
 
 //        holder.itemImage.setImageResource(categoryItemList.get(position).getImageUrl());
     }
 
-    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips) {
-        CategoryItemRecyclerAdapter itemRecyclerAdapter = new CategoryItemRecyclerAdapter(context, allEventSnips);
+
+    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips,String viewChange) {
+        CategoryItemRecyclerAdapter itemRecyclerAdapter = new CategoryItemRecyclerAdapter(context, allEventSnips,viewChange);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.HORIZONTAL, false));
         recyclerView.setAdapter(itemRecyclerAdapter);
     }

@@ -2,11 +2,13 @@ package com.hipoint.snipback.adapter;
 
 import android.content.Context;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.hipoint.snipback.R;
@@ -27,17 +29,23 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private Context context;
     private List<EventData> parentSnips;
     private List<EventData> allSnips;
+    private  String viewChangeValue;
     private int eventId = -1;
 
-    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip) {
+    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip,String viewChange) {
         this.context = context;
         this.allSnips = allEventSnip;
         this.parentSnips = allParentSnip;
+        this.viewChangeValue = viewChange;
+
     }
+
+
 
     @NonNull
     @Override
     public MainViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+
         return new MainViewHolder(LayoutInflater.from(context).inflate(R.layout.main_recycler_row_item, parent, false));
     }
 
@@ -52,10 +60,12 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 //        }
         holder.categoryTitle.setVisibility(View.VISIBLE);
         holder.categoryTitle.setText(parentSnips.get(position).getEvent().getEvent_title());
+        String viewChange =viewChangeValue;
+//        Log.d("action1",viewChange+"");
         eventId = parentSnips.get(position).getEvent().getEvent_id();
-
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
-        setCatItemRecycler(holder.itemRecycler,allParentSnip);
+        setCatItemRecycler(holder.itemRecycler,allParentSnip,viewChange);
+
     }
 
     @Override
@@ -74,8 +84,10 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         }
     }
 
-    private void setCatItemRecycler(RecyclerView recyclerView,List<Snip> allEventSnips){
-        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context,allEventSnips);
+
+    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange){
+        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context,allEventSnips,viewChange);
+        itemRecyclerAdapter.notifyDataSetChanged();
         recyclerView.setLayoutManager(new LinearLayoutManager(context,RecyclerView.VERTICAL,false));
         recyclerView.setAdapter(itemRecyclerAdapter);
     }
