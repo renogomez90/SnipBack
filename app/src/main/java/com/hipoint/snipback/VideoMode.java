@@ -111,12 +111,18 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
 //    private GestureFilter detector;
 
+    //two finger pinch zoom
     public float finger_spacing = 0;
-    public int zoom_level = 1;
+    public double zoom_level = 1;
 
+    //zoom slider controls
     int mProgress, minZoom, maxZoom;
     private int zoomLevel;
     final int zoomStep = 1;
+
+    //left swipe
+    private float x1, x2;
+    static final int MIN_DISTANCE = 150;
 
 
     /**
@@ -130,6 +136,24 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
      */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                x1 = event.getX();
+                break;
+            case MotionEvent.ACTION_UP:
+                x2 = event.getX();
+                float deltaX = x2 - x1;
+                if (Math.abs(deltaX) > MIN_DISTANCE) {
+                    // Left to Right swipe action
+                    if (x2 > x1) {
+                        if (mIsRecordingVideo) {
+                            saveSnipTimeToLocal();
+                        }
+                    }
+                }
+                break;
+        }
+
         try {
             CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
 
@@ -142,17 +166,31 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             float current_finger_spacing;
             setUpCaptureRequestBuilder(mPreviewBuilder);
 
-            if (event.getPointerCount() > 1) {
+            if (event.getPointerCount() == 2) {
                 // Multi touch logic
                 current_finger_spacing = getFingerSpacing(event);
 
+                float delta = 0.34f; //control the zoom sensitivity
+
                 if (finger_spacing != 0) {
                     if (current_finger_spacing > finger_spacing && maxZoom > zoom_level) {
-                        zoom_level++;
-
+                        // sensitivity issues
+//                        seekBar.setProgress((int) zoom_level);
+//                        zoom_level = zoom_level + 0.5;
+                        if ((maxZoom - zoom_level) <= delta) {
+                            delta = (float) (maxZoom - zoom_level);
+                        }
+                        seekBar.setProgress((int) zoom_level);
+                        zoom_level = zoom_level + delta;
                     } else if (current_finger_spacing < finger_spacing && zoom_level > 1) {
-                        zoom_level--;
-
+                        // sensitivity issues
+//                        seekBar.setProgress((int) zoom_level);
+//                        zoom_level = zoomLevel - 0.5;
+                        if ((zoom_level - delta) < 1f) {
+                            delta = (float) (zoom_level - 1f);
+                        }
+                        seekBar.setProgress((int) zoom_level);
+                        zoom_level = zoom_level - delta;
                     }
                     assert m != null;
                     int minW = (int) (m.width() / maxZoom);
@@ -184,6 +222,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         }
 
         return true;
+
+
     }
 
     private float getFingerSpacing(MotionEvent event) {
@@ -425,7 +465,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     private RelativeLayout rlVideo, recStartLayout, bottomContainer, zoomControlLayout;
     private OnTaskCompleted thumbnailProcesingCompleted;
     private SeekBar seekBar;
-    ImageButton zoomOut,zoomIn;
+    ImageButton zoomOut, zoomIn;
 
     public static VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
@@ -467,6 +507,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         zoomControlLayout.setOnClickListener(this);
         zoomIn.setOnClickListener(this);
         zoomOut.setOnClickListener(this);
+        rlVideo.setOnTouchListener(this);
+        rlVideo.setOnClickListener(this);
 
 
 //        detector = new GestureFilter(getActivity(), this);
@@ -519,7 +561,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onStopTrackingTouch(SeekBar seekBar) {
-                        setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));//not tested
+                        setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
                     }
 
                     @Override
@@ -547,7 +589,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         return zoomLevel;
     }
 
-    public int setCurrentZoom(float zoomLevel) {
+    public void setCurrentZoom(float zoomLevel) {
         Rect zoomRect = getZoomRect(zoomLevel);
         if (zoomRect != null) {
             try {
@@ -559,7 +601,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             }
             this.zoomLevel = (int) zoomLevel;
         }
-        return 0;
     }
 
     private Rect getZoomRect(float zoomLevel) {
@@ -645,14 +686,40 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 saveSnipTimeToLocal();
                 break;
             }
-//            case R.id.zoom_out_btn:{
-//                    break;
-//                }
-//
-//                case R.id.zoom_in_btn:{
-//                    Toast.makeText(getActivity(), "this", Toast.LENGTH_SHORT).show();
-//                    break;
-//            }
+            case R.id.zoom_out_btn: {
+
+
+                if (getCurrentZoom(zoomLevel) <= 40) {
+
+                    mProgress = mProgress - 5;
+                    if (mProgress < 0) {
+                        mProgress = 0;
+                    }
+                    setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
+                    seekBar.setProgress((int) getCurrentZoom(zoomLevel));
+
+                }
+
+                break;
+            }
+
+            case R.id.zoom_in_btn: {
+
+                if (getCurrentZoom(zoomLevel) <= 40) {
+
+                    mProgress = mProgress + 5;
+                    if (mProgress > 40) {
+                        mProgress = 40;
+                    }
+                    setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
+                    seekBar.setProgress((int) getCurrentZoom(zoomLevel));
+
+                }
+
+
+                break;
+
+            }
 
 
             case R.id.r_2_shutter: {
@@ -1403,15 +1470,11 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
     private void saveSnipTimeToLocal() {
         if (timerSecond != 0) {
-            rlVideo.startAnimation(animBlink);
-//            blinkEffect.setVisibility(View.VISIBLE);
+
             int endSecond = timerSecond;
             AppClass.getAppInsatnce().setSnipDurations(endSecond);
-//            blinkEffect.setVisibility(View.GONE);
-            rlVideo.clearAnimation();
-
             // on screen tap blinking starts
-
+            rlVideo.startAnimation(animBlink);
             blinkEffect.setVisibility(VISIBLE);
             blinkEffect.animate()
                     .alpha(02f)
@@ -1421,13 +1484,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                         public void onAnimationEnd(Animator animation) {
                             blinkEffect.setVisibility(View.GONE);
                             blinkEffect.clearAnimation();
+                            rlVideo.clearAnimation();
                         }
                     });
 
+//        Log.d("seconds", String.valueOf(endSecond));
         }
-//        Log.i("snap: "+endSecond);
-//        Toast.makeText(getActivity(), endSecond, Toast.LENGTH_LONG).show();
-
     }
 
     private void getVideoThumbnail(Snip snip, File videoFile) {

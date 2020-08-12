@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +25,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -69,7 +71,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-public class FragmentGalleryNew extends Fragment{
+import static android.content.ContentValues.TAG;
+
+public class FragmentGalleryNew extends Fragment  {
     private View rootView;
     RecyclerView mainCategoryRecycler;
     MainRecyclerAdapter mainRecyclerAdapter;
@@ -90,6 +94,9 @@ public class FragmentGalleryNew extends Fragment{
     private Uri uri;
     private PlayerView simpleExoPlayerView;
     private RelativeLayout rlLoader;
+    boolean clicked = false;
+
+    CategoryItemRecyclerAdapter mAdapter;
 
 
     RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con;
@@ -100,6 +107,27 @@ public class FragmentGalleryNew extends Fragment{
         FragmentGalleryNew fragment = new FragmentGalleryNew();
         return fragment;
     }
+    public enum ViewType {
+
+        PT_UNKNOWN(2),
+        PT_JSON(4);
+
+
+        private int type;
+
+        ViewType(int type) {
+            this.type = type;
+        }
+
+        public int getNumericType() {
+            return type;
+        }
+
+        public void setNumericType(int type) {
+            this.type = type;
+        }
+    }
+
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Nullable
@@ -124,11 +152,14 @@ public class FragmentGalleryNew extends Fragment{
         pullToRefresh = rootView.findViewById(R.id.pullToRefresh);
         click.setVisibility(View.GONE);
 
+
         if(AppClass.getAppInsatnce().isInsertionInProgress()){
             rlLoader.setVisibility(View.VISIBLE);
         }else{
             rlLoader.setVisibility(View.INVISIBLE);
         }
+
+
 
         // direct to gallery to view
 
@@ -217,6 +248,18 @@ public class FragmentGalleryNew extends Fragment{
             }
         });
 
+
+        view_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                clicked=true;
+                view_button.setImageResource(R.drawable.ic_view);
+            }
+        });
+
+
+
+
         mainCategoryRecycler = rootView.findViewById(R.id.main_recycler);
 
 //        AppViewModel appViewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
@@ -232,6 +275,7 @@ public class FragmentGalleryNew extends Fragment{
             loadGalleryDataFromDB();
         });
     }
+
 
     @Override
     public void onResume() {
@@ -362,6 +406,9 @@ public class FragmentGalleryNew extends Fragment{
             }
         }
     }
+
+
+
 }
 
 
