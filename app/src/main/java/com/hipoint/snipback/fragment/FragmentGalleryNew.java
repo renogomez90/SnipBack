@@ -99,7 +99,7 @@ public class FragmentGalleryNew extends Fragment {
     CategoryItemRecyclerAdapter mAdapter;
 
 
-    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con;
+    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con,viewButtonLayout;
 
     List<Snip> snipArrayList = new ArrayList<>();
 
@@ -149,6 +149,7 @@ public class FragmentGalleryNew extends Fragment {
         click = rootView.findViewById(R.id.click);
         rlLoader = rootView.findViewById(R.id.showLoader);
         pullToRefresh = rootView.findViewById(R.id.pullToRefresh);
+        viewButtonLayout =rootView.findViewById(R.id.layout_view);
         click.setVisibility(View.GONE);
 
 
