@@ -49,7 +49,6 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     public void onBindViewHolder(@NonNull ParentItemViewHolder holder, int position) {
 
         if (snipArrayList != null) {
-//            Log.d("action2",viewChangeValue+"");
 
             int parentId = snipArrayList.get(position).getSnip_id();
             String viewChange = viewChangeValue;

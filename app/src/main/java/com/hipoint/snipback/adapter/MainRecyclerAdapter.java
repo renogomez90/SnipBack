@@ -61,7 +61,6 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         holder.categoryTitle.setVisibility(View.VISIBLE);
         holder.categoryTitle.setText(parentSnips.get(position).getEvent().getEvent_title());
         String viewChange =viewChangeValue;
-//        Log.d("action1",viewChange+"");
         eventId = parentSnips.get(position).getEvent().getEvent_id();
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
         setCatItemRecycler(holder.itemRecycler,allParentSnip,viewChange);

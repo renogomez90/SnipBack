@@ -94,9 +94,7 @@ public class FragmentGalleryNew extends Fragment {
     private Uri uri;
     private PlayerView simpleExoPlayerView;
     private RelativeLayout rlLoader;
-    boolean viewButtonClicked = false;
 
-    CategoryItemRecyclerAdapter mAdapter;
 
 
     RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con,viewButtonLayout;
@@ -108,23 +106,12 @@ public class FragmentGalleryNew extends Fragment {
         return fragment;
     }
 
+    boolean viewButtonClicked = false;
+
+    public String viewChange;
+
     public enum ViewType {
-
-        VISIBLE, INVISIBLE;
-
-        private int type;
-
-//        ViewType(int type) {
-//            this.type = type;
-//        }
-
-        public int getNumericType() {
-            return type;
-        }
-
-        public void setNumericType(int type) {
-            this.type = type;
-        }
+        NORMAL, ENLARGED;
     }
 
 
@@ -247,20 +234,23 @@ public class FragmentGalleryNew extends Fragment {
             }
         });
 
-
         view_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 if (!viewButtonClicked) {
                     viewButtonClicked = true;
                     view_button.setImageResource(R.drawable.ic_view);
-                    galleryEnlargedView();
+                    viewChange = String.valueOf(ViewType.ENLARGED);
+                    view_label.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
+
                 } else {
                     viewButtonClicked = false;
+                    viewChange = String.valueOf(ViewType.NORMAL);
                     view_button.setImageResource(R.drawable.ic_view_unselected);
-                    galleryEnlargedView();
+                    view_label.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
+
                 }
+                galleryEnlargedView(viewChange);
             }
         });
 
@@ -273,25 +263,13 @@ public class FragmentGalleryNew extends Fragment {
         return rootView;
     }
 
-    private void galleryEnlargedView() {
+    private void galleryEnlargedView(String viewChange) {
+
         List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
         List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
-        if (viewButtonClicked) {
-            String viewChange = String.valueOf(ViewType.VISIBLE);
-//            Log.d("mainAction",viewChange);
-            mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange);
-            mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-            mainRecyclerAdapter.notifyDataSetChanged();
-
-        } else {
-            String viewChange = String.valueOf(ViewType.INVISIBLE);
-//            Log.d("mainAction",viewChange);
-            mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange);
-            mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-            mainRecyclerAdapter.notifyDataSetChanged();
-
-        }
-
+        mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange);
+        mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+        mainRecyclerAdapter.notifyDataSetChanged();
 
     }
 

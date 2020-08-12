@@ -57,7 +57,6 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     @Override
     public void onBindViewHolder(@NonNull CategoryItemViewHolder holder, int position) {
         if (snipArrayList != null){
-//            Log.d("action3",viewChangeValue+"");
             Snip snip = snipArrayList.get(position);
             try {
                 int duration;
@@ -92,11 +91,11 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     holder.itemImage.setImageBitmap(myBitmap);
 
                     //enlarged view
-                    if (viewChangeValue.equals("VISIBLE")){
-                        RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 720);
-                        relativeParams.setMargins(10, 10, 10, 10);
+                    if (viewChangeValue.equals("ENLARGED")){
+                        RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
+                        relativeParams.setMargins(15, 15, 15, 15);
                         holder.relativeLayoutImage.setLayoutParams(relativeParams);
-                        holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 720)));
+                        holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
                     }
 
                 }else{
