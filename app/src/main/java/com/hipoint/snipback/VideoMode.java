@@ -181,39 +181,27 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
                 if (finger_spacing != 0) {
                     if (current_finger_spacing > finger_spacing ) {
-                        // sensitivity issues
-//                        seekBar.setProgress((int) zoom_level);
-//                        zoom_level = zoom_level + 0.5;
+
                         if ((maxZoom - zoom_level) <= delta) {
                             delta = (float) (maxZoom - zoom_level);
                         }
                         zoom_level = zoom_level + delta;
-
 //                        seekBar.setProgress((int) zoom_level);
                     } else if (current_finger_spacing < finger_spacing ) {
-                        // sensitivity issues
-//                        seekBar.setProgress((int) zoom_level);
-//                        zoom_level = zoomLevel - 0.5;
                         if ((zoom_level - delta) < 1f) {
                             delta = (float) (zoom_level - 1f);
                         }
 //                        seekBar.setProgress((int) zoom_level);
                         zoom_level = zoom_level - delta;
                     }
-//                    assert m != null;
-//                    int minW = (int) (m.width() / maxZoom);
-//                    int minH = (int) (m.height() / maxZoom);
-//                    int difW = m.width() - minW;
-//                    int difH = m.height() - minH;
-//                    int cropW = difW / 100 * (int) zoom_level;
-//                    int cropH = difH / 100 * (int) zoom_level;
-//                    cropW -= cropW & 3;
-//                    cropH -= cropH & 3;
-//                    zoom = new Rect(cropW, cropH, m.width() - cropW, m.height() - cropH);
-                    float ratio = (float) ((float) 1 / zoom_level); //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
+
+                    float ratio = (float) ((float) 1 / zoom_level);
+                    //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
                     //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
+
                     int croppedWidth = m.width() - Math.round((float)m.width() * ratio);
                     int croppedHeight = m.height() - Math.round((float)m.height() * ratio);
+
                     //Finally, zoom represents the zoomed visible area
                     zoom = new Rect(croppedWidth/2, croppedHeight/2,
                             m.width() - croppedWidth/2, m.height() - croppedHeight/2);
@@ -628,15 +616,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             float maxZoom = (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM));
             Rect activeRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
             if ((zoomLevel <= maxZoom) && (zoomLevel >= 1)) {
-//                int minW = (int) (activeRect.width() / maxZoom);
-//                int minH = (int) (activeRect.height() / maxZoom);
-//                int difW = activeRect.width() - minW;
-//                int difH = activeRect.height() - minH;
-//                int cropW = difW / 100 * (int) zoomLevel;
-//                int cropH = difH / 100 * (int) zoomLevel;
-//                return new Rect(cropW, cropH, activeRect.width() - cropW, activeRect.height() - cropH);
-//                cropW -= cropW & 3;
-//                cropH -= cropH & 3;
 
                 float ratio = (float) 1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
                 //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
@@ -695,7 +674,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             case R.id.rec: {
                 bottomContainer.setVisibility(View.INVISIBLE);
                 recStartLayout.setVisibility(VISIBLE);
-//                zoomControlLayout.setVisibility(VISIBLE);
                 startRecordingVideo();
                 break;
             }
@@ -703,7 +681,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             case R.id.rec_stop: {
                 bottomContainer.setVisibility(VISIBLE);
                 recStartLayout.setVisibility(View.INVISIBLE);
-//                zoomControlLayout.setVisibility(View.GONE);
                 stopRecordingVideo();
                 break;
             }

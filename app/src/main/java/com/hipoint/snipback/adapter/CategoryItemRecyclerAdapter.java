@@ -38,68 +38,69 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     private Context context;
     private ItemListener mListener;
     List<Snip> snipArrayList;
-    private  String viewChangeValue;
+    private String viewChangeValue;
 
-    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips,String viewChange) {
+    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips, String viewChange) {
         this.context = context;
         this.snipArrayList = allSnips;
-        this.viewChangeValue= viewChange;
+        this.viewChangeValue = viewChange;
     }
-
 
 
     @NonNull
     @Override
     public CategoryItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        return new CategoryItemViewHolder(LayoutInflater.from(context).inflate(R.layout.category_row_items,parent,false));
+        return new CategoryItemViewHolder(LayoutInflater.from(context).inflate(R.layout.category_row_items, parent, false));
     }
 
     @Override
     public void onBindViewHolder(@NonNull CategoryItemViewHolder holder, int position) {
-        if (snipArrayList != null){
+        if (snipArrayList != null) {
             Snip snip = snipArrayList.get(position);
             try {
                 int duration;
-                if(snip.getParent_snip_id() != 0 && snip.getIs_virtual_version() == 1){
+                if (snip.getParent_snip_id() != 0 && snip.getIs_virtual_version() == 1) {
                     holder.tvVersionLabel.setVisibility(View.VISIBLE);
-                    holder.tvVersionLabel.setText("VERSION "+position);
-                    duration =  (int) snipArrayList.get(position).getSnip_duration();
-                }else if(snip.getParent_snip_id() != 0 && snip.getIs_virtual_version() == 0){
+                    holder.tvVersionLabel.setText("VERSION " + position);
+                    duration = (int) snipArrayList.get(position).getSnip_duration();
+                } else if (snip.getParent_snip_id() != 0 && snip.getIs_virtual_version() == 0) {
                     holder.tvVersionLabel.setVisibility(View.VISIBLE);
-                    holder.tvVersionLabel.setText("V.VERSION "+position);
-                    duration =  (int) snipArrayList.get(position).getSnip_duration();
-                }else{
+                    holder.tvVersionLabel.setText("V.VERSION " + position);
+                    duration = (int) snipArrayList.get(position).getSnip_duration();
+                } else {
                     holder.tvVersionLabel.setVisibility(View.INVISIBLE);
-                    duration =  (int) snipArrayList.get(position).getTotal_video_duration();
+                    duration = (int) snipArrayList.get(position).getTotal_video_duration();
                 }
                 int hours = duration / 3600;
                 int minutes = (duration % 3600) / 60;
                 int seconds = duration % 60;
 
 
-
-                if(hours > 0) {
+                if (hours > 0) {
                     holder.tvDuration.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
-                }else{
+                } else {
                     holder.tvDuration.setText(String.format("%02d:%02d", minutes, seconds));
                 }
 
-                String filePath = AppClass.getAppInsatnce().getThumbFilePathRoot()+snip.getSnip_id()+".png";
+                String filePath = AppClass.getAppInsatnce().getThumbFilePathRoot() + snip.getSnip_id() + ".png";
                 File file = new File(filePath);
-                if(file.exists()) {
+                if (file.exists()) {
                     Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
                     holder.itemImage.setImageBitmap(myBitmap);
 
-                    //enlarged view
-                    if (viewChangeValue.equals("ENLARGED")){
-                        RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
-                        relativeParams.setMargins(15, 15, 15, 15);
-                        holder.relativeLayoutImage.setLayoutParams(relativeParams);
-                        holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
+
+                    if (viewChangeValue != null) {
+                        if (viewChangeValue.equals("ENLARGED")) {
+                            RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
+                            relativeParams.setMargins(15, 15, 15, 15);
+                            holder.relativeLayoutImage.setLayoutParams(relativeParams);
+                            holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
+                        }
                     }
 
-                }else{
-                    CommonUtils.getVideoThumbnail(context,snip);
+
+                } else {
+                    CommonUtils.getVideoThumbnail(context, snip);
                 }
                 holder.itemImage.setOnClickListener(v -> {
                     Intent intent = new Intent(context, ActivityPlayVideo.class);
@@ -129,12 +130,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
         TextView tvVersionLabel;
         TextView tvDuration;
         RelativeLayout relativeLayoutImage;
+
         public CategoryItemViewHolder(@NonNull View itemView) {
             super(itemView);
             itemImage = itemView.findViewById(R.id.image);
             tvVersionLabel = itemView.findViewById(R.id.tvVersionLabel);
             tvDuration = itemView.findViewById(R.id.tvDuration);
-            relativeLayoutImage= itemView.findViewById(R.id.rel_layout_image);
+            relativeLayoutImage = itemView.findViewById(R.id.rel_layout_image);
         }
     }
 
