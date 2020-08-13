@@ -113,10 +113,14 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
     //two finger pinch zoom
     public float finger_spacing = 0;
-    public double zoom_level = 1;
+    public double zoom_level = 1f;
+    public  Rect zoom;
+    TextView zoomFactor;
 
     //zoom slider controls
-    int mProgress, minZoom, maxZoom;
+    int mProgress;
+    float minZoom;
+    int maxZoom;
     private int zoomLevel;
     final int zoomStep = 1;
 
@@ -134,6 +138,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
      *              the event.
      * @return True if the listener has consumed the event, false otherwise.
      */
+    @SuppressLint("ClickableViewAccessibility")
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getAction()) {
@@ -159,49 +164,59 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
             String mCameraId = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraId);
-            float maxZoom = (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) * 10;
+            float maxZoom = (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) ;
 
             Rect m = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+            if (m == null) return false;
+
             int action = event.getAction();
             float current_finger_spacing;
-            setUpCaptureRequestBuilder(mPreviewBuilder);
+//            setUpCaptureRequestBuilder(mPreviewBuilder);
 
             if (event.getPointerCount() == 2) {
                 // Multi touch logic
                 current_finger_spacing = getFingerSpacing(event);
 
-                float delta = 0.34f; //control the zoom sensitivity
+                float delta = 0.04f; //control the zoom sensitivity
 
                 if (finger_spacing != 0) {
-                    if (current_finger_spacing > finger_spacing && maxZoom > zoom_level) {
+                    if (current_finger_spacing > finger_spacing ) {
                         // sensitivity issues
 //                        seekBar.setProgress((int) zoom_level);
 //                        zoom_level = zoom_level + 0.5;
                         if ((maxZoom - zoom_level) <= delta) {
                             delta = (float) (maxZoom - zoom_level);
                         }
-                        seekBar.setProgress((int) zoom_level);
                         zoom_level = zoom_level + delta;
-                    } else if (current_finger_spacing < finger_spacing && zoom_level > 1) {
+
+//                        seekBar.setProgress((int) zoom_level);
+                    } else if (current_finger_spacing < finger_spacing ) {
                         // sensitivity issues
 //                        seekBar.setProgress((int) zoom_level);
 //                        zoom_level = zoomLevel - 0.5;
                         if ((zoom_level - delta) < 1f) {
                             delta = (float) (zoom_level - 1f);
                         }
-                        seekBar.setProgress((int) zoom_level);
+//                        seekBar.setProgress((int) zoom_level);
                         zoom_level = zoom_level - delta;
                     }
-                    assert m != null;
-                    int minW = (int) (m.width() / maxZoom);
-                    int minH = (int) (m.height() / maxZoom);
-                    int difW = m.width() - minW;
-                    int difH = m.height() - minH;
-                    int cropW = difW / 100 * (int) zoom_level;
-                    int cropH = difH / 100 * (int) zoom_level;
-                    cropW -= cropW & 3;
-                    cropH -= cropH & 3;
-                    Rect zoom = new Rect(cropW, cropH, m.width() - cropW, m.height() - cropH);
+//                    assert m != null;
+//                    int minW = (int) (m.width() / maxZoom);
+//                    int minH = (int) (m.height() / maxZoom);
+//                    int difW = m.width() - minW;
+//                    int difH = m.height() - minH;
+//                    int cropW = difW / 100 * (int) zoom_level;
+//                    int cropH = difH / 100 * (int) zoom_level;
+//                    cropW -= cropW & 3;
+//                    cropH -= cropH & 3;
+//                    zoom = new Rect(cropW, cropH, m.width() - cropW, m.height() - cropH);
+                    float ratio = (float) ((float) 1 / zoom_level); //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
+                    //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
+                    int croppedWidth = m.width() - Math.round((float)m.width() * ratio);
+                    int croppedHeight = m.height() - Math.round((float)m.height() * ratio);
+                    //Finally, zoom represents the zoomed visible area
+                    zoom = new Rect(croppedWidth/2, croppedHeight/2,
+                            m.width() - croppedWidth/2, m.height() - croppedHeight/2);
                     mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
                 }
                 finger_spacing = current_finger_spacing;
@@ -504,6 +519,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         r_2_shutter = rootView.findViewById(R.id.r_2_shutter);
         r_2_shutter.setOnClickListener(this);
 
+        zoomFactor = rootView.findViewById(R.id.zoom_factor);
         zoomControlLayout.setOnClickListener(this);
         zoomIn.setOnClickListener(this);
         zoomOut.setOnClickListener(this);
@@ -553,10 +569,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
 
         minZoom = getMinZoom();
-        maxZoom = (int) (getMaxZoom() - 1);
+        maxZoom = (int) getMaxZoom();
 
 
-        seekBar.setMax(Math.round(maxZoom - minZoom));
+        seekBar.setMax(Math.round(maxZoom-minZoom));
         seekBar.setOnSeekBarChangeListener(
                 new SeekBar.OnSeekBarChangeListener() {
                     @Override
@@ -580,8 +596,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         return rootView;
     }
 
-    private int getMinZoom() {
-        return 0;
+    private float getMinZoom() {
+        return 1f;
     }
 
 
@@ -609,18 +625,28 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
             String mCameraId = manager.getCameraIdList()[0];
             CameraCharacteristics characteristics = manager.getCameraCharacteristics(mCameraId);
-            float maxZoom = (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) * 10;
+            float maxZoom = (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM));
             Rect activeRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
-            if ((zoomLevel <= maxZoom) && (zoomLevel > 1)) {
-                int minW = (int) (activeRect.width() / maxZoom);
-                int minH = (int) (activeRect.height() / maxZoom);
-                int difW = activeRect.width() - minW;
-                int difH = activeRect.height() - minH;
-                int cropW = difW / 100 * (int) zoomLevel;
-                int cropH = difH / 100 * (int) zoomLevel;
-                cropW -= cropW & 3;
-                cropH -= cropH & 3;
-                return new Rect(cropW, cropH, activeRect.width() - cropW, activeRect.height() - cropH);
+            if ((zoomLevel <= maxZoom) && (zoomLevel >= 1)) {
+//                int minW = (int) (activeRect.width() / maxZoom);
+//                int minH = (int) (activeRect.height() / maxZoom);
+//                int difW = activeRect.width() - minW;
+//                int difH = activeRect.height() - minH;
+//                int cropW = difW / 100 * (int) zoomLevel;
+//                int cropH = difH / 100 * (int) zoomLevel;
+//                return new Rect(cropW, cropH, activeRect.width() - cropW, activeRect.height() - cropH);
+//                cropW -= cropW & 3;
+//                cropH -= cropH & 3;
+
+                float ratio = (float) 1 / zoomLevel; //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
+                //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
+                int croppedWidth = activeRect.width() - Math.round((float)activeRect.width() * ratio);
+                int croppedHeight = activeRect.height() - Math.round((float)activeRect.height() * ratio);
+                //Finally, zoom represents the zoomed visible area
+                return new Rect(croppedWidth/2, croppedHeight/2,
+                        activeRect.width() - croppedWidth/2, activeRect.height() - croppedHeight/2);
+//                mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
+//                return  zoom;
             } else if (zoomLevel == 0) {
                 return new Rect(0, 0, activeRect.width(), activeRect.height());
             }
@@ -636,7 +662,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         try {
             CameraManager manager = (CameraManager) getActivity().getSystemService(Context.CAMERA_SERVICE);
             String mCameraId = manager.getCameraIdList()[0];
-            return (manager.getCameraCharacteristics(mCameraId).get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) * 10;
+            return (manager.getCameraCharacteristics(mCameraId).get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) ;
         } catch (Exception e) {
             Log.e(TAG, "Error during camera init");
             return -1;
@@ -686,40 +712,40 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 saveSnipTimeToLocal();
                 break;
             }
-            case R.id.zoom_out_btn: {
+//            case R.id.zoom_out_btn: {
+//
+//
+//                if (getCurrentZoom(zoomLevel) <= 40) {
+//
+//                    mProgress = mProgress - 5;
+//                    if (mProgress < 0) {
+//                        mProgress = 0;
+//                    }
+//                    setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
+//                    seekBar.setProgress((int) getCurrentZoom(zoomLevel));
+//
+//                }
+//
+//                break;
+//            }
+//
+//            case R.id.zoom_in_btn: {
+//
+//                if (getCurrentZoom(zoomLevel) <= 40) {
+//
+//                    mProgress = mProgress + 5;
+//                    if (mProgress > 40) {
+//                        mProgress = 40;
+//                    }
+//                    setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
+//                    seekBar.setProgress((int) getCurrentZoom(zoomLevel));
+//
+//                }
 
 
-                if (getCurrentZoom(zoomLevel) <= 40) {
-
-                    mProgress = mProgress - 5;
-                    if (mProgress < 0) {
-                        mProgress = 0;
-                    }
-                    setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
-                    seekBar.setProgress((int) getCurrentZoom(zoomLevel));
-
-                }
-
-                break;
-            }
-
-            case R.id.zoom_in_btn: {
-
-                if (getCurrentZoom(zoomLevel) <= 40) {
-
-                    mProgress = mProgress + 5;
-                    if (mProgress > 40) {
-                        mProgress = 40;
-                    }
-                    setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
-                    seekBar.setProgress((int) getCurrentZoom(zoomLevel));
-
-                }
-
-
-                break;
-
-            }
+//                break;
+//
+//            }
 
 
             case R.id.r_2_shutter: {

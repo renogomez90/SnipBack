@@ -40,6 +40,15 @@
         android:textColor="#fff"
         android:textSize="14sp"
         android:visibility="invisible" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1x"
+        android:id="@+id/zoom_factor"
+        android:textColor="@color/colorWhite"
+        android:visibility="gone"
+        android:layout_centerInParent="true"
+        android:layout_above="@id/zoom_control_layout"/>
 
     <RelativeLayout
         android:id="@+id/zoom_control_layout"
@@ -56,6 +65,8 @@
             android:layout_height="wrap_content"
             android:background="@drawable/ic_remove_black_24dp"
             android:visibility="visible" />
+
+
 
         <SeekBar
             android:id="@+id/zoom_controller"
