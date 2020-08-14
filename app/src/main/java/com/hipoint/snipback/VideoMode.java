@@ -694,7 +694,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
 
                 if (getCurrentZoom(zoomLevel) <= (maxZoom+1) ){
-                    if (mProgress >= minZoom) {
+                    if (mProgress > minZoom) {
                         mProgress--;
                         setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
                     seekBar.setProgress((int) getCurrentZoom(zoomLevel));
