@@ -3,6 +3,7 @@
     android:layout_width="100dp"
     android:layout_height="100dp"
     android:gravity="center"
+    android:id="@+id/rel_layout_image"
     android:layout_margin="2dp"
     xmlns:tools="http://schemas.android.com/tools">
 

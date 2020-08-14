@@ -40,36 +40,63 @@
         android:textColor="#fff"
         android:textSize="14sp"
         android:visibility="invisible" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1x"
+        android:id="@+id/zoom_factor"
+        android:textColor="@color/colorWhite"
+        android:visibility="gone"
+        android:layout_centerInParent="true"
+        android:layout_above="@id/zoom_control_layout"/>
 
     <RelativeLayout
+        android:id="@+id/zoom_control_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/bottom_cont"
-        android:padding="12dp">
+        android:gravity="center"
+        android:visibility="visible">
 
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/zoom_out_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+
             android:background="@drawable/ic_remove_black_24dp"
-            android:visibility="invisible" />
+            android:visibility="visible" />
+
+
+
+        <SeekBar
+            android:id="@+id/zoom_controller"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_toLeftOf="@+id/zoom_in_btn"
+            android:layout_toRightOf="@+id/zoom_out_btn"
+            android:visibility="visible" />
 
         <ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:id="@+id/zoom_in_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_alignParentEnd="true"
             android:background="@drawable/ic_add_black_24dp"
-            android:visibility="invisible" />
+            android:visibility="visible" />
 
     </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/rec_start_container"
         android:layout_width="match_parent"
-        android:gravity="center"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="30dp"
-        android:visibility="gone">
+        android:gravity="center"
+        android:visibility="invisible">
 
         <ImageButton
             android:id="@+id/rec_stop"

@@ -100,13 +100,14 @@
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_marginLeft="20dp"
-            android:layout_marginRight="2dp"
             android:layout_weight="0.2"
+            android:layout_marginBottom="3dp"
             android:gravity="center">
 
             <ImageButton
                 android:id="@+id/camera"
                 android:layout_width="match_parent"
+                android:padding="7dp"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_camera" />
@@ -116,7 +117,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/camera"
-                android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Camera"
@@ -129,15 +129,15 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
             android:layout_weight="0.2"
+            android:layout_marginBottom="5dp"
             android:gravity="center">
 
             <ImageButton
                 android:id="@+id/link"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:padding="10dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_link" />
 
@@ -146,7 +146,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/link"
-                android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Link"
@@ -159,15 +158,15 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
             android:layout_weight="0.2"
+            android:layout_marginBottom="4dp"
             android:gravity="center">
 
             <ImageButton
                 android:id="@+id/filter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:padding="9dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_filter_results_button" />
 
@@ -176,7 +175,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/filter"
-                android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Filter"
@@ -189,8 +187,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginBottom="5dp"
             android:layout_weight="0.2"
             android:gravity="center"
             android:clickable="false">
@@ -198,6 +195,7 @@
             <ImageButton
                 android:id="@+id/_button_view"
                 android:layout_width="match_parent"
+                android:padding="10dp"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_view_unselected" />
@@ -207,7 +205,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/_button_view"
-                android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="View"
@@ -220,15 +217,16 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
             android:layout_marginRight="20dp"
             android:layout_weight="0.2"
+            android:layout_marginBottom="5dp"
             android:gravity="center">
 
             <ImageButton
                 android:id="@+id/dropdown_menu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:padding="11dp"
                 android:background="@android:color/transparent"
                 android:src="@drawable/ic_menu" />
 
@@ -237,7 +235,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/dropdown_menu"
-                android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Menu"
