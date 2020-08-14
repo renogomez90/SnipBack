@@ -487,7 +487,7 @@ public class ActivityPlayVideo extends Swipper {
                 + "VID_Share_Audio.mp4");
 
         // merge two videos
-        String[] complexCommand = {"-y","-i",input_share,"-i",destinationPath,"-strict","experimental","-filter_complex",
+        String[] complexCommand = {"-y","-i",destinationPath,"-i",destinationPath,"-strict","experimental","-filter_complex",
                 "[0:v]scale=480x640,setsar=1:1[v0];[1:v]scale=480x640,setsar=1:1[v1];[v0][0:a][v1][1:a] concat=n=2:v=1:a=1",
                 "-ab","48000","-ac","2","-ar","22050","-s","480x640","-vcodec","libx264","-crf","26","-q","4","-preset",
                 "ultrafast",String.valueOf(mediaFile)};
