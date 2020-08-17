@@ -46,7 +46,7 @@ import com.hipoint.snipback.R;
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.VideoMode;
 import com.hipoint.snipback.adapter.AdapterGallery;
-import com.hipoint.snipback.adapter.CategoryItemRecyclerAdapter;
+
 import com.hipoint.snipback.adapter.MainRecyclerAdapter;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.AllCategory;

@@ -26,7 +26,6 @@ import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.FragmentGallery;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
 import com.hipoint.snipback.fragment.FragmentPlayVideo;
-import com.hipoint.snipback.fragment.Videoeditingfragment;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.io.File;
