@@ -192,8 +192,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                         if ((zoom_level - delta) < 1f) {
                             delta = (float) (zoom_level - 1f);
                         }
-//                        seekBar.setProgress((int) zoom_level);
                         zoom_level = zoom_level - delta;
+//                        if (zoom_level == 1){
+//                            seekBar.setProgress(0);
+//                        } else {
+////                            seekBar.setProgress((int) zoom_level);
+//                        }
                     }
 
                     float ratio = (float) ((float) 1 / zoom_level);
@@ -203,7 +207,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                     int croppedWidth = m.width() - Math.round((float) m.width() * ratio);
                     int croppedHeight = m.height() - Math.round((float) m.height() * ratio);
 
-                    //Finally, zoom represents the zoomed visible area
+                    // zoom represents the zoomed visible area
                     zoom = new Rect(croppedWidth / 2, croppedHeight / 2,
                             m.width() - croppedWidth / 2, m.height() - croppedHeight / 2);
                     mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
