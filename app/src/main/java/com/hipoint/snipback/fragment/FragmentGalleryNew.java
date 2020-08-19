@@ -3,6 +3,7 @@ package com.hipoint.snipback.fragment;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -97,6 +98,7 @@ public class FragmentGalleryNew extends Fragment {
 
 
 
+
     RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con,viewButtonLayout;
 
     List<Snip> snipArrayList = new ArrayList<>();
@@ -109,6 +111,7 @@ public class FragmentGalleryNew extends Fragment {
     boolean viewButtonClicked = false;
 
     public String viewChange;
+    public boolean orientationLand;
 
     public enum ViewType {
         NORMAL, ENLARGED;
@@ -121,7 +124,7 @@ public class FragmentGalleryNew extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery_new, container, false);
 
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
 
         import_con = rootView.findViewById(R.id.import_con);
         player_view_image = rootView.findViewById(R.id.player_view_image);
@@ -138,6 +141,7 @@ public class FragmentGalleryNew extends Fragment {
         pullToRefresh = rootView.findViewById(R.id.pullToRefresh);
         viewButtonLayout =rootView.findViewById(R.id.layout_view);
         click.setVisibility(View.GONE);
+
 
 
         if (AppClass.getAppInsatnce().isInsertionInProgress()) {
@@ -273,6 +277,12 @@ public class FragmentGalleryNew extends Fragment {
 
     }
 
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+    }
+
     private void pulltoRefresh() {
         pullToRefresh.setOnRefreshListener(() -> {
             pullToRefresh.setRefreshing(false);
@@ -284,6 +294,7 @@ public class FragmentGalleryNew extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+
         loadGalleryDataFromDB();
 //        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
 //            loadGalleryDataFromDB();
