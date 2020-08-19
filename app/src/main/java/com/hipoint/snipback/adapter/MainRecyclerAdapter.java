@@ -30,17 +30,17 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private List<EventData> parentSnips;
     private List<EventData> allSnips;
     private  String viewChangeValue;
+    private  Integer orientationValue;
     private int eventId = -1;
 
-    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip,String viewChange) {
+    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip,String viewChange,Integer orientation) {
         this.context = context;
         this.allSnips = allEventSnip;
         this.parentSnips = allParentSnip;
         this.viewChangeValue = viewChange;
+        this.orientationValue=orientation;
 
     }
-
-
 
 
     @NonNull
@@ -62,9 +62,11 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         holder.categoryTitle.setVisibility(View.VISIBLE);
         holder.categoryTitle.setText(parentSnips.get(position).getEvent().getEvent_title());
         String viewChange =viewChangeValue;
+        Integer orientation = orientationValue;
+
         eventId = parentSnips.get(position).getEvent().getEvent_id();
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
-        setCatItemRecycler(holder.itemRecycler,allParentSnip,viewChange);
+        setCatItemRecycler(holder.itemRecycler,allParentSnip,viewChange,orientation);
 
     }
 
@@ -85,8 +87,8 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     }
 
 
-    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange){
-        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context,allEventSnips,viewChange);
+    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange, Integer orientation){
+        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context,allEventSnips,viewChange,orientation);
         itemRecyclerAdapter.notifyDataSetChanged();
         recyclerView.setLayoutManager(new LinearLayoutManager(context,RecyclerView.VERTICAL,false));
         recyclerView.setAdapter(itemRecyclerAdapter);

@@ -3,6 +3,7 @@ package com.hipoint.snipback;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
@@ -48,6 +49,7 @@ public class ActivityPlayVideo extends Swipper {
     private SeekBar seek;
     double current_pos, total_duration;
     private TextView exo_duration;
+    Bitmap bmp;
     private RelativeLayout rlPlayPause;
     private Switch play_pause;
     boolean paused = false;
@@ -109,10 +111,18 @@ public class ActivityPlayVideo extends Swipper {
         Uri video1 = Uri.parse(snip.getVideoFilePath());
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         retriever.setDataSource(String.valueOf(video1));
-        int width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
-        int height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
-        Log.d("width", String.valueOf(width));
-        Log.d("height", String.valueOf(height));
+
+        //Set the video Uri as data source for MediaMetadataRetriever
+        retriever.setDataSource(this, video1);
+        //Get one "frame"/bitmap - * NOTE - no time was set, so the first available frame will be used
+        bmp = retriever.getFrameAtTime();
+
+        //Get the bitmap width and height
+        int videoWidth = bmp.getWidth();
+        int videoHeight = bmp.getHeight();
+
+        Log.d("width", String.valueOf(videoWidth));
+        Log.d("height", String.valueOf(videoHeight));
         retriever.release();
         videoView.setVideoURI(video1);
         videoView.requestFocus();
@@ -355,7 +365,6 @@ public class ActivityPlayVideo extends Swipper {
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Log.d("tag", String.valueOf(newConfig));
 
     }
 

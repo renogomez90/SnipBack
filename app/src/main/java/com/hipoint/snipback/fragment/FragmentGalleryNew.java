@@ -20,6 +20,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -97,9 +98,7 @@ public class FragmentGalleryNew extends Fragment {
     private RelativeLayout rlLoader;
 
 
-
-
-    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con,viewButtonLayout;
+    RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con, viewButtonLayout;
 
     List<Snip> snipArrayList = new ArrayList<>();
 
@@ -109,10 +108,8 @@ public class FragmentGalleryNew extends Fragment {
     }
 
     boolean viewButtonClicked = false;
-
     public String viewChange;
-    public boolean orientationLand;
-
+    public Integer orientation;
     public enum ViewType {
         NORMAL, ENLARGED;
     }
@@ -139,9 +136,8 @@ public class FragmentGalleryNew extends Fragment {
         click = rootView.findViewById(R.id.click);
         rlLoader = rootView.findViewById(R.id.showLoader);
         pullToRefresh = rootView.findViewById(R.id.pullToRefresh);
-        viewButtonLayout =rootView.findViewById(R.id.layout_view);
+        viewButtonLayout = rootView.findViewById(R.id.layout_view);
         click.setVisibility(View.GONE);
-
 
 
         if (AppClass.getAppInsatnce().isInsertionInProgress()) {
@@ -263,7 +259,6 @@ public class FragmentGalleryNew extends Fragment {
 //        AppViewModel appViewModel = ViewModelProviders.of(getActivity()).get(AppViewModel.class);
         pulltoRefresh();
         pullToRefresh.setRefreshing(false);
-
         return rootView;
     }
 
@@ -271,7 +266,16 @@ public class FragmentGalleryNew extends Fragment {
 
         List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
         List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
-        mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange);
+        mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange, orientation);
+        mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+        mainRecyclerAdapter.notifyDataSetChanged();
+
+    }
+
+    private void setOrientation(int orientation) {
+        List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
+        List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
+        mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange, orientation);
         mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
         mainRecyclerAdapter.notifyDataSetChanged();
 
@@ -280,6 +284,8 @@ public class FragmentGalleryNew extends Fragment {
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        orientation = Objects.requireNonNull(getActivity()).getResources().getConfiguration().orientation;
+        setOrientation(orientation);
 
     }
 
@@ -294,7 +300,6 @@ public class FragmentGalleryNew extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-
         loadGalleryDataFromDB();
 //        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
 //            loadGalleryDataFromDB();
@@ -345,7 +350,7 @@ public class FragmentGalleryNew extends Fragment {
                                 if (mainRecyclerAdapter == null) {
                                     RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
                                     mainCategoryRecycler.setLayoutManager(layoutManager);
-                                    mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, null);
+                                    mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, null, null);
                                     mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
                                 } else {
                                     mainRecyclerAdapter.notifyDataSetChanged();
@@ -415,7 +420,7 @@ public class FragmentGalleryNew extends Fragment {
             if (mainRecyclerAdapter == null) {
                 RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
                 mainCategoryRecycler.setLayoutManager(layoutManager);
-                mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, null);
+                mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, null, null);
                 mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
             } else {
                 mainRecyclerAdapter.notifyDataSetChanged();
