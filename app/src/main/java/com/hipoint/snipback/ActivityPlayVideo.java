@@ -1,6 +1,12 @@
 package com.hipoint.snipback;
 
+import android.app.DownloadManager;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -19,12 +25,17 @@ import android.widget.VideoView;
 
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.FileUtil;
 import com.hipoint.snipback.Utils.TrimmerUtils;
 import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.fragment.CreateTag;
+import com.hipoint.snipback.fragment.FragmentGalleryNew;
+import com.hipoint.snipback.fragment.FragmentTrimVideo;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
@@ -33,6 +44,8 @@ import com.hipoint.snipback.room.repository.AppViewModel;
 import com.kaopiz.kprogresshud.KProgressHUD;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Objects;
 
 import Jni.FFmpegCmd;
@@ -50,7 +63,7 @@ public class ActivityPlayVideo extends Swipper {
     private Switch play_pause;
     boolean paused = false;
     private RelativeLayout play_forwardbutton, back_arrow, button_camera, layout_share;
-    private ImageButton tvConvertToReal;
+    private ImageButton tvConvertToReal, tag;
     private Event event;
     private AppRepository appRepository;
     private AppViewModel appViewModel;
@@ -58,16 +71,21 @@ public class ActivityPlayVideo extends Swipper {
     private CounterClass counterClass;
     private static final int pick = 100;
     String outputPath_share = "/storage/emulated/0/Snipback_Share/VID_Share.mp4";
-    String yourAudioPath = "/storage/emulated/0/Download/mp3.mp3";
+    //    String yourAudioPath = "/storage/emulated/0/Download/mp3.mp3";
+    String yourAudioPath = "/storage/emulated/0/SnipRec/";
     String yourAudioPathwav = "/storage/emulated/0/Download/file_example_WAV_1MG.wav";
     String input_share = "/storage/emulated/0/Snipback/VID_1597235825538.mp4";
     String output_path_audio = "/storage/emulated/0/Snipback_Share/VID_Share_Audio.mp4";
+
+    private MediaPlayer mMediaPlayer;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
+
+        download_img();
 
         StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
         StrictMode.setVmPolicy(builder.build());
@@ -89,6 +107,20 @@ public class ActivityPlayVideo extends Swipper {
         appViewModel.getEventByIdLiveData(snip.getEvent_id()).observe(this, snipevent -> {
             event = snipevent;
         });
+
+        // // Tag
+        tag = findViewById(R.id.tag);
+        tag.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.frame, new CreateTag().newInstance(snip)).commit();
+
+//                loadFragment(CreateTag.newInstance(),true);
+
+            }
+        });
+
+
         Uri video1 = Uri.parse(snip.getVideoFilePath());
         videoView.setVideoURI(video1);
         videoView.requestFocus();
@@ -452,6 +484,25 @@ public class ActivityPlayVideo extends Swipper {
     @Override
     public void onBackPressed() {
         super.onBackPressed();
+        File delete = new File(outputPath_share);
+        if (delete.exists()) {
+            if (delete.delete()) {
+//                            Log.d("Deleted", ""+uri);
+            }
+            boolean exists = delete.exists();
+            Log.d("Deleted", "does it exist? " + exists);
+        }
+
+
+        File delete1 = new File(output_path_audio);
+        if (delete1.exists()) {
+            if (delete1.delete()) {
+//                            Log.d("Deleted", ""+uri);
+            }
+            boolean exists = delete1.exists();
+            Log.d("Deleted", "does it exist? " + exists);
+        }
+
         finish();
     }
 
@@ -473,65 +524,23 @@ public class ActivityPlayVideo extends Swipper {
                 + "VID_Share_Audio.mp4");
 //        String imagepath = "/storage/emulated/0/Screenshot/c.png";
         String imagepath = "/storage/emulated/0/DCIM/Screenshots/c.jpg";
-        String imageUri = "drawable://" + R.drawable.ic_snipback_logo;
+        String myImageName = "c";
+//        String imageUri = "android.resource://com.hipoint.snipback/assets/"+myImageName;
+//        String imageUri ="file:android.resource://com.hipoint.snipback/assets/c";
+//        String imageUri = "file:assets://c.png";
+
 
         // merge two videos
 //        String[] complexCommand = {"-y","-i",destinationPath,"-i",destinationPath,"-strict","experimental","-filter_complex",
 //                "[0:v]scale=480x640,setsar=1:1[v0];[1:v]scale=480x640,setsar=1:1[v1];[v0][0:a][v1][1:a] concat=n=2:v=1:a=1",
 //                "-ab","48000","-ac","2","-ar","22050","-s","480x640","-vcodec","libx264","-crf","26","-q","4","-preset",
 //                "ultrafast",String.valueOf(mediaFile)};
+
         // can be used for downloading
 //        String[] complexCommand ={"-y","-i",destinationPath,"-codec","copy","-shortest","-preset","ultrafast",String.valueOf(mediaFile)};
 
-//        String strCommand = "-y","-i","-loop", "1" ,"-t" ,"3" ,"-i",imagepath,"-loop", "1" ,"-t" ,"3" ,"-i",imagepath, "-loop", "1" ,"-t" ,"3" ,"-i",imagepath,"-loop", "1" ,"-t" ,"3" ,"-i",imagepath, "-filter_complex","[0:v]trim=duration=3,fade=t=out:st=2.5:d=0.5[v0];[1:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v1];[2:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v2];[3:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v3];[v0][v1][v2][v3]concat=n=4:v=1:a=0","format=yuv420p[v]", "-map", "[v]","-preset","ultrafast",String.valueOf(mediaFile);
-
-// remove video audio
+        // remove video audio
 //        String[] complexCommand = {"-y","-i",input_share,"-vcodec","copy","-an",String.valueOf(mediaFile)};
-
-
-//        {"-i", yourAudioPath, "-i", input_share, "-codec", "copy", "-shortest", String.valueOf(mediaFile)};
-
-//        String[] complexCommand = {"-y","-i",input_share,"-vcodec","copy","-an",String.valueOf(mediaFile)};
-//        String[] complexCommandaudio = {"-y","-i",outputPath_share,"-i",yourAudioPath,"-c:v","copy",String.valueOf(mediaFile_audio)};
-
-//        ffmpeg -i output1.mp4 -i audio.mp3 finalout.mp4
-
-//        ffmpeg -y -i image.png -i audio.mp3 -c:a copy result.avi
-
-
-//        String[] complexCommand = {"-y","-i",imagepath,"-i",yourAudioPath,"c:a","copy",String.valueOf(mediaFile)};
-//        String[] complexCommand = {"-y","-i",imagepath,"-i",yourAudioPath,"c:a","copy",String.valueOf(mediaFile)};
-
-//        String[] complexCommand = {"-y","-i",imagepath,"-i",yourAudioPathwav,"-c:v","libx264","-tune","stillimage","-c:a","aac","-b:a","192k","-pix_fmt","yuv420p","-shortest"
-//                ,String.valueOf(mediaFile)};
-
-//        String[] complexCommand = {"-y","-i","-loop","-vframes","14490","-i",imagepath,"-i",yourAudioPath,"-y","-r","30","-b","2500k","-acodec","ac3","-ab","234k","-c:v","mpeg4",
-//                "ultrafast",String.valueOf(mediaFile)};
-//        ffmpeg -loop 1 -i image.jpg -i audio.wav -c:v libx264 -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest out.mp4
-
-//        ffmpeg -loop_input -vframes 14490 -i imagine.jpg -i audio.mp3 -y -r 30
-//                -b 2500k -acodec ac3 -ab 384k -vcodec mpeg4 result.mp4
-
-//        String[] complexCommand ={"-y","-i",destinationPath,"-codec","copy","-shortest","-preset","ultrafast",String.valueOf(mediaFile)};
-
-//        ffmpeg -y -loop 1 -t 3.03 -i ~/Pictures/yaya_speech_choose2.png   -r 1  -vcodec libx264 -b:v 200k -bt 350k   -f mp4 ~/Videos/dummy.mp4
-
-//        ffmpeg -loop_input -vframes 14490 -i imagine.jpg -i audio.mp3 -y -r 30
-//                -b 2500k -acodec ac3 -ab 384k -vcodec mpeg4 result.mp4
-
-
-//        String[] complexCommand = {"-y","-i","-t", String.valueOf(3.03),"-i",imagepath,"-r","1","-vcodec",
-//                "libx264",
-//                "-b:v","200k","-bt","350k","-f","mp4",
-//                "ultrafast",String.valueOf(mediaFile)};
-//        String[] complexCommand = {,"-loop","1","-i",imagepath,"-i",yourAudioPathwav,"-c:v","libx264","-tune","stillimage","-c:a","aac","-b:a","192k","-pix_fmt","yuv420p","-shortest"
-//                ,String.valueOf(mediaFile)};
-
-//        String strCommand = "ffmpeg -loop 1 -t 3 -i " + /sdcard/videokit/1.jpg + " -loop 1 -t 3 -i " + /sdcard/videokit/2.jpg + " -loop 1 -t 3 -i " + /sdcard/videokit/3.jpg + " -loop 1 -t 3 -i " + /sdcard/videokit/4.jpg + " -filter_complex [0:v]trim=duration=3,fade=t=out:st=2.5:d=0.5[v0];[1:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v1];[2:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v2];[3:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v3];[v0][v1][v2][v3]concat=n=4:v=1:a=0,format=yuv420p[v] -map [v] -preset ultrafast " + /sdcard/videolit/output.mp4;
-
-
-//        String[] complexCommand ={"ffmpeg","-loop", "1" ,"-t" ,"3" ,"-i",imagepath,"-loop", "1" ,"-t" ,"3" ,"-i",imagepath, "-loop", "1" ,"-t" ,"3" ,"-i",imagepath,"-loop", "1" ,"-t" ,"3" ,"-i",imagepath, "-filter_complex","[0:v]trim=duration=3,fade=t=out:st=2.5:d=0.5[v0];[1:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v1];[2:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v2];[3:v]trim=duration=3,fade=t=in:st=0:d=0.5,fade=t=out:st=2.5:d=0.5[v3];[v0][v1][v2][v3]concat=n=4:v=1:a=0","yuv420p","-map","[v]","-preset","ultrafast",String.valueOf(mediaFile)};
-//        String[] complexCommand ={ "ffmpeg" ,"-loop" ,"1" ,"-i ",imagepath,"-i" ,yourAudioPath ,"-c:v" ,"libx264" ,"-tune","stillimage","-c:a","aac","-b:a ","192k","-pix_fmt","yuv420p" ,"-shortest",String.valueOf(mediaFile)};
 
         // image to video working
 //        String[] complexCommandaddaudio ={
@@ -548,19 +557,34 @@ public class ActivityPlayVideo extends Swipper {
 //                "yuv420p",
 //                String.valueOf(mediaFile_audio)};
 
-//        String[] complexCommand ={"ffmpeg","-r","1","-loop","1","-i",imagepath,"-i",yourAudioPathwav,"copy","-r","1","-shortest","-vf","scale=1280:720", String.valueOf(mediaFile)};
-//        String[] complexCommand ={"ffmpeg","-i",imagepath,"-i",yourAudioPath,"-c:v","libx264","-tune","stillimage","-c:a","copy", String.valueOf(mediaFile)};
-        //        ffmpeg -loop 1 -y -i image.jpg -i music.mp3 -shortest -pix_fmt yuv420p output.mp4
 
-        String[] complexCommandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", imagepath, "-i", yourAudioPath, "-shortest", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
-        String[] complexCommandmergevideo = {"-y", "-i", String.valueOf(mediaFile_audio), "-i", destinationPath, "-strict", "experimental", "-filter_complex",
+        String vid = "/storage/emulated/0/SnipRec/2.mp4";
+//        String imageUri = "drawable://" + R.drawable.action_image;
+        String imageUri = "file:drawable://" + R.drawable.action_image;
+
+        Uri path = Uri.parse("android.resource://com.hipoint.snipback/" + R.drawable.action_image);
+//        Uri otherPath = Uri.parse("android.resource://com.segf4ult.test/drawable/icon");
+
+        String path1 = path.toString();
+//        String path = otherPath .toString();
+
+        // overlay image in a video
+
+//        String[] cmd = new String[]{ "ffmpeg","-i", destinationPath, "-i", imagepath, "-filter_complex", "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2", String.valueOf(mediaFile_audio)};
+
+        // convert image and audio filue to video file
+//        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", imagepath, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
+        String img_share="/storage/emulated/0/Snipback_Share/icon.PNG";
+        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", img_share, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
+        // code for merging two videos
+        String[] Commandmergevideo = {"-y", "-i", String.valueOf(mediaFile_audio), "-i", destinationPath, "-strict", "experimental", "-filter_complex",
                 "[0:v]scale=480x640,setsar=1:1[v0];[1:v]scale=480x640,setsar=1:1[v1];[v0][0:a][v1][1:a] concat=n=2:v=1:a=1",
                 "-ab", "48000", "-ac", "2", "-ar", "22050", "-s", "480x640", "-vcodec", "libx264", "-crf", "26", "-q", "4", "-preset",
                 "ultrafast", String.valueOf(mediaFile)};
 
 
         KProgressHUD hud = CommonUtils.showProgressDialog(this);
-        FFmpegCmd.exec(complexCommandaddaudio, 0, new OnEditorListener() {
+        FFmpegCmd.exec(Commandaddaudio, 0, new OnEditorListener() {
             @Override
             public void onSuccess() {
 
@@ -575,7 +599,7 @@ public class ActivityPlayVideo extends Swipper {
 
                             // Do something after 5s = 5000ms
 
-                            FFmpegCmd.exec(complexCommandmergevideo, 0, new OnEditorListener() {
+                            FFmpegCmd.exec(Commandmergevideo, 0, new OnEditorListener() {
                                 @Override
                                 public void onSuccess() {
 
@@ -628,9 +652,6 @@ public class ActivityPlayVideo extends Swipper {
 
                 });
 
-
-
-
             }
 
             @Override
@@ -673,11 +694,43 @@ public class ActivityPlayVideo extends Swipper {
                 boolean exists = delete1.exists();
                 Log.d("Deleted", "does it exist? " + exists);
             }
+
+            File delete_audio = new File(yourAudioPath + snip.getSnip_id() + ".mp3");
+            if (delete_audio.exists()) {
+                if (delete_audio.delete()) {
+//                            Log.d("Deleted", ""+uri);
+                }
+                boolean exists = delete_audio.exists();
+                Log.d("Deleted", "does it exist? " + exists);
+            }
         }
     }
 
-    public String getURLForResource(int resourceId) {
-        //use BuildConfig.APPLICATION_ID instead of R.class.getPackage().getName() if both are not same
-        return Uri.parse("android.resource://" + R.class.getPackage().getName() + "/" + resourceId).toString();
+    public void download_img() {
+
+        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.logo);
+        File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
+                VIDEO_DIRECTORY_NAME_SHARE);
+        // Create storage directory if it does not exist
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                return;
+            }
+        }
+//        String extStorageDirectory = Environment.getExternalStorageDirectory().toString();
+        try {
+
+
+            File file = new File(mediaStorageDir, "icon.PNG");
+            FileOutputStream outStream = new FileOutputStream(file);
+            bm.compress(Bitmap.CompressFormat.PNG, 100, outStream);
+            outStream.flush();
+            outStream.close();
+        } catch (IOException e) {
+
+        }
+
     }
+
+
 }

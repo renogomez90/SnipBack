@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     android:gravity="center">
 
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -67,7 +68,6 @@
             android:layout_height="13dp"
             android:src="@drawable/ic_camera" />
     </RelativeLayout>
-
 
     <RelativeLayout
         android:id="@+id/play_backbutton"
@@ -197,7 +197,6 @@
         android:id="@+id/frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottom_menu"
         android:background="#000000"/>
 
     <LinearLayout
