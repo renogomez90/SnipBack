@@ -3,6 +3,7 @@ package com.hipoint.snipback.adapter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -49,6 +50,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     @NonNull
     @Override
     public CategoryItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+
         return new CategoryItemViewHolder(LayoutInflater.from(context).inflate(R.layout.category_row_items, parent, false));
     }
 
@@ -87,15 +89,33 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
                     holder.itemImage.setImageBitmap(myBitmap);
 
+//                    int orientation = context.getResources().getConfiguration().orientation;
 
-                    if (viewChangeValue != null) {
-                        if (viewChangeValue.equals("ENLARGED")) {
-                            RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
-                            relativeParams.setMargins(15, 15, 15, 15);
-                            holder.relativeLayoutImage.setLayoutParams(relativeParams);
-                            holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
+//                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+////                         code for portrait mode
+                        if (viewChangeValue != null) {
+                            if (viewChangeValue.equals("ENLARGED")) {
+                                RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
+                                relativeParams.setMargins(15, 15, 15, 15);
+                                holder.relativeLayoutImage.setLayoutParams(relativeParams);
+                                holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
+                            }
                         }
-                    }
+//                    }else {
+//                            if (viewChangeValue != null) {
+//                                if (viewChangeValue.equals("ENLARGED")) {
+//                                    // code for landscape mode
+//                                    RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(950, 550);
+//                                    relativeParams.setMargins(15, 15, 15, 40);
+//                                    relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+//                                    relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+//                                    holder.relativeLayoutImage.setLayoutParams(relativeParams);
+//                                    holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(950, 550)));
+//                                }
+//                            }
+//                        }
+
+
 
 
                 } else {

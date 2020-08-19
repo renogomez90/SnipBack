@@ -3,10 +3,15 @@ package com.hipoint.snipback;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -23,14 +28,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
+
 import androidx.lifecycle.ViewModelProviders;
 
 import com.hipoint.snipback.Utils.CommonUtils;
-import com.hipoint.snipback.Utils.FileUtil;
 import com.hipoint.snipback.Utils.TrimmerUtils;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.CreateTag;
@@ -70,11 +73,13 @@ public class ActivityPlayVideo extends Swipper {
     boolean seeked = false;
     private CounterClass counterClass;
     private static final int pick = 100;
+
     String outputPath_share = "/storage/emulated/0/Snipback_Share/VID_Share.mp4";
-    //    String yourAudioPath = "/storage/emulated/0/Download/mp3.mp3";
     String yourAudioPath = "/storage/emulated/0/SnipRec/";
-    String yourAudioPathwav = "/storage/emulated/0/Download/file_example_WAV_1MG.wav";
-    String input_share = "/storage/emulated/0/Snipback/VID_1597235825538.mp4";
+
+    int orientation;
+//    String yourAudioPath = "/storage/emulated/0/Download/mp3.mp3";
+
     String output_path_audio = "/storage/emulated/0/Snipback_Share/VID_Share_Audio.mp4";
 
     private MediaPlayer mMediaPlayer;
@@ -83,7 +88,20 @@ public class ActivityPlayVideo extends Swipper {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main2);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
+//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+//        setContentView(R.layout.activity_main2);
+
+
+        orientation = this.getResources().getConfiguration().orientation;
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+
+            setContentView(R.layout.activity_main2);
+        } else {
+
+            setContentView(R.layout.land_video_mode);
+        }
+
 
         download_img();
 
@@ -122,6 +140,13 @@ public class ActivityPlayVideo extends Swipper {
 
 
         Uri video1 = Uri.parse(snip.getVideoFilePath());
+        MediaMetadataRetriever retriever = new MediaMetadataRetriever();
+        retriever.setDataSource(String.valueOf(video1));
+        int width = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH));
+        int height = Integer.valueOf(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT));
+        Log.d("width", String.valueOf(width));
+        Log.d("height", String.valueOf(height));
+        retriever.release();
         videoView.setVideoURI(video1);
         videoView.requestFocus();
         play_pause.setChecked(true);
@@ -157,6 +182,7 @@ public class ActivityPlayVideo extends Swipper {
 //                videoView.setVideoURI(video);
 
         });
+
 
         seek.setVisibility(View.VISIBLE);
 
@@ -359,6 +385,12 @@ public class ActivityPlayVideo extends Swipper {
 
     }
 
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.d("tag", String.valueOf(newConfig));
+
+    }
 
     public void setVideoProgressParent() {
 
