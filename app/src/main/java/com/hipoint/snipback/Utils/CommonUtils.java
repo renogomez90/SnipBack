@@ -2,6 +2,7 @@ package com.hipoint.snipback.Utils;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.os.Build;
@@ -17,6 +18,8 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
+
+import static android.content.Context.MODE_PRIVATE;
 
 public class CommonUtils {
 
@@ -112,4 +115,22 @@ public class CommonUtils {
         }
     }
 
+    public static void setPreferencesInt(Context context, String key, int value) {
+        if (context != null) {
+            SharedPreferences sharedPreferences = context.getSharedPreferences("mypref", MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt(key, value);
+            editor.commit();
+        }
+    }
+
+    public static int getPreferenceIntValue(Context context, String key) {
+        int value = 0;
+        if (context != null) {
+            SharedPreferences sharedPreferences = context.getSharedPreferences("mypref", MODE_PRIVATE);
+            value = sharedPreferences.getInt(key, 0);
+        }
+        return value;
+
+    }
 }
