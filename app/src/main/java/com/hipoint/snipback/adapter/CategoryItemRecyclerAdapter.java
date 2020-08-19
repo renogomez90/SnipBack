@@ -1,12 +1,9 @@
 package com.hipoint.snipback.adapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,42 +12,34 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.ActivityPlayVideo;
-import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.application.AppClass;
-import com.hipoint.snipback.fragment.FragmentGallery;
-import com.hipoint.snipback.fragment.FragmentGalleryNew;
-import com.hipoint.snipback.fragment.FragmentPlayVideo;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.io.File;
 import java.util.List;
-
-import static com.hipoint.snipback.CircularSeekBar.relativeLayout;
 
 public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryItemRecyclerAdapter.CategoryItemViewHolder> {
     private Context context;
     private ItemListener mListener;
     List<Snip> snipArrayList;
     private String viewChangeValue;
+    private Integer orientationVal;
 
-    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips, String viewChange) {
+    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips, String viewChange, Integer orientation) {
         this.context = context;
         this.snipArrayList = allSnips;
         this.viewChangeValue = viewChange;
+        this.orientationVal = orientation;
     }
-
 
     @NonNull
     @Override
     public CategoryItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
         return new CategoryItemViewHolder(LayoutInflater.from(context).inflate(R.layout.category_row_items, parent, false));
     }
 
@@ -76,7 +65,6 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                 int minutes = (duration % 3600) / 60;
                 int seconds = duration % 60;
 
-
                 if (hours > 0) {
                     holder.tvDuration.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
                 } else {
@@ -89,34 +77,14 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
                     holder.itemImage.setImageBitmap(myBitmap);
 
-//                    int orientation = context.getResources().getConfiguration().orientation;
+                    if (viewChangeValue != null && orientationVal == null) {
+                        enlargedPortraitView(holder);
 
-//                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-////                         code for portrait mode
-                        if (viewChangeValue != null) {
-                            if (viewChangeValue.equals("ENLARGED")) {
-                                RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
-                                relativeParams.setMargins(15, 15, 15, 15);
-                                holder.relativeLayoutImage.setLayoutParams(relativeParams);
-                                holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
-                            }
-                        }
-//                    }else {
-//                            if (viewChangeValue != null) {
-//                                if (viewChangeValue.equals("ENLARGED")) {
-//                                    // code for landscape mode
-//                                    RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(950, 550);
-//                                    relativeParams.setMargins(15, 15, 15, 40);
-//                                    relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
-//                                    relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
-//                                    holder.relativeLayoutImage.setLayoutParams(relativeParams);
-//                                    holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(950, 550)));
-//                                }
-//                            }
-//                        }
-
-
-
+                    } else if (viewChangeValue != null && orientationVal == 2) {
+                        enlargedLandscapeMode(holder);
+                    } else {
+                        enlargedPortraitView(holder);
+                    }
 
                 } else {
                     CommonUtils.getVideoThumbnail(context, snip);
@@ -138,6 +106,27 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
 //        holder.itemImage.setImageResource(categoryItemList.get(position).getImageUrl());
     }
 
+    private void enlargedPortraitView(CategoryItemViewHolder holder) {
+
+        if (viewChangeValue.equals("ENLARGED")) {
+            RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
+            relativeParams.setMargins(15, 15, 15, 15);
+            holder.relativeLayoutImage.setLayoutParams(relativeParams);
+            holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
+
+        }
+    }
+
+    private void enlargedLandscapeMode(CategoryItemViewHolder holder) {
+        if (viewChangeValue.equals("ENLARGED")) {
+            RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(950, 550);
+            relativeParams.setMargins(15, 15, 15, 40);
+            relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+            relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+            holder.relativeLayoutImage.setLayoutParams(relativeParams);
+            holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(950, 550)));
+        }
+    }
 
     @Override
     public int getItemCount() {
