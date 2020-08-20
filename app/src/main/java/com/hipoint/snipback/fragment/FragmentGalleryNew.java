@@ -95,6 +95,7 @@ public class FragmentGalleryNew extends Fragment {
     private MediaSource mediaSource;
     private Uri uri;
     private PlayerView simpleExoPlayerView;
+    FragmentGalleryNew mMyFragment;
     private RelativeLayout rlLoader;
 
 
@@ -115,13 +116,16 @@ public class FragmentGalleryNew extends Fragment {
     }
 
 
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery_new, container, false);
 
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
+
+
+        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
 
         import_con = rootView.findViewById(R.id.import_con);
         player_view_image = rootView.findViewById(R.id.player_view_image);
@@ -272,20 +276,26 @@ public class FragmentGalleryNew extends Fragment {
 
     }
 
+
+
     private void setOrientation(int orientation) {
         List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
         List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
         mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange, orientation);
         mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-        mainRecyclerAdapter.notifyDataSetChanged();
 
     }
+
 
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        
         orientation = Objects.requireNonNull(getActivity()).getResources().getConfiguration().orientation;
         setOrientation(orientation);
+
+
+
 
     }
 

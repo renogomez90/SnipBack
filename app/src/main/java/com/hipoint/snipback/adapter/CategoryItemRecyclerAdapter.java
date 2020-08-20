@@ -107,24 +107,26 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     }
 
     private void enlargedPortraitView(CategoryItemViewHolder holder) {
-
+        if (viewChangeValue != null){
         if (viewChangeValue.equals("ENLARGED")) {
             RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
             relativeParams.setMargins(15, 15, 15, 15);
             holder.relativeLayoutImage.setLayoutParams(relativeParams);
             holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
-
+        }
         }
     }
 
     private void enlargedLandscapeMode(CategoryItemViewHolder holder) {
-        if (viewChangeValue.equals("ENLARGED")) {
-            RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(950, 550);
-            relativeParams.setMargins(15, 15, 15, 40);
-            relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
-            relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
-            holder.relativeLayoutImage.setLayoutParams(relativeParams);
-            holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(950, 550)));
+        if (viewChangeValue != null) {
+            if (viewChangeValue.equals("ENLARGED")) {
+                RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(950, 550);
+                relativeParams.setMargins(15, 15, 15, 40);
+                relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+                relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+                holder.relativeLayoutImage.setLayoutParams(relativeParams);
+                holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(950, 550)));
+            }
         }
     }
 
