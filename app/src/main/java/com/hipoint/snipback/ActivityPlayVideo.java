@@ -442,6 +442,11 @@ public class ActivityPlayVideo extends Swipper {
 
     }
 
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+    }
+
     public String timeConversion(long value) {
         String videoTime;
         int dur = (int) value;
