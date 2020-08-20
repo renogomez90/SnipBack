@@ -90,19 +90,19 @@ public class ActivityPlayVideo extends Swipper {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
-//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-//        setContentView(R.layout.activity_main2);
+//        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_USER);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        setContentView(R.layout.activity_main2);
 
 
-        orientation = this.getResources().getConfiguration().orientation;
-        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-
-            setContentView(R.layout.activity_main2);
-        } else {
-
-            setContentView(R.layout.land_video_mode);
-        }
+//        orientation = this.getResources().getConfiguration().orientation;
+//        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+//
+//            setContentView(R.layout.activity_main2);
+//        } else {
+//
+//            setContentView(R.layout.land_video_mode);
+//        }
 
 
         download_img();

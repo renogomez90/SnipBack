@@ -53,7 +53,8 @@
         <activity
             android:name=".ActivityPlayVideo"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:configChanges="orientation|screenSize">
+            android:configChanges="orientation|screenSize|screenLayout"
+           >
         </activity>
 
         <provider
