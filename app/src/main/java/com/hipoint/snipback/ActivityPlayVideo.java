@@ -593,7 +593,7 @@ public class ActivityPlayVideo extends Swipper {
         // convert image and audio filue to video file
 //        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", imagepath, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
         String img_share="/storage/emulated/0/Snipback_Share/icon.PNG";
-        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", img_share, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
+        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", img_share, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest","-vf"," scale=480x640","-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
         // code for merging two videos before
         String[] CommandmergevideoBefore= {"-y", "-i", String.valueOf(mediaFile_audio), "-i", destinationPath, "-strict", "experimental", "-filter_complex",
                 "[0:v]scale=480x640,setsar=1:1[v0];[1:v]scale=480x640,setsar=1:1[v1];[v0][0:a][v1][1:a] concat=n=2:v=1:a=1",
