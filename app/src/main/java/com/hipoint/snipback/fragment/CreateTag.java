@@ -7,10 +7,18 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Chronometer;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,16 +28,18 @@ import androidx.fragment.app.Fragment;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 public class CreateTag extends Fragment {
     private View rootView;
-    ImageButton edit,mic;
+    ImageButton edit,mic,tick;
     private static final String AUDIO_RECORDER_FILE_EXT_3GP = ".3gp";
     private static final String AUDIO_RECORDER_FILE_EXT_MP4 = ".mp4";
     private static final String AUDIO_RECORDER_FOLDER = "SnipRec";
@@ -39,6 +49,12 @@ public class CreateTag extends Fragment {
     private String file_exts[] = { AUDIO_RECORDER_FILE_EXT_MP4, AUDIO_RECORDER_FILE_EXT_3GP };
     boolean isAudioPlaying=false;
     private Snip snip;
+    private Chronometer mChronometer;
+    private int timerSecond = 0;
+    private static final String TAG = "CreateTag";
+    private Switch img3,img4;
+    private TextView after,before;
+    int posToChoose;
 
 
     public  static CreateTag newInstance(Snip snip) {
@@ -55,28 +71,100 @@ public class CreateTag extends Fragment {
 
         snip = Objects.requireNonNull(getArguments()).getParcelable("snip");
 
-        // record audio
-        mic=rootView.findViewById(R.id.mic);
-        mic.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(isAudioPlaying){
-                    isAudioPlaying=false;
-                    stopRecording();
-                    Toast.makeText(getActivity(), "stop", Toast.LENGTH_LONG).show();
-//                    Intent intent=new Intent(getContext(),ActivityPlayVideo.class);
-//                    startActivity(intent);
-//                    getActivity().onBackPressed();
+        after=rootView.findViewById(R.id.after);
+        before=rootView.findViewById(R.id.before);
+        img3=rootView.findViewById(R.id.img3);
+        img3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // The toggle is enabled
+
+                    after.setTextColor(getResources().getColor(R.color.red_tag));
+                    img4.setChecked(false);
+                    before.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
+                    posToChoose=1;
+                    CommonUtils.setPreferencesInt(getActivity(),"poaition", posToChoose);
 
 
-                }else {
-                    isAudioPlaying=true;
-                    Toast.makeText(getActivity(), "start", Toast.LENGTH_LONG).show();
-                    startRecording();
                 }
 
             }
         });
+        img4=rootView.findViewById(R.id.img4);
+        img4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+
+                    before.setTextColor(getResources().getColor(R.color.red_tag));
+                    img3.setChecked(false);
+                    after.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
+                    posToChoose=2;
+                    CommonUtils.setPreferencesInt(getActivity(),"poaition", posToChoose);
+
+                }
+
+            }
+        });
+        mChronometer = rootView.findViewById(R.id.chronometer);
+        mChronometer.setOnChronometerTickListener(arg0 -> {
+//                if (!resume) {
+            long time = SystemClock.elapsedRealtime() - mChronometer.getBase();
+            int h = (int) (time / 3600000);
+            int m = (int) (time - h * 3600000) / 60000;
+            int s = (int) (time - h * 3600000 - m * 60000) / 1000;
+            String t = (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+            mChronometer.setText(t);
+
+            long minutes = ((SystemClock.elapsedRealtime() - mChronometer.getBase()) / 1000) / 60;
+            long seconds = ((SystemClock.elapsedRealtime() - mChronometer.getBase()) / 1000) % 60;
+            int elapsedMillis = (int) (SystemClock.elapsedRealtime() - mChronometer.getBase());
+            timerSecond = (int) TimeUnit.MILLISECONDS.toSeconds(elapsedMillis);
+//                    elapsedTime = SystemClock.elapsedRealtime();
+            Log.d(TAG, "onChronometerTick: " + minutes + " : " + seconds);
+//                } else {
+//                    long minutes = ((elapsedTime - cmTimer.getBase())/1000) / 60;
+//                    long seconds = ((elapsedTime - cmTimer.getBase())/1000) % 60;
+//                    elapsedTime = elapsedTime + 1000;
+//                    Log.d(TAG, "onChronometerTick: " + minutes + " : " + seconds);
+//                }
+        });
+        tick=rootView.findViewById(R.id.tick);
+        tick.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+                intent.putExtra("snip", snip);
+                startActivity(intent);
+                getActivity().finish();
+            }
+        });
+
+
+        // record audio
+        mic=rootView.findViewById(R.id.mic);
+        mic.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN)
+                {
+                    startRecording();
+                    return true;
+                }
+
+                if (event.getAction() == MotionEvent.ACTION_UP)
+                {
+                    stopRecording();
+                    img3.setChecked(true);
+
+                    return true;
+                }
+
+                return true;
+            }
+        });
+
+
 
         edit=rootView.findViewById(R.id.edit);
         edit.setOnClickListener(new View.OnClickListener() {
@@ -106,7 +194,12 @@ public class CreateTag extends Fragment {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mChronometer.setBase(SystemClock.elapsedRealtime());
+        mChronometer.start();
+        mChronometer.setVisibility(View.VISIBLE);
     }
+
 
     private String getFilename(){
         String filepath = Environment.getExternalStorageDirectory().getPath();
@@ -142,6 +235,10 @@ public class CreateTag extends Fragment {
 
             recorder = null;
         }
+        mChronometer.stop();
+        mChronometer.setVisibility(View.INVISIBLE);
+        mChronometer.setText("");
+
     }
 
 }

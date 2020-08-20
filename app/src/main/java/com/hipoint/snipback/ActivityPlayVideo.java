@@ -558,13 +558,6 @@ public class ActivityPlayVideo extends Swipper {
                 + "VID_Share.mp4");
         File mediaFile_audio = new File(mediaStorageDir.getPath() + File.separator
                 + "VID_Share_Audio.mp4");
-//        String imagepath = "/storage/emulated/0/Screenshot/c.png";
-        String imagepath = "/storage/emulated/0/DCIM/Screenshots/c.jpg";
-        String myImageName = "c";
-//        String imageUri = "android.resource://com.hipoint.snipback/assets/"+myImageName;
-//        String imageUri ="file:android.resource://com.hipoint.snipback/assets/c";
-//        String imageUri = "file:assets://c.png";
-
 
         // merge two videos
 //        String[] complexCommand = {"-y","-i",destinationPath,"-i",destinationPath,"-strict","experimental","-filter_complex",
@@ -593,17 +586,6 @@ public class ActivityPlayVideo extends Swipper {
 //                "yuv420p",
 //                String.valueOf(mediaFile_audio)};
 
-
-        String vid = "/storage/emulated/0/SnipRec/2.mp4";
-//        String imageUri = "drawable://" + R.drawable.action_image;
-        String imageUri = "file:drawable://" + R.drawable.action_image;
-
-        Uri path = Uri.parse("android.resource://com.hipoint.snipback/" + R.drawable.action_image);
-//        Uri otherPath = Uri.parse("android.resource://com.segf4ult.test/drawable/icon");
-
-        String path1 = path.toString();
-//        String path = otherPath .toString();
-
         // overlay image in a video
 
 //        String[] cmd = new String[]{ "ffmpeg","-i", destinationPath, "-i", imagepath, "-filter_complex", "overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2", String.valueOf(mediaFile_audio)};
@@ -612,11 +594,20 @@ public class ActivityPlayVideo extends Swipper {
 //        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", imagepath, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
         String img_share="/storage/emulated/0/Snipback_Share/icon.PNG";
         String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", img_share, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
-        // code for merging two videos
-        String[] Commandmergevideo = {"-y", "-i", String.valueOf(mediaFile_audio), "-i", destinationPath, "-strict", "experimental", "-filter_complex",
+        // code for merging two videos before
+        String[] CommandmergevideoBefore= {"-y", "-i", String.valueOf(mediaFile_audio), "-i", destinationPath, "-strict", "experimental", "-filter_complex",
                 "[0:v]scale=480x640,setsar=1:1[v0];[1:v]scale=480x640,setsar=1:1[v1];[v0][0:a][v1][1:a] concat=n=2:v=1:a=1",
                 "-ab", "48000", "-ac", "2", "-ar", "22050", "-s", "480x640", "-vcodec", "libx264", "-crf", "26", "-q", "4", "-preset",
                 "ultrafast", String.valueOf(mediaFile)};
+
+        // code for merging two videos after
+
+        String[] CommandmergevideoAfter = {"-y", "-i", destinationPath, "-i", String.valueOf(mediaFile_audio), "-strict", "experimental", "-filter_complex",
+                "[0:v]scale=480x640,setsar=1:1[v0];[1:v]scale=480x640,setsar=1:1[v1];[v0][0:a][v1][1:a] concat=n=2:v=1:a=1",
+                "-ab", "48000", "-ac", "2", "-ar", "22050", "-s", "480x640", "-vcodec", "libx264", "-crf", "26", "-q", "4", "-preset",
+                "ultrafast", String.valueOf(mediaFile)};
+
+
 
 
         KProgressHUD hud = CommonUtils.showProgressDialog(this);
@@ -635,54 +626,106 @@ public class ActivityPlayVideo extends Swipper {
 
                             // Do something after 5s = 5000ms
 
-                            FFmpegCmd.exec(Commandmergevideo, 0, new OnEditorListener() {
-                                @Override
-                                public void onSuccess() {
+                            if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition")==1){
+                                FFmpegCmd.exec(CommandmergevideoBefore, 0, new OnEditorListener() {
+                                    @Override
+                                    public void onSuccess() {
 
-                                    runOnUiThread(() -> {
+                                        runOnUiThread(() -> {
 
-                                        Toast.makeText(getApplicationContext(), "Video audio merge", Toast.LENGTH_SHORT).show();
+                                            Toast.makeText(getApplicationContext(), "Video audio merge", Toast.LENGTH_SHORT).show();
 //
-                                        final Handler handler = new Handler();
-                                        handler.postDelayed(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                // Do something after 5s = 5000ms
-                                                Uri fileUri = null;
-                                                File f = new File(outputPath_share);
-                                                fileUri = Uri.fromFile(f);
-                                                Intent sharingIntent = new Intent(Intent.ACTION_SEND);
-                                                if (mediaFile.exists()) {
-                                                    sharingIntent.setType("video/*");
-                                                    sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                                                    sharingIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                                                    sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
-                                                    startActivityForResult(Intent.createChooser(sharingIntent, "Share Video"), 777);
+                                            final Handler handler = new Handler();
+                                            handler.postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // Do something after 5s = 5000ms
+                                                    Uri fileUri = null;
+                                                    File f = new File(outputPath_share);
+                                                    fileUri = Uri.fromFile(f);
+                                                    Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+                                                    if (mediaFile.exists()) {
+                                                        sharingIntent.setType("video/*");
+                                                        sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                                        sharingIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                                                        sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                                                        startActivityForResult(Intent.createChooser(sharingIntent, "Share Video"), 777);
+                                                    }
                                                 }
-                                            }
-                                        }, 1000);
+                                            }, 1000);
 
-                                    });
+                                        });
 
 
-                                    if (hud.isShowing())
-                                        hud.dismiss();
+                                        if (hud.isShowing())
+                                            hud.dismiss();
 
-                                }
+                                    }
 
-                                @Override
-                                public void onFailure() {
-                                    if (hud.isShowing())
-                                        hud.dismiss();
-                                    runOnUiThread(() ->
-                                            Toast.makeText(getApplicationContext(), "Failed to Save", Toast.LENGTH_SHORT).show());
-                                }
+                                    @Override
+                                    public void onFailure() {
+                                        if (hud.isShowing())
+                                            hud.dismiss();
+                                        runOnUiThread(() ->
+                                                Toast.makeText(getApplicationContext(), "Failed to Save", Toast.LENGTH_SHORT).show());
+                                    }
 
-                                @Override
-                                public void onProgress(float progress) {
+                                    @Override
+                                    public void onProgress(float progress) {
 
-                                }
-                            });
+                                    }
+                                });
+                            }else if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition")==2){
+                                FFmpegCmd.exec(CommandmergevideoAfter, 0, new OnEditorListener() {
+                                    @Override
+                                    public void onSuccess() {
+
+                                        runOnUiThread(() -> {
+
+                                            Toast.makeText(getApplicationContext(), "Video audio merge", Toast.LENGTH_SHORT).show();
+//
+                                            final Handler handler = new Handler();
+                                            handler.postDelayed(new Runnable() {
+                                                @Override
+                                                public void run() {
+                                                    // Do something after 5s = 5000ms
+                                                    Uri fileUri = null;
+                                                    File f = new File(outputPath_share);
+                                                    fileUri = Uri.fromFile(f);
+                                                    Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+                                                    if (mediaFile.exists()) {
+                                                        sharingIntent.setType("video/*");
+                                                        sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                                        sharingIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                                                        sharingIntent.putExtra(Intent.EXTRA_STREAM, fileUri);
+                                                        startActivityForResult(Intent.createChooser(sharingIntent, "Share Video"), 777);
+                                                    }
+                                                }
+                                            }, 1000);
+
+                                        });
+
+
+                                        if (hud.isShowing())
+                                            hud.dismiss();
+
+                                    }
+
+                                    @Override
+                                    public void onFailure() {
+                                        if (hud.isShowing())
+                                            hud.dismiss();
+                                        runOnUiThread(() ->
+                                                Toast.makeText(getApplicationContext(), "Failed to Save", Toast.LENGTH_SHORT).show());
+                                    }
+
+                                    @Override
+                                    public void onProgress(float progress) {
+
+                                    }
+                                });
+                            }
+
                         }
                     }, 1000);
 

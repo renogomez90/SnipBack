@@ -519,7 +519,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         rlVideo.setOnTouchListener(this);
         rlVideo.setOnClickListener(this);
 
-
 //        detector = new GestureFilter(getActivity(), this);
 
 //        ((AppMainActivity)getActivity()).registerMyOnTouchListener(new AppMainActivity.MyOnTouchListener() {
