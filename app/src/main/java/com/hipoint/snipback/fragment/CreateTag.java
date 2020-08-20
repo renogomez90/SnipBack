@@ -133,7 +133,10 @@ public class CreateTag extends Fragment {
         tick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getActivity().onBackPressed();
+                Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+                intent.putExtra("snip", snip);
+                startActivity(intent);
+                getActivity().finish();
             }
         });
 
