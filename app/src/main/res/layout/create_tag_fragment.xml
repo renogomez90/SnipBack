@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorPrimary">
+    android:background="@android:color/transparent">
 
     <TextView
         android:id="@+id/create_tag_tv"
@@ -104,9 +104,11 @@
         android:layout_width="match_parent"
         android:layout_height="29dp"
         android:layout_marginTop="70dp"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="30dp"
-        android:paddingLeft="30dp"
+        android:layout_marginLeft="40dp"
+        android:layout_marginRight="40dp"
+        android:paddingLeft="32dp"
+        android:drawablePadding="4dp"
+        android:drawableStart="@drawable/ic_mic_black"
         android:background="@drawable/timer_cont"
         android:textColor="#000"
         android:visibility="gone"
@@ -204,6 +206,7 @@
             android:layout_toRightOf="@+id/img3"
             android:text="Before"
             android:textColor="@color/colorWhite" />
+
     </RelativeLayout>
 
 
@@ -284,14 +287,13 @@
         android:layout_marginBottom="4dp"
         android:gravity="center"
         android:padding="12dp"
-        android:weightSum="10">
+        >
 
         <ImageButton
             android:id="@+id/share"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
-            android:layout_weight="2.5"
             android:background="@drawable/whire_border_round"
             app:srcCompat="@drawable/ic_share"
             tools:ignore="VectorDrawableCompat" />
@@ -301,7 +303,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
-            android:layout_weight="2.5"
             android:background="@drawable/white_circle"
             app:srcCompat="@drawable/ic_edit"
             tools:ignore="VectorDrawableCompat" />
@@ -311,7 +312,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
-            android:layout_weight="2.5"
             android:background="@drawable/rec_button"
             app:srcCompat="@drawable/ic_tick"
             tools:ignore="VectorDrawableCompat" />
@@ -321,7 +321,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="30dp"
-            android:layout_weight="2.5"
             android:background="@drawable/whire_border_round"
             app:srcCompat="@drawable/ic_del"
             tools:ignore="VectorDrawableCompat" />

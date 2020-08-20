@@ -723,10 +723,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
                     }
 
-
-
                 }
-
 
                 break;
 

@@ -52,7 +52,7 @@ public class CreateTag extends Fragment {
     private Chronometer mChronometer;
     private int timerSecond = 0;
     private static final String TAG = "CreateTag";
-    private Switch img3,img4;
+    private Switch img3,img4,play;
     private TextView after,before;
     int posToChoose;
 
@@ -74,6 +74,13 @@ public class CreateTag extends Fragment {
         after=rootView.findViewById(R.id.after);
         before=rootView.findViewById(R.id.before);
         img3=rootView.findViewById(R.id.img3);
+        img4=rootView.findViewById(R.id.img4);
+        tick=rootView.findViewById(R.id.tick);
+        play=rootView.findViewById(R.id.img1);
+        mic=rootView.findViewById(R.id.mic);
+        edit=rootView.findViewById(R.id.edit);
+
+        mChronometer = rootView.findViewById(R.id.chronometer);
         img3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
@@ -90,7 +97,6 @@ public class CreateTag extends Fragment {
 
             }
         });
-        img4=rootView.findViewById(R.id.img4);
         img4.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -106,7 +112,6 @@ public class CreateTag extends Fragment {
 
             }
         });
-        mChronometer = rootView.findViewById(R.id.chronometer);
         mChronometer.setOnChronometerTickListener(arg0 -> {
 //                if (!resume) {
             long time = SystemClock.elapsedRealtime() - mChronometer.getBase();
@@ -129,7 +134,6 @@ public class CreateTag extends Fragment {
 //                    Log.d(TAG, "onChronometerTick: " + minutes + " : " + seconds);
 //                }
         });
-        tick=rootView.findViewById(R.id.tick);
         tick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -139,10 +143,15 @@ public class CreateTag extends Fragment {
                 getActivity().finish();
             }
         });
+        play.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
 
-
+                }
+            }
+        });
         // record audio
-        mic=rootView.findViewById(R.id.mic);
         mic.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -164,9 +173,6 @@ public class CreateTag extends Fragment {
             }
         });
 
-
-
-        edit=rootView.findViewById(R.id.edit);
         edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -199,8 +205,6 @@ public class CreateTag extends Fragment {
         mChronometer.start();
         mChronometer.setVisibility(View.VISIBLE);
     }
-
-
     private String getFilename(){
         String filepath = Environment.getExternalStorageDirectory().getPath();
         File file = new File(filepath,AUDIO_RECORDER_FOLDER);
@@ -212,21 +216,18 @@ public class CreateTag extends Fragment {
 //        return (file.getAbsolutePath() + "/" +snip.getSnip_id()+ file_exts[currentFormat]);\
         return (file.getAbsolutePath() + "/" +snip.getSnip_id()+".mp3");
     }
-
     private MediaRecorder.OnErrorListener errorListener = new MediaRecorder.OnErrorListener() {
         @Override
         public void onError(MediaRecorder mr, int what, int extra) {
 //            AppLog.logString("Error: " + what + ", " + extra);
         }
     };
-
     private MediaRecorder.OnInfoListener infoListener = new MediaRecorder.OnInfoListener() {
         @Override
         public void onInfo(MediaRecorder mr, int what, int extra) {
 //            AppLog.logString("Warning: " + what + ", " + extra);
         }
     };
-
     private void stopRecording(){
         if(null != recorder){
             recorder.stop();
