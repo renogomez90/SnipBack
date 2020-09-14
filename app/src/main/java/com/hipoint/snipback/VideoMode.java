@@ -118,7 +118,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     private static boolean recordPressed = false;   //  to know if the user has actively started recording
     private static boolean recordClips = true;  //  to check if short clips should be recorded
     private Long clipDuration = 10 * 1000L;
-    private Timer clipTimer = null;
+//    private Timer clipTimer = null;
 
     //two finger pinch zoom
     public float finger_spacing = 0;
@@ -379,8 +379,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             mCameraDevice = cameraDevice;
 //            startPreview();
-            if (clipTimer == null)
-                startTimedRecording();
+            Log.d(TAG, "AVA onOpened");
+            if (/*clipTimer == null && */recordClips){
+                startRecordingVideo();
+//                startTimedRecording();
+            }else
+                startPreview();
 
             mCameraOpenCloseLock.release();
             if (null != mTextureView) {
@@ -688,13 +692,14 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.rec: {
+                Log.d(TAG, "AVA record clicked");
                 bottomContainer.setVisibility(View.INVISIBLE);
                 recStartLayout.setVisibility(VISIBLE);
 
                 if (recordClips) {
-                    stopRecordingVideo();   //  stops the timed recording
+//                    stopRecordingVideo();   //  stops the timed recording
                     recordClips = false;
-                    clipTimer.cancel();     //  cancels the timer handling the clip recoding
+//                    clipTimer.cancel();     //  cancels the timer handling the clip recoding
                 }
 
                 recordPressed = true;
@@ -703,6 +708,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             }
 
             case R.id.rec_stop: {
+                Log.d(TAG, "AVA stop record clicked");
                 bottomContainer.setVisibility(VISIBLE);
                 recStartLayout.setVisibility(View.INVISIBLE);
                 stopRecordingVideo();
@@ -1090,6 +1096,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
      * Start the camera preview.
      */
     private void startPreview() {
+        Log.d(TAG, "AVA start preview");
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
             return;
         }
@@ -1197,10 +1204,13 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        if (outputFilePath == null || outputFilePath.isEmpty()) {
+//        if (outputFilePath == null || outputFilePath.isEmpty()) {
             outputFilePath = getOutputMediaFile().getAbsolutePath();
-        }
+//        }
         mMediaRecorder.setOutputFile(outputFilePath);
+        if(recordClips){    //  so that the actual recording is not affected by clip duration.
+            mMediaRecorder.setMaxDuration(clipDuration.intValue());
+        }
         CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
         mMediaRecorder.setVideoFrameRate(profile.videoFrameRate);
         mMediaRecorder.setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight);
@@ -1224,6 +1234,18 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 mMediaRecorder.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation));
                 break;
         }
+        mMediaRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
+            @Override
+            public void onInfo(MediaRecorder mr, int what, int extra) {
+                if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED && recordClips) {
+                    try {
+                        startRecordingVideo();
+                    } catch (IllegalStateException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
         mMediaRecorder.prepare();
     }
 
@@ -1262,7 +1284,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             return;
         }
         try {
-            closePreviewSession();
+//            closePreviewSession();
             setUpMediaRecorder();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
@@ -1296,7 +1318,9 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                         e.printStackTrace();
                     }
 
-                    getActivity().runOnUiThread(new Runnable() {
+                    mIsRecordingVideo = true;
+                    mMediaRecorder.start();
+                    /*getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             // UI
@@ -1304,10 +1328,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                             mIsRecordingVideo = true;
                             // Start recording
                             mMediaRecorder.start();
-
-
                         }
-                    });
+                    });*/
                 }
 
                 @Override
@@ -1336,6 +1358,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     }
 
     private void stopRecordingVideo() {
+        Log.d(TAG, "AVA stop recording");
         // UI
         mIsRecordingVideo = false;
         //  mButtonVideo.setText(R.string.record);
@@ -1746,22 +1769,22 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     }
 
 
-    private void startTimedRecording() {
+    /*private void startTimedRecording() {
         clipTimer = new Timer();
         clipTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 if (!recordPressed) {
                     startRecordingVideo();
-                    Log.d(TAG, "timed recording");
+                    Log.d(TAG, "AVA timed recording");
                 } else {
-                    if (!recordClips) {
+                    *//*if (!recordClips) {
                         stopRecordingVideo();
-                    }
+                    }*//*
                     cancel();
                 }
             }
-        }, 0, clipDuration);
-    }
+        }, 200, clipDuration);
+    }*/
 
 }
