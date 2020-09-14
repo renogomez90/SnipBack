@@ -31,6 +31,7 @@ import android.media.CamcorderProfile;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -91,6 +92,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -111,6 +114,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
 //    private GestureFilter detector;
 
+    // clips
+    private static boolean recordPressed = false;   //  to know if the user has actively started recording
+    private static boolean recordClips = true;  //  to check if short clips should be recorded
+    private Long clipDuration = 10 * 1000L;
+    private Timer clipTimer = null;
+
     //two finger pinch zoom
     public float finger_spacing = 0;
     public double zoom_level = 1f;
@@ -119,7 +128,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
     //zoom slider controls
     float mProgress;
-    float currentProgress =1;
+    float currentProgress = 1;
     float minZoom;
     float maxZoom;
     private float zoomLevel;
@@ -369,7 +378,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         @Override
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             mCameraDevice = cameraDevice;
-            startPreview();
+//            startPreview();
+            if (clipTimer == null)
+                startTimedRecording();
+
             mCameraOpenCloseLock.release();
             if (null != mTextureView) {
                 configureTransform(mTextureView.getWidth(), mTextureView.getHeight());
@@ -561,7 +573,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
 
         minZoom = getMinZoom();
-        maxZoom = (float) getMaxZoom()-1;
+        maxZoom = (float) getMaxZoom() - 1;
 
 
         seekBar.setMax(Math.round(maxZoom - minZoom));
@@ -569,7 +581,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 new SeekBar.OnSeekBarChangeListener() {
                     @Override
                     public void onStopTrackingTouch(SeekBar seekBar) {
-                        setCurrentZoom(Math.round((minZoom+1) + (mProgress * zoomStep)));
+                        setCurrentZoom(Math.round((minZoom + 1) + (mProgress * zoomStep)));
                     }
 
                     @Override
@@ -578,7 +590,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
                     @Override
                     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                        setCurrentZoom(Math.round((minZoom+1) + (float)progress * zoomStep));
+                        setCurrentZoom(Math.round((minZoom + 1) + (float) progress * zoomStep));
                         if (fromUser) mProgress = progress;
                     }
                 }
@@ -678,6 +690,14 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             case R.id.rec: {
                 bottomContainer.setVisibility(View.INVISIBLE);
                 recStartLayout.setVisibility(VISIBLE);
+
+                if (recordClips) {
+                    stopRecordingVideo();   //  stops the timed recording
+                    recordClips = false;
+                    clipTimer.cancel();     //  cancels the timer handling the clip recoding
+                }
+
+                recordPressed = true;
                 startRecordingVideo();
                 break;
             }
@@ -696,30 +716,30 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             case R.id.zoom_out_btn: {
 
 
-                if (getCurrentZoom(zoomLevel) <= (maxZoom+1) ){
+                if (getCurrentZoom(zoomLevel) <= (maxZoom + 1)) {
                     if (mProgress > minZoom) {
                         mProgress--;
                         setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
-                    seekBar.setProgress((int) getCurrentZoom(zoomLevel));
+                        seekBar.setProgress((int) getCurrentZoom(zoomLevel));
                     } else {
                         mProgress = 0;
                     }
 
                 }
 
-                    break;
+                break;
             }
 
             case R.id.zoom_in_btn: {
 
                 if (getCurrentZoom(zoomLevel) <= maxZoom) {
 
-                    if (mProgress<maxZoom) {
+                    if (mProgress < maxZoom) {
                         mProgress++;
                         setCurrentZoom(Math.round(minZoom + (mProgress * zoomStep)));
                         seekBar.setProgress((int) getCurrentZoom(zoomLevel));
-                    }else {
-                        mProgress=3;
+                    } else {
+                        mProgress = 3;
 
                     }
 
@@ -1090,7 +1110,13 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                         @Override
                         public void onConfigured(@NonNull CameraCaptureSession session) {
                             mPreviewSession = session;
-                            updatePreview();
+//                            updatePreview();
+                            mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+                            try {
+                                mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
+                            } catch (CameraAccessException e) {
+                                e.printStackTrace();
+                            }
                         }
 
                         @Override
@@ -1120,6 +1146,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
         } catch (CameraAccessException e) {
             e.printStackTrace();
+        } catch (IllegalStateException e1) {
+            e1.printStackTrace();
         }
     }
 
@@ -1165,6 +1193,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         if (null == activity) {
             return;
         }
+        mMediaRecorder.reset();
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
@@ -1258,7 +1287,15 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     mPreviewSession = cameraCaptureSession;
-                    updatePreview();
+//                    updatePreview();
+
+                    mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+                    try {
+                        mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
+                    } catch (CameraAccessException e) {
+                        e.printStackTrace();
+                    }
+
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -1284,9 +1321,11 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         } catch (CameraAccessException | IOException e) {
             e.printStackTrace();
         }
-        mChronometer.setBase(SystemClock.elapsedRealtime());
-        mChronometer.start();
-        mChronometer.setVisibility(View.VISIBLE);
+        if (recordPressed) {
+            mChronometer.setBase(SystemClock.elapsedRealtime());
+            mChronometer.start();
+            mChronometer.setVisibility(View.VISIBLE);
+        }
     }
 
     private void closePreviewSession() {
@@ -1706,7 +1745,23 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         thumbnailProcesingCompleted = null;
     }
 
+
+    private void startTimedRecording() {
+        clipTimer = new Timer();
+        clipTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (!recordPressed) {
+                    startRecordingVideo();
+                    Log.d(TAG, "timed recording");
+                } else {
+                    if (!recordClips) {
+                        stopRecordingVideo();
+                    }
+                    cancel();
+                }
+            }
+        }, 0, clipDuration);
+    }
+
 }
-
-
-
