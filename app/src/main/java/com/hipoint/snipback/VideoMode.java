@@ -103,38 +103,40 @@ import static android.view.View.VISIBLE;
 
 public class VideoMode extends Fragment implements View.OnClickListener, View.OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted {
 
+    //Camera Orientation
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
-    private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
-    private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
+    private static final SparseIntArray DEFAULT_ORIENTATIONS    = new SparseIntArray();
+    private static final SparseIntArray INVERSE_ORIENTATIONS    = new SparseIntArray();
 
-    private static final String TAG = "Camera2VideoFragment";
+    private static final String TAG                    = "Camera2VideoFragment";
     private static final int REQUEST_VIDEO_PERMISSIONS = 1;
-    private static final String FRAGMENT_DIALOG = "dialog";
-    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
-    private String VIDEO_DIRECTORY_NAME1 = "Snipback";
-    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
+    private static final String FRAGMENT_DIALOG        = "dialog";
+    private static String VIDEO_DIRECTORY_NAME         = "SnipBackVirtual";
+    private String VIDEO_DIRECTORY_NAME1               = "Snipback";
+    private static String THUMBS_DIRECTORY_NAME        = "Thumbs";
 //    private GestureFilter detector;
 
-    // clips
-    private static boolean recordPressed = false;   //  to know if the user has actively started recording
-    private static boolean recordClips = true;  //  to check if short clips should be recorded
-    private Long clipDuration = 10 * 1000L;
+    //clips
+    private static boolean recordPressed = false;      //  to know if the user has actively started recording
+    private static boolean recordClips   = true;       //  to check if short clips should be recorded
+    private Long clipDuration            = 10 * 1000L;
     private Queue<File> clipQueue;
+
 
     //two finger pinch zoom
     public float finger_spacing = 0;
-    public double zoom_level = 1f;
+    public double zoom_level    = 1f;
     public Rect zoom;
     TextView zoomFactor;
 
     //zoom slider controls
     float mProgress;
-    float currentProgress = 1;
     float minZoom;
     float maxZoom;
     private float zoomLevel;
-    final float zoomStep = 1;
+    float currentProgress = 1;
+    final float zoomStep  = 1;
 
     //left swipe
     private float x1, x2;
@@ -245,6 +247,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
     }
 
+    /**
+     * Returns the calculated space between touch points
+     *
+     * @param event
+     * @return float space between touched points
+     */
     private float getFingerSpacing(MotionEvent event) {
         float x = event.getX(0) - event.getX(1);
         float y = event.getY(0) - event.getY(1);
@@ -381,9 +389,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         public void onOpened(@NonNull CameraDevice cameraDevice) {
             mCameraDevice = cameraDevice;
 //            startPreview();
-            if (recordClips){
+            //  If recordClips is true the app will automatically start recording
+            //  and saving clips while displaying the preview
+            //  else preview is shown without recording.
+            if (recordClips) {
                 startRecordingVideo();
-            }else
+            } else
                 startPreview();
 
             mCameraOpenCloseLock.release();
@@ -478,14 +489,16 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     private Integer mSensorOrientation;
     private String outputFilePath;
     private CaptureRequest.Builder mPreviewBuilder;
+    private int timerSecond = 0;
+    private AppRepository appRepository;
+    private Animation animBlink;
+
+    //Views
     private View rootView;
     private ImageButton gallery, settings, recordButton, recordStopButton, r_3_bookmark, r_2_shutter;
     private TextView tvTimer;
     private Chronometer mChronometer;
-    private int timerSecond = 0;
-    private AppRepository appRepository;
     private View blinkEffect;
-    private Animation animBlink;
     private RelativeLayout rlVideo, recStartLayout, bottomContainer, zoomControlLayout;
     private OnTaskCompleted thumbnailProcesingCompleted;
     private SeekBar seekBar;
@@ -608,7 +621,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         return 0f;
     }
 
-
     private float getCurrentZoom(float zoomLevel) {
         return zoomLevel;
     }
@@ -695,15 +707,13 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 bottomContainer.setVisibility(View.INVISIBLE);
                 recStartLayout.setVisibility(VISIBLE);
 
-                if (recordClips) {
-//                    stopRecordingVideo();   //  stops the timed recording
-                    recordClips = false;
-//                    clipTimer.cancel();     //  cancels the timer handling the clip recoding
-                }
+                // Once the record button is pressed we no longer need to capture clips since the
+                // the user has started actively recording.
+                if (recordClips) recordClips = false;
 
                 recordPressed = true;
                 startRecordingVideo();
-                while(clipQueue.size() > 3){
+                while (clipQueue.size() > 3) {
                     // removed clips older than the last 3, so that we have something to fallback on
                     clipQueue.remove().delete();
                 }
@@ -711,10 +721,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             }
 
             case R.id.rec_stop: {
-                Log.d(TAG, "AVA stop record clicked");
                 bottomContainer.setVisibility(VISIBLE);
                 recStartLayout.setVisibility(View.INVISIBLE);
                 stopRecordingVideo();
+                // we can restart recoding clips if it is required at this point
                 break;
             }
 
@@ -1121,6 +1131,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                         public void onConfigured(@NonNull CameraCaptureSession session) {
                             mPreviewSession = session;
 //                            updatePreview();
+                            //  calling capture request without starting another thread.
                             mPreviewBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
                             try {
                                 mPreviewSession.setRepeatingRequest(mPreviewBuilder.build(), null, mBackgroundHandler);
@@ -1194,13 +1205,23 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                     (float) viewWidth / mPreviewSize.getWidth());
             matrix.postScale(scale, scale, centerX, centerY);
             matrix.postRotate(90 * (rotation - 2), centerX, centerY);
-        }else if (Surface.ROTATION_180 == rotation) {
+        } else if (Surface.ROTATION_180 == rotation) {
             matrix.postRotate(180f, centerX, centerY);
         }
 
         mTextureView.setTransform(matrix);
     }
 
+    /**
+     * Sets up the media recorder for capturing the video from the surface
+     * will output as H264 MPEG4 with AAC audio from the mic.
+     *
+     * if recordClips is true, mMediaRecorder.setMaxDuration is set to clipDuration
+     * this is monitored using infoListener and the recording is restarted automatically.
+     * else recording proceeds as normal.
+     *
+     * @throws IOException
+     */
     private void setUpMediaRecorder() throws IOException {
         final Activity activity = getActivity();
         if (null == activity) {
@@ -1211,10 +1232,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
 //        if (outputFilePath == null || outputFilePath.isEmpty()) {
-            outputFilePath = getOutputMediaFile().getAbsolutePath();
+        outputFilePath = getOutputMediaFile().getAbsolutePath();
 //        }
         mMediaRecorder.setOutputFile(outputFilePath);
-        if(recordClips){    //  so that the actual recording is not affected by clip duration.
+        if (recordClips) {    //  so that the actual recording is not affected by clip duration.
             mMediaRecorder.setMaxDuration(clipDuration.intValue());
         }
         CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
@@ -1263,7 +1284,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
 
     private File getOutputMediaFile() {
-        if(clipQueue == null){
+        if (clipQueue == null) {
             clipQueue = new LinkedList<>();
         }
 
@@ -1285,7 +1306,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         mediaFile = new File(mediaStorageDir.getPath() + File.separator
                 + "VID_" + timeStamp + ".mp4");
 
-        if(recordClips){
+        //  adds the created clips to queue
+        if (recordClips) {
             Log.d(TAG, "clip added to queue");
             clipQueue.add(mediaFile);
         }
@@ -1293,6 +1315,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         return mediaFile;
     }
 
+    /**
+     * Sets up the media recorder and starts the recording session
+     *
+     */
     private void startRecordingVideo() {
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
             return;
@@ -1357,6 +1383,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         } catch (CameraAccessException | IOException e) {
             e.printStackTrace();
         }
+
+        //  we don't need to show the chronometer till the user presses the record button.
         if (recordPressed) {
             mChronometer.setBase(SystemClock.elapsedRealtime());
             mChronometer.start();
@@ -1371,6 +1399,11 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         }
     }
 
+    /**
+     * Stops the mediaRecorder and resets it.
+     *
+     * Adds snip details
+     */
     private void stopRecordingVideo() {
         // UI
         mIsRecordingVideo = false;
