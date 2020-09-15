@@ -28,6 +28,7 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.CamcorderProfile;
+import android.media.CameraProfile;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
 import android.net.Uri;
@@ -106,27 +107,27 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     //Camera Orientation
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
-    private static final SparseIntArray DEFAULT_ORIENTATIONS    = new SparseIntArray();
-    private static final SparseIntArray INVERSE_ORIENTATIONS    = new SparseIntArray();
+    private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
+    private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
 
-    private static final String TAG                    = "Camera2VideoFragment";
+    private static final String TAG = "Camera2VideoFragment";
     private static final int REQUEST_VIDEO_PERMISSIONS = 1;
-    private static final String FRAGMENT_DIALOG        = "dialog";
-    private static String VIDEO_DIRECTORY_NAME         = "SnipBackVirtual";
-    private String VIDEO_DIRECTORY_NAME1               = "Snipback";
-    private static String THUMBS_DIRECTORY_NAME        = "Thumbs";
+    private static final String FRAGMENT_DIALOG = "dialog";
+    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
+    private String VIDEO_DIRECTORY_NAME1 = "Snipback";
+    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
 //    private GestureFilter detector;
 
     //clips
     private static boolean recordPressed = false;      //  to know if the user has actively started recording
-    private static boolean recordClips   = true;       //  to check if short clips should be recorded
-    private Long clipDuration            = 10 * 1000L;
+    private static boolean recordClips = true;       //  to check if short clips should be recorded
+    private Long clipDuration = 10 * 1000L;
     private Queue<File> clipQueue;
 
 
     //two finger pinch zoom
     public float finger_spacing = 0;
-    public double zoom_level    = 1f;
+    public double zoom_level = 1f;
     public Rect zoom;
     TextView zoomFactor;
 
@@ -136,7 +137,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     float maxZoom;
     private float zoomLevel;
     float currentProgress = 1;
-    final float zoomStep  = 1;
+    final float zoomStep = 1;
 
     //left swipe
     private float x1, x2;
@@ -1215,7 +1216,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     /**
      * Sets up the media recorder for capturing the video from the surface
      * will output as H264 MPEG4 with AAC audio from the mic.
-     *
+     * <p>
      * if recordClips is true, mMediaRecorder.setMaxDuration is set to clipDuration
      * this is monitored using infoListener and the recording is restarted automatically.
      * else recording proceeds as normal.
@@ -1227,7 +1228,18 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         if (null == activity) {
             return;
         }
+
         mMediaRecorder.reset();
+        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
+        switch (mSensorOrientation) {
+            case SENSOR_ORIENTATION_DEFAULT_DEGREES:
+                mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation));
+                break;
+            case SENSOR_ORIENTATION_INVERSE_DEGREES:
+                mMediaRecorder.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation));
+                break;
+        }
+
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
@@ -1238,7 +1250,8 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         if (recordClips) {    //  so that the actual recording is not affected by clip duration.
             mMediaRecorder.setMaxDuration(clipDuration.intValue());
         }
-        CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
+//        CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
+        CamcorderProfile profile = chooseCamcorderProfile();
         mMediaRecorder.setVideoFrameRate(profile.videoFrameRate);
         mMediaRecorder.setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight);
         mMediaRecorder.setVideoEncodingBitRate(profile.videoBitRate);
@@ -1252,15 +1265,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 //        mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
 //        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
 //        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-        int rotation = activity.getWindowManager().getDefaultDisplay().getRotation();
-        switch (mSensorOrientation) {
-            case SENSOR_ORIENTATION_DEFAULT_DEGREES:
-                mMediaRecorder.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation));
-                break;
-            case SENSOR_ORIENTATION_INVERSE_DEGREES:
-                mMediaRecorder.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation));
-                break;
-        }
+
         mMediaRecorder.setOnInfoListener(new MediaRecorder.OnInfoListener() {
             @Override
             public void onInfo(MediaRecorder mr, int what, int extra) {
@@ -1317,7 +1322,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
     /**
      * Sets up the media recorder and starts the recording session
-     *
      */
     private void startRecordingVideo() {
         if (null == mCameraDevice || !mTextureView.isAvailable() || null == mPreviewSize) {
@@ -1392,6 +1396,45 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         }
     }
 
+    /**
+     * Gets the best Camcorder profile based on the preview dimensions.
+     *
+     * @return CamcorderProfile
+     */
+    private CamcorderProfile chooseCamcorderProfile() {
+        ArrayList<Integer> cameraProfiles = new ArrayList<>();
+        ArrayList<CamcorderProfile> candidateProfiles = new ArrayList<>();
+
+        cameraProfiles.add(CamcorderProfile.QUALITY_2160P);
+        cameraProfiles.add(CamcorderProfile.QUALITY_1080P);
+        cameraProfiles.add(CamcorderProfile.QUALITY_720P);
+        cameraProfiles.add(CamcorderProfile.QUALITY_480P);
+
+        for (int p : cameraProfiles) {
+            if (CamcorderProfile.hasProfile(p)) {
+                CamcorderProfile tmp = CamcorderProfile.get(p);
+                if (tmp.videoFrameWidth <= mPreviewSize.getWidth() && tmp.videoFrameHeight <= mPreviewSize.getHeight() ||
+                        tmp.videoFrameWidth <= mPreviewSize.getHeight() && tmp.videoFrameHeight <= mPreviewSize.getWidth())
+                    candidateProfiles.add(tmp);
+            }
+        }
+
+        Comparator<CamcorderProfile> comparator = new Comparator<CamcorderProfile>() {
+            @Override
+            public int compare(CamcorderProfile p1, CamcorderProfile p2) {
+                if (p1 != null && p2 != null)
+                    return (p2.videoFrameWidth * p2.videoFrameHeight) - (p1.videoFrameWidth * p1.videoFrameHeight);
+                else
+                    return 0;
+            }
+        };
+
+        candidateProfiles.sort(comparator);
+        if(candidateProfiles.size() != 0)
+            return candidateProfiles.get(0);
+        return CamcorderProfile.get(CamcorderProfile.QUALITY_LOW);
+    }
+
     private void closePreviewSession() {
         if (mPreviewSession != null) {
             mPreviewSession.close();
@@ -1401,7 +1444,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
     /**
      * Stops the mediaRecorder and resets it.
-     *
+     * <p>
      * Adds snip details
      */
     private void stopRecordingVideo() {
