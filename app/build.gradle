@@ -84,4 +84,7 @@ dependencies {
     implementation 'com.ankushgrover:Hourglass:2.0.0'
     implementation 'com.kaopiz:kprogresshud:1.2.0'
 
+    //  For Merging Videos
+    implementation "com.github.yangjie10930:EpMedia:v1.0.1"
+
 }

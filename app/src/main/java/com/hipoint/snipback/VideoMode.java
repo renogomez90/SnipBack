@@ -68,9 +68,12 @@ import androidx.legacy.app.FragmentCompat;
 
 import com.hipoint.snipback.Utils.AutoFitTextureView;
 import com.hipoint.snipback.Utils.CountUpTimer;
+import com.hipoint.snipback.Utils.VideoUtils;
 import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.dialog.ProcessingDialog;
 import com.hipoint.snipback.fragment.Feedback_fragment;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
+import com.hipoint.snipback.listener.IVideoOpListener;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
@@ -100,9 +103,11 @@ import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import Jni.VideoUitls;
+
 import static android.view.View.VISIBLE;
 
-public class VideoMode extends Fragment implements View.OnClickListener, View.OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted {
+public class VideoMode extends Fragment implements View.OnClickListener, View.OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted, IVideoOpListener {
 
     //Camera Orientation
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
@@ -119,11 +124,12 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 //    private GestureFilter detector;
 
     //clips
-    private static boolean recordPressed = false;      //  to know if the user has actively started recording
-    private static boolean recordClips = true;       //  to check if short clips should be recorded
-    private Long clipDuration = 10 * 1000L;
+    private static boolean recordPressed = false;   //  to know if the user has actively started recording
+    private static boolean recordClips = true;  //  to check if short clips should be recorded
+    private Long clipDuration = 20 * 1000L; //  Buffer duration
     private Queue<File> clipQueue;
-
+    private VideoUtils mergeUtils = new VideoUtils(this);
+    private ProcessingDialog processingDialog = null;
 
     //two finger pinch zoom
     public float finger_spacing = 0;
@@ -259,7 +265,6 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         float y = event.getY(0) - event.getY(1);
         return (float) Math.sqrt(x * x + y * y);
     }
-
 
     public interface OnTaskCompleted {
         void onTaskCompleted(boolean success);
@@ -714,7 +719,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
                 recordPressed = true;
                 startRecordingVideo();
-                while (clipQueue.size() > 3) {
+                while (clipQueue.size() > 2) {
                     // removed clips older than the last 3, so that we have something to fallback on
                     clipQueue.remove().delete();
                 }
@@ -726,6 +731,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 recStartLayout.setVisibility(View.INVISIBLE);
                 stopRecordingVideo();
                 // we can restart recoding clips if it is required at this point
+                attemptClipConcat();
                 break;
             }
 
@@ -851,6 +857,22 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
             case R.id.texture: {
                 saveSnipTimeToLocal();
             }
+        }
+    }
+
+    private void attemptClipConcat() {
+        if(clipQueue.size() >= 2){
+            File clip1, clip2;
+            clip1 = clipQueue.remove();
+            clip2 = clipQueue.remove();
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            String mergeFilePath = "merged-"+timeStamp+".mp4";
+
+            if(processingDialog == null)
+                processingDialog = new ProcessingDialog(getActivity());
+            processingDialog.show();
+
+            mergeUtils.concatenateFiles(clip1, clip2, clip1.getParent()+"/"+mergeFilePath);
         }
     }
 
@@ -1312,10 +1334,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 + "VID_" + timeStamp + ".mp4");
 
         //  adds the created clips to queue
-        if (recordClips) {
-            Log.d(TAG, "clip added to queue");
-            clipQueue.add(mediaFile);
-        }
+//        if (recordClips) {
+        Log.d(TAG, "clip added to queue");
+        clipQueue.add(mediaFile);
+//        }
 
         return mediaFile;
     }
@@ -1430,7 +1452,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         };
 
         candidateProfiles.sort(comparator);
-        if(candidateProfiles.size() != 0)
+        if (candidateProfiles.size() != 0)
             return candidateProfiles.get(0);
         return CamcorderProfile.get(CamcorderProfile.QUALITY_LOW);
     }
@@ -1856,4 +1878,34 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         super.onDetach();
         thumbnailProcesingCompleted = null;
     }
+
+//    Video edit listener
+    @Override
+    public void failed(VideoOp operation) {
+
+    }
+
+    @Override
+    public void changed(VideoOp operation, String videoPath) {
+        switch (operation){
+            case MERGED:    // merge was done successfully
+                break;
+            case CONCAT:    // concatenation was done successfully
+                if (processingDialog != null) {
+                    processingDialog.dismiss();
+                }
+                break;
+            case TRIMMED:
+                break;
+            case SPEED:
+                break;
+            case FRAMES:
+                break;
+            case KEY_FRAMES:
+                break;
+            case ERROR:
+                break;
+        }
+    }
+
 }
