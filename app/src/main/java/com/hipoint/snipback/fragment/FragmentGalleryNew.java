@@ -7,9 +7,6 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,14 +17,11 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -45,35 +39,19 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
-import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.VideoMode;
-import com.hipoint.snipback.adapter.AdapterGallery;
 
 import com.hipoint.snipback.adapter.MainRecyclerAdapter;
 import com.hipoint.snipback.application.AppClass;
-import com.hipoint.snipback.room.entities.AllCategory;
-import com.hipoint.snipback.room.entities.CategoryItem;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
 import com.hipoint.snipback.room.repository.AppViewModel;
-import com.kaopiz.kprogresshud.KProgressHUD;
 
 import java.io.File;
-import java.time.Month;
-import java.time.Year;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.TextStyle;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-
-import static android.content.ContentValues.TAG;
 
 public class FragmentGalleryNew extends Fragment {
     private View rootView;
@@ -144,7 +122,7 @@ public class FragmentGalleryNew extends Fragment {
         click.setVisibility(View.GONE);
 
 
-        if (AppClass.getAppInsatnce().isInsertionInProgress()) {
+        if (AppClass.getAppInstance().isInsertionInProgress()) {
             rlLoader.setVisibility(View.VISIBLE);
         } else {
             rlLoader.setVisibility(View.INVISIBLE);
@@ -268,8 +246,8 @@ public class FragmentGalleryNew extends Fragment {
 
     private void galleryEnlargedView(String viewChange) {
 
-        List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
-        List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
+        List<EventData> allSnips = AppClass.getAppInstance().getAllSnip();
+        List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
         mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange, orientation);
         mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
         mainRecyclerAdapter.notifyDataSetChanged();
@@ -279,8 +257,8 @@ public class FragmentGalleryNew extends Fragment {
 
 
     private void setOrientation(int orientation) {
-        List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
-        List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
+        List<EventData> allSnips = AppClass.getAppInstance().getAllSnip();
+        List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
         mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, viewChange, orientation);
         mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
 
@@ -291,7 +269,7 @@ public class FragmentGalleryNew extends Fragment {
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         
-        orientation = Objects.requireNonNull(getActivity()).getResources().getConfiguration().orientation;
+        orientation = requireActivity().getResources().getConfiguration().orientation;
         setOrientation(orientation);
 
 
@@ -325,19 +303,19 @@ public class FragmentGalleryNew extends Fragment {
     }
 
     private void loadGalleryDataFromDB() {
-        AppClass.getAppInsatnce().clearAllParentSnips();
-        AppClass.getAppInsatnce().clearAllSnips();
+        AppClass.getAppInstance().clearAllParentSnips();
+        AppClass.getAppInstance().clearAllSnips();
         AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
 //        getFilePathFromInternalStorage();
         List<Event> allEvents = new ArrayList<>();
-        appViewModel.getEventLiveData().observe(this, events -> {
+        appViewModel.getEventLiveData().observe(getViewLifecycleOwner(), events -> {
             if (events != null && events.size() > 0) {
                 allEvents.addAll(events);
                 List<Hd_snips> hdSnips = new ArrayList<>();
-                appViewModel.getHDSnipsLiveData().observe(this, hd_snips -> {
+                appViewModel.getHDSnipsLiveData().observe(getViewLifecycleOwner(), hd_snips -> {
                     if (hd_snips != null && hd_snips.size() > 0) {
                         hdSnips.addAll(hd_snips);
-                        appViewModel.getSnipsLiveData().observe(this, snips -> {
+                        appViewModel.getSnipsLiveData().observe(getViewLifecycleOwner(), snips -> {
                             if (snips != null && snips.size() > 0) {
                                 for (Snip snip : snips) {
                                     for (Hd_snips hdSnip : hdSnips) {
@@ -345,9 +323,9 @@ public class FragmentGalleryNew extends Fragment {
                                             snip.setVideoFilePath(hdSnip.getVideo_path_processed());
                                             for (Event event : allEvents) {
                                                 if (event.getEvent_id() == snip.getEvent_id()) {
-                                                    AppClass.getAppInsatnce().setEventSnipsFromDb(event, snip);
+                                                    AppClass.getAppInstance().setEventSnipsFromDb(event, snip);
                                                     if (snip.getParent_snip_id() == 0) {
-                                                        AppClass.getAppInsatnce().setEventParentSnipsFromDb(event, snip);
+                                                        AppClass.getAppInstance().setEventParentSnipsFromDb(event, snip);
                                                     }
                                                 }
                                             }
@@ -355,8 +333,8 @@ public class FragmentGalleryNew extends Fragment {
                                     }
                                 }
                                 pullToRefresh.setRefreshing(false);
-                                List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
-                                List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
+                                List<EventData> allSnips = AppClass.getAppInstance().getAllSnip();
+                                List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
                                 if (mainRecyclerAdapter == null) {
                                     RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
                                     mainCategoryRecycler.setLayoutManager(layoutManager);
@@ -382,9 +360,9 @@ public class FragmentGalleryNew extends Fragment {
         File photoDirectory;
 //        if (Environment.getExternalStorageState() == null) {
         //create new file directory object
-        directory = new File(Objects.requireNonNull(getActivity()).getDataDir()
+        directory = new File(requireActivity().getDataDir()
                 + "/" + VIDEO_DIRECTORY_NAME + "/");
-        photoDirectory = new File(Objects.requireNonNull(getActivity()).getDataDir()
+        photoDirectory = new File(requireActivity().getDataDir()
                 + "/" + VIDEO_DIRECTORY_NAME + "/" + THUMBS_DIRECTORY_NAME + "/");
         if (photoDirectory.exists()) {
             File[] dirFiles = photoDirectory.listFiles();
@@ -425,8 +403,8 @@ public class FragmentGalleryNew extends Fragment {
     public void onLoadingCompleted(boolean success) {
         if (success) {
             rlLoader.setVisibility(View.INVISIBLE);
-            List<EventData> allSnips = AppClass.getAppInsatnce().getAllSnip();
-            List<EventData> allParentSnip = AppClass.getAppInsatnce().getAllParentSnip();
+            List<EventData> allSnips = AppClass.getAppInstance().getAllSnip();
+            List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
             if (mainRecyclerAdapter == null) {
                 RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
                 mainCategoryRecycler.setLayoutManager(layoutManager);

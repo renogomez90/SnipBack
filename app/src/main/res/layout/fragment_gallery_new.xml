@@ -92,7 +92,7 @@
         android:layout_height="55dp"
         android:layout_alignParentBottom="true"
         android:background="@color/bottom_menu"
-        android:gravity="center">
+        android:baselineAligned="false" android:gravity="center">
 
         <RelativeLayout
             android:id="@+id/layout_camera"

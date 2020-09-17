@@ -1,32 +1,21 @@
 package com.hipoint.snipback.room.repository;
 
-import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.media.MediaMetadataRetriever;
-import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
-import androidx.lifecycle.ViewModelProviders;
 
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.Event;
-import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class AppViewModel extends AndroidViewModel {
     AppRepository appRepository;
@@ -70,15 +59,15 @@ public class AppViewModel extends AndroidViewModel {
             if(events.size() > 0) {
                 Event lastEvent = events.get(events.size() - 1);
                 int eventId = lastEvent.getEvent_id();
-                AppClass.getAppInsatnce().setLastEventId(eventId);
-                AppClass.getAppInsatnce().setLastCreatedEvent(lastEvent);
+                AppClass.getAppInstance().setLastEventId(eventId);
+                AppClass.getAppInstance().setLastCreatedEvent(lastEvent);
             }
         });
     }
 
     public void loadGalleryDataFromDB(AppCompatActivity context) {
-        AppClass.getAppInsatnce().clearAllSnips();
-        AppClass.getAppInsatnce().clearAllParentSnips();
+        AppClass.getAppInstance().clearAllSnips();
+        AppClass.getAppInstance().clearAllParentSnips();
 //        getFilePathFromInternalStorage(context);
         List<Event> allEvents = new ArrayList<>();
         getEventLiveData().observe(context, events -> {
@@ -96,9 +85,9 @@ public class AppViewModel extends AndroidViewModel {
                                             snip.setVideoFilePath(hdSnip.getVideo_path_processed());
                                             for(Event event : allEvents){
                                                 if(event.getEvent_id() == snip.getEvent_id()){
-                                                    AppClass.getAppInsatnce().setEventSnipsFromDb(event,snip);
+                                                    AppClass.getAppInstance().setEventSnipsFromDb(event,snip);
                                                     if(snip.getParent_snip_id() == 0){
-                                                        AppClass.getAppInsatnce().setEventParentSnipsFromDb(event,snip);
+                                                        AppClass.getAppInstance().setEventParentSnipsFromDb(event,snip);
                                                     }
                                                 }
                                             }

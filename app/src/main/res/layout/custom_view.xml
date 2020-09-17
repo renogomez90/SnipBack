@@ -14,7 +14,7 @@
         android:paddingTop="1dp"
         android:id="@+id/progressBar"
         android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true"
+        
         android:layout_alignParentStart="true"
         android:layout_marginRight="10dp"
         android:layout_marginLeft="12dp"/>
@@ -23,14 +23,14 @@
         android:paddingLeft="10dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="11dp"
+        
         android:layout_marginStart="11dp"
         android:id="@+id/textView"
         android:textSize="30dp"
         android:paddingRight="10dp"
         android:textColor="#ffffff"
         android:paddingTop="10dp"
-        android:layout_alignLeft="@+id/progressBar"
+        
         android:layout_alignStart="@+id/progressBar" />
 
     <TextView
@@ -40,11 +40,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textView2"
-        android:layout_marginLeft="100dp"
+        
         android:layout_marginStart="60dp"
         android:paddingBottom="3dp"
         android:layout_below="@+id/textView"
-        android:layout_alignLeft="@+id/textView"
+        
         android:layout_alignStart="@+id/textView"
         />
 

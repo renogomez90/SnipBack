@@ -1,26 +1,18 @@
 package com.hipoint.snipback.adapter;
 
 import android.content.Context;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.Snip;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRecyclerAdapter.ParentItemViewHolder> {
@@ -52,7 +44,7 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
             int parentId = snipArrayList.get(position).getSnip_id();
             String viewChange = viewChangeValue;
             Integer orientation= orientationVal;
-            List<Snip> childSnip = AppClass.getAppInsatnce().getChildSnipsByParentSnipId(snipArrayList.get(position).getEvent_id(), parentId);
+            List<Snip> childSnip = AppClass.getAppInstance().getChildSnipsByParentSnipId(snipArrayList.get(position).getEvent_id(), parentId);
             setCatItemRecycler(holder.itemRecycler, childSnip,viewChange,orientation);
 
         }

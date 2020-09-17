@@ -71,7 +71,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     holder.tvDuration.setText(String.format("%02d:%02d", minutes, seconds));
                 }
 
-                String filePath = AppClass.getAppInsatnce().getThumbFilePathRoot() + snip.getSnip_id() + ".png";
+                String filePath = AppClass.getAppInstance().getThumbFilePathRoot() + snip.getSnip_id() + ".png";
                 File file = new File(filePath);
                 if (file.exists()) {
                     Bitmap myBitmap = BitmapFactory.decodeFile(filePath);

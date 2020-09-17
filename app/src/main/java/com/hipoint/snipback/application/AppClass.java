@@ -36,7 +36,7 @@ public class AppClass extends Application {
 
     public Event lastCreatedEvent;
 
-    public static AppClass getAppInsatnce() {
+    public static AppClass getAppInstance() {
         if (appInstance == null)
             appInstance = new AppClass();
         return appInstance;

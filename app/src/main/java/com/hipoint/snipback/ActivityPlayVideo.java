@@ -1,9 +1,7 @@
 package com.hipoint.snipback;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
@@ -14,7 +12,6 @@ import android.content.res.Configuration;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -42,7 +39,6 @@ import androidx.lifecycle.ViewModelProviders;
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.TrimmerUtils;
 import com.hipoint.snipback.application.AppClass;
-import com.hipoint.snipback.fragment.Videoeditingfragment;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
@@ -52,10 +48,6 @@ import com.kaopiz.kprogresshud.KProgressHUD;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import Jni.FFmpegCmd;
@@ -497,13 +489,13 @@ public class ActivityPlayVideo extends Swipper {
 //                eventData.addEventSnip(snip);
                 snip.setIs_virtual_version(0);
                 snip.setVideoFilePath(mediaFile.getAbsolutePath());
-                AppClass.getAppInsatnce().setEventSnipsFromDb(event, snip);
+                AppClass.getAppInstance().setEventSnipsFromDb(event, snip);
                 appRepository.updateSnip(snip);
                 Hd_snips hdSnips = new Hd_snips();
                 hdSnips.setVideo_path_processed(mediaFile.getAbsolutePath());
                 hdSnips.setSnip_id(snip.getSnip_id());
                 appRepository.insertHd_snips(hdSnips);
-                AppClass.getAppInsatnce().setInsertionInProgress(true);
+                AppClass.getAppInstance().setInsertionInProgress(true);
                 if (hud.isShowing())
                     hud.dismiss();
 

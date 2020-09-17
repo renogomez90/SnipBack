@@ -1,6 +1,5 @@
 package com.hipoint.snipback.room.repository;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 
@@ -44,7 +43,7 @@ public class AppRepository {
 
     public static AppRepository getInstance(){
         if(instance == null) {
-            instance = new AppRepository(AppClass.getAppInsatnce().getContext());
+            instance = new AppRepository(AppClass.getAppInstance().getContext());
         }
         return instance;
     }
@@ -71,8 +70,8 @@ public class AppRepository {
 
         @Override
         protected Void doInBackground(Event... events) {
-            AppClass.getAppInsatnce().setLastEventId((int) dao.insert(events[0]));
-            AppClass.getAppInsatnce().setLastCreatedEvent(events[0]);
+            AppClass.getAppInstance().setLastEventId((int) dao.insert(events[0]));
+            AppClass.getAppInstance().setLastCreatedEvent(events[0]);
             return null;
         }
 
@@ -151,7 +150,7 @@ public class AppRepository {
 
         @Override
         protected Void doInBackground(Hd_snips... hd_snips) {
-            AppClass.getAppInsatnce().setLastHDSnipId(dao.insert(hd_snips[0]));
+            AppClass.getAppInstance().setLastHDSnipId(dao.insert(hd_snips[0]));
             return null;
         }
 
@@ -226,6 +225,7 @@ public class AppRepository {
     private class InsertSnipAsync extends AsyncTask<Snip, Void, Snip> {
         private OnTaskCompleted listener;
         private SnipsDao dao;
+        private int snipId;
         public InsertSnipAsync(OnTaskCompleted listener,SnipsDao dao){
             this.listener = listener;
             this.dao = dao;
@@ -233,13 +233,16 @@ public class AppRepository {
 
         @Override
         protected Snip doInBackground(Snip... snips) {
-            AppClass.getAppInsatnce().setLastSnipId((int)dao.insert(snips[0]));
+            snipId = (int)dao.insert(snips[0]);
+            AppClass.getAppInstance().setLastSnipId(snipId);
             return snips[0];
         }
 
         @Override
         protected void onPostExecute(Snip aVoid) {
-            aVoid.setSnip_id(AppClass.getAppInsatnce().getLastSnipId());
+//            aVoid.setSnip_id(AppClass.getAppInstance().getLastSnipId());
+//  since lastSnipId is asyncly updated we are not getting the correct snip_id, only the latest one.
+            aVoid.setSnip_id(snipId);
             listener.onTaskCompleted(aVoid);
             super.onPostExecute(aVoid);
         }
@@ -306,8 +309,8 @@ public class AppRepository {
             if(events.size() > 0) {
                 Event lastEvent = events.get(events.size() - 1);
                 eventId = lastEvent.getEvent_id();
-                AppClass.getAppInsatnce().setLastEventId(eventId);
-                AppClass.getAppInsatnce().setLastCreatedEvent(lastEvent);
+                AppClass.getAppInstance().setLastEventId(eventId);
+                AppClass.getAppInstance().setLastCreatedEvent(lastEvent);
             }
         });
         return eventId;
@@ -320,7 +323,7 @@ public class AppRepository {
             if(snips.size() > 0) {
                 Snip lastSnip = snips.get(snips.size() - 1);
                 snipId = lastSnip.getSnip_id();
-                AppClass.getAppInsatnce().setLastSnipId(snipId);
+                AppClass.getAppInstance().setLastSnipId(snipId);
             }
         });
         return snipId;

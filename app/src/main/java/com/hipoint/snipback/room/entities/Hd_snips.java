@@ -9,10 +9,10 @@ import androidx.room.PrimaryKey;
 public class Hd_snips {
 
 
-    public final static String TABLE_NAME = "Hd_snips";
-    private final static String COLUMN_HD_SNIP_ID = "hd_snip_id";
-    private final static String COLUMN_SNIP_ID = "snip_id";
-    private final static String COLUMN_VIDEO_PATH_PROCESSED = "video_path_processed";
+    public final static String TABLE_NAME                     = "Hd_snips";
+    private final static String COLUMN_HD_SNIP_ID             = "hd_snip_id";
+    private final static String COLUMN_SNIP_ID                = "snip_id";
+    private final static String COLUMN_VIDEO_PATH_PROCESSED   = "video_path_processed";
     private final static String COLUMN_VIDEO_PATH_UNPROCESSED = "video_path_unprocessed";
 
 
@@ -23,9 +23,11 @@ public class Hd_snips {
 
     @ColumnInfo(name = COLUMN_SNIP_ID)
     private int snip_id;
-    @ColumnInfo(name = COLUMN_VIDEO_PATH_PROCESSED)
+
+    @ColumnInfo(name = COLUMN_VIDEO_PATH_PROCESSED) // trimmed file path
     private String video_path_processed;
-    @ColumnInfo(name = COLUMN_VIDEO_PATH_UNPROCESSED)
+
+    @ColumnInfo(name = COLUMN_VIDEO_PATH_UNPROCESSED)   // merged file path if trimming is not done
     private String video_path_unprocessed;
 
     public int getHd_snip_id() {

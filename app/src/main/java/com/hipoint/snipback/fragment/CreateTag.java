@@ -69,7 +69,7 @@ public class CreateTag extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.create_tag_fragment, container, false);
 
-        snip = Objects.requireNonNull(getArguments()).getParcelable("snip");
+        snip = requireArguments().getParcelable("snip");
 
         after=rootView.findViewById(R.id.after);
         before=rootView.findViewById(R.id.before);

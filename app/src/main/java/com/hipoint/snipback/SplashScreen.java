@@ -4,32 +4,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProviders;
 
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
 
-import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.repository.AppViewModel;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.util.Objects;
 
 public class SplashScreen extends AppCompatActivity {
     Intent intent;
@@ -76,7 +64,7 @@ public class SplashScreen extends AppCompatActivity {
                 THUMBS_DIRECTORY_NAME);
         File fullThumbPath = new File(thumbsStorageDir.getPath() + File.separator
                 + "snip_");
-        AppClass.getAppInsatnce().setThumbFilePathRoot(fullThumbPath.getAbsolutePath());
+        AppClass.getAppInstance().setThumbFilePathRoot(fullThumbPath.getAbsolutePath());
     }
 
 

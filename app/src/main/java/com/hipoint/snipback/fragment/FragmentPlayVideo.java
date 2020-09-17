@@ -1,8 +1,6 @@
 package com.hipoint.snipback.fragment;
 
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -11,7 +9,6 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
-import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
@@ -28,7 +25,6 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-import com.google.android.exoplayer2.ui.PlayerControlView;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.Utils.CommonUtils;
@@ -70,8 +66,6 @@ import java.util.Objects;
 
 import Jni.FFmpegCmd;
 import VideoHandle.OnEditorListener;
-
-import static android.content.Context.WINDOW_SERVICE;
 
 public class FragmentPlayVideo extends Fragment {
     private View rootView;
@@ -124,10 +118,10 @@ public class FragmentPlayVideo extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false);
 
-        appRepository = new AppRepository(Objects.requireNonNull(getActivity()).getApplicationContext());
+        appRepository = new AppRepository(requireActivity().getApplicationContext());
         appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-        snip = Objects.requireNonNull(getArguments()).getParcelable("snip");
-        appViewModel.getEventByIdLiveData(Objects.requireNonNull(snip).getEvent_id()).observe(this, snipevent -> {
+        snip = requireArguments().getParcelable("snip");
+        appViewModel.getEventByIdLiveData(Objects.requireNonNull(snip).getEvent_id()).observe(getViewLifecycleOwner(), snipevent -> {
             event = snipevent;
         });
         exo_duration = rootView.findViewById(R.id.exo_duration);
@@ -450,13 +444,13 @@ public class FragmentPlayVideo extends Fragment {
             public void onSuccess() {
                 snip.setIs_virtual_version(0);
                 snip.setVideoFilePath(mediaFile.getAbsolutePath());
-                AppClass.getAppInsatnce().setEventSnipsFromDb(event,snip);
+                AppClass.getAppInstance().setEventSnipsFromDb(event,snip);
                 appRepository.updateSnip(snip);
                 Hd_snips hdSnips = new Hd_snips();
                 hdSnips.setVideo_path_processed(mediaFile.getAbsolutePath());
                 hdSnips.setSnip_id(snip.getSnip_id());
                 appRepository.insertHd_snips(hdSnips);
-                AppClass.getAppInsatnce().setInsertionInProgress(true);
+                AppClass.getAppInstance().setInsertionInProgress(true);
                 if (hud.isShowing())
                     hud.dismiss();
                 getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), "Video saved to gallery", Toast.LENGTH_SHORT).show());

@@ -28,11 +28,9 @@ import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
 import android.media.CamcorderProfile;
-import android.media.CameraProfile;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaRecorder;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -96,44 +94,48 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Queue;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import Jni.VideoUitls;
-
 import static android.view.View.VISIBLE;
 
-public class VideoMode extends Fragment implements View.OnClickListener, View.OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted, IVideoOpListener {
+public class VideoMode extends Fragment implements
+        View.OnClickListener,
+        View.OnTouchListener,
+        ActivityCompat.OnRequestPermissionsResultCallback,
+        AppRepository.OnTaskCompleted,
+        IVideoOpListener {
 
     //Camera Orientation
     private static final int SENSOR_ORIENTATION_DEFAULT_DEGREES = 90;
     private static final int SENSOR_ORIENTATION_INVERSE_DEGREES = 270;
-    private static final SparseIntArray DEFAULT_ORIENTATIONS = new SparseIntArray();
-    private static final SparseIntArray INVERSE_ORIENTATIONS = new SparseIntArray();
+    private static final SparseIntArray DEFAULT_ORIENTATIONS    = new SparseIntArray();
+    private static final SparseIntArray INVERSE_ORIENTATIONS    = new SparseIntArray();
 
-    private static final String TAG = "Camera2VideoFragment";
+    private static final String TAG                    = "Camera2VideoFragment";
+    private static final String FRAGMENT_DIALOG        = "dialog";
     private static final int REQUEST_VIDEO_PERMISSIONS = 1;
-    private static final String FRAGMENT_DIALOG = "dialog";
-    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
-    private String VIDEO_DIRECTORY_NAME1 = "Snipback";
+
+    private static String VIDEO_DIRECTORY_NAME  = "SnipBackVirtual";
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
+    private String VIDEO_DIRECTORY_NAME1        = "Snipback";
 //    private GestureFilter detector;
 
     //clips
-    private static boolean recordPressed = false;   //  to know if the user has actively started recording
-    private static boolean recordClips = true;  //  to check if short clips should be recorded
-    private Long clipDuration = 20 * 1000L; //  Buffer duration
-    private Queue<File> clipQueue;
-    private VideoUtils mergeUtils = new VideoUtils(this);
+    private static boolean recordPressed      = false;                //  to know if the user has actively started recording
+    private static boolean recordClips        = true;                 //  to check if short clips should be recorded
+    private final int[] totalDuration         = {0};                  //  total combined duration of merged clip
+    private Long clipDuration                 = 30 * 1000L;           //  Buffer duration
+    private VideoUtils mergeUtils             = new VideoUtils(this);
     private ProcessingDialog processingDialog = null;
+    private Long actualClipTime               = 0L;
+    private Queue<File> clipQueue;
+
 
     //two finger pinch zoom
     public float finger_spacing = 0;
-    public double zoom_level = 1f;
+    public double zoom_level    = 1f;
     public Rect zoom;
     TextView zoomFactor;
 
@@ -143,7 +145,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     float maxZoom;
     private float zoomLevel;
     float currentProgress = 1;
-    final float zoomStep = 1;
+    final float zoomStep  = 1;
 
     //left swipe
     private float x1, x2;
@@ -1316,7 +1318,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         }
 
         // External sdcard file location
-        File mediaStorageDir = new File(Objects.requireNonNull(getActivity()).getDataDir(),
+        File mediaStorageDir = new File(requireActivity().getDataDir(),
                 VIDEO_DIRECTORY_NAME);
         // Create storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
@@ -1351,6 +1353,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         }
         try {
 //            closePreviewSession();
+
             setUpMediaRecorder();
             SurfaceTexture texture = mTextureView.getSurfaceTexture();
             assert texture != null;
@@ -1412,9 +1415,13 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 
         //  we don't need to show the chronometer till the user presses the record button.
         if (recordPressed) {
+            actualClipTime = SystemClock.elapsedRealtime() - actualClipTime;    // clip has ended
             mChronometer.setBase(SystemClock.elapsedRealtime());
             mChronometer.start();
             mChronometer.setVisibility(View.VISIBLE);
+        } else{
+            //  keeps a count of how long each clip was
+            actualClipTime = SystemClock.elapsedRealtime() - actualClipTime;
         }
     }
 
@@ -1479,53 +1486,66 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         mChronometer.stop();
         mChronometer.setVisibility(View.INVISIBLE);
         mChronometer.setText("");
-        Activity activity = getActivity();
-        if (null != activity) {
-//            Toast.makeText(activity, "Video saved: " + outputFilePath,
+        clipQueue.forEach(file -> {
+            int currentClipDuration;
+
+            if(file == clipQueue.peek())
+                currentClipDuration = (int) TimeUnit.MILLISECONDS.toSeconds(actualClipTime);
+            else
+                currentClipDuration = timerSecond;
+
+            totalDuration[0] += currentClipDuration;
+            addSnip(file.getAbsolutePath(), currentClipDuration, /*totalDuration[0]*/ currentClipDuration); //
+        });
+        outputFilePath = null;
+        startPreview();
+    }
+
+    private void addSnip(String snipFilePath, int snipDuration, int totalDuration) {
+        Activity activity = requireActivity();
+        //            Toast.makeText(activity, "Video saved: " + outputFilePath,
 //                    Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Video saved: " + outputFilePath);
-            Snip parentSnip = new Snip();
-            parentSnip.setStart_time(0);
-            parentSnip.setEnd_time(0);
-            parentSnip.setIs_virtual_version(0);
-            parentSnip.setParent_snip_id(0);
-            parentSnip.setSnip_duration(0);
-            parentSnip.setTotal_video_duration(timerSecond);
-            parentSnip.setVid_creation_date(System.currentTimeMillis());
-            parentSnip.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
-            if (AppClass.getAppInsatnce().getSnipDurations().size() > 0) {
-                parentSnip.setHas_virtual_versions(1);
-            } else {
-                parentSnip.setHas_virtual_versions(0);
-            }
-            AppClass.getAppInsatnce().setInsertionInProgress(true);
-            appRepository.insertSnip(this, parentSnip);
-            parentSnip.setVideoFilePath(outputFilePath);
+        Log.d(TAG, "Video saved: " + outputFilePath);
+        Snip parentSnip = new Snip();
+        parentSnip.setStart_time(0);
+        parentSnip.setEnd_time(0);
+        parentSnip.setIs_virtual_version(0);
+        parentSnip.setParent_snip_id(0);
+        parentSnip.setSnip_duration(snipDuration);
+        parentSnip.setTotal_video_duration(totalDuration);
+        parentSnip.setVid_creation_date(System.currentTimeMillis());
+        parentSnip.setEvent_id(AppClass.getAppInstance().getLastEventId());
+        if (AppClass.getAppInstance().getSnipDurations().size() > 0) {
+            parentSnip.setHas_virtual_versions(1);
+        } else {
+            parentSnip.setHas_virtual_versions(0);
+        }
+        AppClass.getAppInstance().setInsertionInProgress(true);
+        appRepository.insertSnip(this, parentSnip);
+        parentSnip.setVideoFilePath(snipFilePath);
 //            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
 //            AppClass.getAppInsatnce().saveAllEventSnips();
 //            AppClass.getAppInsatnce().saveAllParentSnips(parentSnip);
 //            AppClass.getAppInsatnce().setEventParentSnips();
-            hdSnips = new Hd_snips();
-            hdSnips.setVideo_path_processed(outputFilePath);
+//        hdSnips = new Hd_snips();
+//        hdSnips.setVideo_path_processed(snipFilePath);
 //            parentSnip.setVideoFilePath(outputFilePath);
 //            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
-            //TODO
-        }
-        outputFilePath = null;
-        startPreview();
-
     }
 
     @Override
     public void onTaskCompleted(Snip snip) {
+        //  todo: merged and trimmed file needs to be added in HD_snip nothing else
         if (snip.getIs_virtual_version() == 0) {
-            snip.setSnip_id(AppClass.getAppInsatnce().getLastSnipId());
-            hdSnips.setSnip_id(AppClass.getAppInsatnce().getLastSnipId());
+//            snip.setSnip_id(AppClass.getAppInstance().getLastSnipId());
+            hdSnips = new Hd_snips();
+            hdSnips.setVideo_path_processed(snip.getVideoFilePath());
+//            hdSnips.setSnip_id(AppClass.getAppInstance().getLastSnipId());
+            hdSnips.setSnip_id(snip.getSnip_id());
             appRepository.insertHd_snips(hdSnips);
             saveSnipToDB(snip, hdSnips.getVideo_path_processed());
         }
         getVideoThumbnail(snip, new File(hdSnips.getVideo_path_processed()));
-
     }
 
 
@@ -1600,9 +1620,9 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
     public void saveSnipToDB(Snip parentSnip, String filePath) {
 //        String chronoText = mChronometer.getText().toString();
 //        Log.e("chrono m reading",chronoText);
-        List<Integer> snipDurations = AppClass.getAppInsatnce().getSnipDurations();
+        List<Integer> snipDurations = AppClass.getAppInstance().getSnipDurations();
         if (snipDurations.size() > 0) {
-            Event event = AppClass.getAppInsatnce().getLastCreatedEvent();
+            Event event = AppClass.getAppInstance().getLastCreatedEvent();
 //            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
 //            String currentDateandTime = sdf.format(new Date());
 //            EventData eventData = new EventData();
@@ -1630,7 +1650,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
 //                eventData.addEventSnip(parentSnip);
             }
 //            AppClass.getAppInsatnce().saveAllEventSnips();
-            AppClass.getAppInsatnce().clearSnipDurations();
+            AppClass.getAppInstance().clearSnipDurations();
         }
 
 //        AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
@@ -1653,7 +1673,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         if (timerSecond != 0) {
 
             int endSecond = timerSecond;
-            AppClass.getAppInsatnce().setSnipDurations(endSecond);
+            AppClass.getAppInstance().setSnipDurations(endSecond);
             // on screen tap blinking starts
             rlVideo.startAnimation(animBlink);
             blinkEffect.setVisibility(VISIBLE);
@@ -1677,7 +1697,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         try {
 //            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
 //                    VIDEO_DIRECTORY_NAME);
-            File thumbsStorageDir = new File(Objects.requireNonNull(getActivity()).getDataDir() + "/" + VIDEO_DIRECTORY_NAME,
+            File thumbsStorageDir = new File(requireActivity().getDataDir() + "/" + VIDEO_DIRECTORY_NAME,
                     THUMBS_DIRECTORY_NAME);
 
             if (!thumbsStorageDir.exists()) {
@@ -1879,7 +1899,7 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
         thumbnailProcesingCompleted = null;
     }
 
-//    Video edit listener
+//    clip edit listener
     @Override
     public void failed(VideoOp operation) {
 
@@ -1894,6 +1914,10 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 if (processingDialog != null) {
                     processingDialog.dismiss();
                 }
+                //  Associating with the latest HD_snip entry; getLastHDSnipID
+                hdSnips.setVideo_path_unprocessed(videoPath);
+                hdSnips.setHd_snip_id((int) AppClass.getAppInstance().getLastHDSnipId());
+                appRepository.updateHDSnip(hdSnips);
                 break;
             case TRIMMED:
                 break;
@@ -1907,5 +1931,4 @@ public class VideoMode extends Fragment implements View.OnClickListener, View.On
                 break;
         }
     }
-
 }

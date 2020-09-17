@@ -2,15 +2,8 @@ package com.hipoint.snipback;
 
 import android.Manifest;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Environment;
-import android.util.Log;
 import android.view.MotionEvent;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,8 +21,6 @@ import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.repository.AppRepository;
 import com.hipoint.snipback.room.repository.AppViewModel;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -88,7 +79,7 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
         Event event = new Event();
         event.setEvent_title(CommonUtils.today() + ", " + currentDateandTime);
         event.setEvent_created(System.currentTimeMillis());
-        AppRepository appRepository = new AppRepository(AppClass.getAppInsatnce());
+        AppRepository appRepository = new AppRepository(AppClass.getAppInstance());
         appRepository.insertEvent(event);
     }
 

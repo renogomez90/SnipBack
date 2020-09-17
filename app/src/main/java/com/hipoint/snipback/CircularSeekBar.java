@@ -96,7 +96,7 @@ public class CircularSeekBar {
                         addRule(RelativeLayout.CENTER_IN_PARENT);
                     }
                 });
-                addView(textView = new TextView(getContext()) {
+                addView(textView = new androidx.appcompat.widget.AppCompatTextView(getContext()) {
                     {
 
                         setText(Integer.toString(valueCounter) + "%");
