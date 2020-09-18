@@ -1692,12 +1692,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     if (AppClass.getAppInstance().snips.isNotEmpty())
                         lastSnip = AppClass.getAppInstance().snips[AppClass.getAppInstance().snips.size - 1]
                     val mergeFile = File(hdSnips!!.video_path_unprocessed)
-                    val splitTime = (totalDuration[0] - lastSnip?.snip_duration!!.roundToInt() - swipeValue).toInt()
+                    Log.d(TAG, "Total duration: ${totalDuration[0]}\nSnip duration: ${lastSnip?.snip_duration!!}\nSwipe duration: ${swipeValue/1000}")
+                    val splitTime = (totalDuration[0] - (lastSnip.snip_duration + swipeValue/1000)).toInt()
+                    Log.d(TAG, "Start time: $splitTime\nEnd time: ${totalDuration[0]}")
                     //  swiped + recorded clip
                     videoUtils.trimToClip(mergeFile,
                             "${mergeFile.parent}/swiped.mp4",
                             splitTime,
                             totalDuration[0])
+                    Log.d(TAG, "Start time: 0\nEnd time: $splitTime")
                     //  buffered clip
                     videoUtils.trimToClip(mergeFile,
                             "${mergeFile.parent}/buffered.mp4",

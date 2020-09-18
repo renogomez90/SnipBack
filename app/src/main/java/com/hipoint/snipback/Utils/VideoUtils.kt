@@ -106,6 +106,8 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param parentFolder Path to save output
      */
     suspend fun trimToClip(clip: File, outputPath: String, startSecond: Int, endSecond: Int) {
+        var start = startSecond
+        var end = endSecond
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip.absolutePath)
         val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong() // in miliseconds
@@ -113,10 +115,12 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         val sec = TimeUnit.MILLISECONDS.toSeconds(duration)
 
-        if(sec <= startSecond || sec < endSecond)
-            throw IllegalArgumentException("Provided file duration is out of bounds.")
+        if(sec <= start)
+            start = 0
+        if(sec < end)
+            end = sec.toInt()
 
-        val cmd = "-i ${clip.absolutePath} -ss $startSecond -to $endSecond -async 1 -strict -2 -c copy $outputPath"
+        val cmd = "-i ${clip.absolutePath} -ss $start -to $end -async 1 -strict -2 -c copy -y $outputPath"
 
         Log.d(TAG, "CMD =$cmd")
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
