@@ -21,10 +21,17 @@ import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.repository.AppRepository;
 import com.hipoint.snipback.room.repository.AppViewModel;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTaskCompleted {
     int PERMISSION_ALL = 1;
@@ -80,7 +87,18 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
         event.setEvent_title(CommonUtils.today() + ", " + currentDateandTime);
         event.setEvent_created(System.currentTimeMillis());
         AppRepository appRepository = new AppRepository(AppClass.getAppInstance());
-        appRepository.insertEvent(event);
+        appRepository.insertEvent(event, new Continuation<Unit>() {
+            @NotNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
+
+            @Override
+            public void resumeWith(@NotNull Object o) {
+
+            }
+        });
     }
 
     private void if24HoursCompleted() {

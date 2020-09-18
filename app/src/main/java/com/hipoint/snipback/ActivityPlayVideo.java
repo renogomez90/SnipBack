@@ -45,6 +45,9 @@ import com.hipoint.snipback.room.entities.Snip;
 import com.hipoint.snipback.room.repository.AppRepository;
 import com.hipoint.snipback.room.repository.AppViewModel;
 import com.kaopiz.kprogresshud.KProgressHUD;
+
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -52,6 +55,10 @@ import java.util.concurrent.TimeUnit;
 
 import Jni.FFmpegCmd;
 import VideoHandle.OnEditorListener;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 
 public class ActivityPlayVideo extends Swipper {
     private String VIDEO_DIRECTORY_NAME = "Snipback";
@@ -490,11 +497,33 @@ public class ActivityPlayVideo extends Swipper {
                 snip.setIs_virtual_version(0);
                 snip.setVideoFilePath(mediaFile.getAbsolutePath());
                 AppClass.getAppInstance().setEventSnipsFromDb(event, snip);
-                appRepository.updateSnip(snip);
+                appRepository.updateSnip(snip, new Continuation<Unit>() {
+                    @NotNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
+                    }
+
+                    @Override
+                    public void resumeWith(@NotNull Object o) {
+
+                    }
+                });
                 Hd_snips hdSnips = new Hd_snips();
                 hdSnips.setVideo_path_processed(mediaFile.getAbsolutePath());
                 hdSnips.setSnip_id(snip.getSnip_id());
-                appRepository.insertHd_snips(hdSnips);
+                appRepository.insertHd_snips(hdSnips, new Continuation<Unit>() {
+                    @NotNull
+                    @Override
+                    public CoroutineContext getContext() {
+                        return EmptyCoroutineContext.INSTANCE;
+                    }
+
+                    @Override
+                    public void resumeWith(@NotNull Object o) {
+
+                    }
+                });
                 AppClass.getAppInstance().setInsertionInProgress(true);
                 if (hud.isShowing())
                     hud.dismiss();

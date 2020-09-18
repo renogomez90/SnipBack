@@ -26,6 +26,9 @@ public interface SnipsDao {
     @Query("DELETE FROM Snip")
     void deleteAll();
 
+    @Query("SELECT * FROM Snip WHERE snip_id LIKE :id")
+    Snip getSnipById(Integer id);
+
     @Query("SELECT * from Snip")
     LiveData<List<Snip>> getSnipsData();
 }
