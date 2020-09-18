@@ -115,7 +115,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         val sec = TimeUnit.MILLISECONDS.toSeconds(duration)
 
-        if(sec <= start)
+        if(sec <= start)    // fixes the times to match that of the video
             start = 0
         if(sec < end)
             end = sec.toInt()
@@ -133,6 +133,33 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             }
 
             override fun onProgress(progress: Float) {}
+        })
+    }
+
+    suspend fun splitVideo(clip: File, splitTime: Int, outputFolder: String){
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(clip.absolutePath)
+        var duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong() // in miliseconds
+        retriever.release()
+
+        duration = TimeUnit.MILLISECONDS.toSeconds(duration)
+        if(splitTime > duration)
+            throw IllegalArgumentException("splitTime must be within video duration")
+
+        val cmd = "-i ${clip.absolutePath} -acodec copy -f segment -segment_time $splitTime -vcodec copy -reset_timestamps 1 -map 0 $outputFolder/split%d.mp4"
+
+        EpEditor.execCmd(cmd, 1, object: OnEditorListener{
+            override fun onSuccess() {
+                opListener.changed(IVideoOpListener.VideoOp.TRIMMED, outputFolder)
+            }
+
+            override fun onFailure() {
+                opListener.failed(IVideoOpListener.VideoOp.TRIMMED)
+            }
+
+            override fun onProgress(progress: Float) {
+            }
+
         })
     }
 
