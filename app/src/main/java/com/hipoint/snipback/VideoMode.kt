@@ -73,7 +73,7 @@ import kotlin.math.roundToInt
 class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted, IVideoOpListener {
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
     private val totalDuration = intArrayOf(0) //  total combined duration of merged clip
-    private val clipDuration = 30 * 1000L //  Buffer duration
+    private val clipDuration = 20 * 1000L //  Buffer duration
     private val swipeValue = 5 * 1000L //  swipeBack duration
     private val videoUtils = VideoUtils(this@VideoMode)
     private var processingDialog: ProcessingDialog? = null
@@ -439,6 +439,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var recordButton: ImageButton
     private lateinit var recordStopButton: ImageButton
     private lateinit var r_3_bookmark: ImageButton
+    private lateinit var capturePrevious: ImageButton
     private lateinit var r_2_shutter: ImageButton
     private lateinit var tvTimer: TextView
     private lateinit var mChronometer: Chronometer
@@ -461,6 +462,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         rlVideo = rootView.findViewById(R.id.rl_video)
         gallery = rootView.findViewById(R.id.r_1)
         settings = rootView.findViewById(R.id.r_5)
+        capturePrevious = rootView.findViewById(R.id.r_3)
         recordButton = rootView.findViewById(R.id.rec)
         mChronometer = rootView.findViewById(R.id.chronometer)
         mTextureView = rootView.findViewById(R.id.texture)
@@ -484,7 +486,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         rlVideo.setOnTouchListener(this)
         rlVideo.setOnClickListener(this)
         recordButton.setOnClickListener(this)
-
+        capturePrevious.setOnClickListener(this)
 //        detector = new GestureFilter(getActivity(), this);
 
 //        ((AppMainActivity)getActivity()).registerMyOnTouchListener(new AppMainActivity.MyOnTouchListener() {
@@ -734,6 +736,47 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
             R.id.texture -> {
                 saveSnipTimeToLocal()
+            }
+            R.id.r_3 -> {
+                if (clipQueue!!.size > 1) {
+                    //  1.  remove the 1st item - clip1
+                    //  2.  restart recording session so that the recording doesn't stop and we get the file we need to merge
+                    //  3.  remove the next item - clip 2
+                    //  4.  merge and split
+
+                    val clip1 = clipQueue!!.remove()
+                    startRecordingVideo()
+                    val clip2 = clipQueue!!.remove()
+
+                    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                    val mergeFilePath = "merged-$timeStamp.mp4"
+                    if (processingDialog == null) processingDialog = ProcessingDialog(requireActivity())
+                    processingDialog!!.show()
+                    CoroutineScope(Default).launch {
+                        videoUtils.concatenateFiles(clip1, clip2, "${clip1.parent}/$mergeFilePath")
+                    }
+
+                } else {
+                    //  1.  check duration of clip and if swipe duration < video duration
+                    //      1.  restart recording session
+                    //      2.  remove item from queue and split the video
+                    //  2.  else save what we have. restart the recording inform user.
+                    if (clipQueue!!.isNotEmpty()) {
+                        startRecordingVideo()
+                        if (actualClipTime > swipeValue) {
+                            val clip = clipQueue!!.remove()
+                            CoroutineScope(Default).launch {
+                                //  splitting may not work for this
+                                Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue")
+                                videoUtils.trimToClip(clip,
+                                        "${clip.parent}/trimmed-${clip.name}",
+                                        TimeUnit.MILLISECONDS.toSeconds(actualClipTime - swipeValue).toInt(),
+                                        TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt())
+                            }
+                        }
+                    }
+                }
+                Toast.makeText(requireActivity(), "Capturing Previous", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -1682,35 +1725,41 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             VideoOp.CONCAT -> {
                 processingDialog?.dismiss()
                 //  Associating with the latest HD_snip entry; getLastHDSnipID
-                hdSnips!!.video_path_unprocessed = videoPath
-                hdSnips!!.hd_snip_id = AppClass.getAppInstance().lastHDSnipId.toInt()
-                CoroutineScope(Default).launch {
-                    appRepository!!.updateHDSnip(hdSnips!!)
-                }
-                CoroutineScope(Default).launch {
-                    var lastSnip: Snip? = null
-                    if (AppClass.getAppInstance().snips.isNotEmpty())
-                        lastSnip = AppClass.getAppInstance().snips[AppClass.getAppInstance().snips.size - 1]
-                    val mergeFile = File(hdSnips!!.video_path_unprocessed)
-                    Log.d(TAG, "Total duration: ${totalDuration[0]}\nSnip duration: ${lastSnip?.snip_duration!!}\nSwipe duration: ${swipeValue / 1000}")
-                    val splitTime = (totalDuration[0] - (/*lastSnip.snip_duration +*/ swipeValue / 1000)).toInt()
-                    Log.d(TAG, "Start time: $splitTime\nEnd time: ${totalDuration[0]}")
-                    /*//  swiped + recorded clip
-                    videoUtils.trimToClip(mergeFile,
-                            "${mergeFile.parent}/swiped.mp4",
-                            splitTime,
-                            totalDuration[0])
-                    Log.d(TAG, "Start time: 0\nEnd time: $splitTime")
-                    //  buffered clip
-                    videoUtils.trimToClip(mergeFile,
-                            "${mergeFile.parent}/buffered.mp4",
-                            0,
-                            splitTime)*/
-                    videoUtils.splitVideo(mergeFile, splitTime, mergeFile.parent!!)
+                if (recordClips) {  //  concat was triggered when automatic capture was ongoing
+                    CoroutineScope(Default).launch {
+                        val retriever = MediaMetadataRetriever()
+                        retriever.setDataSource(videoPath)
+                        val duration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
+                        retriever.release()
+
+                        val splitTime = (duration - (swipeValue / 1000)).toInt()
+                        Log.d(TAG, "Start time: $splitTime\nEnd time: $totalDuration")
+
+                        videoUtils.splitVideo(File(videoPath), splitTime, File(videoPath).parent!!)
+                    }
+                } else {    // concat was triggered when user recording was ongoing
+                    hdSnips!!.video_path_unprocessed = videoPath
+                    hdSnips!!.hd_snip_id = AppClass.getAppInstance().lastHDSnipId.toInt()
+                    CoroutineScope(Default).launch {
+                        appRepository!!.updateHDSnip(hdSnips!!)
+
+                        var lastSnip: Snip? = null
+                        if (AppClass.getAppInstance().snips.isNotEmpty())
+                            lastSnip = AppClass.getAppInstance().snips[AppClass.getAppInstance().snips.size - 1]
+                        val mergeFile = File(hdSnips!!.video_path_unprocessed)
+                        Log.d(TAG, "Total duration: ${totalDuration[0]}\nSnip duration: ${lastSnip?.snip_duration!!}\nSwipe duration: ${swipeValue / 1000}")
+                        val splitTime = (totalDuration[0] - (/*lastSnip.snip_duration +*/ swipeValue / 1000)).toInt()
+                        Log.d(TAG, "Start time: $splitTime\nEnd time: ${totalDuration[0]}")
+                        videoUtils.splitVideo(mergeFile, splitTime, mergeFile.parent!!)
+                    }
                 }
                 processingDialog?.show()
             }
             VideoOp.TRIMMED -> {
+                Log.d(TAG, "$videoPath Completed")
+                processingDialog?.dismiss()
+            }
+            VideoOp.SPLIT -> {
                 Log.d(TAG, "$videoPath Completed")
                 processingDialog?.dismiss()
             }

@@ -120,7 +120,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if(sec < end)
             end = sec.toInt()
 
-        val cmd = "-i ${clip.absolutePath} -ss $start -to $end -async 1 -strict -2 -c copy -y $outputPath"
+        val cmd = "-i ${clip.absolutePath} -ss $start -to $end -async 1 -y $outputPath"
 
         Log.d(TAG, "CMD =$cmd")
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
@@ -150,11 +150,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         EpEditor.execCmd(cmd, 1, object: OnEditorListener{
             override fun onSuccess() {
-                opListener.changed(IVideoOpListener.VideoOp.TRIMMED, outputFolder)
+                opListener.changed(IVideoOpListener.VideoOp.SPLIT, outputFolder)
             }
 
             override fun onFailure() {
-                opListener.failed(IVideoOpListener.VideoOp.TRIMMED)
+                opListener.failed(IVideoOpListener.VideoOp.SPLIT)
             }
 
             override fun onProgress(progress: Float) {
