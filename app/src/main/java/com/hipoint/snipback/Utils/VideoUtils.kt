@@ -26,7 +26,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip2      Second clip to be merged
      * @param outputPath Path to save output
      */
-    suspend fun mergeRecordedFiles(clip1: File, clip2: File, outputPath: String?) {
+    suspend fun mergeRecordedFiles(clip1: File, clip2: File, outputPath: String) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip1.absolutePath)
         val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH).toInt()
@@ -120,7 +120,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if(sec < end)
             end = sec.toInt()
 
-        val cmd = "-i ${clip.absolutePath} -ss $start -to $end -async 1 -y $outputPath"
+        val cmd = "-i ${clip.absolutePath} -ss $start -to $end -c copy -y $outputPath"
 
         Log.d(TAG, "CMD =$cmd")
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
@@ -146,11 +146,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if(splitTime > duration)
             throw IllegalArgumentException("splitTime must be within video duration")
 
-        val cmd = "-i ${clip.absolutePath} -acodec copy -f segment -segment_time $splitTime -vcodec copy -reset_timestamps 1 -map 0 $outputFolder/split%d.mp4"
+        val cmd = "-i ${clip.absolutePath} -acodec copy -f segment -segment_time $splitTime -vcodec copy -reset_timestamps 1 -map 0 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
 
         EpEditor.execCmd(cmd, 1, object: OnEditorListener{
             override fun onSuccess() {
-                opListener.changed(IVideoOpListener.VideoOp.SPLIT, outputFolder)
+                opListener.changed(IVideoOpListener.VideoOp.SPLIT, "$outputFolder/${clip.nameWithoutExtension}")
             }
 
             override fun onFailure() {
