@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <SeekBar
+        android:id="@+id/seek"
+        style="@style/Base.Widget.AppCompat.SeekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:theme="@style/SeekBar" />
+
+    <RelativeLayout
+        android:id="@+id/play_backbutton"
+        android:layout_width="41dp"
+        android:layout_height="41dp"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="37dp"
+        android:layout_toLeftOf="@+id/play_pause_holder"
+        android:background="@drawable/background_play_pouse"
+        android:gravity="center"
+        android:visibility="invisible">
+
+        <ImageView
+            android:layout_width="11dp"
+            android:layout_height="13dp"
+            android:src="@drawable/ic_play_back" />
+    </RelativeLayout>
+
+    <RelativeLayout
+
+        android:id="@+id/play_pause_holder"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="37dp"
+        android:background="@drawable/background_play_pouse"
+        android:gravity="center"
+        android:visibility="visible">
+
+        <Switch
+            android:id="@+id/play_pause"
+            android:layout_width="15dp"
+            android:layout_height="28dp"
+            android:background="@null"
+            android:button="@drawable/switch_play_pause"
+            android:thumb="@null"
+            app:track="@null" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/play_forwardbutton"
+        android:layout_width="41dp"
+        android:layout_height="41dp"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="37dp"
+        android:layout_toRightOf="@+id/play_pause_holder"
+        android:background="@drawable/background_play_pouse"
+        android:gravity="center"
+        android:visibility="invisible">
+
+        <ImageView
+            android:layout_width="11dp"
+            android:layout_height="13dp"
+            android:src="@drawable/ic_play_forward" />
+    </RelativeLayout>
+
+    <ImageButton
+        android:id="@+id/tvConvertToReal"
+        android:layout_width="120dp"
+        android:layout_height="40dp"
+        android:background="@drawable/v_real"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="10dp"
+        android:contentDescription="TODO"
+        android:visibility="invisible"/>
+
+    <RelativeLayout
+        android:id="@+id/back_arrow"
+        android:layout_width="43dp"
+        android:layout_height="43dp"
+        android:layout_above="@id/seek"
+        android:layout_marginLeft="37dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/background_black_round"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="12dp"
+            android:src="@drawable/ic_back_arrow" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/button_camera"
+        android:layout_width="43dp"
+        android:layout_height="43dp"
+        android:layout_above="@id/seek"
+        android:layout_marginLeft="24dp"
+        android:layout_marginBottom="12dp"
+        android:layout_toRightOf="@+id/back_arrow"
+        android:background="@drawable/background_black_round"
+        android:gravity="center">
+
+        <ImageView
+            android:layout_width="19dp"
+            android:layout_height="13dp"
+            android:src="@drawable/ic_camera" />
+    </RelativeLayout>
+
+
+    <TextView
+        android:id="@+id/exo_duration"
+        android:layout_width="103dp"
+        android:layout_height="32dp"
+        android:layout_above="@id/seek"
+        android:layout_alignParentRight="true"
+        android:layout_marginRight="32dp"
+        android:layout_marginBottom="12dp"
+        android:background="@drawable/background_video_timer"
+        android:fontFamily="@font/barlow_semibold"
+        android:gravity="center"
+        android:text="00:00/00:08"
+        android:textColor="@color/colorPrimaryWhite"
+        android:textSize="15dp"
+        android:visibility="visible" />
+
+</RelativeLayout>

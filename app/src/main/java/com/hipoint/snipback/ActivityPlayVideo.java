@@ -124,7 +124,7 @@ public class ActivityPlayVideo extends Swipper {
         seek = findViewById(R.id.seek);
         exo_duration = findViewById(R.id.exo_duration);
         play_pause = findViewById(R.id.play_pause);
-        rlPlayPause = findViewById(R.id.play_pouse);
+        rlPlayPause = findViewById(R.id.play_pause_holder);
         videoView = (VideoView) findViewById(R.id.videoView);
 
         tvConvertToReal = findViewById(R.id.tvConvertToReal);

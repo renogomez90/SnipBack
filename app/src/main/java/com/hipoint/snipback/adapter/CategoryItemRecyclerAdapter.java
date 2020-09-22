@@ -15,9 +15,12 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.ActivityPlayVideo;
+import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.fragment.FragmentPlayVideo;
+import com.hipoint.snipback.fragment.FragmentPlayVideo2;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.io.File;
@@ -90,11 +93,11 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     CommonUtils.getVideoThumbnail(context, snip);
                 }
                 holder.itemImage.setOnClickListener(v -> {
-                    Intent intent = new Intent(context, ActivityPlayVideo.class);
+                    /*Intent intent = new Intent(context, ActivityPlayExoVideo.class);
                     intent.putExtra("snip", snip);
-                    context.startActivity(intent);
+                    context.startActivity(intent);*/
 
-//                    ((AppMainActivity) context).loadFragment(FragmentPlayVideo.newInstance(snip),true);
+                    ((AppMainActivity) context).loadFragment(FragmentPlayVideo2.newInstance(snip),true);
 
                 });
 //                holder.itemImage.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));

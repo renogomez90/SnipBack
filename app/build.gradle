@@ -40,7 +40,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
+    packagingOptions{
+        exclude 'META-INF/library-core_release.kotlin_module'
+    }
 }
 
 dependencies {
@@ -73,9 +75,16 @@ dependencies {
     implementation "com.android.support:support-v4:27.0.2"
     implementation "com.android.support:support-v13:27.0.2"
     implementation 'com.google.code.gson:gson:2.8.6'
-    implementation 'com.github.yangjie10930:EpMedia:v1.0.1'
-    // Room Implemetation
 
+    //  fast seek
+    implementation 'com.github.kibotu:FastExoPlayerSeeker:-SNAPSHOT'
+    implementation 'io.reactivex:rxandroid:1.2.1'
+    implementation 'io.reactivex.rxjava2:rxjava:2.2.6'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.0'
+    implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
+    implementation "com.github.exozet:AndroidCore:2.2.8"
+
+    // Room Implemetation
     implementation 'androidx.room:room-runtime:2.3.0-alpha02'
     annotationProcessor 'androidx.room:room-compiler:2.3.0-alpha02'
     androidTestImplementation 'androidx.room:room-testing:2.3.0-alpha02'

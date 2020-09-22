@@ -163,7 +163,6 @@ public class FragmentGalleryNew extends Fragment {
             layout_autodelete.setOnClickListener(v1 -> {
                 relativeLayout_autodeleteactions.setVisibility(View.VISIBLE);
                 autodelete_arrow.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp);
-
             });
             layout_multidelete.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -209,6 +208,7 @@ public class FragmentGalleryNew extends Fragment {
             @Override
             public void onClick(View v) {
 //                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
+//                Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
                 Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
                 intent.putExtra("uri", uri.toString());
                 startActivity(intent);
