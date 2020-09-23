@@ -16,16 +16,17 @@
             android:layout_height="match_parent"
             android:layout_below="@+id/photolabel"
             android:layout_gravity="center"
-            app:use_controller="false"
+            app:use_controller="true"
             app:controller_layout_id="@layout/exo_controls"/>
 
         <com.exozet.android.core.ui.custom.SwipeDistanceView
             android:id="@+id/swipe_detector"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
             tools:background="#44AA0000"/>
     </FrameLayout>
 
+<!--
     <com.google.android.exoplayer2.ui.PlayerControlView
         android:id="@+id/player_controls"
         android:layout_width="match_parent"
@@ -33,6 +34,7 @@
         app:show_timeout="0"
         app:controller_layout_id="@layout/exo_controls"
         android:layout_above="@id/bottom_menu"/>
+-->
 
     <LinearLayout
         android:id="@+id/bottom_menu"

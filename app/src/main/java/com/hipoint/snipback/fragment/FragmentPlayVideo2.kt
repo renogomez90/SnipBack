@@ -74,12 +74,12 @@ class FragmentPlayVideo2 : Fragment() {
     private lateinit var appViewModel         : AppViewModel
 
     private lateinit var playerView     : PlayerView
-    private lateinit var controlsView   : PlayerControlView
-    private lateinit var playPause      : Switch
-    private lateinit var playPauseHolder: RelativeLayout
+//    private lateinit var controlsView   : PlayerControlView
+//    private lateinit var playPause      : Switch
+    private lateinit var playPauseHolder: FrameLayout
     private lateinit var exoDuration    : TextView
 //    private lateinit var exoProgress    : DefaultTimeBar
-    private lateinit var seekBar        : SeekBar
+    private lateinit var seekBar        : DefaultTimeBar
     private lateinit var rootView       : View
     private lateinit var tag            : ImageView
     private lateinit var backArrow      : RelativeLayout
@@ -225,7 +225,7 @@ class FragmentPlayVideo2 : Fragment() {
                 null)
 
         player = ExoPlayerFactory.newSimpleInstance(requireActivity(), trackSelector)
-        controlsView.player = player
+//        controlsView.player = player
         playerView.player = player
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
         player.prepare(mediaSource)
@@ -235,7 +235,7 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun bindViews() {
-        controlsView    = rootView.findViewById(R.id.player_controls)
+//        controlsView    = rootView.findViewById(R.id.player_controls)
         exoDuration     = rootView.findViewById(R.id.exo_duration)
         buttonCamera    = rootView.findViewById(R.id.button_camera)
         backArrow       = rootView.findViewById(R.id.back_arrow)
@@ -244,20 +244,20 @@ class FragmentPlayVideo2 : Fragment() {
         playerView      = rootView.findViewById(R.id.player_view)
         tag             = rootView.findViewById(R.id.tag)
         swipeDetector   = rootView.findViewById(R.id.swipe_detector)
-        playPause       = controlsView.findViewById(R.id.play_pause)
-        playPauseHolder = controlsView.findViewById(R.id.play_pause_holder)
-        seekBar         = controlsView.findViewById(R.id.seek)
+//        playPause       = rootView.findViewById(R.id.play_pause)
+        playPauseHolder = rootView.findViewById(R.id.play_pause_holder)
+        seekBar         = rootView.findViewById(R.id.exo_progress)
     }
 
     private fun bindListeners() {
-        controlsView.setProgressUpdateListener{ position, bufferedPosition ->
+        /*controlsView.setProgressUpdateListener{ position, bufferedPosition ->
 //                Log.d(TAG, "onProgressUpdate: " + position + " " + bufferedPosition);
             val total = player.duration
             val progress = position * 100f / total + 0.5
             seekBar.progress = progress.toInt()
-        }
+        }*/
 
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        /*seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (isSeeking) {
                     val total = player.duration
@@ -267,17 +267,19 @@ class FragmentPlayVideo2 : Fragment() {
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
                 Log.d(TAG, "onStartTrackingTouch: start")
-                player.playWhenReady = false
+                if(player.isPlaying)
+                    player.playWhenReady = false
                 isSeeking = true
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 Log.d(TAG, "onStopTrackingTouch: stop")
-                player.playWhenReady = true
+                if(!player.isPlaying)
+                    player.playWhenReady = true
                 isSeeking = false
             }
         })
-
+*/
         tvConvertToReal.setOnClickListener(View.OnClickListener { view: View? -> validateVideo(snip) })
         if ((if (snip != null) snip!!.is_virtual_version else 0) == 1) {
             tvConvertToReal.visibility = View.VISIBLE
@@ -298,7 +300,7 @@ class FragmentPlayVideo2 : Fragment() {
             requireActivity().finishAffinity()
         })
 
-        playPause.setOnCheckedChangeListener { compoundButton, isChecked ->
+        /*playPause.setOnCheckedChangeListener { compoundButton, isChecked ->
             if (isChecked) {    //  checked pauses the video
                 if (this::player.isInitialized) {
                     player.playWhenReady = false
@@ -325,10 +327,10 @@ class FragmentPlayVideo2 : Fragment() {
                     }.start()
                 }
                 player.playWhenReady = true
-                player.seekTo(player.currentPosition + 100)
+                player.seekTo(player.currentPosition + 100) //   why?
 
             }
-        }
+        }*/
 
 
         tag.setOnClickListener(View.OnClickListener {
@@ -373,6 +375,7 @@ class FragmentPlayVideo2 : Fragment() {
                 startScrollingSeekPosition = player.currentPosition
 
             player.playWhenReady = !it
+//            playPause.isChecked = !it
         }
 
         val emitter = SeekPositionEmitter()
