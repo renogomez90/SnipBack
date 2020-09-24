@@ -89,10 +89,10 @@ public class FragmentGalleryNew extends Fragment {
     boolean viewButtonClicked = false;
     public String viewChange;
     public Integer orientation;
+
     public enum ViewType {
         NORMAL, ENLARGED;
     }
-
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -100,7 +100,6 @@ public class FragmentGalleryNew extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery_new, container, false);
-
 
 
         (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
@@ -255,7 +254,6 @@ public class FragmentGalleryNew extends Fragment {
     }
 
 
-
     private void setOrientation(int orientation) {
         List<EventData> allSnips = AppClass.getAppInstance().getAllSnip();
         List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
@@ -268,11 +266,9 @@ public class FragmentGalleryNew extends Fragment {
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        
+
         orientation = requireActivity().getResources().getConfiguration().orientation;
         setOrientation(orientation);
-
-
 
 
     }
@@ -335,14 +331,13 @@ public class FragmentGalleryNew extends Fragment {
                                 pullToRefresh.setRefreshing(false);
                                 List<EventData> allSnips = AppClass.getAppInstance().getAllSnip();
                                 List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
-                                if (mainRecyclerAdapter == null) {
-                                    RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
-                                    mainCategoryRecycler.setLayoutManager(layoutManager);
-                                    mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, null, null);
-                                    mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-                                } else {
-                                    mainRecyclerAdapter.notifyDataSetChanged();
-                                }
+//                                if (mainRecyclerAdapter == null) {
+                                RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
+                                mainCategoryRecycler.setLayoutManager(layoutManager);
+                                mainRecyclerAdapter = new MainRecyclerAdapter(getActivity(), allParentSnip, allSnips, null, null);
+                                mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
+//                                }
+                                mainRecyclerAdapter.notifyDataSetChanged();
                             }
                         });
                     }

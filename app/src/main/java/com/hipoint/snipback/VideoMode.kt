@@ -73,9 +73,9 @@ import kotlin.collections.ArrayList
 
 class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted, IVideoOpListener {
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
-    private val totalDuration = intArrayOf(0) //  total combined duration of merged clip
-    private val clipDuration = 20 * 1000L //  Buffer duration
-    private val swipeValue = 5 * 1000L //  swipeBack duration
+    private val totalDuration = intArrayOf(0)                     //  total combined duration of merged clip
+    private val clipDuration = 20 * 1000L                        //  Buffer duration
+    private val swipeValue = 5 * 1000L                         //  swipeBack duration
     private val videoUtils = VideoUtils(this@VideoMode)
     private var processingDialog: ProcessingDialog? = null
     private var parentSnip: Snip? = null
@@ -121,6 +121,12 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     if (x2 > x1) {
                         if (mIsRecordingVideo) {
                             saveSnipTimeToLocal()
+                        }
+                    }
+                    //  Right to left swipe action
+                    if (x2 < x1) {
+                        if (mIsRecordingVideo) {
+                            handleLeftSwipe()
                         }
                     }
                 }
@@ -457,6 +463,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         rootView = inflater.inflate(R.layout.fragment_videomode, container, false)
 
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
@@ -616,6 +623,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         super.onPause()
     }
 
+
     override fun onClick(v: View) {
         when (v.id) {
             R.id.rec -> {
@@ -748,51 +756,54 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
             R.id.r_3 -> {
 
-                if (processingDialog == null) processingDialog = ProcessingDialog(requireActivity())
-                processingDialog!!.show()
-
-                if (clipQueue!!.size > 1) { // there is more than 1 items in the queue
-                    //  1.  remove the 1st item - clip1
-                    //  2.  restart recording session so that the recording doesn't stop and we get the file we need to merge
-                    //  3.  remove the next item - clip 2
-                    //  4.  merge and split
-
-                    val clip1 = clipQueue!!.remove()
-                    startRecordingVideo()
-                    val clip2 = clipQueue!!.remove()
-
-                    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                    val mergeFilePath = "merged-$timeStamp.mp4"
-                    CoroutineScope(IO).launch {
-                        videoUtils.concatenateFiles(clip1, clip2, "${clip1.parent}/$mergeFilePath")
-                    }
-
-                } else {    //  there is only  item in the queue
-                    //  1.  check duration of clip and if swipe duration < video duration
-                    //      1.  restart recording session
-                    //      2.  remove item from queue and split the video
-                    //  2.  else save what we have. restart the recording inform user.
-                    if (clipQueue!!.isNotEmpty()) {
-                        startRecordingVideo()
-                        val clip = clipQueue!!.remove()
-                        if (actualClipTime > swipeValue) {
-                            CoroutineScope(IO).launch {
-                                //  splitting may not work for this
-                                Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue")
-                                videoUtils.trimToClip(clip,
-                                        "${clip.parent}/trimmed-${clip.name}",
-                                        TimeUnit.MILLISECONDS.toSeconds(actualClipTime - swipeValue).toInt(),
-                                        TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt())
-                            }
-                        } else{ //  save what we have
-                            addSnip(clip.absolutePath, TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt(), TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt())
-                            processingDialog?.dismiss()
-                        }
-                    }
-                }
-                Toast.makeText(requireActivity(), "Capturing Previous", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    private fun handleLeftSwipe() {
+        if (processingDialog == null) processingDialog = ProcessingDialog(requireActivity())
+        processingDialog!!.show()
+
+        if (clipQueue!!.size > 1) { // there is more than 1 items in the queue
+            //  1.  remove the 1st item - clip1
+            //  2.  restart recording session so that the recording doesn't stop and we get the file we need to merge
+            //  3.  remove the next item - clip 2
+            //  4.  merge and split
+
+            val clip1 = clipQueue!!.remove()
+            startRecordingVideo()
+            val clip2 = clipQueue!!.remove()
+
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val mergeFilePath = "merged-$timeStamp.mp4"
+            CoroutineScope(IO).launch {
+                videoUtils.concatenateFiles(clip1, clip2, "${clip1.parent}/$mergeFilePath")
+            }
+
+        } else {    //  there is only  item in the queue
+            //  1.  check duration of clip and if swipe duration < video duration
+            //      1.  restart recording session
+            //      2.  remove item from queue and split the video
+            //  2.  else save what we have. restart the recording inform user.
+            if (clipQueue!!.isNotEmpty()) {
+                startRecordingVideo()
+                val clip = clipQueue!!.remove()
+                if (actualClipTime > swipeValue) {
+                    CoroutineScope(IO).launch {
+                        //  splitting may not work for this
+                        Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue")
+                        videoUtils.trimToClip(clip,
+                                "${clip.parent}/trimmed-${clip.name}",
+                                TimeUnit.MILLISECONDS.toSeconds(actualClipTime - swipeValue).toInt(),
+                                TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt())
+                    }
+                } else { //  save what we have
+                    addSnip(clip.absolutePath, TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt(), TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt())
+                    processingDialog?.dismiss()
+                }
+            }
+        }
+        Toast.makeText(requireActivity(), "Capturing Previous", Toast.LENGTH_SHORT).show()
     }
 
     private fun attemptClipConcat() {
@@ -1420,7 +1431,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             hdSnips = Hd_snips()
             hdSnips!!.video_path_processed = snip.videoFilePath
             hdSnips!!.snip_id = snip.snip_id
-            if(parentSnip == null){
+            if (parentSnip == null) {
                 parentSnip = snip
             }
             appRepository!!.insertHd_snips(hdSnips!!)
@@ -1780,7 +1791,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             VideoOp.TRIMMED -> {
                 Log.d(TAG, "$processedVideoPath Completed")
                 CoroutineScope(Main).launch { processingDialog?.dismiss() }
-                CoroutineScope(IO).launch { 
+                CoroutineScope(IO).launch {
                     val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                     addSnip(processedVideoPath, duration, duration)
                 }
@@ -1814,7 +1825,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      *  @param List<File> filePathList
      *  @return List<Int> durations
      */
-    private fun getMetadataDurations(filePathList : List<String>): List<Int>{
+    private fun getMetadataDurations(filePathList: List<String>): List<Int> {
         val durationList = arrayListOf<Int>()
         val retriever = MediaMetadataRetriever()
         var duration = 0

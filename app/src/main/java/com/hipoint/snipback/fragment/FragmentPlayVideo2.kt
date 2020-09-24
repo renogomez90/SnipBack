@@ -54,39 +54,41 @@ import kotlin.math.roundToLong
 class FragmentPlayVideo2 : Fragment() {
     private val TAG = FragmentPlayVideo2::class.java.simpleName
 
-    private val uri    : Uri?    = null
+    private val uri: Uri? = null
     private val uriType: String? = null
-    private val play   : Boolean = true
+    private val play: Boolean = true
 
-    private var currentPosi   = 0L
+    private var currentPosi = 0L
     private var subscriptions = CompositeDisposable()
-    private var isSeeking     = false
+    private var isSeeking = false
 
-    private lateinit var bandwidthMeter       : BandwidthMeter
-    private lateinit var mediaSource          : MediaSource
-    private lateinit var trackSelector        : TrackSelector
+    private lateinit var bandwidthMeter: BandwidthMeter
+    private lateinit var mediaSource: MediaSource
+    private lateinit var trackSelector: TrackSelector
     private lateinit var trackSelectionFactory: TrackSelection.Factory
-    private lateinit var player               : SimpleExoPlayer
-    private lateinit var dataSourceFactory    : DataSource.Factory
-    private lateinit var extractorsFactory    : ExtractorsFactory
+    private lateinit var player: SimpleExoPlayer
+    private lateinit var dataSourceFactory: DataSource.Factory
+    private lateinit var extractorsFactory: ExtractorsFactory
     private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
-    private lateinit var appRepository        : AppRepository
-    private lateinit var appViewModel         : AppViewModel
+    private lateinit var appRepository: AppRepository
+    private lateinit var appViewModel: AppViewModel
 
-    private lateinit var playerView     : PlayerView
-//    private lateinit var controlsView   : PlayerControlView
+    private lateinit var playerView: PlayerView
+
+    //    private lateinit var controlsView   : PlayerControlView
 //    private lateinit var playPause      : Switch
-    private lateinit var exoDuration    : TextView
-    private lateinit var playBtn        : ImageButton
-    private lateinit var pauseBtn       : ImageButton
-//    private lateinit var exoProgress    : DefaultTimeBar
-    private lateinit var seekBar        : DefaultTimeBar
-    private lateinit var rootView       : View
-    private lateinit var tag            : ImageView
-    private lateinit var backArrow      : RelativeLayout
-    private lateinit var buttonCamera   : RelativeLayout
+    private lateinit var exoDuration: TextView
+    private lateinit var playBtn: ImageButton
+    private lateinit var pauseBtn: ImageButton
+
+    //    private lateinit var exoProgress    : DefaultTimeBar
+    private lateinit var seekBar: DefaultTimeBar
+    private lateinit var rootView: View
+    private lateinit var tag: ImageView
+    private lateinit var backArrow: RelativeLayout
+    private lateinit var buttonCamera: RelativeLayout
     private lateinit var tvConvertToReal: ImageButton
-    private lateinit var swipeDetector  : SwipeDistanceView
+    private lateinit var swipeDetector: SwipeDistanceView
 
     // new
     private val seekdistance = 0f
@@ -211,10 +213,10 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun initSetup() {
-        bandwidthMeter        = DefaultBandwidthMeter()
-        extractorsFactory     = DefaultExtractorsFactory()
+        bandwidthMeter = DefaultBandwidthMeter()
+        extractorsFactory = DefaultExtractorsFactory()
         trackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
-        trackSelector         = DefaultTrackSelector(trackSelectionFactory)
+        trackSelector = DefaultTrackSelector(trackSelectionFactory)
         defaultBandwidthMeter = DefaultBandwidthMeter()
 
         dataSourceFactory = DefaultDataSourceFactory(activity,
@@ -238,23 +240,28 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun bindViews() {
-        exoDuration     = rootView.findViewById(R.id.exo_duration)
-        buttonCamera    = rootView.findViewById(R.id.button_camera)
-        backArrow       = rootView.findViewById(R.id.back_arrow)
+        exoDuration = rootView.findViewById(R.id.exo_duration)
+        buttonCamera = rootView.findViewById(R.id.button_camera)
+        backArrow = rootView.findViewById(R.id.back_arrow)
         tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal)
-        playerView      = rootView.findViewById(R.id.player_view)
-        tag             = rootView.findViewById(R.id.tag)
-        swipeDetector   = rootView.findViewById(R.id.swipe_detector)
-        seekBar         = rootView.findViewById(R.id.exo_progress)
-        playBtn         = rootView.findViewById(R.id.exo_play)
-        pauseBtn        = rootView.findViewById(R.id.exo_pause)
-
+        playerView = rootView.findViewById(R.id.player_view)
+        tag = rootView.findViewById(R.id.tag)
+        swipeDetector = rootView.findViewById(R.id.swipe_detector)
+        seekBar = rootView.findViewById(R.id.exo_progress)
+        playBtn = rootView.findViewById(R.id.exo_play)
+        pauseBtn = rootView.findViewById(R.id.exo_pause)
     }
 
     private fun bindListeners() {
-        playBtn.onClick { player.playWhenReady = true }
+        playBtn.onClick {
+            player.playWhenReady = true
+            paused = false
+        }
 
-        pauseBtn.onClick { player.playWhenReady = false }
+        pauseBtn.onClick {
+            player.playWhenReady = false
+            paused = true
+        }
 
         tvConvertToReal.setOnClickListener(View.OnClickListener { view: View? -> validateVideo(snip) })
         if ((if (snip != null) snip!!.is_virtual_version else 0) == 1) {
@@ -331,16 +338,17 @@ class FragmentPlayVideo2 : Fragment() {
         var startScrollingSeekPosition = 0L
 
         swipeDetector.setOnClickListener {
-            if(playerView.isControllerVisible)
+            if (playerView.isControllerVisible)
                 playerView.hideController()
             else
                 playerView.showController()
         }
 
         swipeDetector.onIsScrollingChanged {
-            if(it)
+            if (it)
                 startScrollingSeekPosition = player.currentPosition
-//            player.playWhenReady = !it
+
+            player.playWhenReady = !paused
         }
 
         val emitter = SeekPositionEmitter()
@@ -355,10 +363,19 @@ class FragmentPlayVideo2 : Fragment() {
             val duration = player.duration
 
             val maxPercent = 0.75f
-            val scaledPercent = percentX * maxPercent
-            val percentOfDuration = scaledPercent * -1 * duration + startScrollingSeekPosition
+//            val scaledPercent = percentX * maxPercent
+//            val percentOfDuration = scaledPercent * -1 * duration + startScrollingSeekPosition
             // shift in position domain and ensure circularity
-            val newSeekPosition = ((percentOfDuration + duration) % duration).roundToLong().absoluteValue
+//            val newSeekPosition = ((percentOfDuration + duration) % duration).roundToLong().absoluteValue
+            val newSeekPosition = (percentX * maxPercent + player.currentPosition).toLong()
+/*            Log.d(TAG,
+    """initSwipeControls: 
+    duration: $duration
+    scaledPercent: $scaledPercent
+    percentage duration: $percentOfDuration
+    new seek position $newSeekPosition
+    """.trimMargin())*/
+
             emitter.seekFast(newSeekPosition)
 
         }
@@ -385,12 +402,12 @@ class FragmentPlayVideo2 : Fragment() {
                 snip.is_virtual_version = 0
                 snip.videoFilePath = mediaFile.absolutePath
                 AppClass.getAppInstance().setEventSnipsFromDb(event, snip)
-                CoroutineScope(IO).launch{ appRepository.updateSnip(snip)}
+                CoroutineScope(IO).launch { appRepository.updateSnip(snip) }
                 val hdSnips = Hd_snips()
                 hdSnips.video_path_processed = mediaFile.absolutePath
                 hdSnips.snip_id = snip.snip_id
 
-                CoroutineScope(IO).launch{ appRepository.insertHd_snips(hdSnips)}
+                CoroutineScope(IO).launch { appRepository.insertHd_snips(hdSnips) }
                 AppClass.getAppInstance().isInsertionInProgress = true
                 if (hud.isShowing) hud.dismiss()
                 requireActivity().runOnUiThread { Toast.makeText(activity, "Video saved to gallery", Toast.LENGTH_SHORT).show() }
