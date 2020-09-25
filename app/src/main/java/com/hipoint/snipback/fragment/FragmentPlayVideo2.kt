@@ -363,18 +363,10 @@ class FragmentPlayVideo2 : Fragment() {
             val duration = player.duration
 
             val maxPercent = 0.75f
-//            val scaledPercent = percentX * maxPercent
-//            val percentOfDuration = scaledPercent * -1 * duration + startScrollingSeekPosition
+            val scaledPercent = percentX * maxPercent
+            val percentOfDuration = scaledPercent * -1 * duration + startScrollingSeekPosition
             // shift in position domain and ensure circularity
-//            val newSeekPosition = ((percentOfDuration + duration) % duration).roundToLong().absoluteValue
-            val newSeekPosition = (percentX * maxPercent + player.currentPosition).toLong()
-/*            Log.d(TAG,
-    """initSwipeControls: 
-    duration: $duration
-    scaledPercent: $scaledPercent
-    percentage duration: $percentOfDuration
-    new seek position $newSeekPosition
-    """.trimMargin())*/
+            val newSeekPosition = ((percentOfDuration + duration) % duration).roundToLong().absoluteValue
 
             emitter.seekFast(newSeekPosition)
 
