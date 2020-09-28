@@ -54,9 +54,9 @@ public class AppViewModel extends AndroidViewModel {
         return mAllSnips;
     }
 
-    public void loadLastInsertedEvent(AppCompatActivity activity){
+    public void loadLastInsertedEvent(AppCompatActivity activity) {
         getEventLiveData().observe(activity, events -> {
-            if(events.size() > 0) {
+            if (events.size() > 0) {
                 Event lastEvent = events.get(events.size() - 1);
                 int eventId = lastEvent.getEvent_id();
                 AppClass.getAppInstance().setLastEventId(eventId);
@@ -71,7 +71,7 @@ public class AppViewModel extends AndroidViewModel {
 //        getFilePathFromInternalStorage(context);
         List<Event> allEvents = new ArrayList<>();
         getEventLiveData().observe(context, events -> {
-            if(events != null && events.size() > 0){
+            if (events != null && events.size() > 0) {
                 allEvents.addAll(events);
                 List<Hd_snips> hdSnips = new ArrayList<>();
                 getHDSnipsLiveData().observe(context, hd_snips -> {
@@ -83,11 +83,11 @@ public class AppViewModel extends AndroidViewModel {
                                     for (Hd_snips hdSnip : hdSnips) {
                                         if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {
                                             snip.setVideoFilePath(hdSnip.getVideo_path_processed());
-                                            for(Event event : allEvents){
-                                                if(event.getEvent_id() == snip.getEvent_id()){
-                                                    AppClass.getAppInstance().setEventSnipsFromDb(event,snip);
-                                                    if(snip.getParent_snip_id() == 0){
-                                                        AppClass.getAppInstance().setEventParentSnipsFromDb(event,snip);
+                                            for (Event event : allEvents) {
+                                                if (event.getEvent_id() == snip.getEvent_id()) {
+                                                    AppClass.getAppInstance().setEventSnipsFromDb(event, snip);
+                                                    if (snip.getParent_snip_id() == 0) {
+                                                        AppClass.getAppInstance().setEventParentSnipsFromDb(event, snip);
                                                     }
                                                 }
                                             }
@@ -102,6 +102,7 @@ public class AppViewModel extends AndroidViewModel {
         });
 
     }
+
     private static String VIDEO_DIRECTORY_NAME_VIRTUAL = "SnipBackVirtual";
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
     private ArrayList<String> thumbs = new ArrayList<>();
@@ -118,8 +119,8 @@ public class AppViewModel extends AndroidViewModel {
         if (photoDirectory.exists()) {
             File[] dirFiles = photoDirectory.listFiles();
             if (dirFiles != null && dirFiles.length != 0) {
-                for (int ii = 0; ii < dirFiles.length; ii++) {
-                    thumbs.add(dirFiles[ii].getAbsolutePath());
+                for (File dirFile : dirFiles) {
+                    thumbs.add(dirFile.getAbsolutePath());
                 }
             }
         }

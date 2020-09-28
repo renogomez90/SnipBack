@@ -11,12 +11,15 @@ import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Hd_snips;
 
 import java.util.List;
+
 @Dao
 public interface Hd_snipsDao {
     @Insert
     long insert(Hd_snips hd_snips);
+
     @Update
     void update(Hd_snips hd_snips);
+
     @Delete
     void delete(Hd_snips hd_snips);
 

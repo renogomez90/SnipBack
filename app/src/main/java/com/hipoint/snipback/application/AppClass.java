@@ -62,7 +62,7 @@ public class AppClass extends Application {
         return snipList;
     }
 
-    public void saveLastEvent(Event event){
+    public void saveLastEvent(Event event) {
         EventData eventData = new EventData();
         eventData.setEvent(event);
         allEventSnips.add(eventData);
@@ -75,7 +75,7 @@ public class AppClass extends Application {
             if (eventData.getEvent().getEvent_id() == eventId) {
 //                eventData.setEvent(eventData.getEvent());
                 eventData.addEventAllSnip(getSnips());
-                tempAllSnips.set(tempAllSnips.indexOf(eventData),eventData);
+                tempAllSnips.set(tempAllSnips.indexOf(eventData), eventData);
             }
         }
         allEventSnips = tempAllSnips;
@@ -120,7 +120,7 @@ public class AppClass extends Application {
             if (eventData.getEvent().getEvent_id() == eventId) {
 //                eventData.setEvent(eventData.getEvent());
                 eventData.addEventAllParentSnip(getParentSnips());
-                tempAllParents.set(tempAllParents.indexOf(eventData),eventData);
+                tempAllParents.set(tempAllParents.indexOf(eventData), eventData);
             }
         }
         eventParentSnips = tempAllParents;

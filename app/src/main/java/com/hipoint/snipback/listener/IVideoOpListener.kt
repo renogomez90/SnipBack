@@ -19,5 +19,5 @@ interface IVideoOpListener {
     }
 
     fun failed(operation: VideoOp)
-    fun changed(operation: VideoOp, outputVideoPath: String)
+    fun changed(operation: VideoOp, processedVideoPath: String)
 }

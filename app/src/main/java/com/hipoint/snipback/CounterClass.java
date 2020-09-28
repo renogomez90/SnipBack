@@ -22,7 +22,7 @@ public class CounterClass extends CountDownTimer {
             setListener(null);
             instance.cancel();
             instance = new CounterClass(millisInFuture, countDownInterval);
-        }else{
+        } else {
             instance = new CounterClass(millisInFuture, countDownInterval);
         }
         return instance;

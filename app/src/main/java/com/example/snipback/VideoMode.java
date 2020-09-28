@@ -22,12 +22,13 @@ import com.hipoint.snipback.fragment.TrialOver;
 
 public class VideoMode extends Fragment {
     private View rootView;
-    ImageButton gallery, settings,record_two;
+    ImageButton gallery, settings, record_two;
 
-    public  static  VideoMode newInstance() {
+    public static VideoMode newInstance() {
         VideoMode fragment = new VideoMode();
         return fragment;
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -39,7 +40,7 @@ public class VideoMode extends Fragment {
         gallery.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(FragmentGallery.newInstance(),true);
+                ((AppMainActivity) requireActivity()).loadFragment(FragmentGallery.newInstance(), true);
             }
         });
 
@@ -54,7 +55,7 @@ public class VideoMode extends Fragment {
         record_two.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity)getActivity()).loadFragment(TrialOver.newInstance(),true);
+                ((AppMainActivity) requireActivity()).loadFragment(TrialOver.newInstance(), true);
             }
         });
 
@@ -63,7 +64,7 @@ public class VideoMode extends Fragment {
 
     protected void showDialogSettingsMain() {
 
-        final Dialog dialog = new Dialog(getActivity());
+        final Dialog dialog = new Dialog(requireActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.fragment_settings);
@@ -75,11 +76,11 @@ public class VideoMode extends Fragment {
                 showDialogSettingsResolution();
             }
         });
-        RelativeLayout feedback=dialog.findViewById(R.id.con2);
+        RelativeLayout feedback = dialog.findViewById(R.id.con2);
         feedback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(Feedback_fragment.newInstance(),true);
+                ((AppMainActivity) requireActivity()).loadFragment(Feedback_fragment.newInstance(), true);
                 dialog.dismiss();
             }
         });
@@ -88,10 +89,9 @@ public class VideoMode extends Fragment {
     }
 
 
-
     protected void showDialogSettingsResolution() {
 
-        Dialog dialog = new Dialog(getActivity());
+        Dialog dialog = new Dialog(requireActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.fragment_resolution);

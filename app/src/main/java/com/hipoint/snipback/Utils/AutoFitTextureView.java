@@ -32,7 +32,7 @@ import com.hipoint.snipback.Utils.gesture.MoveGestureDetector;
 /**
  * A {@link TextureView} that can be adjusted to a specified aspect ratio.
  */
-public class AutoFitTextureView extends TextureView implements View.OnTouchListener{
+public class AutoFitTextureView extends TextureView implements View.OnTouchListener {
 
     private int mRatioWidth = 0;
     private int mRatioHeight = 0;
@@ -88,7 +88,7 @@ public class AutoFitTextureView extends TextureView implements View.OnTouchListe
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
 
-        if (motionEvent.getAction()==MotionEvent.ACTION_DOWN){
+        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
 
             if (motionEvent.getPointerCount() == 1) {
                 //MediaController show or hide

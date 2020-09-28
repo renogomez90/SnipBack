@@ -10,12 +10,12 @@
         android:text="Textview"
         android:textColor="@color/colorWhite"
         android:padding="6dp"
-        android:textSize="14sp"/>
+        android:textSize="14sp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/item_recycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/cat_title"/>
+        android:layout_below="@id/cat_title" />
 
 </RelativeLayout>

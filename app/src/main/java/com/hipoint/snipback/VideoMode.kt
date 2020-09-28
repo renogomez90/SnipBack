@@ -7,7 +7,6 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
-import android.app.DialogFragment
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -35,8 +34,9 @@ import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.Fragment
-import androidx.legacy.app.FragmentCompat
+import androidx.fragment.app.DialogFragment
 import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.Utils.CountUpTimer
 import com.hipoint.snipback.Utils.VideoUtils
@@ -71,6 +71,8 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted, IVideoOpListener {
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
@@ -80,7 +82,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private val videoUtils = VideoUtils(this@VideoMode)
     private var processingDialog: ProcessingDialog? = null
     private var parentSnip: Snip? = null
-//    private var actualClipTime = 0L
+
+    //    private var actualClipTime = 0L
     private var clipQueue: Queue<File>? = null
     private var persistentSurface = MediaCodec.createPersistentInputSurface()
 
@@ -141,25 +144,24 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val maxZoom = characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)!!
             val m = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
                     ?: return false
-            val action = event.action
-            val current_finger_spacing: Float
+            val currentFingerSpacing: Float
             //            setUpCaptureRequestBuilder(mPreviewBuilder);
             if (event.pointerCount == 2) {
                 // Multi touch logic
-                current_finger_spacing = getFingerSpacing(event)
+                currentFingerSpacing = getFingerSpacing(event)
                 var delta = 0.03f //control the zoom sensitivity
                 if (finger_spacing != 0f) {
-                    if (current_finger_spacing > finger_spacing) {
+                    if (currentFingerSpacing > finger_spacing) {
                         if (maxZoom - zoom_level <= delta) {
                             delta = (maxZoom - zoom_level).toFloat()
                         }
-                        zoom_level = zoom_level + delta
+                        zoom_level += delta
                         //                        seekBar.setProgress((int)zoom_level);
-                    } else if (current_finger_spacing < finger_spacing) {
+                    } else if (currentFingerSpacing < finger_spacing) {
                         if (zoom_level - delta < 1f) {
                             delta = (zoom_level - 1f).toFloat()
                         }
-                        zoom_level = zoom_level - delta
+                        zoom_level -= delta
                         //                        if (zoom_level == 1){
 //                            seekBar.setProgress(0);
 //                        } else {
@@ -177,12 +179,12 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             m.width() - croppedWidth / 2, m.height() - croppedHeight / 2)
                     mPreviewBuilder!!.set(CaptureRequest.SCALER_CROP_REGION, zoom)
                 }
-                finger_spacing = current_finger_spacing
-            } else {
+                finger_spacing = currentFingerSpacing
+            } /*else {
                 if (action == MotionEvent.ACTION_UP) {
                     //single touch logic
                 }
-            }
+            }*/
             try {
                 mPreviewSession!!.setRepeatingRequest(mPreviewBuilder!!.build(), null,
                         mBackgroundHandler)
@@ -206,7 +208,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun getFingerSpacing(event: MotionEvent): Float {
         val x = event.getX(0) - event.getX(1)
         val y = event.getY(0) - event.getY(1)
-        return Math.sqrt(x * x + y * y.toDouble()).toFloat()
+        return sqrt(x * x + y * y.toDouble()).toFloat()
     }
 
     interface OnTaskCompleted {
@@ -336,7 +338,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var mPreviewSession: CameraCaptureSession? = null
     //    AppMainActivity.MyOnTouchListener onTouchListener;
     //
-    //    private OnSwipeTouchListener touchListener=new OnSwipeTouchListener(getActivity()) {
+    //    private OnSwipeTouchListener touchListener=new OnSwipeTouchListener(requireActivity()) {
     //        public void impelinfragment() {
     //            //do what you want:D
     //            Log.i("swipe","swipe left");
@@ -415,9 +417,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 startRecordingVideo()
             } else startPreview()
             mCameraOpenCloseLock.release()
-            if (null != mTextureView) {
-                configureTransform(mTextureView.width, mTextureView.height)
-            }
+            configureTransform(mTextureView.width, mTextureView.height)
         }
 
         override fun onDisconnected(cameraDevice: CameraDevice) {
@@ -449,9 +449,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var settings: ImageButton
     private lateinit var recordButton: ImageButton
     private lateinit var recordStopButton: ImageButton
-    private lateinit var r_3_bookmark: ImageButton
+    private lateinit var r3Bookmark: ImageButton
     private lateinit var capturePrevious: ImageButton
-    private lateinit var r_2_shutter: ImageButton
+    private lateinit var r2Shutter: ImageButton
     private lateinit var tvTimer: TextView
     private lateinit var mChronometer: Chronometer
     private lateinit var blinkEffect: View
@@ -487,10 +487,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         zoomOut = rootView.findViewById(R.id.zoom_out_btn)
         zoomIn = rootView.findViewById(R.id.zoom_in_btn)
         recordStopButton.setOnClickListener(this)
-        r_3_bookmark = rootView.findViewById(R.id.r_3_bookmark)
-        r_3_bookmark.setOnClickListener(this)
-        r_2_shutter = rootView.findViewById(R.id.r_2_shutter)
-        r_2_shutter.setOnClickListener(this)
+        r3Bookmark = rootView.findViewById(R.id.r_3_bookmark)
+        r3Bookmark.setOnClickListener(this)
+        r2Shutter = rootView.findViewById(R.id.r_2_shutter)
+        r2Shutter.setOnClickListener(this)
         zoomFactor = rootView.findViewById(R.id.zoom_factor)
         zoomControlLayout.setOnClickListener(this)
         zoomIn.setOnClickListener(this)
@@ -499,9 +499,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         rlVideo.setOnClickListener(this)
         recordButton.setOnClickListener(this)
         capturePrevious.setOnClickListener(this)
-//        detector = new GestureFilter(getActivity(), this);
+//        detector = new GestureFilter(requireActivity(), this);
 
-//        ((AppMainActivity)getActivity()).registerMyOnTouchListener(new AppMainActivity.MyOnTouchListener() {
+//        ((AppMainActivity)requireActivity()).registerMyOnTouchListener(new AppMainActivity.MyOnTouchListener() {
 //            @Override
 //            public void onTouch(MotionEvent ev) {
 //                touchListener.onTouch(ev);
@@ -512,16 +512,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //        accessRoomDatabase();
         mTextureView.setOnClickListener(this)
         mTextureView.setOnTouchListener(this)
-        gallery.setOnClickListener(View.OnClickListener { v: View? -> (activity as AppMainActivity?)!!.loadFragment(FragmentGalleryNew.newInstance(), true) })
-        settings.setOnClickListener(View.OnClickListener { v: View? -> showDialogSettingsMain() })
+        gallery.setOnClickListener { (activity as AppMainActivity?)!!.loadFragment(FragmentGalleryNew.newInstance(), true) }
+        settings.setOnClickListener { showDialogSettingsMain() }
         appRepository = instance
-        mChronometer.onChronometerTickListener = OnChronometerTickListener { arg0: Chronometer? ->
+        mChronometer.onChronometerTickListener = OnChronometerTickListener {
 //                if (!resume) {
             val time = SystemClock.elapsedRealtime() - mChronometer.base
             val h = (time / 3600000).toInt()
             val m = (time - h * 3600000).toInt() / 60000
             val s = (time - h * 3600000 - m * 60000).toInt() / 1000
-            val t = (if (h < 10) "0$h" else h).toString() + ":" + (if (m < 10) "0$m" else m) + ":" + if (s < 10) "0$s" else s
+            val t = (if (h < 10) "0$h" else h.toString()) + ":" + (if (m < 10) "0$m" else m) + ":" + if (s < 10) "0$s" else s
             mChronometer.text = t
             val minutes = (SystemClock.elapsedRealtime() - mChronometer.base) / 1000 / 60
             val seconds = (SystemClock.elapsedRealtime() - mChronometer.base) / 1000 % 60
@@ -532,16 +532,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
         mMinZoom = getMinZoom()
         mMaxZoom = getMaxZoom() - 1
-        seekBar.max = Math.round(mMaxZoom - mMinZoom)
+        seekBar.max = (mMaxZoom - mMinZoom).roundToInt()
         seekBar.setOnSeekBarChangeListener(
                 object : OnSeekBarChangeListener {
                     override fun onStopTrackingTouch(seekBar: SeekBar) {
-                        setCurrentZoom(Math.round(mMinZoom + 1 + mProgress * zoomStep).toFloat())
+                        setCurrentZoom((mMinZoom + 1 + mProgress * zoomStep).roundToInt().toFloat())
                     }
 
                     override fun onStartTrackingTouch(seekBar: SeekBar) {}
                     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                        setCurrentZoom(Math.round(mMinZoom + 1 + progress.toFloat() * zoomStep).toFloat())
+                        setCurrentZoom((mMinZoom + 1 + progress.toFloat() * zoomStep).roundToInt().toFloat())
                         if (fromUser) mProgress = progress.toFloat()
                     }
                 }
@@ -578,11 +578,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val characteristics = manager.getCameraCharacteristics(mCameraId)
             val maxZoom = characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)!!
             val activeRect = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
-            if (zoomLevel <= maxZoom && zoomLevel >= 1) {
+            if (zoomLevel in 1.0..maxZoom.toDouble()) {
                 val ratio = 1.toFloat() / zoomLevel //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
                 //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
-                val croppedWidth = activeRect!!.width() - Math.round(activeRect.width().toFloat() * ratio)
-                val croppedHeight = activeRect.height() - Math.round(activeRect.height().toFloat() * ratio)
+                val croppedWidth = activeRect!!.width() - (activeRect.width().toFloat() * ratio).roundToInt()
+                val croppedHeight = activeRect.height() - (activeRect.height().toFloat() * ratio).roundToInt()
                 //Finally, zoom represents the zoomed visible area
                 return Rect(croppedWidth / 2, croppedHeight / 2,
                         activeRect.width() - croppedWidth / 2, activeRect.height() - croppedHeight / 2)
@@ -637,13 +637,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 if (recordClips) recordClips = false
                 recordPressed = true
 //                startRecordingVideo()
-                if(mIsRecordingVideo){
+                if (mIsRecordingVideo) {
                     restartRecording()
 
                     mChronometer.base = SystemClock.elapsedRealtime()
                     mChronometer.start()
                     mChronometer.visibility = View.VISIBLE
-                }else{
+                } else {
                     startRecordingVideo()
                 }
 
@@ -760,7 +760,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //                    Log.d(TAG, "IOException while closing the stream");
 //                    e.printStackTrace();
 //                }
-                getVideoThumbnailclick(File(outputFilePath))
+                getVideoThumbnailClick(File(outputFilePath!!))
                 rlVideo.clearAnimation()
             }
             R.id.texture -> {
@@ -809,7 +809,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue")
                         videoUtils.trimToClip(clip,
                                 "${clip.parent}/trimmed-${clip.name}",
-                                ((actualClipTime - swipeValue/1000).toInt()),
+                                ((actualClipTime - swipeValue / 1000).toInt()),
                                 actualClipTime)
                     }
                 } else { //  save what we have
@@ -847,7 +847,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    protected fun showDialogSettingsMain() {
+    private fun showDialogSettingsMain() {
         val dialog = Dialog(requireActivity())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
@@ -862,7 +862,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         dialog.show()
     }
 
-    protected fun showDialogSettingsResolution() {
+    private fun showDialogSettingsResolution() {
         val dialog = Dialog(requireActivity())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
@@ -932,10 +932,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         break
                     }
                 }
-            } else {
-                /* ErrorDialog.newInstance(getString(R.string.permission_request))
-                        .show(getChildFragmentManager(), FRAGMENT_DIALOG);*/
-            }
+            } /*else {
+                 ErrorDialog.newInstance(getString(R.string.permission_request))
+                        .show(getChildFragmentManager(), FRAGMENT_DIALOG)
+            }*/
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         }
@@ -959,11 +959,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             requestVideoPermissions()
             return
         }
-        val activity: Activity? = activity
-        if (null == activity || activity.isFinishing) {
+
+        if (null == activity || requireActivity().isFinishing) {
             return
         }
-        val manager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val manager = requireActivity().getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             Log.d(TAG, "tryAcquire")
             if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
@@ -998,7 +998,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             manager.openCamera(cameraId, mStateCallback, mBackgroundHandler)
         } catch (e: CameraAccessException) {
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show()
-            activity.finish()
+            requireActivity().finish()
         } catch (e: NullPointerException) {
             // Currently an NPE is thrown when the Camera2API is used but not supported on the
             // device this code runs.
@@ -1009,8 +1009,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    fun requestPermission() {
-        Dexter.withActivity(activity).withPermissions(Manifest.permission.CAMERA,
+    private fun requestPermission() {
+        Dexter.withContext(requireContext()).withPermissions(Manifest.permission.CAMERA,
                 Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -1034,7 +1034,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     override fun onPermissionRationaleShouldBeShown(permissions: List<PermissionRequest>, token: PermissionToken) {
                         token.continuePermissionRequest()
                     }
-                }).withErrorListener { error: DexterError? -> Toast.makeText(requireActivity().applicationContext, "Error occurred! ", Toast.LENGTH_SHORT).show() }
+                }).withErrorListener { Toast.makeText(requireActivity().applicationContext, "Error occurred! ", Toast.LENGTH_SHORT).show() }
                 .onSameThread()
                 .check()
     }
@@ -1044,7 +1044,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         builder.apply {
             setTitle(getString(R.string.message_need_permission))
             setMessage(getString(R.string.message_permission))
-            setPositiveButton(getString(R.string.title_go_to_setting)) { dialog: DialogInterface, which: Int ->
+            setPositiveButton(getString(R.string.title_go_to_setting)) { dialog: DialogInterface, _: Int ->
                 dialog.cancel()
                 openSettings()
             }
@@ -1109,7 +1109,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         }
 
                         override fun onConfigureFailed(session: CameraCaptureSession) {
-                            val activity: Activity? = activity
+                            activity
                             if (null != activity) {
                                 Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
                             }
@@ -1152,11 +1152,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * @param viewHeight The height of `mTextureView`
      */
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
-        val activity: Activity? = activity
-        if (null == mTextureView || null == mPreviewSize || null == activity) {
+        activity
+        if (null == mPreviewSize || null == activity) {
             return
         }
-        val rotation = activity.windowManager.defaultDisplay.rotation
+        val rotation = requireActivity().windowManager.defaultDisplay.rotation
         val matrix = Matrix()
         val viewRect = RectF(0F, 0F, viewWidth.toFloat(), viewHeight.toFloat())
         val bufferRect = RectF(0F, 0F, mPreviewSize!!.height.toFloat(), mPreviewSize!!.width.toFloat())
@@ -1193,9 +1193,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         * todo: use media recorder setInputSurface for persistent surface
         *  Don't use mediaRecorder. */
 
-        val activity = activity ?: return
+        if(activity == null)
+            return
+
         mMediaRecorder!!.reset()
-        val rotation = activity.windowManager.defaultDisplay.rotation
+        val rotation = requireActivity().windowManager.defaultDisplay.rotation
         when (mSensorOrientation) {
             SENSOR_ORIENTATION_DEFAULT_DEGREES -> mMediaRecorder!!.setOrientationHint(DEFAULT_ORIENTATIONS[rotation])
             SENSOR_ORIENTATION_INVERSE_DEGREES -> mMediaRecorder!!.setOrientationHint(INVERSE_ORIENTATIONS[rotation])
@@ -1227,7 +1229,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //        mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
 //        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
 //        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
-            setOnInfoListener { mr, what, extra ->
+            setOnInfoListener { mr, what, _ ->
                 if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED && recordClips) {
                     try {
 //                        startRecordingVideo()
@@ -1257,7 +1259,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //        if (recordClips) {
     //        }
     ?
-        private get() {
+        get() {
             if (clipQueue == null) {
                 clipQueue = LinkedList()
             }
@@ -1327,7 +1329,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
 
                 override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
-                    val activity: Activity? = activity
+                    activity
                     if (null != activity) {
                         Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
                     }
@@ -1469,11 +1471,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     class ErrorDialog : DialogFragment() {
-        override fun onCreateDialog(savedInstanceState: Bundle): Dialog {
-            val activity = activity
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             return AlertDialog.Builder(activity)
-                    .setMessage(arguments.getString(ARG_MESSAGE))
-                    .setPositiveButton(android.R.string.ok) { dialogInterface, i -> activity.finish() }
+                    .setMessage(arguments?.getString(ARG_MESSAGE))
+                    .setPositiveButton(android.R.string.ok) { _, _ -> activity?.finish() }
                     .create()
         }
 
@@ -1490,21 +1491,19 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     class ConfirmationDialog : DialogFragment() {
-        override fun onCreateDialog(savedInstanceState: Bundle): Dialog {
-            val parent = parentFragment
+        override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
             return AlertDialog.Builder(activity)
                     .setMessage(R.string.permission_request)
-                    .setPositiveButton(android.R.string.ok) { dialog, which ->
-                        FragmentCompat.requestPermissions(parent, VIDEO_PERMISSIONS,
-                                REQUEST_VIDEO_PERMISSIONS)
+                    .setPositiveButton(android.R.string.ok) { _, _ ->
+                        requestPermissions(requireActivity(), VIDEO_PERMISSIONS,REQUEST_VIDEO_PERMISSIONS)
                     }
                     .setNegativeButton(android.R.string.cancel
-                    ) { dialog, which -> parent.activity.finish() }
+                    ) { _, _ -> requireActivity().finish() }
                     .create()
         }
     }
 
-    fun saveSnipToDB(parentSnip: Snip?, filePath: String?) {
+    private fun saveSnipToDB(parentSnip: Snip?, filePath: String?) {
 //        String chronoText = mChronometer.getText().toString();
 //        Log.e("chrono m reading",chronoText);
         val snipDurations = AppClass.getAppInstance().snipDurations
@@ -1550,7 +1549,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //                    }
 //                }
 //            }
-//            ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance());
+//            ((AppMainActivity) requireActivity()).loadFragment(FragmentGalleryNew.newInstance());
 
 //        });
 
@@ -1644,7 +1643,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    private fun getVideoThumbnailclick(videoFile: File) {
+    private fun getVideoThumbnailClick(videoFile: File) {
         try {
             val mediaStorageDir = File(Environment.getExternalStorageDirectory(),
                     VIDEO_DIRECTORY_NAME1)
@@ -1724,7 +1723,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     //                break;
     //
     //        }
-    //        Toast.makeText(getActivity(), showToastMessage, Toast.LENGTH_SHORT).show();
+    //        Toast.makeText(requireActivity(), showToastMessage, Toast.LENGTH_SHORT).show();
     //    }
     //    public  void accessRoomDatabase(){
     //        //Inserting data to Table
@@ -1844,7 +1843,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun getMetadataDurations(filePathList: List<String>): List<Int> {
         val durationList = arrayListOf<Int>()
         val retriever = MediaMetadataRetriever()
-        var duration = 0
+        var duration: Int
         filePathList.forEach {
             retriever.setDataSource(it)
             duration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()

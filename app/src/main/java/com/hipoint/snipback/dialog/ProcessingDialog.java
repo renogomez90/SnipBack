@@ -14,7 +14,7 @@ import java.util.Objects;
 
 /**
  * Shows a progress dialog with useful information to intimate the user of ongoing background work
- * */
+ */
 public class ProcessingDialog extends Dialog {
 
     public ProcessingDialog(@NonNull Context context) {

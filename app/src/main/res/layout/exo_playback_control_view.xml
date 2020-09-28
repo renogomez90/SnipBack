@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Copyright (C) 2016 The Android Open Source Project
+<?xml version="1.0" encoding="utf-8"?><!-- Copyright (C) 2016 The Android Open Source Project
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -14,122 +13,122 @@
      limitations under the License.
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_gravity="bottom"
     android:layoutDirection="ltr"
     android:orientation="vertical">
-
 
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:paddingTop="4dp"
         android:orientation="horizontal"
+        android:paddingTop="4dp"
         android:visibility="gone">
 
 
         <ImageView
-            android:layout_width="24dp"
+            android:contentDescription="@string/no_desc"
             android:id="@+id/exo_controller"
+            android:layout_width="24dp"
             android:layout_height="24dp" />
-<!--        android:src="@drawable/ic_hide"-->
+        <!--        android:src="@drawable/ic_hide"-->
 
 
-        <ImageButton android:id="@id/exo_play"
-            style="@style/ExoMediaButton.Play"/>
+        <ImageButton
+            android:id="@id/exo_play"
+            style="@style/ExoMediaButton.Play"
+            android:contentDescription="@string/play_btn" />
 
-        <ImageButton android:id="@id/exo_pause"
-            style="@style/ExoMediaButton.Pause"/>
+        <ImageButton
+            android:id="@id/exo_pause"
+            style="@style/ExoMediaButton.Pause"
+            android:contentDescription="@string/pause_btn" />
 
 
     </LinearLayout>
 
-    <RelativeLayout
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/seek"
+        android:layout_above="@id/seek"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/background_video_timer">
 
-        >
-        <LinearLayout
+        <TextView
+            android:id="@+id/exo_position"
+            android:layout_width="50dp"
+            android:layout_height="32dp"
+            android:fontFamily="@font/barlow_semibold"
+            android:gravity="center"
+            android:text="00:00/00:08"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="15sp" />
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="32dp"
-            android:layout_marginBottom="6dp"
-            android:background="@drawable/background_video_timer"
-            android:layout_alignParentEnd="true">
-            <TextView
-                android:id="@+id/exo_position"
-                android:layout_width="50dp"
-                android:layout_height="32dp"
-                android:gravity="center"
-                android:fontFamily="@font/barlow_semibold"
-                android:textSize="15dp"
-                android:textColor="@color/colorPrimaryWhite"
-                android:text="00:00/00:08"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/colorPrimaryWhite"
-                android:text="/"/>
-            <TextView
-                android:id="@+id/exo_duration"
-                android:layout_width="50dp"
-                android:layout_height="32dp"
-                android:gravity="center"
-                android:fontFamily="@font/barlow_semibold"
-                android:textSize="15dp"
-                android:textColor="@color/colorPrimaryWhite"
-                android:text="00:00/00:08"/>
-        </LinearLayout>
+            android:text="/"
+            android:textColor="@color/colorPrimaryWhite" />
 
-
-    </RelativeLayout>
+        <TextView
+            android:id="@+id/exo_duration"
+            android:layout_width="50dp"
+            android:layout_height="32dp"
+            android:fontFamily="@font/barlow_semibold"
+            android:gravity="center"
+            android:text="00:00/00:08"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="15sp" />
+    </LinearLayout>
 
 
     <LinearLayout
         android:id="@+id/seek"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:background="@color/bottom_menu"
         android:layout_alignParentBottom="true"
+        android:background="@color/bottom_menu"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
-        <TextView android:id="@id/exo_position"
+        <TextView
+            android:id="@id/exo_position"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:includeFontPadding="false"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textColor="#FFBEBEBE"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp"
-            android:includeFontPadding="false"
-            android:visibility="visible"
-            android:textColor="#FFBEBEBE"/>
+            android:visibility="visible" />
 
 
-
-       <com.google.android.exoplayer2.ui.DefaultTimeBar
+        <com.google.android.exoplayer2.ui.DefaultTimeBar
             android:id="@id/exo_progress"
             android:layout_width="0dp"
-           android:layout_weight="1"
-           app:unplayed_color="#FFBEBEBE"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
             app:buffered_color="#FFBEBEBE"
             app:played_color="@color/colorPrimaryAccentRed"
-            android:layout_height="wrap_content"/>
+            app:unplayed_color="#FFBEBEBE" />
 
-        <TextView android:id="@id/exo_duration"
+        <TextView
+            android:id="@id/exo_duration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:paddingLeft="4dp"
-            android:paddingRight="4dp"
             android:includeFontPadding="false"
-            android:textColor="#FFBEBEBE"/>
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            android:textColor="#FFBEBEBE"
+            android:textSize="14sp"
+            android:textStyle="bold" />
 
     </LinearLayout>
 

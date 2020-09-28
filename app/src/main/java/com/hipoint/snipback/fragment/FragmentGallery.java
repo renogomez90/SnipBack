@@ -67,15 +67,14 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
     RelativeLayout relativeLayout_menu, relativeLayout_autodeleteactions, layout_autodelete, layout_filter, layout_multidelete, click, import_con;
 
     public static FragmentGallery newInstance() {
-        FragmentGallery fragment = new FragmentGallery();
-        return fragment;
+        return new FragmentGallery();
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
         import_con = rootView.findViewById(R.id.import_con);
         player_view_image = rootView.findViewById(R.id.player_view_image);
@@ -103,15 +102,15 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
 //        List<Snip> allSnips = AppClass.getAppInsatnce().getAllSnip();
 
 //        recycler_view.setHasFixedSize(true);
-//        recycler_view.setLayoutManager(new GridLayoutManager(getActivity(), 3));
-//        AdapterGallery adapterGallery = new AdapterGallery(getActivity(), allSnips, FragmentGallery.this);
+//        recycler_view.setLayoutManager(new GridLayoutManager(requireActivity(), 3));
+//        AdapterGallery adapterGallery = new AdapterGallery(requireActivity(), allSnips, FragmentGallery.this);
 //
 //        recycler_view.setAdapter(adapterGallery);
 
 
-        camera_button.setOnClickListener(v -> ((AppMainActivity) getActivity()).loadFragment(FragmentTrimVideo.newInstance(),true));
+        camera_button.setOnClickListener(v -> ((AppMainActivity) requireActivity()).loadFragment(FragmentTrimVideo.newInstance(), true));
         menu_button.setOnClickListener(v -> {
-            final Dialog dialog = new Dialog(getActivity());
+            final Dialog dialog = new Dialog(requireActivity());
             view_button.setImageResource(R.drawable.ic_view_unselected);
             view_label.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
             Window window = dialog.getWindow();
@@ -138,7 +137,7 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
                     relativeLayout_autodeleteactions.setVisibility(View.GONE);
                     autodelete_arrow.setImageResource(R.drawable.ic_forward);
                     dialog.cancel();
-                    ((AppMainActivity) getActivity()).loadFragment(FragmentMultiDeletePhoto.newInstance(),true);
+                    ((AppMainActivity) requireActivity()).loadFragment(FragmentMultiDeletePhoto.newInstance(), true);
 
 
                 }
@@ -163,7 +162,7 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
         filter_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Dialog dialogFilter = new Dialog(getActivity());
+                final Dialog dialogFilter = new Dialog(requireActivity());
                 Window window = dialogFilter.getWindow();
                 filter_button.setImageResource(R.drawable.ic_filter_selected);
                 filter_label.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
@@ -175,8 +174,8 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
         click.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                ((AppMainActivity) getActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
-//                Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+//                ((AppMainActivity) requireActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
+//                Intent intent = new Intent(requireActivity(), ActivityPlayVideo.class);
 //                intent.putExtra("uri", uri.toString());
 //                startActivity(intent);
 
@@ -190,25 +189,26 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
         if (resultCode == RESULT_OK) {
             if (requestCode == 1111) {
                 uri = data.getData();
-                String videopath = uri.getPath();
-                File file = new File(videopath);
-                Log.e("path", file.getAbsolutePath());
-                recycler_view.setVisibility(View.GONE);
-                import_con.setVisibility(View.VISIBLE);
-                click.setVisibility(View.VISIBLE);
-                Glide.with(getActivity())
-                        .load(uri)
-                        .override(145, 145)
-                        .into(player_view_image);
+                if (uri != null && uri.getPath() != null) {
+                    String videopath = uri.getPath();
+                    File file = new File(videopath);
+                    Log.e("path", file.getAbsolutePath());
+                    recycler_view.setVisibility(View.GONE);
+                    import_con.setVisibility(View.VISIBLE);
+                    click.setVisibility(View.VISIBLE);
+                    Glide.with(requireActivity())
+                            .load(uri)
+                            .override(145, 145)
+                            .into(player_view_image);
 
-
+                }
             }
         }
     }
 
     @Override
     public void onItemClick(Snip snipvideopath) {
-//        Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+//        Intent intent = new Intent(requireActivity(), ActivityPlayVideo.class);
 //        intent.putExtra("snip", snipvideopath);
 //        startActivity(intent);
     }

@@ -8,16 +8,15 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottom_menu">
+        android:layout_above="@id/bottom_menu">
 
         <com.google.android.exoplayer2.ui.PlayerView
             android:id="@+id/player_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@+id/photolabel"
             android:layout_gravity="center"
             app:controller_layout_id="@layout/exo_controls"
-            app:use_controller="true"/>
+            app:use_controller="true" />
     </FrameLayout>
 
     <LinearLayout
@@ -34,12 +33,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="2dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -50,13 +50,13 @@
                 android:id="@+id/edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/edit"
+                android:layout_below="@id/edit"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Camera"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -64,12 +64,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/tag"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -80,13 +81,13 @@
                 android:id="@+id/tag_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/tag"
+                android:layout_below="@id/tag"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Tag"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -94,12 +95,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/shutter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -110,13 +112,13 @@
                 android:id="@+id/shutter_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/shutter"
+                android:layout_below="@id/shutter"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Shutter"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -124,12 +126,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/_button_share"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -140,13 +143,13 @@
                 android:id="@+id/_button_share_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/_button_share"
+                android:layout_below="@id/_button_share"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Share"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -154,12 +157,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="20dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/button_delete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -170,14 +174,14 @@
                 android:id="@+id/button_delete_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/button_delete"
+                android:layout_below="@id/button_delete"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Delete"
 
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
     </LinearLayout>
 </RelativeLayout>

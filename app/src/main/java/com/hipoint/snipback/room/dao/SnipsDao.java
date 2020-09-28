@@ -12,6 +12,7 @@ import androidx.room.Update;
 import com.hipoint.snipback.room.entities.Snip;
 
 import java.util.List;
+
 @Dao
 public interface SnipsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)

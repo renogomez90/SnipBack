@@ -29,6 +29,7 @@ public class EventData {
     public void addEventAllSnip(List<Snip> newSnip) {
         snips.addAll(newSnip);
     }
+
     public void addEventAllParentSnip(List<Snip> newSnip) {
         parentSnip.addAll(newSnip);
     }
@@ -48,8 +49,8 @@ public class EventData {
         for (Snip snip : snips) {
             if (snip.getSnip_id() == newSnip.getSnip_id()) {
                 int index = snips.indexOf(newSnip);
-                if(index >= 0) {
-                    snips.set(index,newSnip);
+                if (index >= 0) {
+                    snips.set(index, newSnip);
                 }
             }
         }
@@ -63,16 +64,16 @@ public class EventData {
 //        }
     }
 
-    public void clearSnip(){
-        if(snips.size() > 0) snips.clear();
+    public void clearSnip() {
+        if (snips.size() > 0) snips.clear();
     }
 
     public void addEventParentSnip(Snip snip) {
         int index = parentSnip.size() > 0 ? parentSnip.indexOf(snip) : -1;
-        if(index >= 0){
+        if (index >= 0) {
             this.parentSnip.remove(index);
-            this.parentSnip.add(index,snip);
-        }else {
+            this.parentSnip.add(index, snip);
+        } else {
             this.parentSnip.add(snip);
         }
     }

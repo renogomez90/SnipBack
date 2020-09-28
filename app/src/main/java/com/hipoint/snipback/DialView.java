@@ -53,21 +53,20 @@ public abstract class DialView extends View {
                     case MotionEvent.ACTION_MOVE:
                         if (isDragging) {
                             float touchAngle = touchAngle(touchX, touchY);
-                            if(touchAngle>=0&&touchAngle<=180)
-                                modifiedtouchAngle=touchAngle;
+                            if (touchAngle >= 0 && touchAngle <= 180)
+                                modifiedtouchAngle = touchAngle;
                             else
-                                modifiedtouchAngle=360+touchAngle;
-                            if(modifiedtouchAngle>=lastAngle-10&&modifiedtouchAngle<=lastAngle+10) {
+                                modifiedtouchAngle = 360 + touchAngle;
+                            if (modifiedtouchAngle >= lastAngle - 10 && modifiedtouchAngle <= lastAngle + 10) {
                                 deltaAngle = (360 + touchAngle - startAngle + 180) % 360 - 180;
                                 Log.e("delta angle", deltaAngle + "");
                                 if (Math.abs(deltaAngle) > stepAngle) {
                                     int offset = (int) (deltaAngle / stepAngle);
                                     offsetSum += offset;
-                                    if(offsetSum<1)
-                                        offsetSum=1;
-                                    else
-                                    if(offsetSum>99)
-                                        offsetSum=99;
+                                    if (offsetSum < 1)
+                                        offsetSum = 1;
+                                    else if (offsetSum > 99)
+                                        offsetSum = 99;
                                     startAngle = touchAngle;
                                     lastAngle = offsetSum * 3.6f;
                                     onRotate(offset);
@@ -77,8 +76,8 @@ public abstract class DialView extends View {
                         }
                         break;
                     case MotionEvent.ACTION_UP:
-                        Log.e("in Action Up","in Action Up");
-                        handler.postDelayed(delay=new Runnable() {
+                        Log.e("in Action Up", "in Action Up");
+                        handler.postDelayed(delay = new Runnable() {
                             @Override
                             public void run() {
                                 CircularSeekBar.relativeLayout.setVisibility(View.INVISIBLE);
@@ -96,8 +95,8 @@ public abstract class DialView extends View {
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        centerX = getMeasuredWidth()/2f;
-        centerY = getMeasuredHeight()/2f;
+        centerX = getMeasuredWidth() / 2f;
+        centerY = getMeasuredHeight() / 2f;
         super.onLayout(changed, l, t, r, b);
     }
 
@@ -107,15 +106,15 @@ public abstract class DialView extends View {
         radius = Math.min(getMeasuredWidth(), getMeasuredHeight()) / 2f;
         Paint paintGrey = new Paint();
         paintGrey.setColor(0xffcccccc);
-        Paint innerCirclePaint=new Paint();
+        Paint innerCirclePaint = new Paint();
         innerCirclePaint.setColor(0x00000000);
         innerCirclePaint.setAlpha(100);
-        canvas.drawCircle(centerX, centerY, (minCircle) * radius,innerCirclePaint);
+        canvas.drawCircle(centerX, centerY, (minCircle) * radius, innerCirclePaint);
         drawArcSegment(canvas, centerX, centerY, (minCircle) * radius, (maxCircle) * radius, 0, 360, paintGrey, paintGrey);
         Paint progressPaint = new Paint();
         progressPaint.setColor(Color.parseColor(Swipper.color));
-        if(offsetSum>=0)
-            drawArcSegment(canvas, centerX, centerY, (minCircle) * radius, (maxCircle) * radius, -90,offsetSum*3.6f, progressPaint, progressPaint);
+        if (offsetSum >= 0)
+            drawArcSegment(canvas, centerX, centerY, (minCircle) * radius, (maxCircle) * radius, -90, offsetSum * 3.6f, progressPaint, progressPaint);
         super.onDraw(canvas);
 
     }
@@ -136,8 +135,8 @@ public abstract class DialView extends View {
         float dY2 = (float) Math.pow(centerY - touchY, 2);
         float distToCenter = (float) Math.sqrt(dX2 + dY2);
         float baseDist = Math.min(centerX, centerY);
-        float minDistToCenter = minCircle * baseDist-02f;
-        float maxDistToCenter = maxCircle * baseDist+0.2f;
+        float minDistToCenter = minCircle * baseDist - 02f;
+        float maxDistToCenter = maxCircle * baseDist + 0.2f;
         return distToCenter >= minDistToCenter && distToCenter <= maxDistToCenter;
     }
 
@@ -149,8 +148,7 @@ public abstract class DialView extends View {
 
     protected abstract void onRotate(int offset);
 
-    public void drawAgain()
-    {
+    public void drawAgain() {
         invalidate();
     }
 
@@ -181,10 +179,10 @@ public abstract class DialView extends View {
             can.drawPath(segmentPath, stroke);
         }
     }
-    public void setLastAngle(float lastangle)
-    {
-        lastAngle=lastangle;
-        offsetSum=(int)(lastangle/stepAngle);
+
+    public void setLastAngle(float lastangle) {
+        lastAngle = lastangle;
+        offsetSum = (int) (lastangle / stepAngle);
     }
 
 }

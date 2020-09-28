@@ -10,34 +10,33 @@
     <RelativeLayout
         android:layout_width="300dp"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/bottom_menu"
+        android:layout_above="@id/bottom_menu"
         android:layout_centerInParent="true">
 
         <VideoView
             android:id="@+id/videoView"
-            android:layout_centerInParent="true"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-      />
+            android:layout_centerInParent="true" />
     </RelativeLayout>
 
     <ImageButton
         android:id="@+id/tvConvertToReal"
         android:layout_width="120dp"
         android:layout_height="40dp"
-        android:background="@drawable/v_real"
-        android:layout_marginTop="10dp"
         android:layout_marginStart="10dp"
-        android:contentDescription="TODO"
-        android:visibility="invisible"/>
+        android:layout_marginTop="10dp"
+        android:background="@drawable/v_real"
+        android:contentDescription="@string/no_desc"
+        android:visibility="invisible" />
 
     <RelativeLayout
         android:id="@+id/back_arrow"
         android:layout_width="43dp"
         android:layout_height="43dp"
-        android:layout_above="@+id/bottom_menu"
+        android:layout_above="@id/bottom_menu"
         android:layout_alignParentBottom="true"
-        android:layout_marginLeft="37dp"
+        android:layout_marginStart="37dp"
         android:layout_marginBottom="86dp"
         android:background="@drawable/background_black_round"
         android:gravity="center">
@@ -45,6 +44,7 @@
         <ImageView
             android:layout_width="20dp"
             android:layout_height="12dp"
+            android:contentDescription="@string/no_desc"
             android:src="@drawable/ic_back_arrow" />
     </RelativeLayout>
 
@@ -52,17 +52,18 @@
         android:id="@+id/button_camera"
         android:layout_width="43dp"
         android:layout_height="43dp"
-        android:layout_above="@+id/bottom_menu"
+        android:layout_above="@id/bottom_menu"
         android:layout_alignParentBottom="true"
-        android:layout_marginLeft="24dp"
+        android:layout_marginStart="24dp"
         android:layout_marginBottom="86dp"
-        android:layout_toRightOf="@+id/back_arrow"
+        android:layout_toRightOf="@id/back_arrow"
         android:background="@drawable/background_black_round"
         android:gravity="center">
 
         <ImageView
             android:layout_width="19dp"
             android:layout_height="13dp"
+            android:contentDescription="@string/no_desc"
             android:src="@drawable/ic_camera" />
     </RelativeLayout>
 
@@ -72,8 +73,8 @@
         android:layout_width="41dp"
         android:layout_height="41dp"
         android:layout_centerInParent="true"
-        android:layout_marginLeft="37dp"
-        android:layout_toLeftOf="@+id/play_pause_holder"
+        android:layout_marginStart="37dp"
+        android:layout_toStartOf="@id/play_pause_holder"
         android:background="@drawable/background_play_pouse"
         android:gravity="center"
         android:visibility="invisible">
@@ -81,6 +82,7 @@
         <ImageView
             android:layout_width="11dp"
             android:layout_height="13dp"
+            android:contentDescription="@string/no_desc"
             android:src="@drawable/ic_play_back" />
     </RelativeLayout>
 
@@ -109,8 +111,8 @@
         android:layout_width="41dp"
         android:layout_height="41dp"
         android:layout_centerInParent="true"
-        android:layout_marginLeft="37dp"
-        android:layout_toRightOf="@+id/play_pause_holder"
+        android:layout_marginStart="37dp"
+        android:layout_toEndOf="@id/play_pause_holder"
         android:background="@drawable/background_play_pouse"
         android:gravity="center"
         android:visibility="invisible">
@@ -118,6 +120,7 @@
         <ImageView
             android:layout_width="11dp"
             android:layout_height="13dp"
+            android:contentDescription="@string/no_desc"
             android:src="@drawable/ic_play_forward" />
     </RelativeLayout>
 
@@ -126,7 +129,7 @@
         android:id="@+id/exo_duration"
         android:layout_width="103dp"
         android:layout_height="28dp"
-        android:layout_above="@+id/bottom_menu"
+        android:layout_above="@id/bottom_menu"
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="15dp"
@@ -141,7 +144,7 @@
     <!--        android:id="@+id/videoView"-->
     <!--        android:layout_width="match_parent"-->
     <!--        android:layout_height="match_parent"-->
-    <!--        android:layout_below="@+id/photolabel"-->
+    <!--        android:layout_below="@id/photolabel"-->
     <!--        android:background="#FFF"-->
     <!--        android:focusable="true"-->
     <!--        android:visibility="visible"-->
@@ -160,20 +163,20 @@
         style="@style/Base.Widget.AppCompat.SeekBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/bottom_menu"
-        android:theme="@style/SeekBar"/>
+        android:layout_above="@id/bottom_menu"
+        android:theme="@style/SeekBar" />
 
     <com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar
         android:id="@+id/range_seek_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/bottom_menu"
+        android:layout_above="@id/bottom_menu"
         android:elevation="4dp"
         android:padding="4dp"
         android:visibility="gone"
         app:bar_color="@color/colorWhiteLt"
         app:bar_highlight_color="@color/colorThemeRed"
-        app:data_type="_integer"/>
+        app:data_type="_integer" />
     <!--        app:left_thumb_image="@drawable/ic_min_seek"-->
     <!--        app:right_thumb_image="@drawable/ic_max_seek"-->
     <!--        />-->
@@ -182,12 +185,12 @@
         android:id="@+id/seekbar_controller"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/bottom_menu"
+        android:layout_above="@id/bottom_menu"
         android:elevation="4dp"
         android:padding="8dp"
         android:visibility="gone"
         app:bar_color="@color/colorWhiteLt"
-        app:bar_highlight_color="@color/colorThemeRed"/>
+        app:bar_highlight_color="@color/colorThemeRed" />
     <!--        app:left_thumb_image="@drawable/ic_vertical_line"-->
     <!--        />-->
 
@@ -195,8 +198,8 @@
         android:id="@+id/frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/bottom_menu"
-        android:background="#000000"/>
+        android:layout_above="@id/bottom_menu"
+        android:background="#000000" />
 
     <LinearLayout
         android:id="@+id/bottom_menu"
@@ -204,15 +207,16 @@
         android:layout_height="67dp"
         android:layout_alignParentBottom="true"
         android:background="@color/bottom_menu"
-        android:baselineAligned="false" android:gravity="center">
+        android:baselineAligned="false"
+        android:gravity="center">
 
         <RelativeLayout
             android:id="@+id/layout_edit"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="20dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="2dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
@@ -221,19 +225,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_edit_one" />
 
             <TextView
                 android:id="@+id/edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/edit"
+                android:layout_below="@id/edit"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Camera"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -241,8 +246,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
@@ -251,19 +256,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_edit_one" />
 
             <TextView
                 android:id="@+id/tag_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/tag"
+                android:layout_below="@id/tag"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Tag"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -271,8 +277,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
@@ -281,19 +287,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_shutter" />
 
             <TextView
                 android:id="@+id/shutter_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/shutter"
+                android:layout_below="@id/shutter"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Shutter"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -301,8 +308,8 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="2dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
@@ -311,19 +318,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_share" />
 
             <TextView
                 android:id="@+id/_button_share_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/_button_share"
+                android:layout_below="@id/_button_share"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Share"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -331,8 +339,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_marginLeft="2dp"
-            android:layout_marginRight="20dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="20dp"
             android:layout_weight="0.2"
             android:gravity="center">
 
@@ -341,20 +349,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_delete_white" />
 
             <TextView
                 android:id="@+id/button_delete_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/button_delete"
+                android:layout_below="@id/button_delete"
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Delete"
 
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
     </LinearLayout>
 

@@ -12,7 +12,7 @@ import android.view.*
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.exozet.android.core.extensions.onClick
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
@@ -20,6 +20,7 @@ import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.extractor.ExtractorsFactory
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.trackselection.*
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
@@ -105,7 +106,7 @@ class FragmentPlayVideo2 : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false)
         appRepository = AppRepository(requireActivity().applicationContext)
-        appViewModel = ViewModelProviders.of(this).get(AppViewModel::class.java)
+        appViewModel = ViewModelProvider(this).get(AppViewModel::class.java)
         snip = requireArguments().getParcelable("snip")
 
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
@@ -118,7 +119,7 @@ class FragmentPlayVideo2 : Fragment() {
         /*
         simpleExoPlayerView.setOnTouchListener(object : OnSwipeTouchListener(activity) {
             override fun onSwipeTop() {
-//                Toast.makeText(getActivity(), "top", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(requireActivity(), "top", Toast.LENGTH_SHORT).show();
             }
 
             override fun onSwipeRight(diffX: Float) {
@@ -165,11 +166,9 @@ class FragmentPlayVideo2 : Fragment() {
 //                        videoView.stopPlayback();
 //                        videoView.resume();
 //                        play_pause.setChecked(true);
-                    if (player != null) {
-                        player.playWhenReady = false
-                        player.stop()
-                        currentPosi = player.currentPosition
-                    }
+                    player.playWhenReady = false
+                    player.stop()
+                    currentPosi = player.currentPosition
                 }
             }.start()
         }
@@ -186,20 +185,20 @@ class FragmentPlayVideo2 : Fragment() {
 //        h = Integer.parseInt(height);
 //
 //        if (w > h) {
-//            ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+//            ( requireActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 //        } else {
-//            ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+//            ( requireActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 //        }
 
 //        OrientationEventListener mOrientationListener = new OrientationEventListener(
-//                getActivity()) {
+//                requireActivity()) {
 //            @Override
 //            public void onOrientationChanged(int orientation) {
-//                if(!getActivity().isFinishing()) {
+//                if(!requireActivity().isFinishing()) {
 //                    if (orientation == 0 || orientation == 180) {
-//                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+//                        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 //                    } else if (orientation == 90 || orientation == 270) {
-//                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+//                        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 //                    }
 //                }
 //            }
@@ -213,19 +212,21 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun initSetup() {
-        bandwidthMeter = DefaultBandwidthMeter()
+        bandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
         extractorsFactory = DefaultExtractorsFactory()
         trackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
         trackSelector = DefaultTrackSelector(trackSelectionFactory)
-        defaultBandwidthMeter = DefaultBandwidthMeter()
+        defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
 
         dataSourceFactory = DefaultDataSourceFactory(activity,
                 Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
-        mediaSource = ExtractorMediaSource(Uri.parse(snip!!.videoFilePath),
+        /*mediaSource = ExtractorMediaSource(Uri.parse(snip!!.videoFilePath),
                 dataSourceFactory,
                 extractorsFactory,
                 null,
-                null)
+                null)*/
+
+        mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))
 
         player = ExoPlayerFactory.newSimpleInstance(requireActivity(), trackSelector)
 //        controlsView.player = player
@@ -263,19 +264,19 @@ class FragmentPlayVideo2 : Fragment() {
             paused = true
         }
 
-        tvConvertToReal.setOnClickListener(View.OnClickListener { view: View? -> validateVideo(snip) })
+        tvConvertToReal.setOnClickListener(View.OnClickListener { validateVideo(snip) })
         if ((if (snip != null) snip!!.is_virtual_version else 0) == 1) {
             tvConvertToReal.visibility = View.VISIBLE
         } else {
             tvConvertToReal.visibility = View.GONE
         }
 
-        backArrow.setOnClickListener(View.OnClickListener { v: View? ->
+        backArrow.setOnClickListener(View.OnClickListener {
             player.release()
             requireActivity().onBackPressed()
         })
 
-        buttonCamera.setOnClickListener(View.OnClickListener { v: View? ->
+        buttonCamera.setOnClickListener(View.OnClickListener {
 //            (AppMainActivity).loadFragment(VideoMode.newInstance(),true);
             player.release()
             val intent1 = Intent(activity, AppMainActivity::class.java)
@@ -317,15 +318,15 @@ class FragmentPlayVideo2 : Fragment() {
 
 
         tag.setOnClickListener(View.OnClickListener {
-            // ((AppMainActivity) getActivity()).loadFragment(CreateTag.newInstance(), true);
+            // ((AppMainActivity) requireActivity()).loadFragment(CreateTag.newInstance(), true);
         })
         rootView.isFocusableInTouchMode = true
         rootView.requestFocus()
-        rootView.setOnKeyListener(View.OnKeyListener { v, keyCode, event ->
+        rootView.setOnKeyListener(View.OnKeyListener { _, keyCode, _ ->
             if (keyCode == KeyEvent.KEYCODE_BACK) {
                 player.release()
                 requireActivity().onBackPressed()
-                //                    ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(), true);
+                //                    ((AppMainActivity) requireActivity()).loadFragment(FragmentGalleryNew.newInstance(), true);
                 return@OnKeyListener true
             }
             false
@@ -358,7 +359,7 @@ class FragmentPlayVideo2 : Fragment() {
                 }, { Log.e(TAG, "${it.message}") })
                 .addTo(subscriptions)
 
-        swipeDetector.onScroll { percentX, percentY ->
+        swipeDetector.onScroll { percentX, _ ->
 
             val duration = player.duration
 

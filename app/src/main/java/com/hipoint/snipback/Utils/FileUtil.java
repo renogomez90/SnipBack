@@ -23,14 +23,14 @@ public class FileUtil {
         } else {
             String fileExtension = getExtension(uri.toString());
 
-            if(fileExtension == null){
+            if (fileExtension == null) {
                 return null;
             }
 
             mimeType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(
                     fileExtension.toLowerCase());
 
-            if(mimeType == null){
+            if (mimeType == null) {
                 // Handle the misc file extensions
                 return handleMiscFileExtensions(fileExtension);
             }
@@ -39,28 +39,27 @@ public class FileUtil {
     }
 
     @Nullable
-    private static String getExtension(@Nullable String fileName){
+    private static String getExtension(@Nullable String fileName) {
 
-        if(fileName == null || TextUtils.isEmpty(fileName)){
+        if (fileName == null || TextUtils.isEmpty(fileName)) {
             return null;
         }
 
         char[] arrayOfFilename = fileName.toCharArray();
-        for(int i = arrayOfFilename.length-1; i > 0; i--){
-            if(arrayOfFilename[i] == '.'){
-                return fileName.substring(i+1);
+        for (int i = arrayOfFilename.length - 1; i > 0; i--) {
+            if (arrayOfFilename[i] == '.') {
+                return fileName.substring(i + 1);
             }
         }
         return null;
     }
 
     @Nullable
-    private static String handleMiscFileExtensions(@NonNull String extension){
+    private static String handleMiscFileExtensions(@NonNull String extension) {
 
-        if(extension.equals("json")){
+        if (extension.equals("json")) {
             return MIME_TYPE_JSON;
-        }
-        else{
+        } else {
             return null;
         }
     }

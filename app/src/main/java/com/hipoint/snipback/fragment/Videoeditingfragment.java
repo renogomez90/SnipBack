@@ -110,7 +110,7 @@ public class Videoeditingfragment extends Fragment {
 
     protected void showDialogConformation() {
 
-        final Dialog dialog = new Dialog(getActivity());
+        final Dialog dialog = new Dialog(requireActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.warningdialog_savevideodiscardchanges);
@@ -120,7 +120,7 @@ public class Videoeditingfragment extends Fragment {
 
     protected void showDialogSave() {
 
-        final Dialog dialog = new Dialog(getActivity());
+        final Dialog dialog = new Dialog(requireActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.warningdialog_savevideo);
@@ -130,7 +130,7 @@ public class Videoeditingfragment extends Fragment {
 
     protected void showDialogdelete() {
 
-        final Dialog dialog = new Dialog(getActivity());
+        final Dialog dialog = new Dialog(requireActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.warningdialog_deletevideo);

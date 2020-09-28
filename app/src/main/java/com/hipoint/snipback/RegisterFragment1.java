@@ -21,23 +21,18 @@ public class RegisterFragment1 extends Fragment {
     private View rootView;
 
 
-    public  static RegisterFragment1 newInstance() {
-        RegisterFragment1 fragment = new RegisterFragment1();
-        return fragment;
+    public static RegisterFragment1 newInstance() {
+        return new RegisterFragment1();
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.activty_register, container, false);
 
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-        button_register=rootView.findViewById(R.id.button_register);
-        button_register.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(IntroFragmentViewPager.newInstance(),true);
-            }
-        });
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        button_register = rootView.findViewById(R.id.button_register);
+        button_register.setOnClickListener(v -> ((AppMainActivity) requireActivity()).loadFragment(IntroFragmentViewPager.newInstance(), true));
 
         return rootView;
     }

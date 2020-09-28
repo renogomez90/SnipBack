@@ -1,5 +1,4 @@
-<selector xmlns:android="http://schemas.android.com/apk/res/android" >
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@drawable/ic_before" android:state_checked="false" />
     <item android:drawable="@drawable/ic_before_red" android:state_checked="true" />
-
 </selector>

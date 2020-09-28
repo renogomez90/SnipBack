@@ -16,18 +16,19 @@ import com.hipoint.snipback.adapter.AdapterPhotos;
 
 public class FragmentMultiDeletePhoto extends Fragment {
     private View rootView;
-   RecyclerView recycler_view;
-    public  static  FragmentMultiDeletePhoto newInstance() {
-        FragmentMultiDeletePhoto fragment = new FragmentMultiDeletePhoto();
-        return fragment;
+    RecyclerView recycler_view;
+
+    public static FragmentMultiDeletePhoto newInstance() {
+        return new FragmentMultiDeletePhoto();
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_multideletephoto, container, false);
-        recycler_view= rootView.findViewById(R.id.recycler_view);
-        recycler_view.setLayoutManager(new LinearLayoutManager(getActivity()));
-        AdapterPhotos adapterPhotos = new AdapterPhotos(getActivity());
+        recycler_view = rootView.findViewById(R.id.recycler_view);
+        recycler_view.setLayoutManager(new LinearLayoutManager(requireActivity()));
+        AdapterPhotos adapterPhotos = new AdapterPhotos(requireActivity());
         recycler_view.setAdapter(adapterPhotos);
         return rootView;
     }

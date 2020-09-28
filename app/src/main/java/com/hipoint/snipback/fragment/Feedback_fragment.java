@@ -18,19 +18,20 @@ public class Feedback_fragment extends Fragment {
     private View rootView;
     private ImageView back;
 
-    public  static  Feedback_fragment newInstance() {
+    public static Feedback_fragment newInstance() {
         Feedback_fragment fragment = new Feedback_fragment();
         return fragment;
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.feedback_layout, container, false);
-        back=rootView.findViewById(R.id.back);
+        back = rootView.findViewById(R.id.back);
         back.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(VideoMode.newInstance(),true);
+                ((AppMainActivity) requireActivity()).loadFragment(VideoMode.newInstance(), true);
             }
         });
         return rootView;

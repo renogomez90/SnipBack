@@ -7,15 +7,18 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
+
     <style name="TextAppearance.Design.Tab" parent="TextAppearance.AppCompat.Button">
         <item name="android:textSize">14sp</item>
-<!--        <item name="android:textColor">@color/mtrl_tabs_legacy_text_color_selector</item>-->
+        <!--        <item name="android:textColor">@color/mtrl_tabs_legacy_text_color_selector</item>-->
         <item name="textAllCaps">true</item>
     </style>
+
     <style name="CustomTabText" parent="TextAppearance.Design.Tab">
         <item name="android:textSize">20sp</item>
         <item name="textAllCaps">true</item>
     </style>
+
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
     <style name="SeekBar" parent="AppTheme">

@@ -38,10 +38,10 @@ public class Introduction_Fragment_Four extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_intro4, null);
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
 
-        dontshow=view.findViewById(R.id.dontshow);
+        dontshow = view.findViewById(R.id.dontshow);
         dontshow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -49,24 +49,25 @@ public class Introduction_Fragment_Four extends Fragment {
             }
         });
 
-        watch_later=view.findViewById(R.id.watch_later);
+        watch_later = view.findViewById(R.id.watch_later);
         watch_later.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(StartTrial.newInstance(),true);
+                ((AppMainActivity) requireActivity()).loadFragment(StartTrial.newInstance(), true);
             }
         });
         return view;
     }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 
-        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
     }
 
     protected void showDialogdontShow() {
 
-        final Dialog dialog = new Dialog(getActivity());
+        final Dialog dialog = new Dialog(requireActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.dont_show_layout);

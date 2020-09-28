@@ -55,4 +55,17 @@
     <string name="message_need_permission">Need Permissions</string>
     <string name="message_permission">This app needs permission to use this feature. You can grant them in app settings.</string>
     <string name="title_go_to_setting">GOTO SETTINGS</string>
+    <string name="intro4_title">WATCH A TUTORIAL</string>
+    <string name="intro4_tut_1_heading">Tutorial 1</string>
+    <string name="intro4_tut_2_heading">Tutorial 2</string>
+    <string name="intro4_tut_3_heading">Tutorial 3</string>
+    <string name="intro4_tut_4_heading">Tutorial 4</string>
+    <string name="intro4_tut_5_heading">Tutorial 5</string>
+    <string name="intro4_tut_6_heading">Tutorial 6</string>
+    <string name="watch_later">WATCH LATER</string>
+    <string name="don_t_show_again">Don\'t Show Again</string>
+    <string name="pause_btn">Pause Button</string>
+    <string name="play_btn">Play Button</string>
+    <string name="no_desc"> </string>
+    <string name="share_later">SHARE LATER</string>
 </resources>

@@ -10,35 +10,35 @@ import androidx.room.PrimaryKey;
 
 @Entity(tableName = "Snip")
 public class Snip implements Parcelable {
-    public final static String TABLE_NAME                   = "Snip";
-    private final static String COLUMN_SNIP_ID              = "snip_id";
-    private final static String COLUMN_EVENT_ID             = "event_id";             //  timestamp
-    private final static String COLUMN_SNIP_DURATION        = "snip_duration";        //  total duration of current video
-    private final static String COLUMN_STARTTIME            = "start_time";           //  video start time
-    private final static String COLUMN_ENDTIME              = "end_time";             //  video end time
-    private final static String COLUMN_VID_CREATION_DATE    = "vid_creation_date";    //  creation date
-    private final static String COLUMN_PARENT_SNIP_ID       = "parent_snip_id";       //  parent group id, this will be common for the buffer and user recorded video
+    public final static String TABLE_NAME = "Snip";
+    private final static String COLUMN_SNIP_ID = "snip_id";
+    private final static String COLUMN_EVENT_ID = "event_id";             //  timestamp
+    private final static String COLUMN_SNIP_DURATION = "snip_duration";        //  total duration of current video
+    private final static String COLUMN_STARTTIME = "start_time";           //  video start time
+    private final static String COLUMN_ENDTIME = "end_time";             //  video end time
+    private final static String COLUMN_VID_CREATION_DATE = "vid_creation_date";    //  creation date
+    private final static String COLUMN_PARENT_SNIP_ID = "parent_snip_id";       //  parent group id, this will be common for the buffer and user recorded video
     private final static String COLUMN_HAS_VERTUAL_VERSIONS = "has_virtual_versions"; //  Bookmarking, etc
-    private final static String COLUMN_IS_VERTUALVERSION    = "is_virtual_version";   //  Bookmarking, etc.
+    private final static String COLUMN_IS_VERTUALVERSION = "is_virtual_version";   //  Bookmarking, etc.
     private final static String COLUMN_TOTAL_VIDEO_DURATION = "total_video_duration"; //  total duration of buffer + video
 
-    public Snip(){
+    public Snip() {
 
     }
 
     protected Snip(Parcel in) {
-        snip_id              = in.readInt();
-        event_id             = in.readInt();
-        snip_duration        = in.readDouble();
-        start_time           = in.readDouble();
-        end_time             = in.readDouble();
-        vid_creation_date    = in.readLong();
-        parent_snip_id       = in.readInt();
+        snip_id = in.readInt();
+        event_id = in.readInt();
+        snip_duration = in.readDouble();
+        start_time = in.readDouble();
+        end_time = in.readDouble();
+        vid_creation_date = in.readLong();
+        parent_snip_id = in.readInt();
         has_virtual_versions = in.readInt();
-        is_virtual_version   = in.readInt();
+        is_virtual_version = in.readInt();
         total_video_duration = in.readInt();
-        videoFilePath        = in.readString();
-        thumbnailPath        = in.readString();
+        videoFilePath = in.readString();
+        thumbnailPath = in.readString();
     }
 
     public static final Creator<Snip> CREATOR = new Creator<Snip>() {
@@ -150,17 +150,16 @@ public class Snip implements Parcelable {
     }
 
     @PrimaryKey(autoGenerate = true)
-    @NonNull
     @ColumnInfo(name = COLUMN_SNIP_ID)
     private int snip_id;
 
     @ColumnInfo(name = COLUMN_EVENT_ID)
     private int event_id;
-    @ColumnInfo(name = COLUMN_SNIP_DURATION,typeAffinity = ColumnInfo.REAL)
-    private  double snip_duration;
-    @ColumnInfo(name = COLUMN_STARTTIME,typeAffinity = ColumnInfo.REAL)
-    private  double start_time;
-    @ColumnInfo(name = COLUMN_ENDTIME,typeAffinity = ColumnInfo.REAL)
+    @ColumnInfo(name = COLUMN_SNIP_DURATION, typeAffinity = ColumnInfo.REAL)
+    private double snip_duration;
+    @ColumnInfo(name = COLUMN_STARTTIME, typeAffinity = ColumnInfo.REAL)
+    private double start_time;
+    @ColumnInfo(name = COLUMN_ENDTIME, typeAffinity = ColumnInfo.REAL)
     private double end_time;
     @ColumnInfo(name = COLUMN_VID_CREATION_DATE)
     private long vid_creation_date;

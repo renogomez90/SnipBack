@@ -25,10 +25,10 @@ import java.util.List;
 public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHolder> {
 
     private Context mContext;
-    List<Snip> snipArrayList= new ArrayList<>();
+    List<Snip> snipArrayList = new ArrayList<>();
     private ItemListener mListener;
 
-    public AdapterGallery(Context context, List<Snip> allSnips,ItemListener itemListener) {
+    public AdapterGallery(Context context, List<Snip> allSnips, ItemListener itemListener) {
         mContext = context;
         this.snipArrayList = allSnips;
         mListener = itemListener;
@@ -71,6 +71,7 @@ public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHold
     public int getItemCount() {
         return snipArrayList.size();
     }
+
     public interface ItemListener {
         void onItemClick(Snip snipvideopath);
     }

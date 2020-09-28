@@ -97,7 +97,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     intent.putExtra("snip", snip);
                     context.startActivity(intent);*/
 
-                    ((AppMainActivity) context).loadFragment(FragmentPlayVideo2.newInstance(snip),true);
+                    ((AppMainActivity) context).loadFragment(FragmentPlayVideo2.newInstance(snip), true);
 
                 });
 //                holder.itemImage.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));
@@ -110,13 +110,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     }
 
     private void enlargedPortraitView(CategoryItemViewHolder holder) {
-        if (viewChangeValue != null){
-        if (viewChangeValue.equals("ENLARGED")) {
-            RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
-            relativeParams.setMargins(15, 15, 15, 15);
-            holder.relativeLayoutImage.setLayoutParams(relativeParams);
-            holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
-        }
+        if (viewChangeValue != null) {
+            if (viewChangeValue.equals("ENLARGED")) {
+                RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
+                relativeParams.setMargins(15, 15, 15, 15);
+                holder.relativeLayoutImage.setLayoutParams(relativeParams);
+                holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
+            }
         }
     }
 

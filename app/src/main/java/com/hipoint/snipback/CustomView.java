@@ -28,10 +28,10 @@ public class CustomView {
         view.getBackground().setAlpha(100);
         progressBar = (ProgressBar) view.findViewById(R.id.progressBar);
         progressBar.setBackgroundColor(0x00000000);
-        textView=(TextView)view.findViewById(R.id.textView2);
+        textView = (TextView) view.findViewById(R.id.textView2);
 //        Typeface type = Typeface.createFromAsset(context.getAssets(),"DroidSans-Bold.ttf");
 //        textView.setTypeface(type);
-        titleText=(TextView)view.findViewById(R.id.textView);
+        titleText = (TextView) view.findViewById(R.id.textView);
 //        Typeface type1 = Typeface.createFromAsset(context.getAssets(),"DroidSans-Bold.ttf");
 //        titleText.setTypeface(type1);
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
@@ -57,19 +57,19 @@ public class CustomView {
     public void hide() {
         view.setVisibility(View.INVISIBLE);
     }
-    public boolean isVisible()
-    {
-        if(view.getVisibility()==View.VISIBLE)
+
+    public boolean isVisible() {
+        if (view.getVisibility() == View.VISIBLE)
             return true;
         else
             return false;
     }
-    public void setTitle(String s)
-    {
-        title=s;
+
+    public void setTitle(String s) {
+        title = s;
     }
-    public void setProgressText(String s)
-    {
+
+    public void setProgressText(String s) {
         textView.setText(s);
     }
 }

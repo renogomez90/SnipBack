@@ -20,7 +20,7 @@ public class IntroFragment1 extends Fragment {
         super.onAttach(context);
     }
 
-    public  static  IntroFragment1 newInstance() {
+    public static IntroFragment1 newInstance() {
         IntroFragment1 fragment = new IntroFragment1();
         return fragment;
     }
@@ -30,15 +30,16 @@ public class IntroFragment1 extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_intro1, null);
 
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
         return view;
     }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
 
-        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-        //layoutManager = new LinearLayoutManager(getActivity());
+        requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        //layoutManager = new LinearLayoutManager(requireActivity());
 //        pulltoRefresh();
     }
 }

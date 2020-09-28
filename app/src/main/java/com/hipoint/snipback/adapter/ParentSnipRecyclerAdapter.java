@@ -19,15 +19,15 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     private Context context;
     private ItemListener mListener;
     List<Snip> snipArrayList;
-    private  String viewChangeValue;
-    private  Integer orientationVal;
+    private String viewChangeValue;
+    private Integer orientationVal;
 
 
     public ParentSnipRecyclerAdapter(Context context, List<Snip> allParentSnips, String viewChange, Integer orientation) {
         this.context = context;
         this.snipArrayList = allParentSnips;
         this.viewChangeValue = viewChange;
-        this.orientationVal=orientation;
+        this.orientationVal = orientation;
     }
 
     @NonNull
@@ -43,9 +43,9 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
 
             int parentId = snipArrayList.get(position).getSnip_id();
             String viewChange = viewChangeValue;
-            Integer orientation= orientationVal;
+            Integer orientation = orientationVal;
             List<Snip> childSnip = AppClass.getAppInstance().getChildSnipsByParentSnipId(snipArrayList.get(position).getEvent_id(), parentId);
-            setCatItemRecycler(holder.itemRecycler, childSnip,viewChange,orientation);
+            setCatItemRecycler(holder.itemRecycler, childSnip, viewChange, orientation);
 
         }
 
@@ -54,7 +54,7 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
 
 
     private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange, Integer orientation) {
-        CategoryItemRecyclerAdapter itemRecyclerAdapter = new CategoryItemRecyclerAdapter(context, allEventSnips,viewChange,orientation);
+        CategoryItemRecyclerAdapter itemRecyclerAdapter = new CategoryItemRecyclerAdapter(context, allEventSnips, viewChange, orientation);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.HORIZONTAL, false));
         recyclerView.setAdapter(itemRecyclerAdapter);
     }
@@ -66,9 +66,10 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
 
     public class ParentItemViewHolder extends RecyclerView.ViewHolder {
         RecyclerView itemRecycler;
+
         public ParentItemViewHolder(@NonNull View itemView) {
             super(itemView);
-            itemRecycler=itemView.findViewById(R.id.item_recycler);
+            itemRecycler = itemView.findViewById(R.id.item_recycler);
         }
     }
 

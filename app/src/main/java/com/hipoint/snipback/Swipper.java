@@ -1,6 +1,5 @@
 package com.hipoint.snipback;
 
-import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -14,7 +13,6 @@ import android.widget.VideoView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.MotionEventCompat;
 
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ui.PlayerView;
 
 import static android.view.MotionEvent.INVALID_POINTER_ID;
@@ -60,7 +58,7 @@ public class Swipper extends AppCompatActivity {
 //        layout.screenBrightness = 1;
         getWindow().setAttributes(layout);
         customView.setProgress((int) ((brightness / 255) * 100));
-        customView.setProgress((int)((200/255) * 100));
+        customView.setProgress((int) ((200 / 255) * 100));
         customView.setProgressText(Integer.valueOf((int) ((brightness / 255) * 100)).toString() + "%");
         circularSeekBar = new CircularSeekBar(context);
         audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -139,13 +137,13 @@ public class Swipper extends AppCompatActivity {
                 if (numberOfTaps == 2) {
                     if (onCircular == "Brightness") {
                         circularSeekBar.setType("Brightness");
-                        if (circularSeekBar.isVisibile())
+                        if (circularSeekBar.isVisible())
                             circularSeekBar.hide();
                         else
                             circularSeekBar.show();
                     } else if (onCircular == "Volume") {
                         circularSeekBar.setType("Volume");
-                        if (circularSeekBar.isVisibile())
+                        if (circularSeekBar.isVisible())
                             circularSeekBar.hide();
                         else
                             circularSeekBar.show();
@@ -253,6 +251,7 @@ public class Swipper extends AppCompatActivity {
             }
         }
     }
+
     public void commonBrightness(float distance) {
         WindowManager.LayoutParams layout = getWindow().getAttributes();
         if (getWindow().getAttributes().screenBrightness + distance <= 1 && getWindow().getAttributes().screenBrightness + distance >= 0) {
@@ -276,7 +275,7 @@ public class Swipper extends AppCompatActivity {
 
         if (type == "Y" && x == X) {
 //            distance = distance / 300;
-            distance=distance / 400;
+            distance = distance / 400;
             if (y < Y) {
                 seekCommon(distance);
             } else {
@@ -284,7 +283,7 @@ public class Swipper extends AppCompatActivity {
             }
         } else if (type == "X" && y == Y) {
 //            distance = distance / 200;
-            distance=distance/150 ;
+            distance = distance / 150;
             if (x > X) {
                 seekCommon(distance);
             } else {

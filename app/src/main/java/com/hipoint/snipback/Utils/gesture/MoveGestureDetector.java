@@ -129,7 +129,7 @@ public class MoveGestureDetector extends BaseGestureDetector {
     /**
      * Determine (multi)finger focal point (a.k.a. center point between all fingers)
      *
-     * @param  e detected motion event
+     * @param e detected motion event
      * @return PointF focal point
      */
     private PointF determineFocalPoint(MotionEvent e) {

@@ -26,7 +26,8 @@ public class StartTrial extends Fragment {
     private Context mContext;
     private Button bt1;
     private ImageView close;
-    private TextView tv_1,tv_2;
+    private TextView tv_1, tv_2;
+
     public static StartTrial newInstance() {
         StartTrial fragment = new StartTrial();
         return fragment;
@@ -42,29 +43,28 @@ public class StartTrial extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.trial_start, null);
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
         bt1 = view.findViewById(R.id.bt1);
-        close=view.findViewById(R.id.close);
-        tv_1=view.findViewById(R.id.tv_1);
-        tv_2=view.findViewById(R.id.tv_2);
+        close = view.findViewById(R.id.close);
+        tv_1 = view.findViewById(R.id.tv_1);
+        tv_2 = view.findViewById(R.id.tv_2);
         return view;
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
 
-
-        String text1 = "<font color='#EA3C2A'>FREE</font>"+" "+"<font color='#FFFFFF'>TOTAL </font>";
+        String text1 = "<font color='#EA3C2A'>FREE</font>" + " " + "<font color='#FFFFFF'>TOTAL </font>";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             tv_1.setText(Html.fromHtml(text1, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
         } else {
             tv_1.setText(Html.fromHtml(text1), TextView.BufferType.SPANNABLE);
         }
 
-        String text2 = " <font color='#FFFFFF'>ACCESS </font>" +"<font color='#EA3C2A'> FOR 14 DAYS</font>";
+        String text2 = " <font color='#FFFFFF'>ACCESS </font>" + "<font color='#EA3C2A'> FOR 14 DAYS</font>";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             tv_2.setText(Html.fromHtml(text2, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
         } else {
@@ -81,21 +81,22 @@ public class StartTrial extends Fragment {
         close.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getActivity().onBackPressed();
+                requireActivity().onBackPressed();
             }
         });
     }
+
     protected void showDialogEligible() {
 
-        final Dialog dialog = new Dialog(getActivity());
+        final Dialog dialog = new Dialog(requireActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.enjoy_freetrial_layout);
 
-        TextView dialog_subtitle=dialog.findViewById(R.id.dialog_subtitle);
-        TextView dialog_cancel=dialog.findViewById(R.id.dialog_cancel);
-        TextView dialog_ok=dialog.findViewById(R.id.dialog_ok);
-        String text2 = " <font color='#EA3C2A'>30 DAYS FREE </font>" +"<font color='#000'> FOR REGISTERING</font>";
+        TextView dialog_subtitle = dialog.findViewById(R.id.dialog_subtitle);
+        TextView dialog_cancel = dialog.findViewById(R.id.dialog_cancel);
+        TextView dialog_ok = dialog.findViewById(R.id.dialog_ok);
+        String text2 = " <font color='#EA3C2A'>30 DAYS FREE </font>" + "<font color='#000'> FOR REGISTERING</font>";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             dialog_subtitle.setText(Html.fromHtml(text2, Html.FROM_HTML_MODE_LEGACY), TextView.BufferType.SPANNABLE);
         } else {
@@ -110,7 +111,7 @@ public class StartTrial extends Fragment {
         dialog_ok.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(TrialOver.newInstance(),true);
+                ((AppMainActivity) requireActivity()).loadFragment(TrialOver.newInstance(), true);
                 dialog.dismiss();
             }
         });

@@ -18,12 +18,12 @@ import com.hipoint.snipback.room.entities.Snip;
 public abstract class RoomDB extends RoomDatabase {
 
     private static RoomDB INSTANCE;
-    private final static String DB_NAME= "SnipbackDb";
+    private final static String DB_NAME = "SnipbackDb";
 
-    public static synchronized RoomDB getDatabase(final Context context){
-        if(INSTANCE == null){
+    public static synchronized RoomDB getDatabase(final Context context) {
+        if (INSTANCE == null) {
 
-            INSTANCE= Room.databaseBuilder(context.getApplicationContext(),
+            INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                     RoomDB.class, DB_NAME)
                     .fallbackToDestructiveMigration()
                     .setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build();
@@ -31,6 +31,7 @@ public abstract class RoomDB extends RoomDatabase {
         }
         return INSTANCE;
     }
+
     public abstract EventDao eventDao();
 
     public abstract Hd_snipsDao hd_snipsDao();

@@ -29,7 +29,7 @@ public class SplashScreen extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         (this).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-        tv_version=findViewById(R.id.tv_version);
+        tv_version = findViewById(R.id.tv_version);
         appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
         appViewModel.loadLastInsertedEvent(this);
         getThumbnailPath();
@@ -37,7 +37,7 @@ public class SplashScreen extends AppCompatActivity {
         try {
             PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
             String version = pInfo.versionName;
-            tv_version.setText("V"+version+ ".0\n © 2020 SNIPBACK. ALL RIGHTS RESERVED");
+            tv_version.setText("V" + version + ".0\n © 2020 SNIPBACK. ALL RIGHTS RESERVED");
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
@@ -45,11 +45,11 @@ public class SplashScreen extends AppCompatActivity {
         Handler handler = new Handler();
         Window window = getWindow();
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-        window.setStatusBarColor(ContextCompat.getColor(getApplicationContext(),R.color.colorPrimary));
+        window.setStatusBarColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary));
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                intent= new Intent(getApplicationContext(),AppMainActivity.class);
+                intent = new Intent(getApplicationContext(), AppMainActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -57,7 +57,7 @@ public class SplashScreen extends AppCompatActivity {
 
     }
 
-    private void getThumbnailPath(){
+    private void getThumbnailPath() {
         String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
         String THUMBS_DIRECTORY_NAME = "Thumbs";
         File thumbsStorageDir = new File(getDataDir() + "/" + VIDEO_DIRECTORY_NAME,
@@ -66,8 +66,6 @@ public class SplashScreen extends AppCompatActivity {
                 + "snip_");
         AppClass.getAppInstance().setThumbFilePathRoot(fullThumbPath.getAbsolutePath());
     }
-
-
 
 
 }

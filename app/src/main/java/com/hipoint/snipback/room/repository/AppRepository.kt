@@ -1,12 +1,11 @@
 package com.hipoint.snipback.room.repository
 
 import android.content.Context
-import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.room.dao.EventDao
 import com.hipoint.snipback.room.dao.Hd_snipsDao
@@ -18,7 +17,6 @@ import com.hipoint.snipback.room.entities.Snip
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class AppRepository(context: Context?) {
@@ -267,7 +265,7 @@ class AppRepository(context: Context?) {
 
     var eventId = 0
     fun getLastInsertedEventId(activity: AppCompatActivity?): Int {
-        val appViewModel = ViewModelProviders.of(activity!!).get(AppViewModel::class.java)
+        val appViewModel = ViewModelProvider(activity!!).get(AppViewModel::class.java)
         appViewModel.eventLiveData.observe(activity, Observer { events: List<Event> ->
             if (events.isNotEmpty()) {
                 val lastEvent = events[events.size - 1]
@@ -281,7 +279,7 @@ class AppRepository(context: Context?) {
 
     var snipId = 0
     fun getLastInsertedSnipId(activity: Fragment?): Int {
-        val appViewModel = ViewModelProviders.of(activity!!).get(AppViewModel::class.java)
+        val appViewModel = ViewModelProvider(activity!!).get(AppViewModel::class.java)
         appViewModel.snipsLiveData.observe(activity, Observer { snips: List<Snip> ->
             if (snips.isNotEmpty()) {
                 val lastSnip = snips[snips.size - 1]

@@ -33,9 +33,12 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
+
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.TrimmerUtils;
 import com.hipoint.snipback.application.AppClass;
@@ -81,7 +84,7 @@ public class ActivityPlayVideo extends Swipper {
     String outputPath_share = "/storage/emulated/0/Snipback_Share/VID_Share.mp4";
     String yourAudioPath = "/storage/emulated/0/SnipRec/";
     int orientation;
-//    String yourAudioPath = "/storage/emulated/0/Download/mp3.mp3";
+    //    String yourAudioPath = "/storage/emulated/0/Download/mp3.mp3";
     String output_path_audio = "/storage/emulated/0/Snipback_Share/VID_Share_Audio.mp4";
     private MediaPlayer mMediaPlayer;
 
@@ -91,9 +94,9 @@ public class ActivityPlayVideo extends Swipper {
     private static final String AUDIO_RECORDER_FOLDER = "SnipRec";
     private MediaRecorder recorder = null;
     private int currentFormat = 0;
-    private int output_formats[] = { MediaRecorder.OutputFormat.MPEG_4,MediaRecorder.OutputFormat.THREE_GPP };
-    private String file_exts[] = { AUDIO_RECORDER_FILE_EXT_MP4, AUDIO_RECORDER_FILE_EXT_3GP };
-    boolean isAudioPlaying=false;
+    private int[] output_formats = {MediaRecorder.OutputFormat.MPEG_4, MediaRecorder.OutputFormat.THREE_GPP};
+    private String[] file_exts = {AUDIO_RECORDER_FILE_EXT_MP4, AUDIO_RECORDER_FILE_EXT_3GP};
+    boolean isAudioPlaying = false;
     private Chronometer mChronometer;
     private int timerSecond = 0;
     private static final String TAG = "CreateTag";
@@ -125,10 +128,10 @@ public class ActivityPlayVideo extends Swipper {
         exo_duration = findViewById(R.id.exo_duration);
         play_pause = findViewById(R.id.play_pause);
         rlPlayPause = findViewById(R.id.play_pause_holder);
-        videoView = (VideoView) findViewById(R.id.videoView);
+        videoView = findViewById(R.id.videoView);
 
         tvConvertToReal = findViewById(R.id.tvConvertToReal);
-        appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        appViewModel = new ViewModelProvider(this).get(AppViewModel.class);
         back_arrow = findViewById(R.id.back_arrow);
         button_camera = findViewById(R.id.button_camera);
 
@@ -406,7 +409,7 @@ public class ActivityPlayVideo extends Swipper {
     public void setVideoProgressParent() {
 
 //        total_duration = videoView.getDuration();
-        seek.setMax((int) snip.getTotal_video_duration() * 1000);
+        seek.setMax(snip.getTotal_video_duration() * 1000);
 
         final Handler handler = new Handler();
         Runnable runnable = new Runnable() {
@@ -415,8 +418,8 @@ public class ActivityPlayVideo extends Swipper {
                 try {
 
                     current_pos = videoView.getCurrentPosition();
-                    total_duration = (int) snip.getTotal_video_duration() * 1000;
-                    exo_duration.setText(timeConversion((long) videoView.getCurrentPosition()) + "/" + timeConversion((long) total_duration));
+                    total_duration = snip.getTotal_video_duration() * 1000;
+                    exo_duration.setText(timeConversion(videoView.getCurrentPosition()) + "/" + timeConversion((long) total_duration));
                     seek.setProgress((int) current_pos);
 
                     handler.postDelayed(this, 1000);
@@ -626,10 +629,10 @@ public class ActivityPlayVideo extends Swipper {
 
         // convert image and audio filue to video file
 //        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", imagepath, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
-        String img_share="/storage/emulated/0/Snipback_Share/icon.PNG";
-        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", img_share, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest","-vf"," scale=480x640","-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
+        String img_share = "/storage/emulated/0/Snipback_Share/icon.PNG";
+        String[] Commandaddaudio = {"ffmpeg", "-loop", "1", "-y", "-i", img_share, "-i", yourAudioPath + snip.getSnip_id() + ".mp3", "-shortest", "-vf", " scale=480x640", "-pix_fmt", "yuv420p", "-preset", "ultrafast", String.valueOf(mediaFile_audio)};
         // code for merging two videos before
-        String[] CommandmergevideoBefore= {"-y", "-i", String.valueOf(mediaFile_audio), "-i", destinationPath, "-strict", "experimental", "-filter_complex",
+        String[] CommandmergevideoBefore = {"-y", "-i", String.valueOf(mediaFile_audio), "-i", destinationPath, "-strict", "experimental", "-filter_complex",
                 "[0:v]scale=480x640,setsar=1:1[v0];[1:v]scale=480x640,setsar=1:1[v1];[v0][0:a][v1][1:a] concat=n=2:v=1:a=1",
                 "-ab", "48000", "-ac", "2", "-ar", "22050", "-s", "480x640", "-vcodec", "libx264", "-crf", "26", "-q", "4", "-preset",
                 "ultrafast", String.valueOf(mediaFile)};
@@ -640,8 +643,6 @@ public class ActivityPlayVideo extends Swipper {
                 "[0:v]scale=480x640,setsar=1:1[v0];[1:v]scale=480x640,setsar=1:1[v1];[v0][0:a][v1][1:a] concat=n=2:v=1:a=1",
                 "-ab", "48000", "-ac", "2", "-ar", "22050", "-s", "480x640", "-vcodec", "libx264", "-crf", "26", "-q", "4", "-preset",
                 "ultrafast", String.valueOf(mediaFile)};
-
-
 
 
         KProgressHUD hud = CommonUtils.showProgressDialog(this);
@@ -660,7 +661,7 @@ public class ActivityPlayVideo extends Swipper {
 
                             // Do something after 5s = 5000ms
 
-                            if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition")==1){
+                            if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition") == 1) {
                                 FFmpegCmd.exec(CommandmergevideoBefore, 0, new OnEditorListener() {
                                     @Override
                                     public void onSuccess() {
@@ -709,7 +710,7 @@ public class ActivityPlayVideo extends Swipper {
 
                                     }
                                 });
-                            }else if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition")==2){
+                            } else if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition") == 2) {
                                 FFmpegCmd.exec(CommandmergevideoAfter, 0, new OnEditorListener() {
                                     @Override
                                     public void onSuccess() {
@@ -860,20 +861,19 @@ public class ActivityPlayVideo extends Swipper {
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.MATCH_PARENT;
 
-        TextView after=dialog.findViewById(R.id.after);
-        TextView before=dialog.findViewById(R.id.before);
-        Switch img3=dialog.findViewById(R.id.img3);
-        Switch img4=dialog.findViewById(R.id.img4);
-        ImageView play=dialog.findViewById(R.id.img1);
-        ImageButton tick=dialog.findViewById(R.id.tick);
-        ImageButton mic=dialog.findViewById(R.id.mic);
-        ImageButton edit=dialog.findViewById(R.id.edit);
+        TextView after = dialog.findViewById(R.id.after);
+        TextView before = dialog.findViewById(R.id.before);
+        Switch img3 = dialog.findViewById(R.id.img3);
+        Switch img4 = dialog.findViewById(R.id.img4);
+        ImageView play = dialog.findViewById(R.id.img1);
+        ImageButton tick = dialog.findViewById(R.id.tick);
+        ImageButton mic = dialog.findViewById(R.id.mic);
+        ImageButton edit = dialog.findViewById(R.id.edit);
         mChronometer = dialog.findViewById(R.id.chronometer);
 
 //        rocketAnimation = (AnimationDrawable) getResources().getDrawable(R.drawable.ic_mic_black);
 //        rocketAnimation.setBounds(0, 0, rocketAnimation.getIntrinsicWidth(), rocketAnimation.getIntrinsicHeight());
 //        mChronometer.setCompoundDrawables(rocketAnimation, null, null, null);
-
 
 
         img3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -884,8 +884,8 @@ public class ActivityPlayVideo extends Swipper {
                     after.setTextColor(getResources().getColor(R.color.red_tag));
                     img4.setChecked(false);
                     before.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
-                    posToChoose=1;
-                    CommonUtils.setPreferencesInt(ActivityPlayVideo.this,"poaition", posToChoose);
+                    posToChoose = 1;
+                    CommonUtils.setPreferencesInt(ActivityPlayVideo.this, "poaition", posToChoose);
 
                 }
 
@@ -899,8 +899,8 @@ public class ActivityPlayVideo extends Swipper {
                     before.setTextColor(getResources().getColor(R.color.red_tag));
                     img3.setChecked(false);
                     after.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
-                    posToChoose=2;
-                    CommonUtils.setPreferencesInt(ActivityPlayVideo.this,"poaition", posToChoose);
+                    posToChoose = 2;
+                    CommonUtils.setPreferencesInt(ActivityPlayVideo.this, "poaition", posToChoose);
 
                 }
 
@@ -934,7 +934,7 @@ public class ActivityPlayVideo extends Swipper {
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition")==1){
+                if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition") == 1) {
                     play_pause.setChecked(true);
                     videoView.start();
                     videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -943,24 +943,24 @@ public class ActivityPlayVideo extends Swipper {
                         public void onCompletion(MediaPlayer mp) {
                             try {
                                 String filePath = yourAudioPath + snip.getSnip_id() + ".mp3";
-                                mMediaPlayer = new  MediaPlayer();
+                                mMediaPlayer = new MediaPlayer();
                                 mMediaPlayer.setDataSource(filePath);
                                 mMediaPlayer.prepare();
                                 mMediaPlayer.start();
-                            }catch (Exception e){
+                            } catch (Exception e) {
 
                             }
                         }
 
                     });
-                }else if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition")==2){
+                } else if (CommonUtils.getPreferenceIntValue(getApplicationContext(), "poaition") == 2) {
                     try {
                         String filePath = yourAudioPath + snip.getSnip_id() + ".mp3";
-                        mMediaPlayer = new  MediaPlayer();
+                        mMediaPlayer = new MediaPlayer();
                         mMediaPlayer.setDataSource(filePath);
                         mMediaPlayer.prepare();
                         mMediaPlayer.start();
-                    }catch (Exception e){
+                    } catch (Exception e) {
 
                     }
                     mMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
@@ -975,22 +975,18 @@ public class ActivityPlayVideo extends Swipper {
                 }
 
 
-
-
             }
         });
         // record audio
         mic.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN)
-                {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     startRecording();
                     return true;
                 }
 
-                if (event.getAction() == MotionEvent.ACTION_UP)
-                {
+                if (event.getAction() == MotionEvent.ACTION_UP) {
                     stopRecording();
                     img3.setChecked(true);
 
@@ -1013,7 +1009,7 @@ public class ActivityPlayVideo extends Swipper {
     }
 
     // created from createTag
-    private void startRecording(){
+    private void startRecording() {
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(output_formats[currentFormat]);
@@ -1035,17 +1031,19 @@ public class ActivityPlayVideo extends Swipper {
         mChronometer.start();
         mChronometer.setVisibility(View.VISIBLE);
     }
-    private String getFilename(){
-        String filepath = Environment.getExternalStorageDirectory().getPath();
-        File file = new File(filepath,AUDIO_RECORDER_FOLDER);
 
-        if(!file.exists()){
+    private String getFilename() {
+        String filepath = Environment.getExternalStorageDirectory().getPath();
+        File file = new File(filepath, AUDIO_RECORDER_FOLDER);
+
+        if (!file.exists()) {
             file.mkdirs();
         }
 
 //        return (file.getAbsolutePath() + "/" +snip.getSnip_id()+ file_exts[currentFormat]);\
-        return (file.getAbsolutePath() + "/" +snip.getSnip_id()+".mp3");
+        return (file.getAbsolutePath() + "/" + snip.getSnip_id() + ".mp3");
     }
+
     private MediaRecorder.OnErrorListener errorListener = new MediaRecorder.OnErrorListener() {
         @Override
         public void onError(MediaRecorder mr, int what, int extra) {
@@ -1058,8 +1056,9 @@ public class ActivityPlayVideo extends Swipper {
 //            AppLog.logString("Warning: " + what + ", " + extra);
         }
     };
-    private void stopRecording(){
-        if(null != recorder){
+
+    private void stopRecording() {
+        if (null != recorder) {
             recorder.stop();
             recorder.reset();
             recorder.release();

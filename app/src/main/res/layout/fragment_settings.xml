@@ -14,36 +14,37 @@
         android:layout_height="80dp">
 
         <ImageView
+            android:contentDescription="@string/no_desc"
             android:id="@+id/img1"
             android:layout_width="20dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="30dp"
+            android:layout_marginStart="30dp"
             android:src="@drawable/ic_tutorials" />
 
         <TextView
             android:id="@+id/tv1"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
-            android:layout_toRightOf="@+id/img1"
+            android:layout_marginStart="20dp"
             android:fontFamily="@font/barlow_medium"
-            android:gravity="left|center"
+            android:gravity="start|center"
             android:text="TUTORIALS"
             android:textColor="@color/colorAccent"
-            android:textSize="15dp" />
+            android:textSize="15sp" />
 
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:layout_marginRight="12dp"
+            android:layout_marginEnd="12dp"
             android:gravity="center">
 
             <ImageView
+                android:contentDescription="@string/no_desc"
                 android:layout_width="8dp"
                 android:layout_height="13dp"
                 android:src="@drawable/ic_forward"
-                android:id="@+id/tutorial_arrow"/>
+                android:id="@+id/tutorial_arrow" />
 
 
         </RelativeLayout>
@@ -54,48 +55,49 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_below="@+id/con1"
-        android:layout_marginLeft="28.5dp"
-        android:layout_marginRight="29.11dp"
+        android:layout_below="@id/con1"
+        android:layout_marginStart="28.5dp"
+        android:layout_marginEnd="29.11dp"
         android:background="#707070" />
 
     <RelativeLayout
         android:id="@+id/con2"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_below="@+id/con1">
+        android:layout_below="@id/con1">
 
         <ImageView
+            android:contentDescription="@string/no_desc"
             android:id="@+id/img2"
             android:layout_width="20dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="30dp"
+            android:layout_marginStart="30dp"
             android:src="@drawable/ic_feedback" />
 
         <TextView
             android:id="@+id/tv2"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
-            android:layout_toRightOf="@+id/img2"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@id/img2"
             android:fontFamily="@font/barlow_medium"
-            android:gravity="left|center"
+            android:gravity="start|center"
             android:text="FEEDBACK"
             android:textColor="@color/colorAccent"
-            android:textSize="15dp" />
+            android:textSize="15sp" />
 
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:layout_marginRight="12dp"
+            android:layout_marginEnd="12dp"
             android:gravity="center">
 
             <ImageView
+                android:contentDescription="@string/no_desc"
                 android:layout_width="8dp"
                 android:layout_height="13dp"
-                android:src="@drawable/ic_forward"
-                />
+                android:src="@drawable/ic_forward" />
 
         </RelativeLayout>
 
@@ -105,50 +107,52 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_below="@+id/con2"
-        android:layout_marginLeft="28.5dp"
-        android:layout_marginRight="29.11dp"
+        android:layout_below="@id/con2"
+        android:layout_marginStart="28.5dp"
+        android:layout_marginEnd="29.11dp"
         android:background="#707070" />
 
     <RelativeLayout
         android:id="@+id/con3"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_below="@+id/con2">
+        android:layout_below="@id/con2">
 
         <ImageView
+            android:contentDescription="@string/no_desc"
             android:id="@+id/img3"
             android:layout_width="20dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="30dp"
+            android:layout_marginStart="30dp"
             android:src="@drawable/ic_light" />
 
         <TextView
             android:id="@+id/tv3"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
-            android:layout_toRightOf="@+id/img3"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@id/img3"
             android:fontFamily="@font/barlow_medium"
-            android:gravity="left|center"
+            android:gravity="start|center"
             android:text="LIGHT"
             android:textColor="@color/colorAccent"
-            android:textSize="15dp" />
+            android:textSize="15sp" />
+
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:layout_marginRight="12dp"
+            android:layout_marginEnd="12dp"
             android:gravity="center">
 
-<!--            <TextView-->
-<!--                android:layout_width="wrap_content"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:text="5 SEC."-->
-<!--                android:textSize="15dp"-->
-<!--                android:fontFamily="@font/barlow_medium"-->
-<!--                android:textColor="@color/colorPrimaryRed"-->
-<!--                />-->
+            <!--            <TextView-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:text="5 SEC."-->
+            <!--                android:textSize="15sp"-->
+            <!--                android:fontFamily="@font/barlow_medium"-->
+            <!--                android:textColor="@color/colorPrimaryRed"-->
+            <!--                />-->
 
             <Switch
                 android:id="@+id/booked"
@@ -158,11 +162,8 @@
                 android:background="@null"
                 android:button="@drawable/toogle_button"
                 android:thumb="@null"
-                app:track="@null"/>
+                app:track="@null" />
         </RelativeLayout>
-
-
-
 
 
     </RelativeLayout>
@@ -170,51 +171,51 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_below="@+id/con3"
-        android:layout_marginLeft="28.5dp"
-        android:layout_marginRight="29.11dp"
+        android:layout_below="@id/con3"
+        android:layout_marginStart="28.5dp"
+        android:layout_marginEnd="29.11dp"
         android:background="#707070" />
 
     <RelativeLayout
         android:id="@+id/con4"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_below="@+id/con3">
+        android:layout_below="@id/con3">
 
         <ImageView
+            android:contentDescription="@string/no_desc"
             android:id="@+id/img4"
             android:layout_width="20dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="30dp"
+            android:layout_marginStart="30dp"
             android:src="@drawable/ic_set_buffer" />
 
         <TextView
             android:id="@+id/tv4"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
-            android:layout_toRightOf="@+id/img4"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@id/img4"
             android:fontFamily="@font/barlow_medium"
-            android:gravity="left|center"
+            android:gravity="start|center"
             android:text="SET BUFFER"
             android:textColor="@color/colorAccent"
-            android:textSize="15dp" />
+            android:textSize="15sp" />
 
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:layout_marginRight="12dp"
+            android:layout_marginEnd="12dp"
             android:gravity="center">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="5 SEC."
-                android:textSize="15dp"
+                android:textSize="15sp"
                 android:fontFamily="@font/barlow_medium"
-                android:textColor="@color/colorPrimaryRed"
-                />
+                android:textColor="@color/colorPrimaryRed" />
         </RelativeLayout>
 
 
@@ -225,7 +226,7 @@
         style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/con4"
+        android:layout_below="@id/con4"
         android:maxHeight="4dp"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
@@ -237,54 +238,53 @@
         android:id="@+id/v1"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_below="@+id/buffer_progress"
-        android:layout_marginLeft="28.5dp"
+        android:layout_below="@id/buffer_progress"
+        android:layout_marginStart="28.5dp"
         android:layout_marginTop="10dp"
-        android:layout_marginRight="29.11dp"
+        android:layout_marginEnd="29.11dp"
         android:background="#707070" />
 
     <RelativeLayout
         android:id="@+id/con5"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_below="@+id/v1">
+        android:layout_below="@id/v1">
 
         <ImageView
+            android:contentDescription="@string/no_desc"
             android:id="@+id/img5"
             android:layout_width="20dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="30dp"
+            android:layout_marginStart="30dp"
             android:src="@drawable/ic_quickback" />
 
         <TextView
             android:id="@+id/tv5"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
-            android:layout_toRightOf="@+id/img5"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@id/img5"
             android:fontFamily="@font/barlow_medium"
-            android:gravity="left|center"
+            android:gravity="start|center"
             android:text="QUICKBACK"
             android:textColor="@color/colorAccent"
-            android:textSize="15dp" />
+            android:textSize="15sp" />
 
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:layout_marginRight="12dp"
+            android:layout_marginEnd="12dp"
             android:gravity="center">
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="5 SEC."
-                android:textSize="15dp"
+                android:textSize="15sp"
                 android:fontFamily="@font/barlow_medium"
-                android:textColor="@color/colorPrimaryRed"
-                 />
+                android:textColor="@color/colorPrimaryRed" />
         </RelativeLayout>
-
 
 
     </RelativeLayout>
@@ -294,7 +294,7 @@
         style="@android:style/Widget.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/con5"
+        android:layout_below="@id/con5"
         android:maxHeight="4dp"
         android:layout_marginStart="12dp"
         android:layout_marginEnd="12dp"
@@ -306,58 +306,59 @@
         android:id="@+id/v2"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_below="@+id/quickback_progress"
-        android:layout_marginLeft="28.5dp"
+        android:layout_below="@id/quickback_progress"
+        android:layout_marginStart="28.5dp"
         android:layout_marginTop="10dp"
-        android:layout_marginRight="29.11dp"
+        android:layout_marginEnd="29.11dp"
         android:background="#707070" />
 
     <RelativeLayout
         android:id="@+id/con6"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_below="@+id/v2">
+        android:layout_below="@id/v2">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="75dp"
+            android:layout_marginStart="75dp"
             android:layout_marginTop="40dp"
             android:text="1080x1920 HD @30fps"
             android:textColor="@color/colorPrimary" />
 
         <ImageView
+            android:contentDescription="@string/no_desc"
             android:id="@+id/img6"
             android:layout_width="20dp"
             android:layout_height="match_parent"
-            android:layout_marginLeft="30dp"
+            android:layout_marginStart="30dp"
             android:src="@drawable/ic_resolution" />
 
         <TextView
             android:id="@+id/tv6"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginLeft="20dp"
-            android:layout_toRightOf="@+id/img6"
+            android:layout_marginStart="20dp"
+            android:layout_toEndOf="@id/img6"
             android:fontFamily="@font/barlow_medium"
-            android:gravity="left|center"
+            android:gravity="start|center"
             android:text="RESOLUTION/QUALITY"
             android:textColor="@color/colorAccent"
-            android:textSize="15dp" />
+            android:textSize="15sp" />
+
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
-            android:layout_marginRight="12dp"
+            android:layout_marginEnd="12dp"
             android:gravity="center">
 
             <ImageView
+                android:contentDescription="@string/no_desc"
                 android:layout_width="8dp"
                 android:layout_height="13dp"
-                android:src="@drawable/ic_forward"
-                />
+                android:src="@drawable/ic_forward" />
         </RelativeLayout>
-
 
 
     </RelativeLayout>

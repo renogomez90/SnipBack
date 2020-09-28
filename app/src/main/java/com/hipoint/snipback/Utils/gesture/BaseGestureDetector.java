@@ -38,7 +38,7 @@ public abstract class BaseGestureDetector {
      * @param event
      * @return
      */
-    public boolean onTouchEvent(MotionEvent event){
+    public boolean onTouchEvent(MotionEvent event) {
         final int actionCode = event.getAction() & MotionEvent.ACTION_MASK;
         if (!mGestureInProgress) {
             handleStartProgressEvent(actionCode, event);
@@ -52,6 +52,7 @@ public abstract class BaseGestureDetector {
      * Called when the current event occurred when NO gesture is in progress
      * yet. The handling in this implementation may set the gesture in progress
      * (via mGestureInProgress) or out of progress
+     *
      * @param actionCode
      * @param event
      */
@@ -61,13 +62,14 @@ public abstract class BaseGestureDetector {
      * Called when the current event occurred when a gesture IS in progress. The
      * handling in this implementation may set the gesture out of progress (via
      * mGestureInProgress).
-     * @param action
+     *
+     * @param actionCode
      * @param event
      */
     protected abstract void handleInProgressEvent(int actionCode, MotionEvent event);
 
 
-    protected void updateStateByEvent(MotionEvent curr){
+    protected void updateStateByEvent(MotionEvent curr) {
         final MotionEvent prev = mPrevEvent;
 
         // Reset mCurrEvent
@@ -101,6 +103,7 @@ public abstract class BaseGestureDetector {
 
     /**
      * Returns {@code true} if a gesture is currently in progress.
+     *
      * @return {@code true} if a gesture is currently in progress, {@code false} otherwise.
      */
     public boolean isInProgress() {

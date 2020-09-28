@@ -7,10 +7,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.AllCategory;
@@ -29,16 +31,16 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private Context context;
     private List<EventData> parentSnips;
     private List<EventData> allSnips;
-    private  String viewChangeValue;
-    private  Integer orientationValue;
+    private String viewChangeValue;
+    private Integer orientationValue;
     private int eventId = -1;
 
-    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip,String viewChange,Integer orientation) {
+    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange, Integer orientation) {
         this.context = context;
         this.allSnips = allEventSnip;
         this.parentSnips = allParentSnip;
         this.viewChangeValue = viewChange;
-        this.orientationValue=orientation;
+        this.orientationValue = orientation;
 
     }
 
@@ -61,12 +63,12 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 //        }
         holder.categoryTitle.setVisibility(View.VISIBLE);
         holder.categoryTitle.setText(parentSnips.get(position).getEvent().getEvent_title());
-        String viewChange =viewChangeValue;
+        String viewChange = viewChangeValue;
         Integer orientation = orientationValue;
 
         eventId = parentSnips.get(position).getEvent().getEvent_id();
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
-        setCatItemRecycler(holder.itemRecycler,allParentSnip,viewChange,orientation);
+        setCatItemRecycler(holder.itemRecycler, allParentSnip, viewChange, orientation);
 
     }
 
@@ -82,15 +84,15 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         public MainViewHolder(@NonNull View itemView) {
             super(itemView);
             categoryTitle = itemView.findViewById(R.id.cat_title);
-            itemRecycler=itemView.findViewById(R.id.item_recycler);
+            itemRecycler = itemView.findViewById(R.id.item_recycler);
         }
     }
 
 
-    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange, Integer orientation){
-        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context,allEventSnips,viewChange,orientation);
+    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange, Integer orientation) {
+        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange, orientation);
         itemRecyclerAdapter.notifyDataSetChanged();
-        recyclerView.setLayoutManager(new LinearLayoutManager(context,RecyclerView.VERTICAL,false));
+        recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
         recyclerView.setAdapter(itemRecyclerAdapter);
     }
 
@@ -100,6 +102,6 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         String date = DateFormat.format("dd MMM yyyy", cal).toString();
         String[] dateString = date.split(" ");
 //        String dayWithSuffix = dateString[0] + getDaySuffix(Integer.parseInt(dateString[0]));
-        return dateString[0] + " ," + dateString[1] + " " + dateString[2] ;
+        return dateString[0] + " ," + dateString[1] + " " + dateString[2];
     }
 }

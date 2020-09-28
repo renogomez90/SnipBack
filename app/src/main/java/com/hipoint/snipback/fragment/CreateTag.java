@@ -39,31 +39,32 @@ import java.util.concurrent.TimeUnit;
 
 public class CreateTag extends Fragment {
     private View rootView;
-    ImageButton edit,mic,tick;
+    ImageButton edit, mic, tick;
     private static final String AUDIO_RECORDER_FILE_EXT_3GP = ".3gp";
     private static final String AUDIO_RECORDER_FILE_EXT_MP4 = ".mp4";
     private static final String AUDIO_RECORDER_FOLDER = "SnipRec";
     private MediaRecorder recorder = null;
     private int currentFormat = 0;
-    private int output_formats[] = { MediaRecorder.OutputFormat.MPEG_4,MediaRecorder.OutputFormat.THREE_GPP };
-    private String file_exts[] = { AUDIO_RECORDER_FILE_EXT_MP4, AUDIO_RECORDER_FILE_EXT_3GP };
-    boolean isAudioPlaying=false;
+    private int output_formats[] = {MediaRecorder.OutputFormat.MPEG_4, MediaRecorder.OutputFormat.THREE_GPP};
+    private String file_exts[] = {AUDIO_RECORDER_FILE_EXT_MP4, AUDIO_RECORDER_FILE_EXT_3GP};
+    boolean isAudioPlaying = false;
     private Snip snip;
     private Chronometer mChronometer;
     private int timerSecond = 0;
     private static final String TAG = "CreateTag";
-    private Switch img3,img4,play;
-    private TextView after,before;
+    private Switch img3, img4, play;
+    private TextView after, before;
     int posToChoose;
 
 
-    public  static CreateTag newInstance(Snip snip) {
+    public static CreateTag newInstance(Snip snip) {
         CreateTag fragment = new CreateTag();
         Bundle bundle = new Bundle();
         bundle.putParcelable("snip", snip);
         fragment.setArguments(bundle);
         return fragment;
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -71,14 +72,14 @@ public class CreateTag extends Fragment {
 
         snip = requireArguments().getParcelable("snip");
 
-        after=rootView.findViewById(R.id.after);
-        before=rootView.findViewById(R.id.before);
-        img3=rootView.findViewById(R.id.img3);
-        img4=rootView.findViewById(R.id.img4);
-        tick=rootView.findViewById(R.id.tick);
-        play=rootView.findViewById(R.id.img1);
-        mic=rootView.findViewById(R.id.mic);
-        edit=rootView.findViewById(R.id.edit);
+        after = rootView.findViewById(R.id.after);
+        before = rootView.findViewById(R.id.before);
+        img3 = rootView.findViewById(R.id.img3);
+        img4 = rootView.findViewById(R.id.img4);
+        tick = rootView.findViewById(R.id.tick);
+        play = rootView.findViewById(R.id.img1);
+        mic = rootView.findViewById(R.id.mic);
+        edit = rootView.findViewById(R.id.edit);
 
         mChronometer = rootView.findViewById(R.id.chronometer);
         img3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -89,8 +90,8 @@ public class CreateTag extends Fragment {
                     after.setTextColor(getResources().getColor(R.color.red_tag));
                     img4.setChecked(false);
                     before.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
-                    posToChoose=1;
-                    CommonUtils.setPreferencesInt(getActivity(),"poaition", posToChoose);
+                    posToChoose = 1;
+                    CommonUtils.setPreferencesInt(requireActivity(), "poaition", posToChoose);
 
 
                 }
@@ -105,8 +106,8 @@ public class CreateTag extends Fragment {
                     before.setTextColor(getResources().getColor(R.color.red_tag));
                     img3.setChecked(false);
                     after.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
-                    posToChoose=2;
-                    CommonUtils.setPreferencesInt(getActivity(),"poaition", posToChoose);
+                    posToChoose = 2;
+                    CommonUtils.setPreferencesInt(requireActivity(), "poaition", posToChoose);
 
                 }
 
@@ -137,10 +138,10 @@ public class CreateTag extends Fragment {
         tick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getActivity(), ActivityPlayVideo.class);
+                Intent intent = new Intent(requireActivity(), ActivityPlayVideo.class);
                 intent.putExtra("snip", snip);
                 startActivity(intent);
-                getActivity().finish();
+                requireActivity().finish();
             }
         });
         play.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -155,14 +156,12 @@ public class CreateTag extends Fragment {
         mic.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN)
-                {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     startRecording();
                     return true;
                 }
 
-                if (event.getAction() == MotionEvent.ACTION_UP)
-                {
+                if (event.getAction() == MotionEvent.ACTION_UP) {
                     stopRecording();
                     img3.setChecked(true);
 
@@ -176,14 +175,14 @@ public class CreateTag extends Fragment {
         edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) getActivity()).loadFragment(Videoeditingfragment.newInstance(),true);
+                ((AppMainActivity) requireActivity()).loadFragment(Videoeditingfragment.newInstance(), true);
             }
         });
 
         return rootView;
     }
 
-    private void startRecording(){
+    private void startRecording() {
         recorder = new MediaRecorder();
         recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         recorder.setOutputFormat(output_formats[currentFormat]);
@@ -205,17 +204,19 @@ public class CreateTag extends Fragment {
         mChronometer.start();
         mChronometer.setVisibility(View.VISIBLE);
     }
-    private String getFilename(){
-        String filepath = Environment.getExternalStorageDirectory().getPath();
-        File file = new File(filepath,AUDIO_RECORDER_FOLDER);
 
-        if(!file.exists()){
+    private String getFilename() {
+        String filepath = Environment.getExternalStorageDirectory().getPath();
+        File file = new File(filepath, AUDIO_RECORDER_FOLDER);
+
+        if (!file.exists()) {
             file.mkdirs();
         }
 
 //        return (file.getAbsolutePath() + "/" +snip.getSnip_id()+ file_exts[currentFormat]);\
-        return (file.getAbsolutePath() + "/" +snip.getSnip_id()+".mp3");
+        return (file.getAbsolutePath() + "/" + snip.getSnip_id() + ".mp3");
     }
+
     private MediaRecorder.OnErrorListener errorListener = new MediaRecorder.OnErrorListener() {
         @Override
         public void onError(MediaRecorder mr, int what, int extra) {
@@ -228,8 +229,9 @@ public class CreateTag extends Fragment {
 //            AppLog.logString("Warning: " + what + ", " + extra);
         }
     };
-    private void stopRecording(){
-        if(null != recorder){
+
+    private void stopRecording() {
+        if (null != recorder) {
             recorder.stop();
             recorder.reset();
             recorder.release();

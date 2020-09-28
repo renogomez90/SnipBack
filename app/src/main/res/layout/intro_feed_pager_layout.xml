@@ -21,14 +21,14 @@
         app:tabIndicatorHeight="0dp"
         app:tabMode="scrollable"
         app:tabTextAppearance="@style/CustomTabText"
-        android:background="#000000"/>
+        android:background="#000000" />
 
 
     <androidx.viewpager.widget.ViewPager
         android:id="@+id/viewPager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/homeTabs"
+        android:layout_below="@id/homeTabs"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 

@@ -22,8 +22,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
@@ -125,45 +127,45 @@ public class FragmentPlayVideo extends Fragment {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false);
 
         appRepository = new AppRepository(requireActivity().getApplicationContext());
-        appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
+        appViewModel = new ViewModelProvider(this).get(AppViewModel.class);
         snip = requireArguments().getParcelable("snip");
-        appViewModel.getEventByIdLiveData(Objects.requireNonNull(snip).getEvent_id()).observe(getViewLifecycleOwner(), snipevent -> {
-            event = snipevent;
-        });
+        appViewModel.getEventByIdLiveData(Objects.requireNonNull(snip).getEvent_id()).observe(getViewLifecycleOwner(), snipevent -> event = snipevent);
         exo_duration = rootView.findViewById(R.id.exo_duration);
         button_camera = rootView.findViewById(R.id.button_camera);
         back_arrow = rootView.findViewById(R.id.back_arrow);
 
 
 //        uri = Uri.parse(getArguments().getString("uri"));
-        bandwidthMeter = new DefaultBandwidthMeter();
+        bandwidthMeter = new DefaultBandwidthMeter.Builder(requireActivity()).build();
         extractorsFactory = new DefaultExtractorsFactory();
         trackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
         trackSelector = new DefaultTrackSelector(trackSelectionFactory);
         defaultBandwidthMeter = new DefaultBandwidthMeter();
-        dataSourceFactory = new DefaultDataSourceFactory(getActivity(),
-                Util.getUserAgent(getActivity(), "mediaPlayerSample"), defaultBandwidthMeter);
-        mediaSource = new ExtractorMediaSource(Uri.parse(snip.getVideoFilePath()),
+        dataSourceFactory = new DefaultDataSourceFactory(requireActivity(),
+                Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter);
+        /*mediaSource = new ExtractorMediaSource(Uri.parse(snip.getVideoFilePath()),
                 dataSourceFactory,
                 extractorsFactory,
                 null,
-                null);
+                null);*/
+        mediaSource = new ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip.getVideoFilePath()));
 
-        player = ExoPlayerFactory.newSimpleInstance(getActivity(), trackSelector);
+//        player = ExoPlayerFactory.newSimpleInstance(requireActivity(), trackSelector);
+        player = new SimpleExoPlayer.Builder(requireContext()).build();
         exo_progress = rootView.findViewById(R.id.exo_progress);
 
         tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal);
         tvConvertToReal.setOnClickListener(view -> validateVideo(snip));
         if ((snip != null ? snip.getIs_virtual_version() : 0) == 1) {
             tvConvertToReal.setVisibility(View.VISIBLE);
-        }else{
+        } else {
             tvConvertToReal.setVisibility(View.GONE);
         }
-        simpleExoPlayerView = (PlayerView) rootView.findViewById(R.id.player_view);
-        simpleExoPlayerView.setOnTouchListener(new OnSwipeTouchListener(getActivity()) {
+        simpleExoPlayerView = rootView.findViewById(R.id.player_view);
+        simpleExoPlayerView.setOnTouchListener(new OnSwipeTouchListener(requireActivity()) {
 
             public void onSwipeTop() {
-//                Toast.makeText(getActivity(), "top", Toast.LENGTH_SHORT).show();
+//                Toast.makeText(requireActivity(), "top", Toast.LENGTH_SHORT).show();
             }
 
             public void onSwipeRight(float diffX) {
@@ -184,9 +186,7 @@ public class FragmentPlayVideo extends Fragment {
             }
 
             public void onSwipeLeft(float diffX) {
-                if (player.getCurrentPosition() == 0) {
-
-                } else {
+                if (player.getCurrentPosition() != 0) {
                     player.seekTo((player.getCurrentPosition() - (long) diffX));
                     simpleExoPlayerView.showController();
                 }
@@ -195,7 +195,7 @@ public class FragmentPlayVideo extends Fragment {
             }
 
             public void onSwipeBottom() {
-                Toast.makeText(getActivity(), "bottom", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireActivity(), "bottom", Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -214,15 +214,15 @@ public class FragmentPlayVideo extends Fragment {
 
         back_arrow.setOnClickListener(v -> {
             player.release();
-            getActivity().onBackPressed();
+            requireActivity().onBackPressed();
         });
 
         button_camera.setOnClickListener(v -> {
 //            (AppMainActivity).loadFragment(VideoMode.newInstance(),true);
             player.release();
-            Intent intent1 = new Intent(getActivity(), AppMainActivity.class);
+            Intent intent1 = new Intent(requireActivity(), AppMainActivity.class);
             startActivity(intent1);
-            getActivity().finishAffinity();
+            requireActivity().finishAffinity();
         });
 
         exo_progress.setVisibility(View.INVISIBLE);
@@ -231,7 +231,7 @@ public class FragmentPlayVideo extends Fragment {
 //        exo_progress.setVisibility(View.INVISIBLE);
 
         if (snip.getIs_virtual_version() == 1) {
-            exo_progress.setDuration((long)snip.getSnip_duration() * 1000);
+            exo_progress.setDuration((long) snip.getSnip_duration() * 1000);
             player.seekTo(player.getCurrentPosition() + (long) snip.getStart_time() * 1000);
             new CountDownTimer((long) snip.getSnip_duration() * 1000, 1000) {
                 @Override
@@ -269,20 +269,20 @@ public class FragmentPlayVideo extends Fragment {
 //        h = Integer.parseInt(height);
 //
 //        if (w > h) {
-//            ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+//            ( requireActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 //        } else {
-//            ( getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+//            ( requireActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 //        }
 
 //        OrientationEventListener mOrientationListener = new OrientationEventListener(
-//                getActivity()) {
+//                requireActivity()) {
 //            @Override
 //            public void onOrientationChanged(int orientation) {
-//                if(!getActivity().isFinishing()) {
+//                if(!requireActivity().isFinishing()) {
 //                    if (orientation == 0 || orientation == 180) {
-//                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+//                        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 //                    } else if (orientation == 90 || orientation == 270) {
-//                        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+//                        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
 //                    }
 //                }
 //            }
@@ -310,7 +310,7 @@ public class FragmentPlayVideo extends Fragment {
 //                        player.setPlayWhenReady(true);
                         player.setPlayWhenReady(true);
                         player.getPlaybackState();
-                        player.seekTo(player.getCurrentPosition()+(long) snip.getStart_time());
+                        player.seekTo(player.getCurrentPosition() + (long) snip.getStart_time());
                         current_posi = player.getCurrentPosition();
                         new CountDownTimer((long) snip.getSnip_duration() * 1000 - current_posi, 1000) {
                             @Override
@@ -321,7 +321,7 @@ public class FragmentPlayVideo extends Fragment {
                             @Override
                             public void onFinish() {
 
-                                if (player != null && paused==false) {
+                                if (player != null && !paused) {
                                     player.setPlayWhenReady(false);
                                     player.stop();
                                     current_posi = player.getCurrentPosition();
@@ -401,33 +401,28 @@ public class FragmentPlayVideo extends Fragment {
 
 
         tag = rootView.findViewById(R.id.tag);
-        tag.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-//                ((AppMainActivity) getActivity()).loadFragment(CreateTag.newInstance(), true);
-            }
+        tag.setOnClickListener(v -> {
+//                ((AppMainActivity) requireActivity()).loadFragment(CreateTag.newInstance(), true);
         });
 
         rootView.setFocusableInTouchMode(true);
         rootView.requestFocus();
-        rootView.setOnKeyListener(new View.OnKeyListener() {
-            @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    player.release();
-                    getActivity().onBackPressed();
-//                    ((AppMainActivity) getActivity()).loadFragment(FragmentGalleryNew.newInstance(), true);
+        rootView.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                player.release();
+                requireActivity().onBackPressed();
+//                    ((AppMainActivity) requireActivity()).loadFragment(FragmentGalleryNew.newInstance(), true);
 
-                    return true;
-                }
-                return false;
+                return true;
             }
+            return false;
         });
 
         return rootView;
     }
 
     private String VIDEO_DIRECTORY_NAME = "Snipback";
+
     private void validateVideo(Snip snip) {
         String destinationPath = snip.getVideoFilePath();
 
@@ -444,13 +439,13 @@ public class FragmentPlayVideo extends Fragment {
 
         String[] complexCommand = {"ffmpeg", "-i", String.valueOf(destinationPath), "-ss", TrimmerUtils.formatCSeconds((long) snip.getStart_time()),
                 "-to", TrimmerUtils.formatCSeconds((long) snip.getEnd_time()), "-async", "1", String.valueOf(mediaFile)};
-        KProgressHUD hud = CommonUtils.showProgressDialog(getActivity());
+        KProgressHUD hud = CommonUtils.showProgressDialog(requireActivity());
         FFmpegCmd.exec(complexCommand, 0, new OnEditorListener() {
             @Override
             public void onSuccess() {
                 snip.setIs_virtual_version(0);
                 snip.setVideoFilePath(mediaFile.getAbsolutePath());
-                AppClass.getAppInstance().setEventSnipsFromDb(event,snip);
+                AppClass.getAppInstance().setEventSnipsFromDb(event, snip);
                 appRepository.updateSnip(snip, new Continuation<Unit>() {
                     @NotNull
                     @Override
@@ -481,7 +476,7 @@ public class FragmentPlayVideo extends Fragment {
                 AppClass.getAppInstance().setInsertionInProgress(true);
                 if (hud.isShowing())
                     hud.dismiss();
-                getActivity().runOnUiThread(() -> Toast.makeText(getActivity(), "Video saved to gallery", Toast.LENGTH_SHORT).show());
+                requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity(), "Video saved to gallery", Toast.LENGTH_SHORT).show());
 
 //                appViewModel.loadGalleryDataFromDB(ActivityPlayVideo.this);
 
@@ -491,8 +486,8 @@ public class FragmentPlayVideo extends Fragment {
             public void onFailure() {
                 if (hud.isShowing())
                     hud.dismiss();
-                getActivity().runOnUiThread(() ->
-                        Toast.makeText(getActivity(), "Failed to trim", Toast.LENGTH_SHORT).show());
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireActivity(), "Failed to trim", Toast.LENGTH_SHORT).show());
             }
 
             @Override

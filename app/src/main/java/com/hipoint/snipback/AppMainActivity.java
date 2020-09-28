@@ -40,7 +40,7 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
             android.Manifest.permission.INTERNET};
 
-//    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
+    //    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
 //    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
     private List<MyOnTouchListener> onTouchListeners;
 
@@ -71,8 +71,9 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
         }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) !=
                 PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.CAMERA},
-                    50); }
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA},
+                    50);
+        }
 
     }
 
@@ -107,7 +108,7 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
         appViewModel.getEventLiveData().observe(this, events -> {
             if (events != null && events.size() > 0) {
                 Event lastEvent = events.get(events.size() - 1);
-                if(!lastEvent.getEvent_title().equals(CommonUtils.today() + ", " + currentDateandTime)){
+                if (!lastEvent.getEvent_title().equals(CommonUtils.today() + ", " + currentDateandTime)) {
                     addDailyEvent();
                 }
 //                long diff = System.currentTimeMillis() - lastEvent.getEvent_created();
@@ -147,9 +148,9 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
         if (count == 0) {
             super.onBackPressed();
         } else {
-            if(myFragment instanceof FragmentGalleryNew){
+            if (myFragment instanceof FragmentGalleryNew) {
                 getSupportFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            }else{
+            } else {
                 getSupportFragmentManager().popBackStack();
             }
         }
@@ -168,9 +169,9 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
 
     @Override
     public void onTaskCompleted(boolean success) {
-        if(success){
+        if (success) {
             Fragment myFragment = getSupportFragmentManager().findFragmentById(R.id.mainFragment);
-            if(myFragment instanceof FragmentGalleryNew){
+            if (myFragment instanceof FragmentGalleryNew) {
                 ((FragmentGalleryNew) myFragment).onLoadingCompleted(success);
             }
         }
@@ -179,8 +180,6 @@ public class AppMainActivity extends AppCompatActivity implements VideoMode.OnTa
     public interface MyOnTouchListener {
         public void onTouch(MotionEvent ev);
     }
-
-
 
 
 }

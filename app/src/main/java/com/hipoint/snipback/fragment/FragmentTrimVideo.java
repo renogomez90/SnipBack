@@ -18,11 +18,13 @@ import androidx.fragment.app.Fragment;
 
 import com.hipoint.snipback.R;
 
-public class FragmentTrimVideo extends  Fragment implements View.OnClickListener {
-    public  static  FragmentTrimVideo newInstance() {
+public class FragmentTrimVideo extends Fragment implements View.OnClickListener {
+    public static FragmentTrimVideo newInstance() {
         FragmentTrimVideo fragment = new FragmentTrimVideo();
-    return fragment;
-}    private static final int REQUEST_TAKE_VIDEO = 552;
+        return fragment;
+    }
+
+    private static final int REQUEST_TAKE_VIDEO = 552;
 
     private VideoView videoView;
 
@@ -35,34 +37,34 @@ public class FragmentTrimVideo extends  Fragment implements View.OnClickListener
 
     private static final String TAG = "FragmentTrimVideo";
 
-        @Nullable
-        @Override
-        public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.fragment_timvideoactivity, null);
-            videoView = view.findViewById(R.id.video_view);
-            edtMinFrom =view.findViewById(R.id.edt_min_from);
-            edtMAxTo =view.findViewById(R.id.edt_max_to);
-            mediaController = new MediaController(getActivity());
-            mediaController.setAnchorView(videoView);
-            button=view.findViewById(R.id.btn_min_max_gap);
-            button.setOnClickListener(this);
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_timvideoactivity, container, false);
+        videoView = view.findViewById(R.id.video_view);
+        edtMinFrom = view.findViewById(R.id.edt_min_from);
+        edtMAxTo = view.findViewById(R.id.edt_max_to);
+        mediaController = new MediaController(requireActivity());
+        mediaController.setAnchorView(videoView);
+        button = view.findViewById(R.id.btn_min_max_gap);
+        button.setOnClickListener(this);
 
-            return view;
-        }
-        @Override
-        public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-            getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+        return view;
+    }
 
-        }
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        requireActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+
+    }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_min_max_gap:
-                onMinToMaxTrimClicked();
-                break;
+        if (v.getId() == R.id.btn_min_max_gap) {
+            onMinToMaxTrimClicked();
         }
     }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -84,7 +86,7 @@ public class FragmentTrimVideo extends  Fragment implements View.OnClickListener
 //                    LogMessage.v("Video path:: "+data.getData());
 ////                    openTrimActivity(String.valueOf(data.getData()));
 //                }else{
-//                    Toast.makeText(getActivity(),"video uri is null",Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(requireActivity(),"video uri is null",Toast.LENGTH_SHORT).show();
 //                }
 //            }
         } catch (Exception e) {
@@ -94,17 +96,17 @@ public class FragmentTrimVideo extends  Fragment implements View.OnClickListener
 
 
     private void onMinToMaxTrimClicked() {
-        trimType=3;
+        trimType = 3;
         if (isEdtTxtEmpty(edtMinFrom))
-            Toast.makeText(getActivity(),"Enter min gap duration",Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireActivity(), "Enter min gap duration", Toast.LENGTH_SHORT).show();
         else if (isEdtTxtEmpty(edtMAxTo))
-            Toast.makeText(getActivity(),"Enter max gap duration",Toast.LENGTH_SHORT).show();
+            Toast.makeText(requireActivity(), "Enter max gap duration", Toast.LENGTH_SHORT).show();
         else {
             showVideoOptions();
         }
     }
 
-    public  void showVideoOptions() {
+    public void showVideoOptions() {
         openVideo();
     }
 
@@ -120,17 +122,17 @@ public class FragmentTrimVideo extends  Fragment implements View.OnClickListener
         }
     }
 
-    private boolean isEdtTxtEmpty(EditText editText){
+    private boolean isEdtTxtEmpty(EditText editText) {
         return editText.getText().toString().trim().isEmpty();
     }
 
-    private long getEdtValueLong(EditText editText){
+    private long getEdtValueLong(EditText editText) {
         return Long.parseLong(editText.getText().toString().trim());
     }
 
     private void openTrimActivity(String data) {
 
-//        Intent intent=new Intent(getActivity(), ActVideoTrimmer.class);
+//        Intent intent=new Intent(requireActivity(), ActVideoTrimmer.class);
 //        intent.putExtra(TrimmerConstants.TRIM_VIDEO_URI,data);
 //        intent.putExtra(TrimmerConstants.TRIM_TYPE,3);
 //        intent.putExtra(TrimmerConstants.MIN_FROM_DURATION,getEdtValueLong(edtMinFrom));

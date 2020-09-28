@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="com.hipoint.snipback">
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -12,7 +13,8 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
     <uses-feature android:name="android.hardware.camera" />
 
     <application
@@ -36,24 +38,20 @@
             android:name="com.hipoint.snipback.AppMainActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"
             android:configChanges="orientation|screenSize|layoutDirection"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
+            android:windowSoftInputMode="adjustResize"></activity>
 
 
-
-<!--        <activity-->
-<!--            android:name=".ActivityPlayVideo"-->
-<!--            android:theme="@style/Theme.AppCompat.NoActionBar"-->
-<!--            android:configChanges="orientation|screenSize|layoutDirection"-->
-<!--            android:windowSoftInputMode="adjustResize">-->
-<!--        </activity>-->
+        <!--        <activity-->
+        <!--            android:name=".ActivityPlayVideo"-->
+        <!--            android:theme="@style/Theme.AppCompat.NoActionBar"-->
+        <!--            android:configChanges="orientation|screenSize|layoutDirection"-->
+        <!--            android:windowSoftInputMode="adjustResize">-->
+        <!--        </activity>-->
 
         <activity
             android:name=".ActivityPlayVideo"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:configChanges="orientation|screenLayout"
-           >
-        </activity>
+            android:configChanges="orientation|screenLayout"></activity>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -64,7 +62,7 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_path" />
         </provider>
-<!--        android:authorities="${applicationId}.fileprovider"-->
+        <!--        android:authorities="${applicationId}.fileprovider"-->
 
     </application>
 

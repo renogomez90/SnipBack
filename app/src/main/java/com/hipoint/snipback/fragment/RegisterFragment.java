@@ -19,23 +19,23 @@ public class RegisterFragment extends Fragment {
     private View rootView;
     private Button button_register;
 
-    public  static  RegisterFragment newInstance() {
-        RegisterFragment fragment = new RegisterFragment();
-        return fragment;
+    public static RegisterFragment newInstance() {
+        return new RegisterFragment();
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.register_layout, container, false);
 
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
-        button_register=rootView.findViewById(R.id.button_register);
+        button_register = rootView.findViewById(R.id.button_register);
         button_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                ((AppMainActivity) getActivity()).loadFragment(RegisterFragment1.newInstance(),true);
+                ((AppMainActivity) requireActivity()).loadFragment(RegisterFragment1.newInstance(), true);
             }
         });
         return rootView;

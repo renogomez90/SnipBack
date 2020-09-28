@@ -30,7 +30,7 @@ public class CommonUtils {
         return hud;
     }
 
-    public static String today(){
+    public static String today() {
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
         int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);
@@ -60,8 +60,10 @@ public class CommonUtils {
         }
         return day;
     }
+
     private static String VIDEO_DIRECTORY_NAME_VIRTUAL = "SnipBackVirtual";
     private static String THUMBS_DIRECTORY_NAME = "Thumbs";
+
     public static void getVideoThumbnail(Context activity, Snip snip) {
         String TAG = "Thumbnail Creation";
         try {

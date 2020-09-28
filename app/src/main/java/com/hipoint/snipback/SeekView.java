@@ -22,7 +22,7 @@ public class SeekView {
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         view = inflater.inflate(R.layout.custom_seekview, null);
         view.getBackground().setAlpha(100);
-        textView=(TextView)view.findViewById(R.id.textView3);
+        textView = (TextView) view.findViewById(R.id.textView3);
 //        Typeface.createFromAsset(context.getAssets(),"DroidSans-Bold.ttf");
         RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT);
         params.leftMargin = 100;
@@ -34,22 +34,22 @@ public class SeekView {
         view.requestLayout();
         view.setVisibility(View.INVISIBLE);
     }
-    public void show()
-    {
+
+    public void show() {
         view.setVisibility(View.VISIBLE);
     }
-    public void hide()
-    {
+
+    public void hide() {
         view.setVisibility(View.INVISIBLE);
 
     }
-    public void setText(String s)
-    {
+
+    public void setText(String s) {
         textView.setText(s);
     }
-    public boolean isVisible()
-    {
-        if(view.getVisibility()==View.VISIBLE)
+
+    public boolean isVisible() {
+        if (view.getVisibility() == View.VISIBLE)
             return true;
         else
             return false;

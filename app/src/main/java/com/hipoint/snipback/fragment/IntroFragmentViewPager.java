@@ -21,16 +21,17 @@ public class IntroFragmentViewPager extends Fragment {
     private ViewPager viewPager;
     private ViewPagerAdapter adapter;
 
-    public  static  IntroFragmentViewPager newInstance() {
+    public static IntroFragmentViewPager newInstance() {
         IntroFragmentViewPager fragment = new IntroFragmentViewPager();
         return fragment;
     }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.intro_feed_pager_layout, null);
 
-        (getActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
 
         tabLayout = view.findViewById(R.id.homeTabs);

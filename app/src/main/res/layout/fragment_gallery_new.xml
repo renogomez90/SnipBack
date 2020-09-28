@@ -24,9 +24,8 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp"
         android:layout_marginTop="5dp"
-        android:layout_above="@+id/llfooter"
-        android:layout_below="@+id/photolabel"
-        >
+        android:layout_above="@id/llfooter"
+        android:layout_below="@id/photolabel">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/main_recycler"
@@ -40,20 +39,21 @@
         android:id="@+id/showLoader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/pullToRefresh"
+        android:layout_below="@id/pullToRefresh"
         android:visibility="invisible">
 
         <ImageView
+            android:contentDescription="@string/no_desc"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:adjustViewBounds="true"/>
+            android:adjustViewBounds="true" />
 
         <ProgressBar
             style="?android:attr/progressBarStyleSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:visibility="visible"/>
+            android:visibility="visible" />
 
     </RelativeLayout>
 
@@ -62,14 +62,15 @@
         android:id="@+id/import_con"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/photolabel"
+        android:layout_below="@id/photolabel"
         android:visibility="gone">
 
         <ImageView
+            android:contentDescription="@string/no_desc"
             android:id="@+id/player_view_image"
             android:layout_width="145dp"
             android:layout_height="145dp"
-            android:layout_marginLeft="44dp"
+            android:layout_marginStart="44dp"
             android:layout_marginTop="24dp"
             android:scaleType="fitXY"
             android:visibility="visible" />
@@ -78,7 +79,7 @@
             android:id="@+id/click"
             android:layout_width="145dp"
             android:layout_height="145dp"
-            android:layout_marginLeft="44dp"
+            android:layout_marginStart="44dp"
             android:layout_marginTop="24dp"
             android:background="@android:color/transparent"
             android:focusable="true"
@@ -92,19 +93,21 @@
         android:layout_height="55dp"
         android:layout_alignParentBottom="true"
         android:background="@color/bottom_menu"
-        android:baselineAligned="false" android:gravity="center">
+        android:baselineAligned="false"
+        android:gravity="center">
 
         <RelativeLayout
             android:id="@+id/layout_camera"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
             android:layout_weight="0.2"
             android:layout_marginBottom="3dp"
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/camera"
                 android:layout_width="match_parent"
                 android:padding="7dp"
@@ -116,12 +119,12 @@
                 android:id="@+id/camera_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/camera"
+                android:layout_below="@id/camera"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Camera"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -134,6 +137,7 @@
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/link"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -145,12 +149,12 @@
                 android:id="@+id/link_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/link"
+                android:layout_below="@id/link"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Link"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -163,6 +167,7 @@
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/filter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -174,12 +179,12 @@
                 android:id="@+id/filter_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/filter"
+                android:layout_below="@id/filter"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Filter"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -193,6 +198,7 @@
             android:clickable="false">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/_button_view"
                 android:layout_width="match_parent"
                 android:padding="10dp"
@@ -204,12 +210,12 @@
                 android:id="@+id/_button_view_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/_button_view"
+                android:layout_below="@id/_button_view"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="View"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
 
         <RelativeLayout
@@ -217,12 +223,13 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
             android:layout_weight="0.2"
             android:layout_marginBottom="5dp"
             android:gravity="center">
 
             <ImageButton
+            android:contentDescription="@string/no_desc"
                 android:id="@+id/dropdown_menu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -234,12 +241,12 @@
                 android:id="@+id/dropdown_menu_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/dropdown_menu"
+                android:layout_below="@id/dropdown_menu"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Menu"
                 android:textColor="@color/colorPrimaryGrey"
-                android:textSize="10dp" />
+                android:textSize="10sp" />
         </RelativeLayout>
     </LinearLayout>
 
