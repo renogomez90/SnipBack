@@ -17,6 +17,7 @@ import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
 import android.media.CamcorderProfile
+import android.media.MediaCodec
 import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.net.Uri
@@ -79,8 +80,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private val videoUtils = VideoUtils(this@VideoMode)
     private var processingDialog: ProcessingDialog? = null
     private var parentSnip: Snip? = null
-    private var actualClipTime = 0L
+//    private var actualClipTime = 0L
     private var clipQueue: Queue<File>? = null
+    private var persistentSurface = MediaCodec.createPersistentInputSurface()
 
     //two finger pinch zoom
     var finger_spacing = 0f
@@ -634,7 +636,17 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 // the user has started actively recording.
                 if (recordClips) recordClips = false
                 recordPressed = true
-                startRecordingVideo()
+//                startRecordingVideo()
+                if(mIsRecordingVideo){
+                    restartRecording()
+
+                    mChronometer.base = SystemClock.elapsedRealtime()
+                    mChronometer.start()
+                    mChronometer.visibility = View.VISIBLE
+                }else{
+                    startRecordingVideo()
+                }
+
                 while (clipQueue!!.size > 2) {
                     clipQueue!!.remove().delete()
                 }
@@ -771,7 +783,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             //  4.  merge and split
 
             val clip1 = clipQueue!!.remove()
-            startRecordingVideo()
+            restartRecording()
             val clip2 = clipQueue!!.remove()
 
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
@@ -786,24 +798,37 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             //      2.  remove item from queue and split the video
             //  2.  else save what we have. restart the recording inform user.
             if (clipQueue!!.isNotEmpty()) {
-                startRecordingVideo()
+
+                restartRecording()
+
                 val clip = clipQueue!!.remove()
+                val actualClipTime = getMetadataDurations(arrayListOf(clip.absolutePath))[0]
                 if (actualClipTime > swipeValue) {
                     CoroutineScope(IO).launch {
                         //  splitting may not work for this
                         Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue")
                         videoUtils.trimToClip(clip,
                                 "${clip.parent}/trimmed-${clip.name}",
-                                TimeUnit.MILLISECONDS.toSeconds(actualClipTime - swipeValue).toInt(),
-                                TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt())
+                                ((actualClipTime - swipeValue/1000).toInt()),
+                                actualClipTime)
                     }
                 } else { //  save what we have
-                    addSnip(clip.absolutePath, TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt(), TimeUnit.MILLISECONDS.toSeconds(actualClipTime).toInt())
+                    addSnip(clip.absolutePath, actualClipTime, actualClipTime)
                     processingDialog?.dismiss()
                 }
             }
         }
         Toast.makeText(requireActivity(), "Capturing Previous", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Stops and restarts the mediaRecorder,
+     * assuming the mediaRecorder is initialized and already recording
+     */
+    private fun restartRecording() {
+        mMediaRecorder?.stop()
+        setUpMediaRecorder()
+        mMediaRecorder?.start()
     }
 
     private fun attemptClipConcat() {
@@ -1164,6 +1189,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      */
     @Throws(IOException::class)
     private fun setUpMediaRecorder() {
+        /*
+        * todo: use media recorder setInputSurface for persistent surface
+        *  Don't use mediaRecorder. */
+
         val activity = activity ?: return
         mMediaRecorder!!.reset()
         val rotation = activity.windowManager.defaultDisplay.rotation
@@ -1191,6 +1220,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
             setAudioEncodingBitRate(profile.audioBitRate)
             setAudioSamplingRate(profile.audioSampleRate)
+            setInputSurface(persistentSurface)
 
 //        mMediaRecorder.setVideoEncodingBitRate(10000000);
 //        mMediaRecorder.setVideoFrameRate(30);
@@ -1200,7 +1230,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             setOnInfoListener { mr, what, extra ->
                 if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED && recordClips) {
                     try {
-                        startRecordingVideo()
+//                        startRecordingVideo()
+                        mr.stop()
+                        setUpMediaRecorder()
+                        mMediaRecorder!!.start()
                     } catch (e: IllegalStateException) {
                         e.printStackTrace()
                     }
@@ -1261,9 +1294,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
         try {
 //            closePreviewSession();
-            if (recordPressed)
-                actualClipTime = SystemClock.elapsedRealtime() - actualClipTime // clip has ended
-
             setUpMediaRecorder()
             val texture = mTextureView.surfaceTexture!!
             texture.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
@@ -1276,9 +1306,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             mPreviewBuilder!!.addTarget(previewSurface)
 
             // Set up Surface for the MediaRecorder
-            val recorderSurface = mMediaRecorder!!.surface
-            surfaces.add(recorderSurface)
-            mPreviewBuilder!!.addTarget(recorderSurface)
+//            val recorderSurface = mMediaRecorder!!.surface
+            surfaces.add(persistentSurface)
+            mPreviewBuilder!!.addTarget(persistentSurface)
 
             // Start a capture session
             // Once the session starts, we can update the UI and start recording
@@ -1294,16 +1324,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     }
                     mIsRecordingVideo = true
                     mMediaRecorder!!.start()
-                    /*getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            // UI
-                            // mButtonVideo.setText(R.string.stop);
-                            mIsRecordingVideo = true;
-                            // Start recording
-                            mMediaRecorder.start();
-                        }
-                    });*/
                 }
 
                 override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
@@ -1324,9 +1344,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             mChronometer.base = SystemClock.elapsedRealtime()
             mChronometer.start()
             mChronometer.visibility = View.VISIBLE
-        } else {
-            //  keeps a count of how long each clip was
-            actualClipTime = SystemClock.elapsedRealtime() - actualClipTime
         }
     }
 
@@ -1382,14 +1399,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         clipQueue!!.forEach(Consumer { file: File ->
             retriever.setDataSource(file.absolutePath)
             val currentClipDuration: Int = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
-            Log.d(TAG, "stopRecordingVideo:\nActual Clip time: $actualClipTime\nCurrent clip duration: $currentClipDuration\nTotalDuration: $totalDuration")
+            Log.d(TAG, "stopRecordingVideo:\nCurrent clip duration: $currentClipDuration\nTotalDuration: $totalDuration")
             totalDuration[0] += currentClipDuration
             addSnip(file.absolutePath, currentClipDuration,  /*totalDuration[0]*/currentClipDuration) //
         })
         retriever.release()
 
         outputFilePath = null
-        actualClipTime = 0L //  resetting clip time
         startPreview()
     }
 
