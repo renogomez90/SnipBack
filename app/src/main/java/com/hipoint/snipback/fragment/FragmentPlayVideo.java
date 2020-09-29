@@ -78,12 +78,12 @@ import kotlin.coroutines.EmptyCoroutineContext;
 public class FragmentPlayVideo extends Fragment {
     private View rootView;
     ImageView tag;
-    private BandwidthMeter bandwidthMeter;
-    private TrackSelector trackSelector;
-    private TrackSelection.Factory trackSelectionFactory;
+//    private BandwidthMeter bandwidthMeter;
+//    private TrackSelector trackSelector;
+//    private TrackSelection.Factory trackSelectionFactory;
     private SimpleExoPlayer player;
     private DataSource.Factory dataSourceFactory;
-    private ExtractorsFactory extractorsFactory;
+//    private ExtractorsFactory extractorsFactory;
     private DefaultBandwidthMeter defaultBandwidthMeter;
     private MediaSource mediaSource;
     private Uri uri;
@@ -136,11 +136,13 @@ public class FragmentPlayVideo extends Fragment {
 
 
 //        uri = Uri.parse(getArguments().getString("uri"));
+        /*
         bandwidthMeter = new DefaultBandwidthMeter.Builder(requireActivity()).build();
         extractorsFactory = new DefaultExtractorsFactory();
         trackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
         trackSelector = new DefaultTrackSelector(trackSelectionFactory);
-        defaultBandwidthMeter = new DefaultBandwidthMeter();
+        */
+        defaultBandwidthMeter = new DefaultBandwidthMeter.Builder(requireContext()).build();
         dataSourceFactory = new DefaultDataSourceFactory(requireActivity(),
                 Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter);
         /*mediaSource = new ExtractorMediaSource(Uri.parse(snip.getVideoFilePath()),
@@ -293,54 +295,51 @@ public class FragmentPlayVideo extends Fragment {
 //        }
 
         play_pause = rootView.findViewById(R.id.play_pause);
-        play_pause.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    if (player != null) {
-                        player.setPlayWhenReady(false);
-                        player.getPlaybackState();
-                        paused = true;
+        play_pause.setOnCheckedChangeListener((compoundButton, b) -> {
+            if (b) {
+                if (player != null) {
+                    player.setPlayWhenReady(false);
+                    player.getPlaybackState();
+                    paused = true;
 //                        current_posi = player.getCurrentPosition();
-                    }
-                } else {
-                    paused = false;
-                    if (snip.getIs_virtual_version() == 1) {
+                }
+            } else {
+                paused = false;
+                if (snip.getIs_virtual_version() == 1) {
 //                        player.prepare(mediaSource);
 //                        player.setPlayWhenReady(true);
-                        player.setPlayWhenReady(true);
-                        player.getPlaybackState();
-                        player.seekTo(player.getCurrentPosition() + (long) snip.getStart_time());
-                        current_posi = player.getCurrentPosition();
-                        new CountDownTimer((long) snip.getSnip_duration() * 1000 - current_posi, 1000) {
-                            @Override
-                            public void onTick(long millisUntilFinished) {
-
-                            }
-
-                            @Override
-                            public void onFinish() {
-
-                                if (player != null && !paused) {
-                                    player.setPlayWhenReady(false);
-                                    player.stop();
-                                    current_posi = player.getCurrentPosition();
-
-                                }
-
-                            }
-                        }.start();
-                    }
-//                    player.prepare(mediaSource);
                     player.setPlayWhenReady(true);
                     player.getPlaybackState();
-                    player.seekTo(player.getCurrentPosition() + 100);
+                    player.seekTo(player.getCurrentPosition() + (long) snip.getStart_time());
+                    current_posi = player.getCurrentPosition();
+                    new CountDownTimer((long) snip.getSnip_duration() * 1000 - current_posi, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+
+                        }
+
+                        @Override
+                        public void onFinish() {
+
+                            if (player != null && !paused) {
+                                player.setPlayWhenReady(false);
+                                player.stop();
+                                current_posi = player.getCurrentPosition();
+
+                            }
+
+                        }
+                    }.start();
+                }
+//                    player.prepare(mediaSource);
+                player.setPlayWhenReady(true);
+                player.getPlaybackState();
+                player.seekTo(player.getCurrentPosition() + 100);
 
 
 //////                    player.setPlayWhenReady(true);
 //                    player.setPlayWhenReady(!player.getPlayWhenReady());
 
-                }
             }
         });
 

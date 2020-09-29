@@ -50,6 +50,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
@@ -71,9 +72,6 @@ dependencies {
     implementation 'androidx.preference:preference:1.1.1'
     implementation 'com.google.android.exoplayer:exoplayer:2.11.8'
     implementation 'com.google.android.play:core:1.8.0'
-    implementation 'com.android.support:support-v13:version_of_library'
-    implementation "com.android.support:support-v4:27.0.2"
-    implementation "com.android.support:support-v13:27.0.2"
     implementation 'com.google.code.gson:gson:2.8.6'
 
     //  fast seek
@@ -84,7 +82,7 @@ dependencies {
     implementation 'io.reactivex.rxjava2:rxkotlin:2.3.0'
     implementation "com.github.exozet:AndroidCore:2.2.8"
 
-    // Room Implemetation
+    // Room Implementation
     implementation 'androidx.room:room-runtime:2.3.0-alpha02'
     annotationProcessor 'androidx.room:room-compiler:2.3.0-alpha02'
     androidTestImplementation 'androidx.room:room-testing:2.3.0-alpha02'

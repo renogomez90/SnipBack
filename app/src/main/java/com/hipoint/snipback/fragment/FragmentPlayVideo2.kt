@@ -16,17 +16,11 @@ import androidx.lifecycle.ViewModelProvider
 import com.exozet.android.core.extensions.onClick
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
-import com.google.android.exoplayer2.extractor.ExtractorsFactory
-import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.trackselection.*
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
-import com.google.android.exoplayer2.ui.PlayerControlView
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.BandwidthMeter
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -55,49 +49,37 @@ import kotlin.math.roundToLong
 class FragmentPlayVideo2 : Fragment() {
     private val TAG = FragmentPlayVideo2::class.java.simpleName
 
-    private val uri: Uri? = null
-    private val uriType: String? = null
-    private val play: Boolean = true
-
-    private var currentPosi = 0L
+    private var currentPosi   = 0L
     private var subscriptions = CompositeDisposable()
-    private var isSeeking = false
+    private var isSeeking     = false
 
-    private lateinit var bandwidthMeter: BandwidthMeter
-    private lateinit var mediaSource: MediaSource
-    private lateinit var trackSelector: TrackSelector
-    private lateinit var trackSelectionFactory: TrackSelection.Factory
-    private lateinit var player: SimpleExoPlayer
-    private lateinit var dataSourceFactory: DataSource.Factory
-    private lateinit var extractorsFactory: ExtractorsFactory
+    private lateinit var mediaSource          : MediaSource
+    private lateinit var player               : SimpleExoPlayer
+    private lateinit var dataSourceFactory    : DataSource.Factory
     private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
-    private lateinit var appRepository: AppRepository
-    private lateinit var appViewModel: AppViewModel
-
-    private lateinit var playerView: PlayerView
-
-    //    private lateinit var controlsView   : PlayerControlView
-//    private lateinit var playPause      : Switch
-    private lateinit var exoDuration: TextView
-    private lateinit var playBtn: ImageButton
-    private lateinit var pauseBtn: ImageButton
-
-    //    private lateinit var exoProgress    : DefaultTimeBar
-    private lateinit var seekBar: DefaultTimeBar
-    private lateinit var rootView: View
-    private lateinit var tag: ImageView
-    private lateinit var backArrow: RelativeLayout
-    private lateinit var buttonCamera: RelativeLayout
-    private lateinit var tvConvertToReal: ImageButton
-    private lateinit var swipeDetector: SwipeDistanceView
+    private lateinit var appRepository        : AppRepository
+    private lateinit var appViewModel         : AppViewModel
+    private lateinit var playerView           : PlayerView
+    private lateinit var exoDuration          : TextView
+    private lateinit var playBtn              : ImageButton
+    private lateinit var pauseBtn             : ImageButton
+    private lateinit var seekBar              : DefaultTimeBar
+    private lateinit var rootView             : View
+    private lateinit var tag                  : ImageView
+    private lateinit var backArrow            : RelativeLayout
+    private lateinit var buttonCamera         : RelativeLayout
+    private lateinit var tvConvertToReal      : ImageButton
+    private lateinit var swipeDetector        : SwipeDistanceView
 
     // new
+    /*
     private val seekdistance = 0f
     var initialX = 0f
     var initialY = 0f
     var currentX = 0f
     var currentY = 0f
     var condition2 = 0f
+    */
     private var event: Event? = null
 
     // new added
@@ -212,24 +194,13 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun initSetup() {
-        bandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
-        extractorsFactory = DefaultExtractorsFactory()
-        trackSelectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
-        trackSelector = DefaultTrackSelector(trackSelectionFactory)
         defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
-
         dataSourceFactory = DefaultDataSourceFactory(activity,
                 Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
-        /*mediaSource = ExtractorMediaSource(Uri.parse(snip!!.videoFilePath),
-                dataSourceFactory,
-                extractorsFactory,
-                null,
-                null)*/
 
         mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))
 
-        player = ExoPlayerFactory.newSimpleInstance(requireActivity(), trackSelector)
-//        controlsView.player = player
+        player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
 
@@ -237,20 +208,19 @@ class FragmentPlayVideo2 : Fragment() {
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.playWhenReady = true
         playerView.controllerShowTimeoutMs = 2000
-//        exoProgress.visibility = View.INVISIBLE
     }
 
     private fun bindViews() {
-        exoDuration = rootView.findViewById(R.id.exo_duration)
-        buttonCamera = rootView.findViewById(R.id.button_camera)
-        backArrow = rootView.findViewById(R.id.back_arrow)
+        exoDuration     = rootView.findViewById(R.id.exo_duration)
+        buttonCamera    = rootView.findViewById(R.id.button_camera)
+        backArrow       = rootView.findViewById(R.id.back_arrow)
         tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal)
-        playerView = rootView.findViewById(R.id.player_view)
-        tag = rootView.findViewById(R.id.tag)
-        swipeDetector = rootView.findViewById(R.id.swipe_detector)
-        seekBar = rootView.findViewById(R.id.exo_progress)
-        playBtn = rootView.findViewById(R.id.exo_play)
-        pauseBtn = rootView.findViewById(R.id.exo_pause)
+        playerView      = rootView.findViewById(R.id.player_view)
+        tag             = rootView.findViewById(R.id.tag)
+        swipeDetector   = rootView.findViewById(R.id.swipe_detector)
+        seekBar         = rootView.findViewById(R.id.exo_progress)
+        playBtn         = rootView.findViewById(R.id.exo_play)
+        pauseBtn        = rootView.findViewById(R.id.exo_pause)
     }
 
     private fun bindListeners() {
@@ -264,62 +234,29 @@ class FragmentPlayVideo2 : Fragment() {
             paused = true
         }
 
-        tvConvertToReal.setOnClickListener(View.OnClickListener { validateVideo(snip) })
+        tvConvertToReal.setOnClickListener { validateVideo(snip) }
         if ((if (snip != null) snip!!.is_virtual_version else 0) == 1) {
             tvConvertToReal.visibility = View.VISIBLE
         } else {
             tvConvertToReal.visibility = View.GONE
         }
 
-        backArrow.setOnClickListener(View.OnClickListener {
+        backArrow.setOnClickListener {
             player.release()
             requireActivity().onBackPressed()
-        })
+        }
 
-        buttonCamera.setOnClickListener(View.OnClickListener {
+        buttonCamera.setOnClickListener {
 //            (AppMainActivity).loadFragment(VideoMode.newInstance(),true);
             player.release()
             val intent1 = Intent(activity, AppMainActivity::class.java)
             startActivity(intent1)
             requireActivity().finishAffinity()
-        })
+        }
 
-        /*playPause.setOnCheckedChangeListener { compoundButton, isChecked ->
-            if (isChecked) {    //  checked pauses the video
-                if (this::player.isInitialized) {
-                    player.playWhenReady = false
-                    paused = true
-                    //                        current_posi = player.getCurrentPosition();
-                }
-            } else {    //  plays the video
-                paused = false
-                if (snip!!.is_virtual_version == 1) {
-//                        player.prepare(mediaSource);
-//                        player.setPlayWhenReady(true);
-                    player.playWhenReady = true
-                    player.seekTo(player.currentPosition + snip!!.start_time.toLong())
-                    currentPosi = player.currentPosition
-                    object : CountDownTimer(snip!!.snip_duration.toLong() * 1000 - currentPosi, 1000) {
-                        override fun onTick(millisUntilFinished: Long) {}
-                        override fun onFinish() {
-                            if (!paused) {
-                                player.playWhenReady = false
-                                player.stop()
-                                currentPosi = player.currentPosition
-                            }
-                        }
-                    }.start()
-                }
-                player.playWhenReady = true
-                player.seekTo(player.currentPosition + 100) //   why?
-
-            }
-        }*/
-
-
-        tag.setOnClickListener(View.OnClickListener {
+        tag.setOnClickListener {
             // ((AppMainActivity) requireActivity()).loadFragment(CreateTag.newInstance(), true);
-        })
+        }
         rootView.isFocusableInTouchMode = true
         rootView.requestFocus()
         rootView.setOnKeyListener(View.OnKeyListener { _, keyCode, _ ->
