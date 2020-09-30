@@ -225,6 +225,9 @@ class FragmentPlayVideo2 : Fragment() {
 
     private fun bindListeners() {
         playBtn.onClick {
+            if(player.currentPosition >= player.contentDuration){
+                player.seekTo(0)
+            }
             player.playWhenReady = true
             paused = false
         }

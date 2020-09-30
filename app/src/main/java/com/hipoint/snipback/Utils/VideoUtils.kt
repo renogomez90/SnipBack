@@ -84,20 +84,24 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -c copy -y -b:v 1M $outputPath"
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
-        EpEditor.execCmd(cmd, duration1 + duration2, object : OnEditorListener {
-            override fun onSuccess() {
-                File(tmpFile).delete()
-                Log.d(TAG, "Concat Success")
-                opListener.changed(IVideoOpListener.VideoOp.CONCAT, outputPath)
-            }
+        try {
+            EpEditor.execCmd(cmd, duration1 + duration2, object : OnEditorListener {
+                override fun onSuccess() {
+                    File(tmpFile).delete()
+                    Log.d(TAG, "Concat Success")
+                    opListener.changed(IVideoOpListener.VideoOp.CONCAT, outputPath)
+                }
 
-            override fun onFailure() {
-                Log.d(TAG, "Concat Failed")
-                opListener.failed(IVideoOpListener.VideoOp.CONCAT)
-            }
+                override fun onFailure() {
+                    Log.d(TAG, "Concat Failed")
+                    opListener.failed(IVideoOpListener.VideoOp.CONCAT)
+                }
 
-            override fun onProgress(progress: Float) {}
-        })
+                override fun onProgress(progress: Float) {}
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     /**
@@ -120,20 +124,25 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (sec < end)
             end = sec.toInt()
 
-        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -c copy -y $outputPath"
+//        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -preset ultrafast -y $outputPath"
+        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -preset ultrafast -y $outputPath"
 
         Log.d(TAG, "trimToClip: cmd= $cmd")
-        EpEditor.execCmd(cmd, 1, object : OnEditorListener {
-            override fun onSuccess() {
-                opListener.changed(IVideoOpListener.VideoOp.TRIMMED, outputPath)
-            }
+        try {
+            EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+                override fun onSuccess() {
+                    opListener.changed(IVideoOpListener.VideoOp.TRIMMED, outputPath)
+                }
 
-            override fun onFailure() {
-                opListener.failed(IVideoOpListener.VideoOp.TRIMMED)
-            }
+                override fun onFailure() {
+                    opListener.failed(IVideoOpListener.VideoOp.TRIMMED)
+                }
 
-            override fun onProgress(progress: Float) {}
-        })
+                override fun onProgress(progress: Float) {}
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     suspend fun splitVideo(clip: File, splitTime: Int, outputFolder: String) {
@@ -146,23 +155,27 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (splitTime > duration)
             throw IllegalArgumentException("splitTime must be within video duration")
 
-        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -acodec copy -f segment -segment_time $splitTime -vcodec copy -reset_timestamps 1 -map 0 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
+        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -preset ultrafast -reset_timestamps 1 -map 0 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
 
         Log.d(TAG, "splitVideo: cmd= $cmd")
 
-        EpEditor.execCmd(cmd, 1, object : OnEditorListener {
-            override fun onSuccess() {
-                opListener.changed(IVideoOpListener.VideoOp.SPLIT, "$outputFolder/${clip.nameWithoutExtension}")
-            }
+        try {
+            EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+                override fun onSuccess() {
+                    opListener.changed(IVideoOpListener.VideoOp.SPLIT, "$outputFolder/${clip.nameWithoutExtension}")
+                }
 
-            override fun onFailure() {
-                opListener.failed(IVideoOpListener.VideoOp.SPLIT)
-            }
+                override fun onFailure() {
+                    opListener.failed(IVideoOpListener.VideoOp.SPLIT)
+                }
 
-            override fun onProgress(progress: Float) {
-            }
+                override fun onProgress(progress: Float) {
+                }
 
-        })
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun createFileList(clip1: File, clip2: File): String {

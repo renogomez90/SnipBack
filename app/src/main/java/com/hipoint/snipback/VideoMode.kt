@@ -79,16 +79,16 @@ import kotlin.math.sqrt
 
 class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, AppRepository.OnTaskCompleted, IVideoOpListener {
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
-    private val totalDuration = intArrayOf(0)                     //  total combined duration of merged clip
-    private val clipDuration = 20 * 1000L                        //  Buffer duration
-    private val swipeValue = 5 * 1000L                         //  swipeBack duration
-    private val videoUtils = VideoUtils(this@VideoMode)
-    private var processingDialog: ProcessingDialog? = null
-    private var parentSnip: Snip? = null
-    private var swipedFileNames: ArrayList<String> = arrayListOf()  //  names of files generated from swiping left
-    private var showInGallery: ArrayList<String> = arrayListOf()    //  names of files that need to be displayed in the gallery
-    private var swipedRecording: SwipedRecording? = null
-    private var swipeProcessed: Boolean = false
+    private val totalDuration         = intArrayOf(0)                              //  total combined duration of merged clip
+    private val clipDuration          = 20 * 1000L                                 //  Buffer duration
+    private val swipeValue            = 5 * 1000L                                  //  swipeBack duration
+    private val videoUtils            = VideoUtils(this@VideoMode)
+    private var processingDialog     : ProcessingDialog?           = null
+    private var parentSnip           : Snip?                       = null
+    private var swipedFileNames      : ArrayList<String>           = arrayListOf() //  names of files generated from swiping left
+    private var showInGallery        : ArrayList<String>           = arrayListOf() //  names of files that need to be displayed in the gallery
+    private var swipedRecording      : SwipedRecording?            = null
+    private var swipeProcessed       : Boolean                     = false
 
     //    private var actualClipTime = 0L
     private var clipQueue: Queue<File>? = null
@@ -96,17 +96,18 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     //two finger pinch zoom
     var finger_spacing = 0f
-    var zoom_level = 1.0
-    var zoom: Rect? = null
+    var zoom_level     = 1.0
+
+    var zoom      : Rect?     = null
     var zoomFactor: TextView? = null
 
     //zoom slider controls
-    var mProgress = 0f
-    var mMinZoom = 0f
-    var mMaxZoom = 0f
+    var mProgress         = 0f
+    var mMinZoom          = 0f
+    var mMaxZoom          = 0f
     private var zoomLevel = 0f
-    var currentProgress = 1f
-    val zoomStep = 1f
+    var currentProgress   = 1f
+    val zoomStep          = 1f
 
     //left swipe
     private var x1 = 0f
@@ -197,6 +198,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         mBackgroundHandler)
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
+                Toast.makeText(requireContext(), "Cannot connect to camera", Toast.LENGTH_SHORT).show()
+                requireActivity().finish()
             } catch (e: NullPointerException) {
                 e.printStackTrace()
             }
@@ -645,7 +648,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 recordPressed = true
 //                startRecordingVideo()
                 if (mIsRecordingVideo) {
-                    restartRecording()
+                    restartRecording()  //  if record is pressed immediately after the app launches, causes crash todo: fix this
 
                     mChronometer.base = SystemClock.elapsedRealtime()
                     mChronometer.start()
@@ -1156,6 +1159,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                                 mPreviewSession!!.setRepeatingRequest(mPreviewBuilder!!.build(), null, mBackgroundHandler)
                             } catch (e: CameraAccessException) {
                                 e.printStackTrace()
+                                Toast.makeText(requireContext(), "Cannot connect to camera", Toast.LENGTH_SHORT).show()
+                                requireActivity().finish()
+                            } catch (e1: IllegalStateException) {
+                                e1.printStackTrace()
                             }
                         }
 
@@ -1216,7 +1223,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY())
             matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
-            val scale = Math.max(
+            val scale = max(
                     viewHeight.toFloat() / mPreviewSize!!.height,
                     viewWidth.toFloat() / mPreviewSize!!.width)
             matrix.postScale(scale, scale, centerX, centerY)
@@ -1369,6 +1376,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         mPreviewSession!!.setRepeatingRequest(mPreviewBuilder!!.build(), null, mBackgroundHandler)
                     } catch (e: CameraAccessException) {
                         e.printStackTrace()
+                        Toast.makeText(requireContext(), "Cannot connect to camera", Toast.LENGTH_SHORT).show()
+                        requireActivity().finish()
+                    } catch (e1: IllegalStateException) {
+                        e1.printStackTrace()
                     }
                     mIsRecordingVideo = true
                     mMediaRecorder!!.start()
@@ -1873,8 +1884,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 Log.d(TAG, "$processedVideoPath Completed")
                 CoroutineScope(Main).launch { processingDialog?.dismiss() }
                 CoroutineScope(IO).launch {
-
-                    val pathList = arrayListOf<String>("$processedVideoPath-0.mp4", "$processedVideoPath-1.mp4")
+                    val pathList = arrayListOf("$processedVideoPath-0.mp4", "$processedVideoPath-1.mp4")
                     getMetadataDurations(pathList).forEachIndexed { index, dur ->
                         addSnip("$processedVideoPath-${index}.mp4", dur, dur)
                     }
@@ -1905,9 +1915,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         val retriever = MediaMetadataRetriever()
         var duration: Int
         filePathList.forEach {
-            retriever.setDataSource(it)
-            duration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
-            durationList.add(duration)
+            try {
+                retriever.setDataSource(it)
+                duration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
+                durationList.add(duration)
+            }catch (e:IllegalArgumentException){
+                e.printStackTrace()
+                Log.e(TAG, "getMetadataDurations: data file error; setting duration to -1")
+                durationList.add(-1)
+            }
         }
         retriever.release()
         return durationList
