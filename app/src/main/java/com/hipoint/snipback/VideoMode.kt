@@ -73,6 +73,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import kotlin.collections.ArrayList
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -84,8 +85,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private val videoUtils = VideoUtils(this@VideoMode)
     private var processingDialog: ProcessingDialog? = null
     private var parentSnip: Snip? = null
-    private var swipedFileNames: ArrayList<String> = arrayListOf()
-    private var showInGallery: ArrayList<String> = arrayListOf()
+    private var swipedFileNames: ArrayList<String> = arrayListOf()  //  names of files generated from swiping left
+    private var showInGallery: ArrayList<String> = arrayListOf()    //  names of files that need to be displayed in the gallery
     private var swipedRecording: SwipedRecording? = null
     private var swipeProcessed: Boolean = false
 
@@ -640,7 +641,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
                 // Once the record button is pressed we no longer need to capture clips since the
                 // the user has started actively recording.
-                if (recordClips) recordClips = false
+                recordClips = false
                 recordPressed = true
 //                startRecordingVideo()
                 if (mIsRecordingVideo) {
@@ -660,6 +661,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.rec_stop -> {
                 bottomContainer.visibility = View.VISIBLE
                 recStartLayout.visibility = View.INVISIBLE
+                showInGallery.add(File(outputFilePath!!).nameWithoutExtension)
                 stopRecordingVideo()
                 attemptClipConcat()
                 parentSnip = null   //  resetting the session parent Snip
@@ -835,23 +837,23 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         CoroutineScope(IO).launch {
                             //  splitting may not work for this
                             Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
-                            swipedFileNames.add("trimmed-${clip.name}")
-                            showInGallery.add("trimmed-${clip.name}")
+                            swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
+                            showInGallery.add("trimmed-${clip.nameWithoutExtension}")
                             videoUtils.trimToClip(clip,
                                     "${clip.parent}/trimmed-${clip.name}",
                                     ((actualClipTime - swipeClipDuration).toInt()),
                                     actualClipTime)
                         }
                     } else { //  save what we have
-                        swipedFileNames.add(clip.name)
-                        showInGallery.add(clip.name)
+                        swipedFileNames.add(clip.nameWithoutExtension)
+                        showInGallery.add(clip.nameWithoutExtension)
                         addSnip(clip.absolutePath, actualClipTime, actualClipTime)
                         processingDialog?.dismiss()
                     }
                 }
             }
         } else {    // swiped during video recording
-            swipedFileNames.add(outputFilePath!!)
+            swipedFileNames.add(File(outputFilePath!!).nameWithoutExtension)
             if (swipedRecording == null) {
                 swipedRecording = outputFilePath?.let { SwipedRecording(it) }
                 swipedRecording!!.timestamps.add(timerSecond)
@@ -1238,14 +1240,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      */
     @Throws(IOException::class)
     private fun setUpMediaRecorder() {
-        /*
-        * todo: use media recorder setInputSurface for persistent surface
-        *  Don't use mediaRecorder. */
-
         if (activity == null)
             return
+        //  ensuring the media recorder is recreated
+        try {
+            mMediaRecorder!!.reset()
+        } catch (e: IllegalStateException) {
+            e.printStackTrace()
+        }
 
-        mMediaRecorder!!.reset()
         val rotation = requireActivity().windowManager.defaultDisplay.rotation
         when (mSensorOrientation) {
             SENSOR_ORIENTATION_DEFAULT_DEGREES -> mMediaRecorder!!.setOrientationHint(DEFAULT_ORIENTATIONS[rotation])
@@ -1261,6 +1264,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             setOutputFile(outputFilePath)
             if (recordClips) {    //  so that the actual recording is not affected by clip duration.
                 setMaxDuration(clipDuration.toInt())
+            } else {
+                setMaxDuration(0)
             }
             //        CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
             val profile = chooseCamcorderProfile()
@@ -1273,18 +1278,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             setAudioSamplingRate(profile.audioSampleRate)
             setInputSurface(persistentSurface)
 
-//        mMediaRecorder.setVideoEncodingBitRate(10000000);
-//        mMediaRecorder.setVideoFrameRate(30);
-//        mMediaRecorder.setVideoSize(mVideoSize.getWidth(), mVideoSize.getHeight());
-//        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-//        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
             setOnInfoListener { mr, what, _ ->
                 if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED && recordClips) {
                     try {
-//                        startRecordingVideo()
-                        mr.stop()
-                        setUpMediaRecorder()
-                        mMediaRecorder!!.start()
+                        restartRecording()
                     } catch (e: IllegalStateException) {
                         e.printStackTrace()
                     }
@@ -1455,7 +1452,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             addSnip(file.absolutePath, currentClipDuration,  /*totalDuration[0]*/currentClipDuration) //
         })
         retriever.release()
-
 //        outputFilePath = null
         startPreview()
     }
@@ -1467,7 +1463,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             start_time = 0.0
             end_time = 0.0
             is_virtual_version = 0
-            parent_snip_id = /*parentSnip?.snip_id ?:*/ 0
+            parent_snip_id = if (swipedFileNames.contains(File(snipFilePath).nameWithoutExtension))
+                parentSnip?.snip_id ?: 0
+            else 0
             snip_duration = snipDuration.toDouble()
             total_video_duration = totalDuration
             vid_creation_date = System.currentTimeMillis()
@@ -1489,8 +1487,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     override suspend fun onTaskCompleted(snip: Snip?) {
-        //  todo: merged and trimmed file needs to be added in HD_snip nothing else
-
         if (snip?.is_virtual_version == 0) {
 //            snip.setSnip_id(AppClass.getAppInstance().getLastSnipId());
 //            hdSnips!!.video_path_processed = snip.videoFilePath
@@ -1502,7 +1498,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             if (parentSnip == null) {
                 parentSnip = snip
             }
-            if (showInGallery.contains(File(snip.videoFilePath).name)) {
+            if (showInGallery.contains(File(snip.videoFilePath).nameWithoutExtension)) {
                 appRepository!!.insertHd_snips(hdSnips!!)
                 saveSnipToDB(parentSnip, hdSnips!!.video_path_processed)
             }
@@ -1569,16 +1565,20 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //            eventData.setEvent_title(event.getEvent_title());
 //            eventData.setEvent_created(event.getEvent_created());
             for (endSecond in snipDurations) {
-                val startSecond = Math.max(endSecond - 5, 0)
+                val startSecond = (endSecond - 5).coerceAtLeast(0)
                 val snip = Snip()
-                snip.start_time = startSecond.toDouble()
-                snip.end_time = endSecond.toDouble()
-                snip.is_virtual_version = 1
-                snip.has_virtual_versions = 0
-                snip.parent_snip_id = 0 /*parentSnip!!.snip_id*/
-                snip.snip_duration = endSecond - startSecond.toDouble()
-                snip.vid_creation_date = System.currentTimeMillis()
-                snip.event_id = event.event_id
+                snip.apply {
+                    start_time = startSecond.toDouble()
+                    end_time = endSecond.toDouble()
+                    is_virtual_version = 1
+                    has_virtual_versions = 0
+                    parent_snip_id = if (swipedFileNames.contains(File(filePath!!).nameWithoutExtension))
+                        parentSnip?.snip_id ?: 0
+                    else 0
+                    snip_duration = endSecond - startSecond.toDouble()
+                    vid_creation_date = System.currentTimeMillis()
+                    event_id = event.event_id
+                }
                 CoroutineScope(IO).launch {
                     appRepository!!.insertSnip(this@VideoMode, snip)
                 }
@@ -1865,7 +1865,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                     addSnip(processedVideoPath, duration, duration)
                 }
-                if(!swipeProcessed){
+                if (!swipeProcessed) {
                     processPendingSwipes()
                 }
             }
@@ -1879,7 +1879,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         addSnip("$processedVideoPath-${index}.mp4", dur, dur)
                     }
                 }
-                if(!swipeProcessed){
+                if (!swipeProcessed) {
                     processPendingSwipes()
                 }
             }
