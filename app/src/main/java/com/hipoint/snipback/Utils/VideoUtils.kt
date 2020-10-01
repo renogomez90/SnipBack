@@ -124,8 +124,8 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (sec < end)
             end = sec.toInt()
 
-//        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -preset ultrafast -y $outputPath"
         val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -preset ultrafast -y $outputPath"
+//        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -c copy -y $outputPath"
 
         Log.d(TAG, "trimToClip: cmd= $cmd")
         try {
@@ -155,7 +155,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (splitTime > duration)
             throw IllegalArgumentException("splitTime must be within video duration")
 
-        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -preset ultrafast -reset_timestamps 1 -map 0 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
+        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -c copy -reset_timestamps 1 -map 0 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
 
         Log.d(TAG, "splitVideo: cmd= $cmd")
 
