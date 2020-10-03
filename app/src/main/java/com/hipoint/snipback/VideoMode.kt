@@ -674,6 +674,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 recStartLayout.visibility = View.INVISIBLE
                 showInGallery.add(File(outputFilePath!!).nameWithoutExtension)
                 stopRecordingVideo()
+//                processPendingSwipes()
                 attemptClipConcat()
                 parentSnip = null   //  resetting the session parent Snip
                 // we can restart recoding clips if it is required at this point
@@ -799,7 +800,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 val task = arrayListOf<VideoOpItem>()
                 swipedRecording?.timestamps?.forEachIndexed { index, timeStamp ->
 
-                    val outputFileName = "${swipedRecording?.fileName}-$index.mp4"
+                    val outputFileName = "${File(swipedRecording?.fileName!!).parent}/${File(swipedRecording?.fileName!!).nameWithoutExtension}-$index.mp4"
 
                     showInGallery.add(File(outputFileName).nameWithoutExtension)
                     Log.d(TAG, "processPendingSwipes: \n Output = $outputFileName, \n start = ${(timeStamp - (swipeValue / 1000)).toInt()} \n end = $timeStamp")
@@ -837,7 +838,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
                 val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val mergeFilePath = "${clip1.parent!!}/merged-$timeStamp.mp4"
-                swipedFileNames.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+                swipedFileNames.add("${File(outputFilePath).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
                 showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
 
                 val intentService = Intent(requireContext(), VideoService::class.java)
@@ -926,7 +927,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val clip2: File = clipQueue!!.remove()
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val mergeFilePath = "${clip1.parent!!}/merged-$timeStamp.mp4"
-            showInGallery.add("merged-$timeStamp-1")
+            showInGallery.add(clip2.nameWithoutExtension)   //  only the actual recording is shown
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val task = arrayListOf(VideoOpItem(
@@ -1556,10 +1557,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
                 Log.d(TAG, "sanity check: HD snip insertion of = ${snip.videoFilePath}")
                 showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
+
+                getVideoThumbnail(snip, File(hdSnips!!.video_path_processed))
             }
 //            parentSnipId = AppClass.getAppInstance().lastSnipId + 1
         }
-        getVideoThumbnail(snip, File(hdSnips!!.video_path_processed))
 
     }
 
@@ -1906,43 +1908,49 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      */
     fun videoConcatCompleted(processedVideoPath: String) {
         val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-        addSnip(processedVideoPath, duration, duration)
+        addSnip(processedVideoPath, duration, duration)     //  merged file is saved to DB
 
         val swipeClipDuration = swipeValue / 1000
         if (recordClips) {  //  concat was triggered when automatic capture was ongoing
 
             val intentService = Intent(requireContext(), VideoService::class.java)
+            val split2File = "${File(processedVideoPath).parent}/${File(processedVideoPath).nameWithoutExtension}-1.mp4"
             val task = arrayListOf(VideoOpItem(
-                    operation = VideoOp.SPLIT,
+                    operation = VideoOp.TRIMMED,
                     clip1 = processedVideoPath,
                     clip2 = "",
-                    splitTime = (duration - swipeClipDuration).toInt(),
-                    outputPath = File(processedVideoPath).parent!!))
+                    startTime = (duration - swipeClipDuration).toInt(),
+                    endTime = duration,
+                    outputPath = split2File))
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             startForegroundService(requireContext(), intentService)
 
-        } else {    // concat was triggered when user recording was ongoing
-            hdSnips!!.video_path_unprocessed = processedVideoPath
-            hdSnips!!.hd_snip_id = AppClass.getAppInstance().lastHDSnipId.toInt()
-            val splitTime = if (swipedFileNames.contains(File(processedVideoPath).nameWithoutExtension)) {
-                (totalDuration[0] - swipeClipDuration).toInt()
-            } else {
-                totalDuration[0] - userRecordDuration
-            }
+        } else {    // concat was triggered when user recording was completed
+            /*
+             hdSnips!!.video_path_unprocessed = processedVideoPath
+           hdSnips!!.hd_snip_id = AppClass.getAppInstance().lastHDSnipId.toInt()
 
-            CoroutineScope(IO).launch {
-                appRepository!!.updateHDSnip(hdSnips!!)
-            }
+           val splitTime = if (swipedFileNames.contains(File(processedVideoPath).nameWithoutExtension)) {
+               (totalDuration[0] - swipeClipDuration).toInt()
+           } else {
+               totalDuration[0] - userRecordDuration
+           }
 
-            val intentService = Intent(requireContext(), VideoService::class.java)
-            val task = arrayListOf(VideoOpItem(
-                    operation = VideoOp.SPLIT,
-                    clip1 = processedVideoPath,
-                    clip2 = "",
-                    splitTime = splitTime,
-                    outputPath = File(processedVideoPath).parent!!))
-            intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-            startForegroundService(requireContext(), intentService)
+           CoroutineScope(IO).launch {
+               appRepository!!.updateHDSnip(hdSnips!!)
+           }
+
+           val intentService = Intent(requireContext(), VideoService::class.java)  //  todo: changed now
+           val task = arrayListOf(VideoOpItem(
+                   operation = VideoOp.TRIMMED,
+                   clip1 = processedVideoPath,
+                   clip2 = "",
+                   startTime = splitTime,
+                   endTime = totalDuration[0],
+                   outputPath = File(processedVideoPath).parent!!))
+           intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+           startForegroundService(requireContext(), intentService)
+           */
         }
     }
 
