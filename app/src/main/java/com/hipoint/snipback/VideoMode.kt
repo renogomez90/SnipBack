@@ -673,10 +673,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 bottomContainer.visibility = View.VISIBLE
                 recStartLayout.visibility = View.INVISIBLE
                 showInGallery.add(File(outputFilePath!!).nameWithoutExtension)
+                parentSnip = null   //  resetting the session parent Snip
                 stopRecordingVideo()
 //                processPendingSwipes()
                 attemptClipConcat()
-                parentSnip = null   //  resetting the session parent Snip
                 // we can restart recoding clips if it is required at this point
                 recordClips = true
                 recordPressed = false
@@ -1515,7 +1515,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             start_time = 0.0
             end_time = 0.0
             is_virtual_version = 0
-            parent_snip_id = if (swipedFileNames.contains(File(snipFilePath).nameWithoutExtension) && !recordClips)
+            parent_snip_id = if (isInList(swipedFileNames, snipFilePath) && !recordClips)
                 parentSnip?.snip_id ?: 0
             else 0
             snip_duration = snipDuration.toDouble()
@@ -1551,7 +1551,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 parentSnip = snip
             }
             Log.d(TAG, "sanity check: Saved Snip = ${snip.videoFilePath}")
-            if (showInGallery.contains(File(snip.videoFilePath).nameWithoutExtension)) {
+
+            if (isInList(showInGallery, snip.videoFilePath)) {
                 appRepository!!.insertHd_snips(hdSnips!!)
                 saveSnipToDB(parentSnip, hdSnips!!.video_path_processed)
 
@@ -1609,6 +1610,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
+    //todo: fix parent snips
     private fun saveSnipToDB(parentSnip: Snip?, filePath: String?) {
 //        String chronoText = mChronometer.getText().toString();
 //        Log.e("chrono m reading",chronoText);
@@ -1624,12 +1626,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             for (endSecond in snipDurations) {
                 val startSecond = (endSecond - 5).coerceAtLeast(0)
                 val snip = Snip()
+
                 snip.apply {
                     start_time = startSecond.toDouble()
                     end_time = endSecond.toDouble()
                     is_virtual_version = 1
                     has_virtual_versions = 0
-                    parent_snip_id = if (swipedFileNames.contains(File(filePath!!).nameWithoutExtension) && !recordClips)
+                    parent_snip_id = if (isInList(swipedFileNames, filePath) && !recordClips)
                         parentSnip?.snip_id ?: 0
                     else 0
                     snip_duration = endSecond - startSecond.toDouble()
@@ -1662,8 +1665,21 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //            ((AppMainActivity) requireActivity()).loadFragment(FragmentGalleryNew.newInstance());
 
 //        });
+    }
 
-        //TODO
+    /**
+     * Checks if the required item is availble in the list
+     * @param listOfPaths ArrayList<String>
+     * @param filePath String?
+     * @return Boolean
+     */
+    private fun isInList(listOfPaths: ArrayList<String>, filePath: String?): Boolean {
+        var isInList = false
+        listOfPaths.forEach {
+            if (File(it).nameWithoutExtension == File(filePath!!).nameWithoutExtension)
+                isInList = true
+        }
+        return isInList
     }
 
     private fun saveSnipTimeToLocal() {
