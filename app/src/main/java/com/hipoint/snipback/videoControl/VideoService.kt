@@ -97,47 +97,48 @@ class VideoService : Service(), IVideoOpListener {
                     IVideoOpListener.VideoOp.CONCAT -> {
                         if (clip2.isBlank()) {
                             failed(IVideoOpListener.VideoOp.CONCAT)
+                            return@with
                         } else {
                             CoroutineScope(IO).launch {
                                 vUtil.concatenateFiles(File(clip1), File(clip2), outputPath)
+                                return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.MERGED -> {
                         if (clip2.isBlank()) {
                             failed(IVideoOpListener.VideoOp.MERGED)
+                            return@with
                         } else {
                             CoroutineScope(IO).launch {
                                 vUtil.mergeRecordedFiles(File(clip1), File(clip2), outputPath)
+                                return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.TRIMMED -> {
                         if (startTime == -1 || endTime == -1) {
                             failed(IVideoOpListener.VideoOp.TRIMMED)
+                            return@with
                         } else {
                             CoroutineScope(IO).launch {
                                 vUtil.trimToClip(File(clip1), outputPath, startTime, endTime)
+                                return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.SPLIT -> {
                         if (splitTime == -1) {
                             failed(IVideoOpListener.VideoOp.SPLIT)
+                            return@with
                         } else {
                             CoroutineScope(IO).launch {
                                 vUtil.splitVideo(File(clip1), splitTime, outputPath)
+                                return@launch
                             }
                         }
                     }
-                    IVideoOpListener.VideoOp.SPEED -> {
-                    }
-                    IVideoOpListener.VideoOp.FRAMES -> {
-                    }
-                    IVideoOpListener.VideoOp.KEY_FRAMES -> {
-                    }
-                    IVideoOpListener.VideoOp.ERROR -> {
-                    }
+                    else ->{}
                 }
             }
         } else {

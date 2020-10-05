@@ -86,6 +86,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var parentSnip: Snip? = null
     private var swipedFileNames: ArrayList<String> = arrayListOf()  //  names of files generated from swiping left
     private var showInGallery: ArrayList<String> = arrayListOf()    //  names of files that need to be displayed in the gallery
+    private var addedToSnip: ArrayList<String> = arrayListOf()    //  names of files that need to be displayed in the gallery
     private var swipedRecording: SwipedRecording? = null
     private var swipeProcessed: Boolean = false
     private var processingDialog: ProcessingDialog? = null
@@ -226,6 +227,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     companion object {
+        private var videoMode: VideoMode? = null
+
         //Camera Orientation
         private const val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
         private const val SENSOR_ORIENTATION_INVERSE_DEGREES = 270
@@ -309,7 +312,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         @JvmStatic
         fun newInstance(): VideoMode {
-            return VideoMode()
+            if(videoMode == null)
+                videoMode = VideoMode()
+
+            return videoMode!!
         }
 
         init {
@@ -794,6 +800,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Processes the swipe that were made during user recording
      * */
     private fun processPendingSwipes() {
+
+        swipeProcessed = true
+
         if (swipedRecording != null) {
             if (swipedRecording?.fileName.equals(outputFilePath)) {
                 val intentService = Intent(requireContext(), VideoService::class.java)
@@ -819,8 +828,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 startForegroundService(requireContext(), intentService)
             }
         }
-
-        swipeProcessed = true
     }
 
     private fun handleLeftSwipe() {
@@ -890,13 +897,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             swipedFileNames.add(File(outputFilePath!!).nameWithoutExtension)    // video file currently being recorded
             if (swipedRecording == null) {
                 swipedRecording = outputFilePath?.let { SwipedRecording(it) }
+            }
+            if (swipedRecording!!.fileName?.equals(outputFilePath)!!) {
                 swipedRecording!!.timestamps.add(timerSecond)
-                Log.d(TAG, "sanity check: Time stamp for swipe added at : $timerSecond ")
-            } else {
-                if (swipedRecording!!.fileName?.equals(outputFilePath)!!) {
-                    swipedRecording!!.timestamps.add(timerSecond)
-                    Log.d(TAG, "sanity check: Time stamp for swipe added at : $timerSecond ")
-                }
             }
         }
 
@@ -1509,15 +1512,21 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private fun addSnip(snipFilePath: String, snipDuration: Int, totalDuration: Int) {
-        Log.d(TAG, "Video saved: $outputFilePath")
+        if(addedToSnip.contains(snipFilePath))  //  This is a work around till we figure out the cause of duplication
+            return
+        else
+            addedToSnip.add(snipFilePath)
+
         val pSnip = Snip()
         pSnip.apply {
             start_time = 0.0
             end_time = 0.0
             is_virtual_version = 0
-            parent_snip_id = if (isInList(swipedFileNames, snipFilePath) && !recordClips)
-                parentSnip?.snip_id ?: 0
-            else 0
+            parent_snip_id = if (parentSnip != null) {
+                if (File(snipFilePath).nameWithoutExtension.contains(File(parentSnip!!.videoFilePath).nameWithoutExtension)) {
+                    parentSnip!!.snip_id
+                } else 0
+            } else 0
             snip_duration = snipDuration.toDouble()
             total_video_duration = totalDuration
             vid_creation_date = System.currentTimeMillis()
@@ -1530,7 +1539,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             // So that the order of the videos don't change
             appRepository!!.insertSnip(this@VideoMode, pSnip)
         }
-        //            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
+//            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
 //            AppClass.getAppInsatnce().saveAllEventSnips();
 //            AppClass.getAppInsatnce().saveAllParentSnips(parentSnip);
 //            AppClass.getAppInsatnce().setEventParentSnips();
@@ -1547,19 +1556,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             hdSnips = Hd_snips()
             hdSnips!!.video_path_processed = snip.videoFilePath
             hdSnips!!.snip_id = snip.snip_id
-            if (parentSnip == null) {
+            if (!File(snip.videoFilePath).name.contains("-")) { //  files names with - are edited from original
                 parentSnip = snip
             }
-            Log.d(TAG, "sanity check: Saved Snip = ${snip.videoFilePath}")
 
             if (isInList(showInGallery, snip.videoFilePath)) {
                 appRepository!!.insertHd_snips(hdSnips!!)
-                saveSnipToDB(parentSnip, hdSnips!!.video_path_processed)
-
-                Log.d(TAG, "sanity check: HD snip insertion of = ${snip.videoFilePath}")
-                showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
-
+//                saveSnipToDB(parentSnip, hdSnips!!.video_path_processed)
                 getVideoThumbnail(snip, File(hdSnips!!.video_path_processed))
+                showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
             }
 //            parentSnipId = AppClass.getAppInstance().lastSnipId + 1
         }
@@ -1610,7 +1615,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    //todo: fix parent snips
     private fun saveSnipToDB(parentSnip: Snip?, filePath: String?) {
 //        String chronoText = mChronometer.getText().toString();
 //        Log.e("chrono m reading",chronoText);
@@ -1632,9 +1636,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     end_time = endSecond.toDouble()
                     is_virtual_version = 1
                     has_virtual_versions = 0
-                    parent_snip_id = if (isInList(swipedFileNames, filePath) && !recordClips)
-                        parentSnip?.snip_id ?: 0
-                    else 0
+                    parent_snip_id = if (parentSnip != null) {
+                        if (File(filePath!!).nameWithoutExtension.contains(File(parentSnip.videoFilePath).nameWithoutExtension)) {
+                            parentSnip.snip_id
+                        } else 0
+                    } else 0
                     snip_duration = endSecond - startSecond.toDouble()
                     vid_creation_date = System.currentTimeMillis()
                     event_id = event.event_id
@@ -1668,7 +1674,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     /**
-     * Checks if the required item is availble in the list
+     * Checks if the required item is available in the list
      * @param listOfPaths ArrayList<String>
      * @param filePath String?
      * @return Boolean
@@ -1678,6 +1684,30 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         listOfPaths.forEach {
             if (File(it).nameWithoutExtension == File(filePath!!).nameWithoutExtension)
                 isInList = true
+        }
+        return isInList
+    }
+
+    /**
+     * Check if children following the naming convention <parent>-<index>.mp4 is available
+     * @param listOfPaths ArrayList<String>
+     * @param filePath String
+     * @return Boolean
+     */
+    private fun isSimilarInList(listOfPaths: ArrayList<String>, filePath: String): Boolean {
+        var isInList = false
+        /*listOfPaths.forEach {
+            if(File(it).nameWithoutExtension.startsWith(File(filePath).nameWithoutExtension)) {
+                isInList = true
+                return@forEach
+            }
+        }*/
+
+        listOfPaths.forEach {
+            if (it.contains(File(filePath).nameWithoutExtension)) {
+                isInList = true
+                return@forEach
+            }
         }
         return isInList
     }
