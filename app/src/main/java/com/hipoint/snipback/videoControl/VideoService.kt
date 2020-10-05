@@ -4,10 +4,13 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.util.Log
+import androidx.core.app.JobIntentService
 import androidx.core.app.NotificationCompat
 import com.hipoint.snipback.Utils.VideoUtils
 import com.hipoint.snipback.listener.IVideoOpListener
@@ -21,7 +24,7 @@ import java.util.*
 /**
  * Queues and executes video edits
  */
-class VideoService : Service(), IVideoOpListener {
+class VideoService : JobIntentService(), IVideoOpListener {
     companion object {
         val ACTION = "com.hipoint.snipback.VideoOpAction"
         val VIDEO_OP_ITEM = "VIDEO_OP_ITEM"
@@ -34,6 +37,11 @@ class VideoService : Service(), IVideoOpListener {
         val STATUS_HIDE_PROGRESS = 4
 
         private var workQueue: Queue<VideoOpItem> = LinkedList<VideoOpItem>()
+        private var isProcessing = false
+
+        fun enqueueWork(context: Context, work:Intent){
+            enqueueWork(context, VideoService::class.java, 10, work)
+        }
     }
 
     private val TAG = VideoService::class.java.simpleName
@@ -41,13 +49,15 @@ class VideoService : Service(), IVideoOpListener {
     private val vUtil = VideoUtils(this@VideoService)
     private val broadcastIntent = Intent()
 
+/*
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(TAG, "onStartCommand: Service starting")
-
+*/
+/*
             createNotificationChannel()
             val notification: Notification = NotificationCompat.Builder(this, channelId)
                     .setContentTitle("Foreground Service")
@@ -56,7 +66,8 @@ class VideoService : Service(), IVideoOpListener {
                     .build()
 
             startForeground(NOTIFICATION_ID, notification)
-//        }
+//        }*//*
+
 
         val items = intent?.getParcelableArrayListExtra<VideoOpItem>(VIDEO_OP_ITEM)
         items?.forEach {
@@ -65,11 +76,22 @@ class VideoService : Service(), IVideoOpListener {
         }
 
         processQueue()
-
         return START_STICKY
     }
+*/
 
-    private fun createNotificationChannel() {
+    override fun onHandleWork(intent: Intent) {
+
+        val items = intent.getParcelableArrayListExtra<VideoOpItem>(VIDEO_OP_ITEM)
+        items?.forEach {
+            workQueue.add(it)
+            Log.d(TAG, "onHandleWork: $it")
+        }
+
+        processQueue()
+    }
+
+    /*private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(channelId,
                     "Foreground Service Channel",
@@ -79,9 +101,10 @@ class VideoService : Service(), IVideoOpListener {
             manager?.createNotificationChannel(serviceChannel)
         }
     }
-
+*/
     private fun processQueue() {
         Log.d(TAG, "processQueue: processing")
+        isProcessing = true
 
         if (workQueue.isNotEmpty()) {
 
@@ -148,6 +171,7 @@ class VideoService : Service(), IVideoOpListener {
 
     override fun failed(operation: IVideoOpListener.VideoOp) {
         Log.e(TAG, "failed: ${operation.name}")
+        isProcessing = false
         //  only process the next item after the previous one is completed
 
         broadcastIntent.apply {
@@ -163,7 +187,7 @@ class VideoService : Service(), IVideoOpListener {
 
     override fun changed(operation: IVideoOpListener.VideoOp, processedVideoPath: String) {
         Log.i(TAG, "${operation.name} completed: $processedVideoPath")
-
+        isProcessing = false
         broadcastIntent.apply {
             action = ACTION
             putExtra("status", STATUS_OP_SUCCESS)

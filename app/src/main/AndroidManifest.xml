@@ -54,7 +54,8 @@
                 android:configChanges="orientation|screenLayout"/>
 
         <service android:name=".videoControl.VideoService"
-                 android:label="Video Processing"/>
+                 android:label="Video Processing"
+                 android:permission="android.permission.BIND_JOB_SERVICE"/>
 
         <provider
                 android:name="androidx.core.content.FileProvider"

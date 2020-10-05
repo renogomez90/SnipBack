@@ -825,7 +825,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
 
                 intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-                startForegroundService(requireContext(), intentService)
+                VideoService.enqueueWork(requireContext(), intentService)
             }
         }
     }
@@ -855,7 +855,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         clip2 = clip2.absolutePath,
                         outputPath = mergeFilePath))
                 intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-                startForegroundService(requireContext(), intentService)
+                VideoService.enqueueWork(requireContext(), intentService)
 
             } else {    //  there is only  item in the queue
                 //  1.  check duration of clip and if swipe duration < video duration
@@ -884,8 +884,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                                 endTime = actualClipTime,
                                 outputPath = "${clip.parent}/trimmed-${clip.name}").also { toString() })
                         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-                        startForegroundService(requireContext(), intentService)
-
+                        VideoService.enqueueWork(requireContext(), intentService)
                     } else { //  save what we have
                         swipedFileNames.add(clip.nameWithoutExtension)
                         showInGallery.add(clip.nameWithoutExtension)
@@ -939,7 +938,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     clip2 = clip2.absolutePath,
                     outputPath = mergeFilePath))
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-            startForegroundService(requireContext(), intentService)
+            VideoService.enqueueWork(requireContext(), intentService)
         } else {
             processPendingSwipes()
         }
@@ -1969,7 +1968,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     endTime = duration,
                     outputPath = split2File))
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-            startForegroundService(requireContext(), intentService)
+            VideoService.enqueueWork(requireContext(), intentService)
 
         } else {    // concat was triggered when user recording was completed
             /*
@@ -2036,7 +2035,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val showProgress = intent.getIntExtra("progress", -1)
             val processedVideoPath = intent.getStringExtra("processedVideoPath")
 
-            if (showProgress == STATUS_SHOW_PROGRESS) {
+            if (showProgress == STATUS_SHOW_PROGRESS && stopPressed) {
                 if (processingDialog == null) processingDialog = ProcessingDialog(context)
                 processingDialog?.show()
             } else {
