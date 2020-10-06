@@ -33,13 +33,11 @@ import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
-import androidx.core.app.ActivityCompat.startForegroundService
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.Utils.CountUpTimer
 import com.hipoint.snipback.application.AppClass
-import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.fragment.Feedback_fragment
 import com.hipoint.snipback.fragment.FragmentGalleryNew
 import com.hipoint.snipback.listener.IVideoOpListener.VideoOp
@@ -49,11 +47,6 @@ import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppRepository.Companion.instance
 import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
-import com.hipoint.snipback.videoControl.VideoService.Companion.ACTION
-import com.hipoint.snipback.videoControl.VideoService.Companion.STATUS_NO_VALUE
-import com.hipoint.snipback.videoControl.VideoService.Companion.STATUS_OP_FAILED
-import com.hipoint.snipback.videoControl.VideoService.Companion.STATUS_OP_SUCCESS
-import com.hipoint.snipback.videoControl.VideoService.Companion.STATUS_SHOW_PROGRESS
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -62,7 +55,6 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -78,16 +70,16 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback {
-    private val VIDEO_DIRECTORY_NAME1 = "Snipback"
-    private val totalDuration = intArrayOf(0)   //  total combined duration of merged clip
-    private val clipDuration = 20 * 1000L   //  Buffer duration
     val swipeValue = 5 * 1000L  //  swipeBack duration
-    private var userRecordDuration = 0  //  duration of user recorded time
-    private var parentSnip: Snip? = null
-    private var swipedFileNames: ArrayList<String> = arrayListOf()  //  names of files generated from swiping left
-    private var addedToSnip: ArrayList<String> = arrayListOf()    //  names of files that need to be displayed in the gallery
-    private var swipedRecording: SwipedRecording? = null
-    private var processingDialog: ProcessingDialog? = null
+
+    private val VIDEO_DIRECTORY_NAME1 = "Snipback"
+    private val totalDuration         = intArrayOf(0) //  total combined duration of merged clip
+    private val clipDuration          = 20 * 1000L    //  Buffer duration
+    private var userRecordDuration    = 0             //  duration of user recorded time
+
+    private var parentSnip     : Snip?             = null
+    private var swipedFileNames: ArrayList<String> = arrayListOf() //  names of files generated from swiping left
+    private var swipedRecording: SwipedRecording?  = null
 
     //    private var actualClipTime = 0L
     private var clipQueue: Queue<File>? = null
@@ -95,18 +87,18 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     //two finger pinch zoom
     var finger_spacing = 0f
-    var zoom_level = 1.0
+    var zoom_level     = 1.0
 
-    var zoom: Rect? = null
+    var zoom      : Rect?     = null
     var zoomFactor: TextView? = null
 
     //zoom slider controls
-    var mProgress = 0f
-    var mMinZoom = 0f
-    var mMaxZoom = 0f
+    var mProgress         = 0f
+    var mMinZoom          = 0f
+    var mMaxZoom          = 0f
     private var zoomLevel = 0f
-    var currentProgress = 1f
-    val zoomStep = 1f
+    var currentProgress   = 1f
+    val zoomStep          = 1f
 
     //left swipe
     private var x1 = 0f
@@ -231,13 +223,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         //Camera Orientation
         private const val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
         private const val SENSOR_ORIENTATION_INVERSE_DEGREES = 270
+        private const val TAG                                = "Camera2VideoFragment"
+        private const val FRAGMENT_DIALOG                    = "dialog"
+        private const val REQUEST_VIDEO_PERMISSIONS          = 1
+        private const val VIDEO_DIRECTORY_NAME               = "SnipBackVirtual"
+        private const val THUMBS_DIRECTORY_NAME              = "Thumbs"
+
         private val DEFAULT_ORIENTATIONS = SparseIntArray()
         private val INVERSE_ORIENTATIONS = SparseIntArray()
-        private const val TAG = "Camera2VideoFragment"
-        private const val FRAGMENT_DIALOG = "dialog"
-        private const val REQUEST_VIDEO_PERMISSIONS = 1
-        private const val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
-        private const val THUMBS_DIRECTORY_NAME = "Thumbs"
 
         //    private GestureFilter detector;
         //clips
@@ -450,34 +443,35 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             activity?.finish()
         }
     }
-    private var hdSnips: Hd_snips? = null
-    private var mSensorOrientation: Int? = null
-    private var outputFilePath: String? = null
-    private var mPreviewBuilder: CaptureRequest.Builder? = null
-    private var timerSecond = 0
-    private var appRepository: AppRepository? = null
-    private var animBlink: Animation? = null
-    private var thumbnailProcesingCompleted: OnTaskCompleted? = null
+
+    private var timerSecond                 : Int                     = 0
+    private var hdSnips                     : Hd_snips?               = null
+    private var mSensorOrientation          : Int?                    = null
+    private var outputFilePath              : String?                 = null
+    private var mPreviewBuilder             : CaptureRequest.Builder? = null
+    private var appRepository               : AppRepository?          = null
+    private var animBlink                   : Animation?              = null
+    private var thumbnailProcessingCompleted: OnTaskCompleted?        = null
 
     //Views
-    private lateinit var rootView: View
-    private lateinit var gallery: ImageButton
-    private lateinit var settings: ImageButton
-    private lateinit var recordButton: ImageButton
-    private lateinit var recordStopButton: ImageButton
-    private lateinit var r3Bookmark: ImageButton
-    private lateinit var capturePrevious: ImageButton
-    private lateinit var r2Shutter: ImageButton
-    private lateinit var tvTimer: TextView
-    private lateinit var mChronometer: Chronometer
-    private lateinit var blinkEffect: View
-    private lateinit var rlVideo: RelativeLayout
-    private lateinit var recStartLayout: RelativeLayout
-    private lateinit var bottomContainer: RelativeLayout
+    private lateinit var rootView         : View
+    private lateinit var gallery          : ImageButton
+    private lateinit var settings         : ImageButton
+    private lateinit var recordButton     : ImageButton
+    private lateinit var recordStopButton : ImageButton
+    private lateinit var r3Bookmark       : ImageButton
+    private lateinit var capturePrevious  : ImageButton
+    private lateinit var r2Shutter        : ImageButton
+    private lateinit var tvTimer          : TextView
+    private lateinit var mChronometer     : Chronometer
+    private lateinit var blinkEffect      : View
+    private lateinit var rlVideo          : RelativeLayout
+    private lateinit var recStartLayout   : RelativeLayout
+    private lateinit var bottomContainer  : RelativeLayout
     private lateinit var zoomControlLayout: RelativeLayout
-    private lateinit var seekBar: SeekBar
-    private lateinit var zoomOut: ImageButton
-    private lateinit var zoomIn: ImageButton
+    private lateinit var seekBar          : SeekBar
+    private lateinit var zoomOut          : ImageButton
+    private lateinit var zoomIn           : ImageButton
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -487,27 +481,43 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
 
-        rlVideo = rootView.findViewById(R.id.rl_video)
-        gallery = rootView.findViewById(R.id.r_1)
-        settings = rootView.findViewById(R.id.r_5)
-        capturePrevious = rootView.findViewById(R.id.r_3)
-        recordButton = rootView.findViewById(R.id.rec)
-        mChronometer = rootView.findViewById(R.id.chronometer)
-        mTextureView = rootView.findViewById(R.id.texture)
-        blinkEffect = rootView.findViewById(R.id.overlay)
-        recStartLayout = rootView.findViewById(R.id.rec_start_container)
-        bottomContainer = rootView.findViewById(R.id.bottom_cont)
-        recordStopButton = rootView.findViewById(R.id.rec_stop)
+        bindViews()
+        bindListeners()
+
+        return rootView
+    }
+
+    /**
+     * Binds views to references
+     * */
+    private fun bindViews() {
+        rlVideo           = rootView.findViewById(R.id.rl_video)
+        gallery           = rootView.findViewById(R.id.r_1)
+        settings          = rootView.findViewById(R.id.r_5)
+        capturePrevious   = rootView.findViewById(R.id.r_3)
+        recordButton      = rootView.findViewById(R.id.rec)
+        mChronometer      = rootView.findViewById(R.id.chronometer)
+        mTextureView      = rootView.findViewById(R.id.texture)
+        blinkEffect       = rootView.findViewById(R.id.overlay)
+        recStartLayout    = rootView.findViewById(R.id.rec_start_container)
+        bottomContainer   = rootView.findViewById(R.id.bottom_cont)
+        recordStopButton  = rootView.findViewById(R.id.rec_stop)
         zoomControlLayout = rootView.findViewById(R.id.zoom_control_layout)
-        seekBar = rootView.findViewById(R.id.zoom_controller)
-        zoomOut = rootView.findViewById(R.id.zoom_out_btn)
-        zoomIn = rootView.findViewById(R.id.zoom_in_btn)
-        recordStopButton.setOnClickListener(this)
-        r3Bookmark = rootView.findViewById(R.id.r_3_bookmark)
+        seekBar           = rootView.findViewById(R.id.zoom_controller)
+        zoomOut           = rootView.findViewById(R.id.zoom_out_btn)
+        zoomIn            = rootView.findViewById(R.id.zoom_in_btn)
+        r3Bookmark        = rootView.findViewById(R.id.r_3_bookmark)
+        r2Shutter         = rootView.findViewById(R.id.r_2_shutter)
+        zoomFactor        = rootView.findViewById(R.id.zoom_factor)
+    }
+
+    /**
+     * Binds views to required listeners
+     * */
+    private fun bindListeners() {
         r3Bookmark.setOnClickListener(this)
-        r2Shutter = rootView.findViewById(R.id.r_2_shutter)
+        recordStopButton.setOnClickListener(this)
         r2Shutter.setOnClickListener(this)
-        zoomFactor = rootView.findViewById(R.id.zoom_factor)
         zoomControlLayout.setOnClickListener(this)
         zoomIn.setOnClickListener(this)
         zoomOut.setOnClickListener(this)
@@ -515,24 +525,24 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         rlVideo.setOnClickListener(this)
         recordButton.setOnClickListener(this)
         capturePrevious.setOnClickListener(this)
-//        detector = new GestureFilter(requireActivity(), this);
+        //        detector = new GestureFilter(requireActivity(), this);
 
-//        ((AppMainActivity)requireActivity()).registerMyOnTouchListener(new AppMainActivity.MyOnTouchListener() {
-//            @Override
-//            public void onTouch(MotionEvent ev) {
-//                touchListener.onTouch(ev);
-//            }
-//        });
+        //        ((AppMainActivity)requireActivity()).registerMyOnTouchListener(new AppMainActivity.MyOnTouchListener() {
+        //            @Override
+        //            public void onTouch(MotionEvent ev) {
+        //                touchListener.onTouch(ev);
+        //            }
+        //        });
 
-//        rlVideo.setOnTouchListener((view, motionEvent) -> mTextureView.onTouch(view, motionEvent));
-//        accessRoomDatabase();
+        //        rlVideo.setOnTouchListener((view, motionEvent) -> mTextureView.onTouch(view, motionEvent));
+        //        accessRoomDatabase();
         mTextureView.setOnClickListener(this)
         mTextureView.setOnTouchListener(this)
         gallery.setOnClickListener { (activity as AppMainActivity?)!!.loadFragment(FragmentGalleryNew.newInstance(), true) }
         settings.setOnClickListener { showDialogSettingsMain() }
         appRepository = instance
         mChronometer.onChronometerTickListener = OnChronometerTickListener {
-//                if (!resume) {
+    //                if (!resume) {
             val time = SystemClock.elapsedRealtime() - mChronometer.base
             val h = (time / 3600000).toInt()
             val m = (time - h * 3600000).toInt() / 60000
@@ -562,7 +572,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     }
                 }
         )
-        return rootView
     }
 
     private fun getMinZoom(): Float {
@@ -625,6 +634,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
+    /**
+     * Sets up background thread and camera when the fragment is in the foreground
+     * */
     override fun onResume() {
         super.onResume()
 
@@ -636,6 +648,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
+    /**
+     * Closes the camrea and stops the background thread when fragment is not in the foreground
+     * */
     override fun onPause() {
         closeCamera()
         stopBackgroundThread()
@@ -645,7 +660,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     override fun onClick(v: View) {
         when (v.id) {
-            R.id.rec -> {
+            R.id.rec -> {   //  Sets up UI and starts user triggered recording
                 bottomContainer.visibility = View.INVISIBLE
                 recStartLayout.visibility = View.VISIBLE
 
@@ -670,13 +685,12 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     clipQueue!!.remove().delete()
                 }
             }
-            R.id.rec_stop -> {
+            R.id.rec_stop -> {  // sets up UI and stops user triggered recording
                 bottomContainer.visibility = View.VISIBLE
                 recStartLayout.visibility = View.INVISIBLE
                 (requireActivity() as AppMainActivity).showInGallery.add(File(outputFilePath!!).nameWithoutExtension)
                 parentSnip = null   //  resetting the session parent Snip
                 stopRecordingVideo()
-//                processPendingSwipes()
                 attemptClipConcat()
                 // we can restart recoding clips if it is required at this point
                 recordClips = true
@@ -826,6 +840,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private fun handleLeftSwipe() {
+
         if (recordClips) {    //  if clips are being recorded
 
             if (clipQueue!!.size > 1) { // there is more than 1 items in the queue
@@ -862,7 +877,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     restartRecording()
 
                     val clip = clipQueue!!.remove()
-                    val actualClipTime = getMetadataDurations(arrayListOf(clip.absolutePath))[0]
+                    val actualClipTime = (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
                     val swipeClipDuration = swipeValue / 1000
                     if (actualClipTime >= swipeClipDuration) {
                         //  splitting may not work for this so we opt for trim
@@ -1007,7 +1022,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         if (shouldShowRequestPermissionRationale(VIDEO_PERMISSIONS)) {
             //new ConfirmationDialog().show(getChildFragmentManager(), FRAGMENT_DIALOG);
         } else {
-            ActivityCompat.requestPermissions(requireActivity(), VIDEO_PERMISSIONS, REQUEST_VIDEO_PERMISSIONS)
+            requestPermissions(requireActivity(), VIDEO_PERMISSIONS, REQUEST_VIDEO_PERMISSIONS)
         }
     }
 
@@ -1342,13 +1357,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     // External sdcard file location
-    private val outputMediaFile: File
-    // Create storage directory if it does not exist
-
-    //  adds the created clips to queue
-//        if (recordClips) {
-    //        }
-    ?
+    private val outputMediaFile: File?
         get() {
             if (clipQueue == null) {
                 clipQueue = LinkedList()
@@ -1504,66 +1513,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         startPreview()
     }
 
-    /*private fun addSnip(snipFilePath: String, snipDuration: Int, totalDuration: Int) {
-        if(addedToSnip.contains(snipFilePath))  //  This is a work around till we figure out the cause of duplication
-            return
-        else
-            addedToSnip.add(snipFilePath)
-
-        val pSnip = Snip()
-        pSnip.apply {
-            start_time = 0.0
-            end_time = 0.0
-            is_virtual_version = 0
-            parent_snip_id = if (parentSnip != null) {
-                if (File(snipFilePath).nameWithoutExtension.contains(File(parentSnip!!.videoFilePath).nameWithoutExtension)) {
-                    parentSnip!!.snip_id
-                } else 0
-            } else 0
-            snip_duration = snipDuration.toDouble()
-            total_video_duration = totalDuration
-            vid_creation_date = System.currentTimeMillis()
-            event_id = AppClass.getAppInstance().lastEventId
-            has_virtual_versions = (if (AppClass.getAppInstance().snipDurations.size > 0) 1 else 0)
-            videoFilePath = snipFilePath
-        }
-        AppClass.getAppInstance().isInsertionInProgress = true
-        runBlocking {
-            // So that the order of the videos don't change
-            appRepository!!.insertSnip(this@VideoMode, pSnip)
-        }
-//            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
-//            AppClass.getAppInsatnce().saveAllEventSnips();
-//            AppClass.getAppInsatnce().saveAllParentSnips(parentSnip);
-//            AppClass.getAppInsatnce().setEventParentSnips();
-//            parentSnip.setVideoFilePath(outputFilePath);
-//            AppClass.getAppInsatnce().saveAllSnips(parentSnip);
-    }*/
-
-    /*override suspend fun onTaskCompleted(snip: Snip?) {
-        if (snip?.is_virtual_version == 0) {
-//            snip.setSnip_id(AppClass.getAppInstance().getLastSnipId());
-//            hdSnips!!.video_path_processed = snip.videoFilePath
-//            hdSnips.setSnip_id(AppClass.getAppInstance().getLastSnipId());
-
-            hdSnips = Hd_snips()
-            hdSnips!!.video_path_processed = snip.videoFilePath
-            hdSnips!!.snip_id = snip.snip_id
-            if (!File(snip.videoFilePath).name.contains("-")) { //  files names with - are edited from original
-                parentSnip = snip
-            }
-
-            if (isInList(showInGallery, snip.videoFilePath)) {
-                appRepository!!.insertHd_snips(hdSnips!!)
-//                saveSnipToDB(parentSnip, hdSnips!!.video_path_processed)
-                getVideoThumbnail(snip, File(hdSnips!!.video_path_processed))
-                showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
-            }
-//            parentSnipId = AppClass.getAppInstance().lastSnipId + 1
-        }
-
-    }*/
-
     /**
      * Compares two `Size`s based on their areas.
      */
@@ -1641,75 +1590,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 CoroutineScope(IO).launch {
 //                    appRepository!!.insertSnip(this@VideoMode, snip)
                 }
-                //                parentSnip.setHas_virtual_versions(1);
-//                appRepository.updateSnip(parentSnip);
                 snip.videoFilePath = filePath
-                //                eventData.addEventSnip(snip);
-//                AppClass.getAppInsatnce().saveAllSnips(snip);
-//                eventData.addEventSnip(parentSnip);
             }
-            //            AppClass.getAppInsatnce().saveAllEventSnips();
             AppClass.getAppInstance().clearSnipDurations()
         }
-
-//        AppViewModel appViewModel = ViewModelProviders.of(this).get(AppViewModel.class);
-//        appViewModel.getSnipsLiveData().observe(this, snips -> {
-//            if(snips.size() > 0) {
-//                for (Snip snip : snips) {
-//                    if (snip.getParent_snip_id() == parentSnip.getSnip_id() || snip.getSnip_id() == parentSnip.getSnip_id()) {
-//                        getVideoThumbnail(snip, new File(filePath), snips.indexOf(snip) == snips.size() - 1);
-//                    }
-//                }
-//            }
-//            ((AppMainActivity) requireActivity()).loadFragment(FragmentGalleryNew.newInstance());
-
-//        });
     }
-/*
-    *//**
-     * Checks if the required item is available in the list
-     * @param listOfPaths ArrayList<String>
-     * @param filePath String?
-     * @return Boolean
-     *//*
-    private fun isInList(listOfPaths: ArrayList<String>, filePath: String?): Boolean {
-        var isInList = false
-        listOfPaths.forEach {
-            if (File(it).nameWithoutExtension == File(filePath!!).nameWithoutExtension)
-                isInList = true
-        }
-        return isInList
-    }*/
-
-/*
-    */
-/**
-     * Check if children following the naming convention <parent>-<index>.mp4 is available
-     * @param listOfPaths ArrayList<String>
-     * @param filePath String
-     * @return Boolean
-     *//*
-
-    private fun isSimilarInList(listOfPaths: ArrayList<String>, filePath: String): Boolean {
-        var isInList = false
-        */
-/*listOfPaths.forEach {
-            if(File(it).nameWithoutExtension.startsWith(File(filePath).nameWithoutExtension)) {
-                isInList = true
-                return@forEach
-            }
-        }*//*
-
-
-        listOfPaths.forEach {
-            if (it.contains(File(filePath).nameWithoutExtension)) {
-                isInList = true
-                return@forEach
-            }
-        }
-        return isInList
-    }
-*/
 
     private fun saveSnipTimeToLocal() {
         if (timerSecond != 0) {
@@ -1732,71 +1617,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //        Log.d("seconds", String.valueOf(endSecond));
         }
     }
-
-    /*private fun getVideoThumbnail(snip: Snip?, videoFile: File) {
-        try {
-//            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
-//                    VIDEO_DIRECTORY_NAME);
-            val thumbsStorageDir = File(requireActivity().dataDir.toString() + "/" + VIDEO_DIRECTORY_NAME,
-                    THUMBS_DIRECTORY_NAME)
-            if (!thumbsStorageDir.exists()) {
-                if (!thumbsStorageDir.mkdirs()) {
-                    Log.d(TAG, "Oops! Failed create "
-                            + VIDEO_DIRECTORY_NAME + " directory")
-                    return
-                }
-            }
-            val fullThumbPath: File
-            fullThumbPath = File(thumbsStorageDir.path + File.separator
-                    + "snip_" + snip!!.snip_id + ".png")
-            Log.d(TAG, "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.absolutePath)
-            //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
-            val streamThumbnail = FileOutputStream(fullThumbPath)
-
-            //Other method to get a thumbnail. The problem is that it doesn't allow to get at a specific time
-            val thumb: Bitmap //= ThumbnailUtils.createVideoThumbnail(videoFile.getAbsolutePath(),MediaStore.Images.Thumbnails.MINI_KIND);
-            val retriever = MediaMetadataRetriever()
-            try {
-                retriever.setDataSource(videoFile.absolutePath)
-                thumb = if (snip.is_virtual_version != 0) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-                        retriever.getScaledFrameAtTime(snip.start_time.toInt() * 1000000.toLong(),
-                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100)
-                    } else {
-                        retriever.getFrameAtTime(snip.start_time.toInt() * 1000000.toLong(),
-                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-                    }
-                } else {
-                    retriever.frameAtTime
-                }
-                thumb.compress(Bitmap.CompressFormat.PNG, 80, streamThumbnail)
-                thumb.recycle() //ensure the image is freed;
-            } catch (ex: Exception) {
-                Log.i(TAG, "MediaMetadataRetriever got exception:$ex")
-            }
-            streamThumbnail.close()
-            //            snip.setThumbnailPath(fullThumbPath.getAbsolutePath());
-            //update Snip
-//            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
-//            String currentDateandTime = sdf.format(new Date());
-//            EventData eventData = new EventData();
-//            eventData.setEvent_id(AppClass.getAppInsatnce().getLastEventId());
-//            eventData.setEvent_title(currentDateandTime);
-//            eventData.addEventSnip(snip);
-//            AppClass.getAppInsatnce().saveAllEventSnips(snip);
-//            if(isLast){
-//                AppClass.getAppInsatnce().setInsertionInProgress(false);
-//                thumbnailProcesingCompleted.onTaskCompleted(true);
-//            }
-            Log.d(TAG, "thumbnail saved successfully")
-        } catch (e: FileNotFoundException) {
-            Log.d(TAG, "File Not Found Exception : check directory path")
-            e.printStackTrace()
-        } catch (e: IOException) {
-            Log.d(TAG, "IOException while closing the stream")
-            e.printStackTrace()
-        }
-    }*/
 
     private fun getVideoThumbnailClick(videoFile: File) {
         try {
@@ -1910,7 +1730,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     //    }
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        thumbnailProcesingCompleted = if (context is OnTaskCompleted) {
+        thumbnailProcessingCompleted = if (context is OnTaskCompleted) {
             context
         } else {
             throw RuntimeException(context.toString()
@@ -1920,32 +1740,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     override fun onDetach() {
         super.onDetach()
-        thumbnailProcesingCompleted = null
-    }
-
-
-    /**
-     *  Takes in a list of media files and returns a list of durations
-     *
-     *  @param List<File> filePathList
-     *  @return List<Int> durations
-     */
-    private fun getMetadataDurations(filePathList: List<String>): List<Int> {
-        val durationList = arrayListOf<Int>()
-        val retriever = MediaMetadataRetriever()
-        var duration: Int
-        filePathList.forEach {
-            try {
-                retriever.setDataSource(it)
-                duration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
-                durationList.add(duration)
-            } catch (e: IllegalArgumentException) {
-                e.printStackTrace()
-                Log.e(TAG, "getMetadataDurations: data file error; setting duration to -1")
-                durationList.add(-1)
-            }
-        }
-        retriever.release()
-        return durationList
+        thumbnailProcessingCompleted = null
     }
 }

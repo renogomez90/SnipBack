@@ -18,10 +18,9 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.application.AppClass
-import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.fragment.FragmentGalleryNew
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
@@ -43,8 +42,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
-import kotlin.coroutines.Continuation
-import kotlin.coroutines.CoroutineContext
 
 class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepository.OnTaskCompleted {
     var PERMISSION_ALL = 1
@@ -55,22 +52,26 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     //    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
     //    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
-    private val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
+    private val VIDEO_DIRECTORY_NAME  = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
-    private val TAG = AppMainActivity.javaClass.simpleName
-    private var onTouchListeners: MutableList<MyOnTouchListener>? = null
-    private var appViewModel: AppViewModel? = null
-    private var parentSnip: Snip? = null
-    private var addedToSnip: ArrayList<String> = arrayListOf()
+    private val TAG                   = AppMainActivity::class.java.simpleName
 
-    var swipeProcessed: Boolean = false
-    var showInGallery: ArrayList<String> = arrayListOf()    //  names of files that need to be displayed in the gallery
-    private var videoModeFragment: VideoMode? = null
+    private var onTouchListeners : MutableList<MyOnTouchListener>? = null
+    private var appViewModel     : AppViewModel?                   = null
+    private var parentSnip       : Snip?                           = null
+    private var addedToSnip      : ArrayList<String>               = arrayListOf()
+    private var videoModeFragment: VideoMode?                      = null
+
+    var swipeProcessed: Boolean           = false
+    var showInGallery : ArrayList<String> = arrayListOf() //  names of files that need to be displayed in the gallery
 
     private val appRepository by lazy {AppRepository(AppClass.getAppInstance())}
 
     //    private ArrayList<String> thumbs = new ArrayList<>();
 
+    /**
+     * Registers a listener for receiving service broadcast for video operation status
+     */
     override fun onResume() {
         super.onResume()
         registerReceiver(videoOperationReceiver, IntentFilter(VideoService.ACTION))
@@ -82,7 +83,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         if (onTouchListeners == null) {
             onTouchListeners = ArrayList()
         }
-        appViewModel = ViewModelProviders.of(this).get(AppViewModel::class.java)
+        appViewModel = ViewModelProvider(this).get(AppViewModel::class.java)
 
 //        RegisterFragment videoMode = new RegisterFragment();
 //        loadFragment(videoMode);
@@ -104,6 +105,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         }
     }
 
+    /**
+     * Unregister broadcast receiver
+     */
     override fun onPause() {
         unregisterReceiver(videoOperationReceiver)
         super.onPause()
@@ -201,6 +205,14 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         }
     }
 
+    /**
+     * Adds the required snip with durations to the snip DB
+     * Sets up snip hierarchy based on file names.
+     *
+     * @param snipFilePath String
+     * @param snipDuration Int
+     * @param totalDuration Int
+     */
     fun addSnip(snipFilePath: String, snipDuration: Int, totalDuration: Int) {
         if(addedToSnip.contains(snipFilePath))  //  This is a work around till we figure out the cause of duplication
             return
@@ -231,6 +243,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         }
     }
 
+    /**
+     * Triggered after the snip has been added,
+     * Items to be displayed in the gallery are to be inserted in HR snips
+     *
+     * @param snip Snip?
+     */
     override suspend fun onTaskCompleted(snip: Snip?) {
         if (snip?.is_virtual_version == 0) {
 //            snip.setSnip_id(AppClass.getAppInstance().getLastSnipId());
@@ -254,6 +272,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         }
     }
 
+    /**
+     * Creates the thumbnail image for the video file at the location passed in.
+     *
+     * @param snip Snip?
+     * @param videoFile File
+     */
     private fun getVideoThumbnail(snip: Snip?, videoFile: File) {
         try {
 //            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
@@ -321,6 +345,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     /**
      * Checks if the required item is available in the list
+     *
      * @param listOfPaths ArrayList<String>
      * @param filePath String?
      * @return Boolean
@@ -334,6 +359,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         return isInList
     }
 
+    /**
+     * Video was successfully trimmed and is available at processedVideoPath
+     *
+     * @param processedVideoPath String
+     */
     private fun videoTrimCompleted(processedVideoPath: String) {
         Log.d(TAG, "$processedVideoPath Completed")
         CoroutineScope(IO).launch {
@@ -345,6 +375,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         }
     }
 
+    /**
+     * Video was successfully split and is available at processedVideoPath
+     * Processed video is added to snip
+     *
+     * @param processedVideoPath String
+     */
     private fun videoSplitCompleted(processedVideoPath: String) {
         Log.d(TAG, "$processedVideoPath Completed")
         CoroutineScope(IO).launch {
@@ -359,7 +395,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     }
 
     /**
-     * Concatenation is done
+     * Video concatenation was successfully done and is available at processedVideoPath
+     * Processed video is added to snip
+     *
      * @param processedVideoPath
      */
     fun videoConcatCompleted(processedVideoPath: String) {
@@ -418,7 +456,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         override fun onReceive(context: Context, intent: Intent) {
 
             val operation = intent.getStringExtra("operation")
-            val showProgress = intent.getIntExtra("progress", -1)
+//            val showProgress = intent.getIntExtra("progress", -1)
             val processedVideoPath = intent.getStringExtra("processedVideoPath")
 
             /*if (showProgress == VideoService.STATUS_SHOW_PROGRESS && VideoMode.stopPressed) {
@@ -459,10 +497,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     /**
      *  Takes in a list of media files and returns a list of durations
      *
-     *  @param List<File> filePathList
+     *  @param List<String> filePathList
      *  @return List<Int> durations
      */
-    private fun getMetadataDurations(filePathList: List<String>): List<Int> {
+    fun getMetadataDurations(filePathList: List<String>): List<Int> {
         val durationList = arrayListOf<Int>()
         val retriever = MediaMetadataRetriever()
         var duration: Int
