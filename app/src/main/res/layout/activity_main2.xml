@@ -233,7 +233,7 @@
                 android:layout_marginTop="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
-                android:text="Camera"
+                android:text="Edit"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10sp" />
         </RelativeLayout>

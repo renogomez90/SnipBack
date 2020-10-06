@@ -8,14 +8,18 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Environment
 import android.util.Log
-import android.view.*
+import android.view.KeyEvent
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.exozet.android.core.extensions.onClick
 import com.exozet.android.core.ui.custom.SwipeDistanceView
-import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
@@ -25,7 +29,6 @@ import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
-import com.google.android.exoplayer2.video.VideoListener
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.CommonUtils
@@ -44,6 +47,7 @@ import kotlinx.coroutines.launch
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
+import java.text.SimpleDateFormat
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
 
@@ -60,7 +64,6 @@ class FragmentPlayVideo2 : Fragment() {
     private lateinit var appRepository        : AppRepository
     private lateinit var appViewModel         : AppViewModel
     private lateinit var playerView           : PlayerView
-    private lateinit var exoDuration          : TextView
     private lateinit var playBtn              : ImageButton
     private lateinit var pauseBtn             : ImageButton
     private lateinit var editBtn              : ImageButton
@@ -212,7 +215,6 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun bindViews() {
-        exoDuration     = rootView.findViewById(R.id.exo_duration)
         buttonCamera    = rootView.findViewById(R.id.button_camera)
         backArrow       = rootView.findViewById(R.id.back_arrow)
         tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal)
@@ -262,6 +264,11 @@ class FragmentPlayVideo2 : Fragment() {
         tag.setOnClickListener {
             // ((AppMainActivity) requireActivity()).loadFragment(CreateTag.newInstance(), true);
         }
+
+        editBtn.setOnClickListener {
+            (activity as AppMainActivity?)!!.loadFragment(Videoeditingfragment.newInstance(), true)
+        }
+
         rootView.isFocusableInTouchMode = true
         rootView.requestFocus()
         rootView.setOnKeyListener(View.OnKeyListener { _, keyCode, _ ->
