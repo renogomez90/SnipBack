@@ -1557,44 +1557,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    private fun saveSnipToDB(parentSnip: Snip?, filePath: String?) {
-//        String chronoText = mChronometer.getText().toString();
-//        Log.e("chrono m reading",chronoText);
-        val snipDurations = AppClass.getAppInstance().snipDurations
-        if (snipDurations.size > 0) {
-            val event = AppClass.getAppInstance().getLastCreatedEvent()
-            //            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
-//            String currentDateandTime = sdf.format(new Date());
-//            EventData eventData = new EventData();
-//            eventData.setEvent_id(event.getEvent_id());
-//            eventData.setEvent_title(event.getEvent_title());
-//            eventData.setEvent_created(event.getEvent_created());
-            for (endSecond in snipDurations) {
-                val startSecond = (endSecond - 5).coerceAtLeast(0)
-                val snip = Snip()
 
-                snip.apply {
-                    start_time = startSecond.toDouble()
-                    end_time = endSecond.toDouble()
-                    is_virtual_version = 1
-                    has_virtual_versions = 0
-                    parent_snip_id = if (parentSnip != null) {
-                        if (File(filePath!!).nameWithoutExtension.contains(File(parentSnip.videoFilePath).nameWithoutExtension)) {
-                            parentSnip.snip_id
-                        } else 0
-                    } else 0
-                    snip_duration = endSecond - startSecond.toDouble()
-                    vid_creation_date = System.currentTimeMillis()
-                    event_id = event.event_id
-                }
-                CoroutineScope(IO).launch {
-//                    appRepository!!.insertSnip(this@VideoMode, snip)
-                }
-                snip.videoFilePath = filePath
-            }
-            AppClass.getAppInstance().clearSnipDurations()
-        }
-    }
 
     private fun saveSnipTimeToLocal() {
         if (timerSecond != 0) {

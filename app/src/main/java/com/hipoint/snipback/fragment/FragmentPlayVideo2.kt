@@ -25,6 +25,7 @@ import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.video.VideoListener
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.CommonUtils
@@ -51,7 +52,6 @@ class FragmentPlayVideo2 : Fragment() {
 
     private var currentPosi   = 0L
     private var subscriptions = CompositeDisposable()
-    private var isSeeking     = false
 
     private lateinit var mediaSource          : MediaSource
     private lateinit var player               : SimpleExoPlayer
@@ -63,6 +63,7 @@ class FragmentPlayVideo2 : Fragment() {
     private lateinit var exoDuration          : TextView
     private lateinit var playBtn              : ImageButton
     private lateinit var pauseBtn             : ImageButton
+    private lateinit var editBtn              : ImageButton
     private lateinit var seekBar              : DefaultTimeBar
     private lateinit var rootView             : View
     private lateinit var tag                  : ImageView
@@ -139,7 +140,7 @@ class FragmentPlayVideo2 : Fragment() {
         */
 
         if (snip!!.is_virtual_version == 1) {
-//            exoProgress.setDuration(snip!!.snip_duration.toLong() * 1000)
+            seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
             player.seekTo(player.currentPosition + snip!!.start_time.toLong() * 1000)
             object : CountDownTimer(snip!!.snip_duration.toLong() * 1000, 1000) {
                 override fun onTick(millisUntilFinished: Long) {}
@@ -216,6 +217,7 @@ class FragmentPlayVideo2 : Fragment() {
         backArrow       = rootView.findViewById(R.id.back_arrow)
         tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal)
         playerView      = rootView.findViewById(R.id.player_view)
+        editBtn         = rootView.findViewById(R.id.edit)
         tag             = rootView.findViewById(R.id.tag)
         swipeDetector   = rootView.findViewById(R.id.swipe_detector)
         seekBar         = rootView.findViewById(R.id.exo_progress)

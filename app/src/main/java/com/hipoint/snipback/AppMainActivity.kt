@@ -59,8 +59,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     private var onTouchListeners : MutableList<MyOnTouchListener>? = null
     private var appViewModel     : AppViewModel?                   = null
     private var parentSnip       : Snip?                           = null
-    private var addedToSnip      : ArrayList<String>               = arrayListOf()
     private var videoModeFragment: VideoMode?                      = null
+    private var addedToSnip      : ArrayList<String>               = arrayListOf()
 
     var swipeProcessed: Boolean           = false
     var showInGallery : ArrayList<String> = arrayListOf() //  names of files that need to be displayed in the gallery
@@ -264,11 +264,42 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
             if (isInList(showInGallery, snip.videoFilePath)) {
                 appRepository.insertHd_snips(hdSnips)
-//                saveSnipToDB(parentSnip, hdSnips!!.video_path_processed)
+                saveSnipToDB(parentSnip, hdSnips!!.video_path_processed)
                 getVideoThumbnail(snip, File(hdSnips.video_path_processed))
                 showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
             }
 //            parentSnipId = AppClass.getAppInstance().lastSnipId + 1
+        }
+    }
+
+    private fun saveSnipToDB(parentSnip: Snip?, filePath: String?) {
+        val snipDurations = AppClass.getAppInstance().snipDurations
+        if (snipDurations.size > 0) {
+            val event = AppClass.getAppInstance().getLastCreatedEvent()
+            for (endSecond in snipDurations) {
+                val startSecond = (endSecond - 5).coerceAtLeast(0)
+                val snip = Snip()
+
+                snip.apply {
+                    start_time = startSecond.toDouble()
+                    end_time = endSecond.toDouble()
+                    is_virtual_version = 1
+                    has_virtual_versions = 0
+                    parent_snip_id = if (parentSnip != null) {
+                        if (File(filePath!!).nameWithoutExtension.contains(File(parentSnip.videoFilePath).nameWithoutExtension)) {
+                            parentSnip.snip_id
+                        } else 0
+                    } else 0
+                    snip_duration = endSecond - startSecond.toDouble()
+                    vid_creation_date = System.currentTimeMillis()
+                    event_id = event.event_id
+                }
+                CoroutineScope(IO).launch {
+                    appRepository.insertSnip(this@AppMainActivity, snip)
+                }
+                snip.videoFilePath = filePath
+            }
+            AppClass.getAppInstance().clearSnipDurations()
         }
     }
 
