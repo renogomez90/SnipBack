@@ -47,7 +47,6 @@ import kotlinx.coroutines.launch
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
-import java.text.SimpleDateFormat
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
 
@@ -266,7 +265,7 @@ class FragmentPlayVideo2 : Fragment() {
         }
 
         editBtn.setOnClickListener {
-            (activity as AppMainActivity?)!!.loadFragment(Videoeditingfragment.newInstance(), true)
+            (activity as AppMainActivity?)!!.loadFragment(VideoEditingFragment.newInstance(snip), true)
         }
 
         rootView.isFocusableInTouchMode = true

@@ -1,10 +1,7 @@
 package com.hipoint.snipback.fragment;
 
 import android.content.Intent;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.MediaRecorder;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.SystemClock;
@@ -16,10 +13,8 @@ import android.view.ViewGroup;
 import android.widget.Chronometer;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,7 +28,6 @@ import com.hipoint.snipback.room.entities.Snip;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 
@@ -175,7 +169,7 @@ public class CreateTag extends Fragment {
         edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) requireActivity()).loadFragment(Videoeditingfragment.newInstance(), true);
+                ((AppMainActivity) requireActivity()).loadFragment(VideoEditingFragment.newInstance(snip), true);
             }
         });
 
