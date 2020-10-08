@@ -54,6 +54,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FragmentGalleryNew extends Fragment {
+    private static FragmentGalleryNew mMyFragment;
+
     private View rootView;
     RecyclerView mainCategoryRecycler;
     MainRecyclerAdapter mainRecyclerAdapter;
@@ -73,7 +75,6 @@ public class FragmentGalleryNew extends Fragment {
     private MediaSource mediaSource;
     private Uri uri;
     private PlayerView simpleExoPlayerView;
-    FragmentGalleryNew mMyFragment;
     private RelativeLayout rlLoader;
 
 
@@ -82,8 +83,9 @@ public class FragmentGalleryNew extends Fragment {
     List<Snip> snipArrayList = new ArrayList<>();
 
     public static FragmentGalleryNew newInstance() {
-        FragmentGalleryNew fragment = new FragmentGalleryNew();
-        return fragment;
+        if (mMyFragment == null)
+            mMyFragment = new FragmentGalleryNew();
+        return mMyFragment;
     }
 
     boolean viewButtonClicked = false;

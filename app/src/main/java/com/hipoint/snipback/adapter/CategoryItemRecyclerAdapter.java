@@ -8,12 +8,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
+import com.bumptech.glide.Glide;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
@@ -78,7 +81,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                 File file = new File(filePath);
                 if (file.exists()) {
                     Bitmap myBitmap = BitmapFactory.decodeFile(filePath);
-                    holder.itemImage.setImageBitmap(myBitmap);
+//                    holder.itemImage.setImageBitmap(myBitmap);
+                    CircularProgressDrawable circularProgressDrawable = new CircularProgressDrawable(context);
+                    circularProgressDrawable.setStrokeWidth(5F);
+                    circularProgressDrawable.setCenterRadius(30F);
+                    circularProgressDrawable.start();
+
+                    Glide.with(context).load(myBitmap).placeholder(circularProgressDrawable).into(holder.itemImage);
 
                     if (viewChangeValue != null && orientationVal == null) {
                         enlargedPortraitView(holder);

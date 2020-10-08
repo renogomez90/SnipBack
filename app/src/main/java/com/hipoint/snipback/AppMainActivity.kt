@@ -52,20 +52,21 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     //    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
     //    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
-    private val VIDEO_DIRECTORY_NAME  = "SnipBackVirtual"
+    private val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
-    private val TAG                   = AppMainActivity::class.java.simpleName
+    private val TAG = AppMainActivity::class.java.simpleName
 
-    private var onTouchListeners : MutableList<MyOnTouchListener>? = null
-    private var appViewModel     : AppViewModel?                   = null
-    private var parentSnip       : Snip?                           = null
-    private var videoModeFragment: VideoMode?                      = null
-    private var addedToSnip      : ArrayList<String>               = arrayListOf()
+    private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
-    var swipeProcessed: Boolean           = false
-    var showInGallery : ArrayList<String> = arrayListOf() //  names of files that need to be displayed in the gallery
+    private var onTouchListeners: MutableList<MyOnTouchListener>? = null
+    private var appViewModel: AppViewModel? = null
+    private var parentSnip: Snip? = null
+    private var addedToSnip: ArrayList<String> = arrayListOf()
 
-    private val appRepository by lazy {AppRepository(AppClass.getAppInstance())}
+    var swipeProcessed: Boolean = false
+    var showInGallery: ArrayList<String> = arrayListOf() //  names of files that need to be displayed in the gallery
+
+    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
 
     //    private ArrayList<String> thumbs = new ArrayList<>();
 
@@ -90,11 +91,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         if24HoursCompleted()
 
 //        appViewModel.loadGalleryDataFromDB(this);
-        if (videoModeFragment == null) {
-            videoModeFragment = VideoMode.newInstance()
-        }
 
-        if(!videoModeFragment?.isAdded!!) {
+        if (!videoModeFragment.isAdded) {
             loadFragment(videoModeFragment, false)
         }
         if (!hasPermissions(this, *PERMISSIONS)) {
@@ -216,7 +214,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      * @param totalDuration Int
      */
     fun addSnip(snipFilePath: String, snipDuration: Int, totalDuration: Int) {
-        if(addedToSnip.contains(snipFilePath))  //  This is a work around till we figure out the cause of duplication
+        if (addedToSnip.contains(snipFilePath))  //  This is a work around till we figure out the cause of duplication
             return
         else
             addedToSnip.add(snipFilePath)
@@ -239,7 +237,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             videoFilePath = snipFilePath
         }
         AppClass.getAppInstance().isInsertionInProgress = true
-            // So that the order of the videos don't change
+        // So that the order of the videos don't change
         runBlocking {
             appRepository.insertSnip(this@AppMainActivity, pSnip)
         }
@@ -266,7 +264,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
             if (isInList(showInGallery, snip.videoFilePath)) {
                 appRepository.insertHd_snips(hdSnips)
-                saveSnipToDB(parentSnip, hdSnips!!.video_path_processed)
+                saveSnipToDB(parentSnip, hdSnips.video_path_processed)
                 getVideoThumbnail(snip, File(hdSnips.video_path_processed))
                 showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
             }
@@ -404,7 +402,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             addSnip(processedVideoPath, duration, duration)
         }
         if (!swipeProcessed) {
-            videoModeFragment?.processPendingSwipes()
+            videoModeFragment.processPendingSwipes()
         }
     }
 
@@ -423,7 +421,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             }
         }
         if (!swipeProcessed) {
-            videoModeFragment?.processPendingSwipes()
+            videoModeFragment.processPendingSwipes()
         }
     }
 
@@ -437,7 +435,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
         addSnip(processedVideoPath, duration, duration)     //  merged file is saved to DB
 
-        val swipeClipDuration = videoModeFragment?.swipeValue!! / 1000
+        val swipeClipDuration = videoModeFragment.swipeValue / 1000
         if (VideoMode.recordClips) {  //  concat was triggered when automatic capture was ongoing
 
             val intentService = Intent(this, VideoService::class.java)
@@ -489,15 +487,14 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         override fun onReceive(context: Context, intent: Intent) {
 
             val operation = intent.getStringExtra("operation")
-//            val showProgress = intent.getIntExtra("progress", -1)
+            val showProgress = intent.getIntExtra("progress", -1)
             val processedVideoPath = intent.getStringExtra("processedVideoPath")
 
-            /*if (showProgress == VideoService.STATUS_SHOW_PROGRESS && VideoMode.stopPressed) {
-                if (processingDialog == null) processingDialog = ProcessingDialog(context)
-                processingDialog?.show()
+            if (showProgress == VideoService.STATUS_SHOW_PROGRESS && videoModeFragment.isVisible) {
+                videoModeFragment.videoProcessing(true)
             } else {
-                processingDialog?.dismiss()
-            }*/
+                videoModeFragment.videoProcessing(false)
+            }
 
             when (intent.getIntExtra("status", VideoService.STATUS_NO_VALUE)) {
                 VideoService.STATUS_OP_SUCCESS -> {

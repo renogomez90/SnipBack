@@ -14,7 +14,7 @@
         android:layout_height="100dp"
         android:layout_margin="2dp"
         android:gravity="center"
-        android:visibility="gone">
+        android:visibility="visible">
 
         <ImageView
             android:contentDescription="@string/no_desc"

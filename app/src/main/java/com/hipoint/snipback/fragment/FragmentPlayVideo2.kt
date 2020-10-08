@@ -20,6 +20,7 @@ import com.exozet.android.core.extensions.onClick
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
@@ -47,32 +48,33 @@ import kotlinx.coroutines.launch
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
+import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
 
 class FragmentPlayVideo2 : Fragment() {
     private val TAG = FragmentPlayVideo2::class.java.simpleName
 
-    private var currentPosi   = 0L
+    private var currentPosi = 0L
     private var subscriptions = CompositeDisposable()
 
-    private lateinit var mediaSource          : MediaSource
-    private lateinit var player               : SimpleExoPlayer
-    private lateinit var dataSourceFactory    : DataSource.Factory
+    private lateinit var mediaSource: MediaSource
+    private lateinit var player: SimpleExoPlayer
+    private lateinit var dataSourceFactory: DataSource.Factory
     private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
-    private lateinit var appRepository        : AppRepository
-    private lateinit var appViewModel         : AppViewModel
-    private lateinit var playerView           : PlayerView
-    private lateinit var playBtn              : ImageButton
-    private lateinit var pauseBtn             : ImageButton
-    private lateinit var editBtn              : ImageButton
-    private lateinit var seekBar              : DefaultTimeBar
-    private lateinit var rootView             : View
-    private lateinit var tag                  : ImageView
-    private lateinit var backArrow            : RelativeLayout
-    private lateinit var buttonCamera         : RelativeLayout
-    private lateinit var tvConvertToReal      : ImageButton
-    private lateinit var swipeDetector        : SwipeDistanceView
+    private lateinit var appRepository: AppRepository
+    private lateinit var appViewModel: AppViewModel
+    private lateinit var playerView: PlayerView
+    private lateinit var playBtn: ImageButton
+    private lateinit var pauseBtn: ImageButton
+    private lateinit var editBtn: ImageButton
+    private lateinit var seekBar: DefaultTimeBar
+    private lateinit var rootView: View
+    private lateinit var tag: ImageView
+    private lateinit var backArrow: RelativeLayout
+    private lateinit var buttonCamera: RelativeLayout
+    private lateinit var tvConvertToReal: ImageButton
+    private lateinit var swipeDetector: SwipeDistanceView
 
     // new
     /*
@@ -141,22 +143,6 @@ class FragmentPlayVideo2 : Fragment() {
         })
         */
 
-        if (snip!!.is_virtual_version == 1) {
-            seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
-            player.seekTo(player.currentPosition + snip!!.start_time.toLong() * 1000)
-            object : CountDownTimer(snip!!.snip_duration.toLong() * 1000, 1000) {
-                override fun onTick(millisUntilFinished: Long) {}
-                override fun onFinish() {
-
-//                        videoView.stopPlayback();
-//                        videoView.resume();
-//                        play_pause.setChecked(true);
-                    player.playWhenReady = false
-                    player.stop()
-                    currentPosi = player.currentPosition
-                }
-            }.start()
-        }
 
 /*
 //        int w;
@@ -207,28 +193,35 @@ class FragmentPlayVideo2 : Fragment() {
         playerView.player = player
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
 
-        player.prepare(mediaSource)
+        if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
+            val clippingMediaSource = ClippingMediaSource(mediaSource, TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()),  TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong()))
+            seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
+            player.prepare(clippingMediaSource)
+        } else {
+            player.prepare(mediaSource)
+        }
+
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.playWhenReady = true
         playerView.controllerShowTimeoutMs = 2000
     }
 
     private fun bindViews() {
-        buttonCamera    = rootView.findViewById(R.id.button_camera)
-        backArrow       = rootView.findViewById(R.id.back_arrow)
+        buttonCamera = rootView.findViewById(R.id.button_camera)
+        backArrow = rootView.findViewById(R.id.back_arrow)
         tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal)
-        playerView      = rootView.findViewById(R.id.player_view)
-        editBtn         = rootView.findViewById(R.id.edit)
-        tag             = rootView.findViewById(R.id.tag)
-        swipeDetector   = rootView.findViewById(R.id.swipe_detector)
-        seekBar         = rootView.findViewById(R.id.exo_progress)
-        playBtn         = rootView.findViewById(R.id.exo_play)
-        pauseBtn        = rootView.findViewById(R.id.exo_pause)
+        playerView = rootView.findViewById(R.id.player_view)
+        editBtn = rootView.findViewById(R.id.edit)
+        tag = rootView.findViewById(R.id.tag)
+        swipeDetector = rootView.findViewById(R.id.swipe_detector)
+        seekBar = rootView.findViewById(R.id.exo_progress)
+        playBtn = rootView.findViewById(R.id.exo_play)
+        pauseBtn = rootView.findViewById(R.id.exo_pause)
     }
 
     private fun bindListeners() {
         playBtn.onClick {
-            if(player.currentPosition >= player.contentDuration){
+            if (player.currentPosition >= player.contentDuration) {
                 player.seekTo(0)
             }
             player.playWhenReady = true
@@ -367,8 +360,12 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     companion object {
+
+
         @JvmStatic
         fun newInstance(snip: Snip?): FragmentPlayVideo2 {
+            //  we need to create new fragments for each video
+            // otherwise the smooth scrolling is having issues for some reason
             val fragment = FragmentPlayVideo2()
             val bundle = Bundle()
             bundle.putParcelable("snip", snip)

@@ -13,7 +13,9 @@ import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
+import com.bumptech.glide.Glide;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.room.entities.Snip;
 
@@ -60,7 +62,15 @@ public class AdapterGallery extends RecyclerView.Adapter<AdapterGallery.ViewHold
         Snip snip = snipArrayList.get(position);
         try {
             Bitmap myBitmap = BitmapFactory.decodeFile(snip.getThumbnailPath());
-            holder.image1.setImageBitmap(myBitmap);
+
+            CircularProgressDrawable circularProgressDrawable = new CircularProgressDrawable(mContext);
+            circularProgressDrawable.setStrokeWidth(5F);
+            circularProgressDrawable.setCenterRadius(30F);
+            circularProgressDrawable.start();
+
+            Glide.with(mContext).load(myBitmap).placeholder(circularProgressDrawable).into(holder.image1);
+
+//            holder.image1.setImageBitmap(myBitmap);
             holder.image1.setOnClickListener(v -> mListener.onItemClick(snipArrayList.get(position)));
         } catch (Exception e) {
             e.printStackTrace();
