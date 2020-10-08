@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.exoplayer2.Player;
@@ -37,11 +38,12 @@ public class VideoEditingFragment extends Fragment {
     //    UI
     private View rootView;
     ImageView back, back1, save, close;
-    RelativeLayout layout_extent, play_con;
+    RelativeLayout layout_extent;
     LinearLayout play_con1, play_con2;
     ImageButton extent;
     TextView extent_text, end, start;
-    ImageButton playBtn;
+    ImageButton playBtn,pauseBtn;
+    ConstraintLayout play_con;
 
     //    Exoplayer
     private PlayerView playerView;
@@ -79,6 +81,7 @@ public class VideoEditingFragment extends Fragment {
         start = rootView.findViewById(R.id.start);
         close = rootView.findViewById(R.id.close);
         playBtn = rootView.findViewById(R.id.exo_play);
+        pauseBtn = rootView.findViewById(R.id.exo_pause);
 
         setupPlayer();
 
@@ -149,6 +152,10 @@ public class VideoEditingFragment extends Fragment {
         player.prepare(mediaSource);
         player.setRepeatMode(Player.REPEAT_MODE_OFF);
         player.setPlayWhenReady(true);
+        playerView.setControllerAutoShow(false);
+        playerView.setControllerShowTimeoutMs(-1);
+        playerView.setControllerHideOnTouch(false);
+        playerView.showController();
 
     }
 

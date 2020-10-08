@@ -7,7 +7,9 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
-import android.content.*
+import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -28,6 +30,7 @@ import android.view.TextureView.SurfaceTextureListener
 import android.view.View.OnTouchListener
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.view.animation.TranslateAnimation
 import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.SeekBar.OnSeekBarChangeListener
@@ -52,9 +55,6 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -74,7 +74,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
     private val totalDuration         = intArrayOf(0) //  total combined duration of merged clip
-    private val clipDuration          = 20 * 1000L    //  Buffer duration
+    private val clipDuration          = 60 * 1000L    //  Buffer duration
     private var userRecordDuration    = 0             //  duration of user recorded time
 
     private var parentSnip     : Snip?             = null
@@ -294,6 +294,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
 
             // Pick the smallest of those, assuming we found any
+            //todo: set a default value when nothing is matching (perhaps set the value passed in?)
             return if (bigEnough.size > 0) {
                 Collections.min(bigEnough, CompareSizesByArea())
             } else {
@@ -448,6 +449,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var hdSnips                     : Hd_snips?               = null
     private var mSensorOrientation          : Int?                    = null
     private var outputFilePath              : String?                 = null
+    private var lastUserRecordedPath        : String?                 = null
     private var mPreviewBuilder             : CaptureRequest.Builder? = null
     private var appRepository               : AppRepository?          = null
     private var animBlink                   : Animation?              = null
@@ -690,12 +692,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 recStartLayout.visibility = View.INVISIBLE
                 (requireActivity() as AppMainActivity).showInGallery.add(File(outputFilePath!!).nameWithoutExtension)
                 parentSnip = null   //  resetting the session parent Snip
-                stopRecordingVideo()
+                stopRecordingVideo()    // don't close session here since we have to resume saving clips
                 attemptClipConcat()
                 // we can restart recoding clips if it is required at this point
                 recordClips = true
                 recordPressed = false
                 stopPressed = true
+                startRecordingVideo()
             }
             R.id.r_3_bookmark -> {
                 saveSnipTimeToLocal()
@@ -813,7 +816,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         (requireActivity() as AppMainActivity).swipeProcessed = true
 
         if (swipedRecording != null) {
-            if (swipedRecording?.fileName.equals(outputFilePath)) {
+            if (swipedRecording?.fileName.equals(lastUserRecordedPath)) {
                 val intentService = Intent(requireContext(), VideoService::class.java)
                 val task = arrayListOf<VideoOpItem>()
                 swipedRecording?.timestamps?.forEachIndexed { index, timeStamp ->
@@ -840,6 +843,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private fun handleLeftSwipe() {
+
+//        val animation: Animation = AnimationUtils.loadAnimation(requireContext(), R.anim.swipe_translate_anim)
+//        recordButton.startAnimation(animation)
 
         if (recordClips) {    //  if clips are being recorded
 
@@ -912,7 +918,21 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
         }
 
-        Toast.makeText(requireActivity(), "Capturing Previous", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(requireActivity(), "Capturing Previous", Toast.LENGTH_SHORT).show()
+
+        /*rlVideo.startAnimation(animBlink)
+        blinkEffect.visibility = View.VISIBLE
+        blinkEffect.animate()
+                .alpha(02f)
+                .setDuration(100)
+                .setListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        blinkEffect.visibility = View.GONE
+                        blinkEffect.clearAnimation()
+                        rlVideo.clearAnimation()
+                    }
+                })*/
+
         (requireActivity() as AppMainActivity).swipeProcessed = false
     }
 
@@ -1087,8 +1107,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 throw RuntimeException("Cannot get available preview/video sizes")
             }
             mVideoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
-            mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java),
-                    width, height, mVideoSize)
+            mPreviewSize = Size(width, height)  //  Fixes jumpy UI in devices
+            /*chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height, mVideoSize)*/
             val orientation = resources.configuration.orientation
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mTextureView.setAspectRatio(mPreviewSize!!.width, mPreviewSize!!.height)
@@ -1499,6 +1519,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         mChronometer.stop()
         mChronometer.visibility = View.INVISIBLE
         mChronometer.text = ""
+        lastUserRecordedPath = outputFilePath
 
         val retriever = MediaMetadataRetriever()
         clipQueue!!.forEach(Consumer { file: File ->

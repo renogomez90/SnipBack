@@ -265,6 +265,7 @@ class FragmentPlayVideo2 : Fragment() {
         }
 
         editBtn.setOnClickListener {
+            player.playWhenReady = false
             (activity as AppMainActivity?)!!.loadFragment(VideoEditingFragment.newInstance(snip), true)
         }
 

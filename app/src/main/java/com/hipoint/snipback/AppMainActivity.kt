@@ -94,7 +94,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             videoModeFragment = VideoMode.newInstance()
         }
 
-        loadFragment(videoModeFragment, false)
+        if(!videoModeFragment?.isAdded!!) {
+            loadFragment(videoModeFragment, false)
+        }
         if (!hasPermissions(this, *PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL)
         }

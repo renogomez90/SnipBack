@@ -123,7 +123,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                vUtil.concatenateFiles(File(clip1), File(clip2), outputPath)
+                                VideoUtils(this@VideoService).concatenateFiles(File(clip1), File(clip2), outputPath)
                                 return@launch
                             }
                         }
@@ -134,7 +134,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                vUtil.mergeRecordedFiles(File(clip1), File(clip2), outputPath)
+                                VideoUtils(this@VideoService).mergeRecordedFiles(File(clip1), File(clip2), outputPath)
                                 return@launch
                             }
                         }
@@ -145,7 +145,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                vUtil.trimToClip(File(clip1), outputPath, startTime, endTime)
+                                VideoUtils(this@VideoService).trimToClip(File(clip1), outputPath, startTime, endTime)
                                 return@launch
                             }
                         }
@@ -156,7 +156,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                vUtil.splitVideo(File(clip1), splitTime, outputPath)
+                                VideoUtils(this@VideoService).splitVideo(File(clip1), splitTime, outputPath)
                                 return@launch
                             }
                         }
