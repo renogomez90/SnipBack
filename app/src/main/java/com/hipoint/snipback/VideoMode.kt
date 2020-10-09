@@ -673,7 +673,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 (requireActivity() as AppMainActivity).showInGallery.add(File(outputFilePath!!).nameWithoutExtension)
                 parentSnip = null   //  resetting the session parent Snip
                 stopRecordingVideo()    // don't close session here since we have to resume saving clips
-                attemptClipConcat()
+                attemptClipConcat() //  merge what is in the buffer with the recording
                 // we can restart recoding clips if it is required at this point
                 recordClips = true
                 recordPressed = false
@@ -842,6 +842,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 restartRecording()
                 val clip2 = clipQueue!!.remove()
 
+                if(clip1.length() == 0L || clip2.length() == 0L)
+                    return
+
                 val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val mergeFilePath = "${clip1.parent!!}/merged-$timeStamp.mp4"
                 swipedFileNames.add("${File(outputFilePath!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
@@ -923,12 +926,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     /**
-     * Check if recorded files can be concatenated, else procees to process left swipes
+     * Check if recorded files can be concatenated, else proceed to process left swipes
      */
     private fun attemptClipConcat() {
         if (clipQueue!!.size >= 2) {
             val clip1: File = clipQueue!!.remove()
             val clip2: File = clipQueue!!.remove()
+
+            if(clip1.length() == 0L || clip2.length() == 0L)    // the file is not formed and concat will not work
+                return
+
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val mergeFilePath = "${clip1.parent!!}/merged-$timeStamp.mp4"
             (requireActivity() as AppMainActivity).showInGallery.add(clip2.nameWithoutExtension)   //  only the actual recording is shown
@@ -1339,7 +1346,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             SENSOR_ORIENTATION_INVERSE_DEGREES -> mMediaRecorder!!.setOrientationHint(INVERSE_ORIENTATIONS[rotation])
         }
         mMediaRecorder!!.apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
+//            setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             //        if (outputFilePath == null || outputFilePath.isEmpty()) {
@@ -1357,9 +1364,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
             setVideoEncodingBitRate(profile.videoBitRate)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setAudioEncodingBitRate(profile.audioBitRate)
-            setAudioSamplingRate(profile.audioSampleRate)
+//            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+//            setAudioEncodingBitRate(profile.audioBitRate)
+//            setAudioSamplingRate(profile.audioSampleRate)
             setInputSurface(persistentSurface)
 
             setOnInfoListener { mr, what, _ ->
@@ -1576,11 +1583,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         val retriever = MediaMetadataRetriever()
         clipQueue!!.forEach(Consumer { file: File ->
-            retriever.setDataSource(file.absolutePath)
-            val currentClipDuration: Int = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
-            Log.d(TAG, "stopRecordingVideo:\nCurrent clip duration: $currentClipDuration\nTotalDuration: ${totalDuration[0]}")
-            totalDuration[0] += currentClipDuration
-            (requireActivity() as AppMainActivity).addSnip(file.absolutePath, currentClipDuration,  /*totalDuration[0]*/currentClipDuration)
+            if(file.length() > 0L) {
+                retriever.setDataSource(file.absolutePath)
+                Log.d(TAG, "stopRecordingVideo: file in queue = ${file.absolutePath}")
+                val currentClipDuration: Int = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
+                Log.d(TAG, "stopRecordingVideo:\nCurrent clip duration: $currentClipDuration\nTotalDuration: ${totalDuration[0]}")
+                totalDuration[0] += currentClipDuration
+                (requireActivity() as AppMainActivity).addSnip(file.absolutePath, currentClipDuration,  /*totalDuration[0]*/currentClipDuration)
+            }
         })
         retriever.release()
 //        outputFilePath = null
