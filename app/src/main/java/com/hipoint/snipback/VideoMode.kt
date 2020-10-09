@@ -38,7 +38,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
-import com.exozet.android.core.extensions.isRightToLeft
 import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.Utils.CountUpTimer
 import com.hipoint.snipback.application.AppClass
@@ -56,7 +55,6 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-import kotlinx.android.synthetic.main.fragment_gallery.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -70,6 +68,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 import kotlin.collections.ArrayList
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -79,7 +78,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
     private val totalDuration = intArrayOf(0)//  total combined duration of merged clip
-    private val clipDuration = 60 * 1000L    //  Buffer duration
+    private val clipDuration = 30 * 1000L    //  Buffer duration
     private var userRecordDuration = 0       //  duration of user recorded time
 
     private var parentSnip: Snip? = null
@@ -125,7 +124,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             MotionEvent.ACTION_UP -> {
                 x2 = event.x
                 val deltaX = x2 - x1
-                if (Math.abs(deltaX) > MIN_DISTANCE) {
+                if (abs(deltaX) > MIN_DISTANCE) {
                     // Left to Right swipe action
                     if (x2 > x1) {
                         if (mIsRecordingVideo) {
@@ -175,8 +174,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     val ratio = (1.toFloat() / zoom_level).toFloat()
                     //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
                     //croppedWidth and croppedHeight are the pixels cropped away, not pixels after cropped
-                    val croppedWidth = m.width() - Math.round(m.width().toFloat() * ratio)
-                    val croppedHeight = m.height() - Math.round(m.height().toFloat() * ratio)
+                    val croppedWidth = m.width() - (m.width().toFloat() * ratio).roundToInt()
+                    val croppedHeight = m.height() - (m.height().toFloat() * ratio).roundToInt()
 
                     // zoom represents the zoomed visible area
                     zoom = Rect(croppedWidth / 2, croppedHeight / 2,
@@ -274,70 +273,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
             Log.e(TAG, "Couldn't find any suitable video size")
             return choices[choices.size - 1]
-        }
-
-        /**
-         * Given `choices` of `Size`s supported by a camera, chooses the smallest one whose
-         * width and height are at least as large as the respective requested values, and whose aspect
-         * ratio matches with the specified value.
-         *
-         * @param choices     The list of sizes that the camera supports for the intended output class
-         * @param width       The minimum desired width
-         * @param height      The minimum desired height
-         * @param aspectRatio The aspect ratio
-         * @return The optimal `Size`, or an arbitrary one if none were big enough
-         */
-        private fun chooseOptimalSize(choices: Array<Size>, width: Int, height: Int/*, aspectRatio: Size?*/): Size {
-            /*    // Collect the supported resolutions that are at least as big as the preview Surface
-                val choicesList = choices.toMutableList()
-                val bigEnough: MutableList<Size> = ArrayList()
-                val w = aspectRatio!!.width
-                val h = aspectRatio.height
-                for (option in choices) {
-                    if (option.height == option.width * h / w && option.width >= width && option.height >= height) {
-                        bigEnough.add(option)
-                    }
-                }
-
-                // Pick the smallest of those, assuming we found any
-                //todo: set a default value when nothing is matching (perhaps set the value passed in?)
-                return if (bigEnough.size > 0) {
-                    Collections.min(bigEnough, CompareSizesByArea())
-                } else {
-                    Log.e(TAG, "Couldn't find any suitable preview size")
-                    Collections.sort(choicesList.toList()) { c1, c2 ->
-                        c1.width * c1.height - c2.width * c2.height
-                    }
-                    choicesList[0]
-                }*/
-
-            val ASPECT_TOLERANCE = 0.1
-            val targetRatio: Double = (height / width).toDouble()
-
-            var optimalSize: Size? = null
-            var minDiff = Double.MAX_VALUE
-
-            val targetHeight: Int = height
-
-            for (size in choices) {
-                val ratio: Double = (size.width / size.height).toDouble()
-                if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue
-                if (Math.abs(size.height - targetHeight) < minDiff) {
-                    optimalSize = size
-                    minDiff = Math.abs(size.height - targetHeight).toDouble()
-                }
-            }
-
-            if (optimalSize == null) {
-                minDiff = Double.MAX_VALUE
-                for (size in choices) {
-                    if (Math.abs(size.height - targetHeight) < minDiff) {
-                        optimalSize = size
-                        minDiff = Math.abs(size.height - targetHeight).toDouble()
-                    }
-                }
-            }
-            return optimalSize!!
         }
 
         @JvmStatic
@@ -586,7 +521,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         mTextureView.setOnTouchListener(this)
         gallery.setOnClickListener { (activity as AppMainActivity?)!!.loadFragment(FragmentGalleryNew.newInstance(), true) }
         settings.setOnClickListener { showDialogSettingsMain() }
-        changeCamera.setOnClickListener { /*switchCamera()*/ }
+        changeCamera.setOnClickListener { switchCamera() }
         appRepository = instance
         mChronometer.onChronometerTickListener = OnChronometerTickListener {
             //                if (!resume) {
@@ -718,7 +653,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 stopPressed = false
                 userRecordDuration = 0
 //                startRecordingVideo()
-                if (mIsRecordingVideo) {
+                if (mIsRecordingVideo && recordClips) {
                     restartRecording()  //  if record is pressed immediately after the app launches, causes crash todo: fix this
 
                     mChronometer.base = SystemClock.elapsedRealtime()
@@ -909,7 +844,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
                 val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val mergeFilePath = "${clip1.parent!!}/merged-$timeStamp.mp4"
-                swipedFileNames.add("${File(outputFilePath).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+                swipedFileNames.add("${File(outputFilePath!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
                 (requireActivity() as AppMainActivity).showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
 
                 val intentService = Intent(requireContext(), VideoService::class.java)
@@ -1145,7 +1080,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
             mVideoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
             /*mPreviewSize = Size(width, height)  //  Fixes jumpy UI in devices*/
-            mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height/*, mVideoSize*/)
+            mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height, mVideoSize)
             val orientation = resources.configuration.orientation
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mTextureView.setAspectRatio(mPreviewSize!!.width, mPreviewSize!!.height)
@@ -1177,8 +1112,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Switches between front and back facing cameras
      */
     private fun switchCamera() {
-        if(isBackFacingRequired)
-            isBackFacingRequired = !isBackFacingRequired
+        isBackFacingRequired = !isBackFacingRequired
         closeCamera()
         reOpenCamera()
     }
@@ -1384,6 +1318,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * this is monitored using infoListener and the recording is restarted automatically.
      * else recording proceeds as normal.
      *
+     * MediaRecorder is currently not supported by the emulator
+     *
      * @throws IOException
      */
     @Throws(IOException::class)
@@ -1537,6 +1473,54 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             mChronometer.base = SystemClock.elapsedRealtime()
             mChronometer.start()
             mChronometer.visibility = View.VISIBLE
+        }
+    }
+
+    /**
+     * Given `choices` of `Size`s supported by a camera, chooses the smallest one whose
+     * width and height are at least as large as the respective requested values, and whose aspect
+     * ratio matches with the specified value.
+     *
+     * @param choices     The list of sizes that the camera supports for the intended output class
+     * @param width       The minimum desired width
+     * @param height      The minimum desired height
+     * @param aspectRatio The aspect ratio
+     * @return The optimal `Size`, or an arbitrary one if none were big enough
+     */
+    private fun chooseOptimalSize(choices: Array<Size>, width: Int = 1080, height: Int = 1920, aspectRatio: Size?): Size {
+        // Collect the supported resolutions that are at least as big as the preview Surface
+        val bigEnough = arrayListOf<Size>()
+        // Collect the supported resolutions that are smaller than the preview Surface
+        val notBigEnough = arrayListOf<Size>()
+        val w = aspectRatio!!.width
+        val h = aspectRatio.height
+        for (option in choices) {
+            if (option.height == option.width * h / w) {
+                if (option.width >= width &&
+                        option.height >= height) {
+                    bigEnough.add(option)
+                } else {
+                    notBigEnough.add(option)
+                }
+            }
+        }
+
+        // Pick the smallest of those big enough. If there is no one big enough, pick the
+        // largest of those not big enough.
+
+        // Pick the smallest of those big enough. If there is no one big enough, pick the
+        // largest of those not big enough.
+        return when {
+            bigEnough.isNotEmpty() -> {
+                Collections.min(bigEnough, CompareSizesByArea())
+            }
+            notBigEnough.isNotEmpty() -> {
+                Collections.max(notBigEnough, CompareSizesByArea())
+            }
+            else -> {
+                Log.e(TAG, "Couldn't find any suitable preview size")
+                choices[0]
+            }
         }
     }
 

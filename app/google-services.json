@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "805782262304",
+    "firebase_url": "https://snipback-android.firebaseio.com",
+    "project_id": "snipback-android",
+    "storage_bucket": "snipback-android.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:805782262304:android:8cbc32c43caad8f454a245",
+        "android_client_info": {
+          "package_name": "com.hipoint.snipback"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "805782262304-gbqh4h6r7foqevl461ephi5oo5at5d2c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hipoint.snipback",
+            "certificate_hash": "6f297c4e6d8e3111437a9c9074ed5632efa4f02a"
+          }
+        },
+        {
+          "client_id": "805782262304-7qnv6piksgqc9tiqthr8ud0mfn66rtmr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXIJPU3p0Wa-utzvYVXeOD8IzHBeZDTJA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "805782262304-7qnv6piksgqc9tiqthr8ud0mfn66rtmr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

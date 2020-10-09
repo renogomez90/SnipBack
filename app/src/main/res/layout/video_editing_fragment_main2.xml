@@ -7,8 +7,7 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/sample_videomode_bg"/>
+        android:layout_height="match_parent"/>
 
     <com.google.android.exoplayer2.ui.PlayerView
         android:id="@+id/player_view"
@@ -16,7 +15,10 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         app:controller_layout_id="@layout/exo_edit_controller"
-        app:use_controller="true"/>
+        app:use_controller="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"/>
 
     <RelativeLayout
         android:id="@+id/edit_cont"
@@ -36,72 +38,16 @@
             android:gravity="center"
             android:padding="4dp">
 
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
-            <ImageView
-                android:layout_width="39.61dp"
-                android:layout_height="32.99dp"
-                android:contentDescription="@string/no_desc"
-                android:src="@drawable/tony_hawk_new" />
-
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/previewFrameList"
+                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_gravity="center"
+                android:clipToPadding="true"
+                android:clipChildren="true"
+                android:scrollbars="none"
+                android:overScrollMode="never"
+                android:nestedScrollingEnabled="false"/>
 
         </LinearLayout>
     </RelativeLayout>

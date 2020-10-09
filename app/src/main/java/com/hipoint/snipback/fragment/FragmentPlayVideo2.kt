@@ -58,23 +58,23 @@ class FragmentPlayVideo2 : Fragment() {
     private var currentPosi = 0L
     private var subscriptions = CompositeDisposable()
 
-    private lateinit var mediaSource: MediaSource
-    private lateinit var player: SimpleExoPlayer
-    private lateinit var dataSourceFactory: DataSource.Factory
+    private lateinit var mediaSource          : MediaSource
+    private lateinit var player               : SimpleExoPlayer
+    private lateinit var dataSourceFactory    : DataSource.Factory
     private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
-    private lateinit var appRepository: AppRepository
-    private lateinit var appViewModel: AppViewModel
-    private lateinit var playerView: PlayerView
-    private lateinit var playBtn: ImageButton
-    private lateinit var pauseBtn: ImageButton
-    private lateinit var editBtn: ImageButton
-    private lateinit var seekBar: DefaultTimeBar
-    private lateinit var rootView: View
-    private lateinit var tag: ImageView
-    private lateinit var backArrow: RelativeLayout
-    private lateinit var buttonCamera: RelativeLayout
-    private lateinit var tvConvertToReal: ImageButton
-    private lateinit var swipeDetector: SwipeDistanceView
+    private lateinit var appRepository        : AppRepository
+    private lateinit var appViewModel         : AppViewModel
+    private lateinit var playerView           : PlayerView
+    private lateinit var playBtn              : ImageButton
+    private lateinit var pauseBtn             : ImageButton
+    private lateinit var editBtn              : ImageButton
+    private lateinit var seekBar              : DefaultTimeBar
+    private lateinit var rootView             : View
+    private lateinit var tag                  : ImageView
+    private lateinit var backArrow            : RelativeLayout
+    private lateinit var buttonCamera         : RelativeLayout
+    private lateinit var tvConvertToReal      : ImageButton
+    private lateinit var swipeDetector        : SwipeDistanceView
 
     // new
     /*
@@ -204,19 +204,20 @@ class FragmentPlayVideo2 : Fragment() {
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.playWhenReady = true
         playerView.controllerShowTimeoutMs = 2000
+        playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
     }
 
     private fun bindViews() {
-        buttonCamera = rootView.findViewById(R.id.button_camera)
-        backArrow = rootView.findViewById(R.id.back_arrow)
+        buttonCamera    = rootView.findViewById(R.id.button_camera)
+        backArrow       = rootView.findViewById(R.id.back_arrow)
         tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal)
-        playerView = rootView.findViewById(R.id.player_view)
-        editBtn = rootView.findViewById(R.id.edit)
-        tag = rootView.findViewById(R.id.tag)
-        swipeDetector = rootView.findViewById(R.id.swipe_detector)
-        seekBar = rootView.findViewById(R.id.exo_progress)
-        playBtn = rootView.findViewById(R.id.exo_play)
-        pauseBtn = rootView.findViewById(R.id.exo_pause)
+        playerView      = rootView.findViewById(R.id.player_view)
+        editBtn         = rootView.findViewById(R.id.edit)
+        tag             = rootView.findViewById(R.id.tag)
+        swipeDetector   = rootView.findViewById(R.id.swipe_detector)
+        seekBar         = rootView.findViewById(R.id.exo_progress)
+        playBtn         = rootView.findViewById(R.id.exo_play)
+        pauseBtn        = rootView.findViewById(R.id.exo_pause)
     }
 
     private fun bindListeners() {
