@@ -190,7 +190,7 @@
         android:layout_height="wrap_content"
         android:layout_above="@id/bottom_menu"
         android:elevation="4dp"
-        android:padding="8dp"
+        android:padding="@dimen/app_margin"
         android:visibility="gone"
         app:bar_color="@color/colorWhiteLt"
         app:bar_highlight_color="@color/colorThemeRed" />

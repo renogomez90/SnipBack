@@ -20,7 +20,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
@@ -36,12 +35,10 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.Snip;
 
 
 import java.io.File;
-import java.util.List;
 
 import static android.app.Activity.RESULT_OK;
 
@@ -84,8 +81,8 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
         view_button = rootView.findViewById(R.id._button_view);
         camera_button = rootView.findViewById(R.id.camera);
         filter_button = rootView.findViewById(R.id.filter);
-        filter_label = rootView.findViewById(R.id.filter_text);
-        view_label = rootView.findViewById(R.id._button_view_text);
+        filter_label = rootView.findViewById(R.id.highlight_text_btn);
+        view_label = rootView.findViewById(R.id.slow_text_btn);
         click = rootView.findViewById(R.id.click);
         click.setVisibility(View.GONE);
 

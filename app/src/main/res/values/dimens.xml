@@ -1,6 +1,7 @@
 <resources>
 
     <dimen name="grid_expected_size">120dp</dimen>
+    <dimen name="app_margin">8dp</dimen>
 
 
 </resources>

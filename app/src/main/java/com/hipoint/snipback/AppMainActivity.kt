@@ -172,11 +172,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         if (count == 0) {
             super.onBackPressed()
         } else {
-            if (myFragment is FragmentGalleryNew) {
-                supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-            } else {
+//            if (myFragment is FragmentGalleryNew) {
+//                supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+//            } else {
                 supportFragmentManager.popBackStack()
-            }
+//            }
         }
     }
 

@@ -36,7 +36,6 @@
 
         <activity
             android:name="com.hipoint.snipback.AppMainActivity"
-            android:configChanges="orientation|screenSize|layoutDirection"
             android:theme="@style/Theme.AppCompat.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
 

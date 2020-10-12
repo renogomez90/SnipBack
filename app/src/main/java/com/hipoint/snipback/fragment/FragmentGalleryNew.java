@@ -114,8 +114,8 @@ public class FragmentGalleryNew extends Fragment {
         view_button = rootView.findViewById(R.id._button_view);
         camera_button = rootView.findViewById(R.id.camera);
         filter_button = rootView.findViewById(R.id.filter);
-        filter_label = rootView.findViewById(R.id.filter_text);
-        view_label = rootView.findViewById(R.id._button_view_text);
+        filter_label = rootView.findViewById(R.id.highlight_text_btn);
+        view_label = rootView.findViewById(R.id.slow_text_btn);
         click = rootView.findViewById(R.id.click);
         rlLoader = rootView.findViewById(R.id.showLoader);
         pullToRefresh = rootView.findViewById(R.id.pullToRefresh);

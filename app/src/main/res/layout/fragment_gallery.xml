@@ -148,7 +148,7 @@
                 android:src="@drawable/ic_filter_results_button" />
 
             <TextView
-                android:id="@+id/filter_text"
+                android:id="@+id/highlight_text_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/filter"
@@ -179,7 +179,7 @@
                 android:src="@drawable/ic_view" />
 
             <TextView
-                android:id="@+id/_button_view_text"
+                android:id="@+id/slow_text_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/_button_view"
@@ -210,7 +210,7 @@
                 android:src="@drawable/ic_menu" />
 
             <TextView
-                android:id="@+id/dropdown_menu_text"
+                android:id="@+id/speedup_text_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/dropdown_menu"

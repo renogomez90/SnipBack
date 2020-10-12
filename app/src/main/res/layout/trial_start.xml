@@ -7,7 +7,7 @@
 
     <ImageView
         android:contentDescription="@string/no_desc"
-        android:id="@+id/close"
+        android:id="@+id/reject"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
@@ -20,7 +20,7 @@
         android:layout_height="300dp"
         android:layout_marginTop="20dp"
         android:src="@drawable/ic_gift"
-        android:layout_below="@id/close" />
+        android:layout_below="@id/reject" />
 
     <TextView
         android:id="@+id/tv_1"

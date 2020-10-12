@@ -33,9 +33,9 @@ public class VideoMode extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_videomode, container, false);
-        gallery = rootView.findViewById(R.id.r_1);
-        settings = rootView.findViewById(R.id.r_5);
-        record_two = rootView.findViewById(R.id.r_2);
+        gallery = rootView.findViewById(R.id.gallery_btn);
+        settings = rootView.findViewById(R.id.menu_btn);
+        record_two = rootView.findViewById(R.id.switch_cam_btn);
 
         gallery.setOnClickListener(new View.OnClickListener() {
             @Override

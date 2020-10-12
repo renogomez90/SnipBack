@@ -74,7 +74,7 @@
             <ImageView
                 android:layout_width="0dp"
                 android:layout_height="28dp"
-                android:layout_toEndOf="@id/close"
+                android:layout_toEndOf="@id/reject"
                 android:layout_weight="2.5"
                 android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_save"
@@ -139,7 +139,7 @@
 
 
             <ImageView
-                android:id="@+id/close"
+                android:id="@+id/reject"
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
                 android:contentDescription="@string/no_desc"
@@ -147,7 +147,7 @@
 
 
             <ImageView
-                android:id="@+id/save"
+                android:id="@+id/accept"
                 android:layout_width="wrap_content"
                 android:layout_height="28dp"
                 android:layout_marginStart="9dp"
@@ -169,8 +169,8 @@
             android:id="@+id/layout_images"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginStart="@dimen/app_margin"
+            android:layout_marginEnd="@dimen/app_margin"
             android:background="@drawable/background_screentwo_editer_image"
             android:gravity="center"
             android:padding="4dp">
@@ -327,7 +327,7 @@
                 android:src="@drawable/ic_highlight" />
 
             <TextView
-                android:id="@+id/filter_text"
+                android:id="@+id/highlight_text_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/filter"
@@ -355,7 +355,7 @@
                 android:src="@drawable/ic_slowmo" />
 
             <TextView
-                android:id="@+id/_button_view_text"
+                android:id="@+id/slow_text_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/_button_view"
@@ -384,7 +384,7 @@
                 android:src="@drawable/ic_speed" />
 
             <TextView
-                android:id="@+id/dropdown_menu_text"
+                android:id="@+id/speedup_text_btn"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@id/dropdown_menu"

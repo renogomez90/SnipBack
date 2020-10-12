@@ -10,7 +10,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -53,7 +52,7 @@ public class TrialOver extends Fragment {
         tv_6 = view.findViewById(R.id.tv_6);
         tv_1_1 = view.findViewById(R.id.tv_1_1);
 
-        close = view.findViewById(R.id.close);
+        close = view.findViewById(R.id.reject);
         rL1 = view.findViewById(R.id.rlAmtChange1);
         rL2 = view.findViewById(R.id.rlAmtChange2);
         return view;

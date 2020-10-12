@@ -34,6 +34,7 @@ import android.view.animation.AnimationUtils
 import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.SeekBar.OnSeekBarChangeListener
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.DialogFragment
@@ -73,17 +74,17 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
-class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback {
+class VideoMode: Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback {
     val swipeValue = 5 * 1000L  //  swipeBack duration
 
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
-    private val totalDuration = intArrayOf(0)//  total combined duration of merged clip
-    private val clipDuration = 30 * 1000L    //  Buffer duration
-    private var userRecordDuration = 0       //  duration of user recorded time
+    private val totalDuration         = intArrayOf(0) //  total combined duration of merged clip
+    private val clipDuration          = 30 * 1000L    //  Buffer duration
+    private var userRecordDuration    = 0             //  duration of user recorded time
 
-    private var parentSnip: Snip? = null
+    private var parentSnip     : Snip?             = null
     private var swipedFileNames: ArrayList<String> = arrayListOf() //  names of files generated from swiping left
-    private var swipedRecording: SwipedRecording? = null
+    private var swipedRecording: SwipedRecording?  = null
 
     //    private var actualClipTime = 0L
     private var clipQueue: Queue<File>? = null
@@ -227,11 +228,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         //Camera Orientation
         private const val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
         private const val SENSOR_ORIENTATION_INVERSE_DEGREES = 270
-        private const val TAG = "Camera2VideoFragment"
-        private const val FRAGMENT_DIALOG = "dialog"
-        private const val REQUEST_VIDEO_PERMISSIONS = 1
-        private const val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
-        private const val THUMBS_DIRECTORY_NAME = "Thumbs"
+        private const val TAG                                = "Camera2VideoFragment"
+        private const val FRAGMENT_DIALOG                    = "dialog"
+        private const val REQUEST_VIDEO_PERMISSIONS          = 1
+        private const val VIDEO_DIRECTORY_NAME               = "SnipBackVirtual"
+        private const val THUMBS_DIRECTORY_NAME              = "Thumbs"
 
         private val DEFAULT_ORIENTATIONS = SparseIntArray()
         private val INVERSE_ORIENTATIONS = SparseIntArray()
@@ -422,36 +423,36 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    private var timerSecond: Int = 0
-    private var hdSnips: Hd_snips? = null
-    private var mSensorOrientation: Int? = null
-    private var outputFilePath: String? = null
-    private var lastUserRecordedPath: String? = null
-    private var mPreviewBuilder: CaptureRequest.Builder? = null
-    private var appRepository: AppRepository? = null
-    private var animBlink: Animation? = null
-    private var thumbnailProcessingCompleted: OnTaskCompleted? = null
+    private var timerSecond                 : Int                     = 0
+    private var hdSnips                     : Hd_snips?               = null
+    private var mSensorOrientation          : Int?                    = null
+    private var outputFilePath              : String?                 = null
+    private var lastUserRecordedPath        : String?                 = null
+    private var mPreviewBuilder             : CaptureRequest.Builder? = null
+    private var appRepository               : AppRepository?          = null
+    private var animBlink                   : Animation?              = null
+    private var thumbnailProcessingCompleted: OnTaskCompleted?        = null
 
     //Views
-    private lateinit var rootView: View
-    private lateinit var gallery: ImageButton
-    private lateinit var settings: ImageButton
-    private lateinit var recordButton: ImageButton
-    private lateinit var recordStopButton: ImageButton
-    private lateinit var r3Bookmark: ImageButton
-    private lateinit var capturePrevious: ImageButton
-    private lateinit var changeCamera: ImageButton
-    private lateinit var r2Shutter: ImageButton
-    private lateinit var tvTimer: TextView
-    private lateinit var mChronometer: Chronometer
-    private lateinit var blinkEffect: View
-    private lateinit var rlVideo: RelativeLayout
-    private lateinit var recStartLayout: RelativeLayout
-    private lateinit var bottomContainer: RelativeLayout
-    private lateinit var zoomControlLayout: RelativeLayout
-    private lateinit var seekBar: SeekBar
-    private lateinit var zoomOut: ImageButton
-    private lateinit var zoomIn: ImageButton
+    private lateinit var rootView         : View
+    private lateinit var gallery          : ImageButton
+    private lateinit var settings         : ImageButton
+    private lateinit var recordButton     : ImageButton
+    private lateinit var recordStopButton : ImageButton
+    private lateinit var r3Bookmark       : ImageButton
+    private lateinit var capturePrevious  : ImageButton
+    private lateinit var changeCamera     : ImageButton
+    private lateinit var r2Shutter        : ImageButton
+    private lateinit var tvTimer          : TextView
+    private lateinit var mChronometer     : Chronometer
+    private lateinit var blinkEffect      : View
+    private lateinit var rlVideo          : ConstraintLayout
+    private lateinit var recStartLayout   : ConstraintLayout
+    private lateinit var bottomContainer  : ConstraintLayout
+    private lateinit var zoomControlLayout: ConstraintLayout
+    private lateinit var seekBar          : SeekBar
+    private lateinit var zoomOut          : ImageButton
+    private lateinit var zoomIn           : ImageButton
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -471,25 +472,25 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Binds views to references
      * */
     private fun bindViews() {
-        rlVideo = rootView.findViewById(R.id.rl_video)
-        gallery = rootView.findViewById(R.id.r_1)
-        settings = rootView.findViewById(R.id.r_5)
-        capturePrevious = rootView.findViewById(R.id.r_3)
-        changeCamera = rootView.findViewById(R.id.r_2)
-        recordButton = rootView.findViewById(R.id.rec)
-        mChronometer = rootView.findViewById(R.id.chronometer)
-        mTextureView = rootView.findViewById(R.id.texture)
-        blinkEffect = rootView.findViewById(R.id.overlay)
-        recStartLayout = rootView.findViewById(R.id.rec_start_container)
-        bottomContainer = rootView.findViewById(R.id.bottom_cont)
-        recordStopButton = rootView.findViewById(R.id.rec_stop)
+        rlVideo           = rootView.findViewById(R.id.rl_video)
+        gallery           = rootView.findViewById(R.id.gallery_btn)
+        settings          = rootView.findViewById(R.id.menu_btn)
+        capturePrevious   = rootView.findViewById(R.id.back_video_btn)
+        changeCamera      = rootView.findViewById(R.id.switch_cam_btn)
+        recordButton      = rootView.findViewById(R.id.rec)
+        mChronometer      = rootView.findViewById(R.id.chronometer)
+        mTextureView      = rootView.findViewById(R.id.texture)
+        blinkEffect       = rootView.findViewById(R.id.overlay)
+        recStartLayout    = rootView.findViewById(R.id.rec_start_container)
+        bottomContainer   = rootView.findViewById(R.id.bottom_cont)
+        recordStopButton  = rootView.findViewById(R.id.rec_stop)
         zoomControlLayout = rootView.findViewById(R.id.zoom_control_layout)
-        seekBar = rootView.findViewById(R.id.zoom_controller)
-        zoomOut = rootView.findViewById(R.id.zoom_out_btn)
-        zoomIn = rootView.findViewById(R.id.zoom_in_btn)
-        r3Bookmark = rootView.findViewById(R.id.r_3_bookmark)
-        r2Shutter = rootView.findViewById(R.id.r_2_shutter)
-        zoomFactor = rootView.findViewById(R.id.zoom_factor)
+        seekBar           = rootView.findViewById(R.id.zoom_controller)
+        zoomOut           = rootView.findViewById(R.id.zoom_out_btn)
+        zoomIn            = rootView.findViewById(R.id.zoom_in_btn)
+        r3Bookmark        = rootView.findViewById(R.id.r_3_bookmark)
+        r2Shutter         = rootView.findViewById(R.id.r_2_shutter)
+        zoomFactor        = rootView.findViewById(R.id.zoom_factor)
     }
 
     /**
@@ -654,8 +655,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 userRecordDuration = 0
 //                startRecordingVideo()
                 if (mIsRecordingVideo && recordClips) {
-                    restartRecording()  //  if record is pressed immediately after the app launches, causes crash todo: fix this
-
+                    try{
+                        restartRecording()
+                    }catch (e: IllegalStateException){
+                        //  attempt to reopent the camera
+                        closeCamera()
+                        if (mTextureView.isAvailable) {
+                            openCamera(mTextureView.width, mTextureView.height)
+                            startRecordingVideo()
+                        }
+                    }
                     mChronometer.base = SystemClock.elapsedRealtime()
                     mChronometer.start()
                     mChronometer.visibility = View.VISIBLE
@@ -782,7 +791,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.texture -> {
                 saveSnipTimeToLocal()
             }
-            R.id.r_3 -> {
+            R.id.back_video_btn -> {
 
             }
         }
@@ -839,7 +848,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 //  4.  merge and split
 
                 val clip1 = clipQueue!!.remove()
-                restartRecording()
+                try{
+                    restartRecording()
+                }catch (e: IllegalStateException){
+                    //  attempt to reopent the camera
+                    closeCamera()
+                    if (mTextureView.isAvailable) {
+                        openCamera(mTextureView.width, mTextureView.height)
+                        startRecordingVideo()
+                    }
+                }
                 val clip2 = clipQueue!!.remove()
 
                 if(clip1.length() == 0L || clip2.length() == 0L)
@@ -866,7 +884,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 //  2.  else save what we have. restart the recording inform user.
                 if (clipQueue!!.isNotEmpty()) {
 
-                    restartRecording()
+                    try{
+                        restartRecording()
+                    }catch (e: IllegalStateException){
+                        //  attempt to reopent the camera
+                        closeCamera()
+                        if (mTextureView.isAvailable) {
+                            openCamera(mTextureView.width, mTextureView.height)
+                            startRecordingVideo()
+                        }
+                    }
 
                     val clip = clipQueue!!.remove()
                     val actualClipTime = (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
@@ -958,9 +985,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
         dialog.setContentView(R.layout.fragment_settings)
-        val con6 = dialog.findViewById<RelativeLayout>(R.id.con6)
+        val con6 = dialog.findViewById<ConstraintLayout>(R.id.con6)
         con6.setOnClickListener { showDialogSettingsResolution() }
-        val feedback = dialog.findViewById<RelativeLayout>(R.id.con2)
+        val feedback = dialog.findViewById<ConstraintLayout>(R.id.con2)
         feedback.setOnClickListener {
             (activity as AppMainActivity?)!!.loadFragment(Feedback_fragment.newInstance(), true)
             dialog.dismiss()
@@ -1375,6 +1402,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         restartRecording()
                     } catch (e: IllegalStateException) {
                         e.printStackTrace()
+                        //  attempt to reopent the camera
+                        closeCamera()
+                        if (mTextureView.isAvailable) {
+                            openCamera(mTextureView.width, mTextureView.height)
+                        } else {
+                            mTextureView.surfaceTextureListener = mSurfaceTextureListener
+                        }
                     }
                 }
             }
@@ -1503,8 +1537,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         val h = aspectRatio.height
         for (option in choices) {
             if (option.height == option.width * h / w) {
-                if (option.width >= width &&
-                        option.height >= height) {
+                if (option.width >= width && option.height >= height || option.width >= height && option.height >= width) {
                     bigEnough.add(option)
                 } else {
                     notBigEnough.add(option)

@@ -41,7 +41,7 @@
 
             <ImageView
                 android:contentDescription="@string/no_desc"
-                android:layout_width="8dp"
+                android:layout_width="@dimen/app_margin"
                 android:layout_height="13dp"
                 android:src="@drawable/ic_forward"
                 android:id="@+id/tutorial_arrow" />
@@ -95,7 +95,7 @@
 
             <ImageView
                 android:contentDescription="@string/no_desc"
-                android:layout_width="8dp"
+                android:layout_width="@dimen/app_margin"
                 android:layout_height="13dp"
                 android:src="@drawable/ic_forward" />
 
@@ -355,7 +355,7 @@
 
             <ImageView
                 android:contentDescription="@string/no_desc"
-                android:layout_width="8dp"
+                android:layout_width="@dimen/app_margin"
                 android:layout_height="13dp"
                 android:src="@drawable/ic_forward" />
         </RelativeLayout>

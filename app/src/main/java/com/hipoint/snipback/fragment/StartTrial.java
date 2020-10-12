@@ -46,7 +46,7 @@ public class StartTrial extends Fragment {
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
 
         bt1 = view.findViewById(R.id.bt1);
-        close = view.findViewById(R.id.close);
+        close = view.findViewById(R.id.reject);
         tv_1 = view.findViewById(R.id.tv_1);
         tv_2 = view.findViewById(R.id.tv_2);
         return view;

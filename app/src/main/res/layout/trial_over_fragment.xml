@@ -11,7 +11,7 @@
 
         <ImageView
             android:contentDescription="@string/no_desc"
-            android:id="@+id/close"
+            android:id="@+id/reject"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
@@ -112,7 +112,7 @@
 
             <TextView
                 android:id="@+id/tvDollar1"
-                android:layout_width="8dp"
+                android:layout_width="@dimen/app_margin"
                 android:layout_height="18dp"
                 android:layout_marginTop="14dp"
                 android:layout_marginEnd="3dp"
@@ -138,7 +138,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="-73dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/app_margin"
                 android:layout_toEndOf="@id/tvAmtValue2"
                 android:fontFamily="@font/barlow_medium"
                 android:text="/ month"
@@ -158,7 +158,7 @@
 
             <TextView
                 android:id="@+id/tvDollar4"
-                android:layout_width="8dp"
+                android:layout_width="@dimen/app_margin"
                 android:layout_height="18dp"
                 android:layout_marginTop="14dp"
                 android:layout_marginEnd="3dp"
@@ -184,7 +184,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="-60dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/app_margin"
                 android:layout_toEndOf="@id/tvAmtValue4"
                 android:fontFamily="@font/barlow_medium"
                 android:text="/ year"
@@ -286,7 +286,7 @@
                 android:layout_width="46dp"
                 android:layout_height="28dp"
                 android:layout_marginStart="25dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="@dimen/app_margin"
                 android:fontFamily="@font/barlow_bold"
                 android:text="11.99"
                 android:textColor="#FFFFFF"

@@ -89,7 +89,8 @@ class FragmentPlayVideo2 : Fragment() {
 
     // new added
     private var snip: Snip? = null
-    var paused = false
+    private var paused = false
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false)
         appRepository = AppRepository(requireActivity().applicationContext)
@@ -382,6 +383,7 @@ class FragmentPlayVideo2 : Fragment() {
 
     override fun onDestroy() {
         subscriptions.dispose()
+        player.release()
         super.onDestroy()
     }
 }

@@ -38,7 +38,7 @@
         app:left_thumb_image="@drawable/ic_vertical_line"
         android:id="@+id/seekbar_controller"
         android:elevation="4dp"
-        android:padding="8dp"
+        android:padding="@dimen/app_margin"
         />
 
     <LinearLayout
