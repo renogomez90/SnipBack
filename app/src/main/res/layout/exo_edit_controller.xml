@@ -8,6 +8,18 @@
     android:layout_above="@id/edit_cont"
     android:layout_gravity="bottom">
 
+    <LinearLayout
+        android:id="@+id/colour_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:alpha=".3"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/edit_swipe_detector"/>
+
     <com.exozet.android.core.ui.custom.SwipeDistanceView
         android:id="@+id/edit_swipe_detector"
         android:layout_width="match_parent"
@@ -28,9 +40,9 @@
         android:textColor="@color/colorWhite"
         android:textSize="20sp"
         android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/play_con2_holder"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/play_con2_holder"/>
+        app:layout_constraintStart_toStartOf="parent" />
 
 
     <LinearLayout
@@ -74,9 +86,9 @@
         android:id="@+id/play_con2_holder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:background="@color/bottom_menu"
         android:gravity="top"
+        android:orientation="vertical"
         android:paddingTop="10dp"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -244,38 +256,42 @@
                 android:id="@+id/previewFrameList"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="@dimen/app_margin"
-                android:paddingEnd="@dimen/app_margin"
                 android:layout_gravity="center"
+                android:clickable="false"
                 android:clipChildren="true"
                 android:clipToPadding="true"
                 android:nestedScrollingEnabled="false"
                 android:overScrollMode="never"
-                android:scrollbars="none"
-                android:clickable="false"/>
+                android:paddingStart="@dimen/app_margin"
+                android:paddingEnd="@dimen/app_margin"
+                android:scrollbars="none" />
 
             <FrameLayout
+                android:id="@+id/timebar_holder"
                 android:layout_width="match_parent"
                 android:layout_height="35dp">
-            <com.google.android.exoplayer2.ui.DefaultTimeBar
-                android:id="@id/exo_progress"
-                android:layout_width="match_parent"
-                android:layout_height="35dp"
-                android:paddingBottom="3dp"
-                app:bar_height="40dp"
-                app:scrubber_enabled_size="35dp"
-                app:scrubber_drawable="@drawable/thumb"
-                app:played_color="@android:color/transparent"
-                app:buffered_color="@android:color/transparent"
-                app:unplayed_color="@android:color/transparent" />
+
+                <com.google.android.exoplayer2.ui.DefaultTimeBar
+                    android:id="@id/exo_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="35dp"
+                    android:paddingBottom="3dp"
+                    android:elevation="8dp"
+                    app:bar_height="40dp"
+                    app:buffered_color="@android:color/transparent"
+                    app:played_color="@android:color/transparent"
+                    app:scrubber_drawable="@drawable/thumb"
+                    app:scrubber_enabled_size="35dp"
+                    app:unplayed_color="@android:color/transparent" />
+
                 <ProgressBar
                     android:id="@+id/previewBarProgress"
+                    style="@style/Widget.MaterialComponents.ProgressIndicator.Circular.Indeterminate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:indeterminate="true"
-                    android:indeterminateTint="@color/white"
-                    style="@style/Widget.MaterialComponents.ProgressIndicator.Circular.Indeterminate"/>
+                    android:indeterminateTint="@color/white" />
             </FrameLayout>
 
         </FrameLayout>

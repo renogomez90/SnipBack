@@ -383,7 +383,12 @@ class FragmentPlayVideo2 : Fragment() {
 
     override fun onDestroy() {
         subscriptions.dispose()
-        player.release()
+        player.apply {
+            playWhenReady = false
+            stop(true)
+            setVideoSurface(null)
+            release()
+        }
         super.onDestroy()
     }
 }
