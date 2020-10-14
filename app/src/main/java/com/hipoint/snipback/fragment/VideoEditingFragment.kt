@@ -107,9 +107,13 @@ class VideoEditingFragment : Fragment() {
     private var startingTimestamps = 0L
     private var endingTimestamps = 0L
     private var speedDuration = Pair<Long, Long>(0, 0)
-    private var speedDetails = arrayListOf<SpeedDetails>()
+    private var speedDetails = mutableSetOf<SpeedDetails>()
+    private var segmentCount = 0
+    private var editAction = EditAction.NORMAL
+
     private var tmpSpeedDetails: SpeedDetails? = null
-    private var rangeSeekbar: CrystalRangeSeekbar? = null
+    private var rangeSegments: ArrayList<CrystalRangeSeekbar>? = null
+//    private var rangeSeekbar: CrystalRangeSeekbar? = null
 
     private val progressTracker: ProgressTracker by lazy { ProgressTracker(player) }
 
@@ -125,46 +129,49 @@ class VideoEditingFragment : Fragment() {
     }
 
     override fun onDestroy() {
+        if (this::player.isInitialized)
+            player.apply {
+                playWhenReady = false
+                stop(true)
+                setVideoSurface(null)
+                release()
+            }
+
         super.onDestroy()
-        player.apply {
-            playWhenReady = false
-            stop(true)
-            setVideoSurface(null)
-            release()
-        }
     }
 
     /**
      * Binds views to layout references
      */
     private fun bindViews() {
-        playerView = rootView.findViewById(R.id.player_view)
-        playCon = rootView.findViewById(R.id.play_con)
-        playCon1 = rootView.findViewById(R.id.play_con1)
-        playCon2 = rootView.findViewById(R.id.play_con2)
-        speedIndicator = rootView.findViewById(R.id.speed_indicator)
-        extentTextBtn = rootView.findViewById(R.id.extent_text)
-        cutTextBtn = rootView.findViewById(R.id.cut_text_btn)
-        highlightTextBtn = rootView.findViewById(R.id.highlight_text_btn)
-        slowTextBtn = rootView.findViewById(R.id.slow_text_btn)
-        speedTextBtn = rootView.findViewById(R.id.speedup_text_btn)
-        save = rootView.findViewById(R.id.save)
-        accept = rootView.findViewById(R.id.accept)
-        end = rootView.findViewById(R.id.end)
-        start = rootView.findViewById(R.id.start)
-        reject = rootView.findViewById(R.id.reject)
-        playBtn = rootView.findViewById(R.id.exo_play)
-        pauseBtn = rootView.findViewById(R.id.exo_pause)
-        toStartBtn = rootView.findViewById(R.id.toStartBtn)
-        back = rootView.findViewById(R.id.back)
-        back1 = rootView.findViewById(R.id.back1)
-        seekBar = rootView.findViewById(R.id.exo_progress)
-        timebarHolder = rootView.findViewById(R.id.timebar_holder)
-        colourOverlay = rootView.findViewById(R.id.colour_overlay)
-        previewTileList = rootView.findViewById(R.id.previewFrameList)
-        previewBarProgress = rootView.findViewById(R.id.previewBarProgress)
-        swipeDetector = rootView.findViewById(R.id.edit_swipe_detector)
-
+        with(rootView) {
+            playerView = findViewById(R.id.player_view)
+            playCon = findViewById(R.id.play_con)
+            playCon1 = findViewById(R.id.play_con1)
+            playCon2 = findViewById(R.id.play_con2)
+            speedIndicator = findViewById(R.id.speed_indicator)
+            extentTextBtn = findViewById(R.id.extent_text)
+            cutTextBtn = findViewById(R.id.cut_text_btn)
+            highlightTextBtn = findViewById(R.id.highlight_text_btn)
+            slowTextBtn = findViewById(R.id.slow_text_btn)
+            speedTextBtn = findViewById(R.id.speedup_text_btn)
+            save = findViewById(R.id.save)
+            accept = findViewById(R.id.accept)
+            end = findViewById(R.id.end)
+            start = findViewById(R.id.start)
+            reject = findViewById(R.id.reject)
+            playBtn = findViewById(R.id.exo_play)
+            pauseBtn = findViewById(R.id.exo_pause)
+            toStartBtn = findViewById(R.id.toStartBtn)
+            back = findViewById(R.id.back)
+            back1 = findViewById(R.id.back1)
+            seekBar = findViewById(R.id.exo_progress)
+            timebarHolder = findViewById(R.id.timebar_holder)
+            colourOverlay = findViewById(R.id.colour_overlay)
+            previewTileList = findViewById(R.id.previewFrameList)
+            previewBarProgress = findViewById(R.id.previewBarProgress)
+            swipeDetector = findViewById(R.id.edit_swipe_detector)
+        }
         setupIcons()
     }
 
@@ -201,28 +208,47 @@ class VideoEditingFragment : Fragment() {
      * Binds listeners for view references
      */
     private fun bindListeners() {
+        /**
+         * sets up the start position UI and increments the segmentCount indicating the number of edit segments available
+         * todo: ensure the start point is the one moving and end point if selected remains as is.
+         */
+        start.setOnClickListener {
+            startEditUI()
+            segmentCount += 1
+        }
 
+        /**
+         * locks in the start edit point and sets up the rangeSeekBar for indication.
+         * range indicator starts off with tmpSpeedDetails which should then be replaced with the actual details
+         */
         end.setOnClickListener {
             start.setBackgroundResource(R.drawable.end_curve)
             end.setBackgroundResource(R.drawable.end_curve_red)
             val currentPosition = player.currentPosition
+
+            if (checkSegmentTaken(currentPosition))   // checking to see if the start positions is acceptable
+                return@setOnClickListener
+
             if (startingTimestamps != currentPosition) {
-                startingTimestamps = currentPosition  //take the starting point when end is pressed
-//                playerView.setExtraAdGroupMarkers(longArrayOf(currentPosition), booleanArrayOf(false))
+                startingTimestamps = currentPosition  //    take the starting point when end is pressed
                 val startValue = (startingTimestamps * 100 / player.duration).toFloat()
 
                 speedDuration = Pair(startingTimestamps, startingTimestamps)    //  we only have the starting position now
                 tmpSpeedDetails = SpeedDetails(false, currentSpeed, speedDuration)
                 speedDetails.add(tmpSpeedDetails!!)
 
-                setupRangeMarker(startValue, 0F)    //  initial value for marker
-                timebarHolder.addView(rangeSeekbar)
-            }
-        }
+                if (segmentCount <= rangeSegments?.size ?: 0) {
+                    rangeSegments = arrayListOf()
+                    rangeSegments?.add(CrystalRangeSeekbar(requireContext()))
+                }
 
-        start.setOnClickListener {
-            start.setBackgroundResource(R.drawable.start_curve)
-            end.setBackgroundResource(R.drawable.end_curve)
+                setupRangeMarker(startValue, 0F)    //  initial value for marker
+
+                if (rangeSegments == null)
+                    rangeSegments = arrayListOf()
+
+                timebarHolder.addView(rangeSegments!!.last())
+            }
         }
 
         extentTextBtn.setOnClickListener {
@@ -245,23 +271,34 @@ class VideoEditingFragment : Fragment() {
 
         save.setOnClickListener { showDialogSave() }
 
+        /**
+         * accepts the changes to the edit that were made
+         * todo: place checks to ensure that edit is completed before the details are accepted
+         * takes in the end position and updates the rangeSeekBar.
+         * progress tracker is run to make sure playback is in accordance with the edit.
+         * reset the UI for new edit
+         */
         accept.setOnClickListener {
             val currentPosition = player.currentPosition
+
+            if (checkSegmentTaken(currentPosition))  //  checking to see if the end positions is acceptable
+                return@setOnClickListener
+
             if (endingTimestamps != currentPosition)
                 endingTimestamps = currentPosition
             //  durations are correct and changes can be accepted
-//            playerView.setExtraAdGroupMarkers(longArrayOf(startingTimestamps, endingTimestamps), booleanArrayOf(false, false))
 
             speedDetails.remove(tmpSpeedDetails)
             progressTracker.removeSpeedDetails(tmpSpeedDetails!!)
 
             speedDuration = Pair(startingTimestamps, endingTimestamps)
-            speedDetails.add(SpeedDetails(false, currentSpeed, speedDuration))
+            speedDetails.add(SpeedDetails(editAction == EditAction.FAST, currentSpeed, speedDuration))
 
             progressTracker.setChangeAccepted(true)
             progressTracker.setSpeed(currentSpeed.toFloat())
-            progressTracker.addSpeedDetails(speedDetails)
+            progressTracker.setSpeedDetails(speedDetails.toMutableList() as ArrayList<SpeedDetails>)
             progressTracker.run()
+
             isEditOnGoing = false
             isSpeedChanged = true
 
@@ -273,9 +310,17 @@ class VideoEditingFragment : Fragment() {
             val endValue = ((endingTimestamps - startingTimestamps) * 100 / player.duration).toFloat()
 
             setupRangeMarker(startValue, endValue)
-            // todo: show enclosing markers
+
+            startEditUI()
+            editAction = EditAction.NORMAL
         }
 
+        /**
+         * progressTracker speed is reset to normal
+         * start and end time stamps are reset
+         * edit segmentCount is decremented
+         * UI is reset for new edit
+         * */
         reject.setOnClickListener {
             /*showDialogdelete()*/
             progressTracker.setChangeAccepted(false)
@@ -290,9 +335,12 @@ class VideoEditingFragment : Fragment() {
             isSpeedChanged = false
             isEditOnGoing = false
 
+            startEditUI()
+            segmentCount -= 1
             speedIndicator.visibility = View.GONE
             playCon1.visibility = View.GONE
             playCon2.visibility = View.VISIBLE
+            editAction = EditAction.NORMAL
         }
 
         playBtn.setOnClickListener {
@@ -322,11 +370,13 @@ class VideoEditingFragment : Fragment() {
         seekBar.isClickable = false
 
         slowTextBtn.setOnClickListener {
-            speedIndicator.visibility = View.VISIBLE
-            playCon1.visibility = View.VISIBLE
-            playCon2.visibility = View.GONE
-            isEditOnGoing = true
-            player.playWhenReady = false
+            setupForEdit()
+            editAction = EditAction.SLOW
+        }
+
+        speedTextBtn.setOnClickListener {
+            setupForEdit()
+            editAction = EditAction.FAST
         }
 
         speedIndicator.setOnClickListener {
@@ -336,19 +386,62 @@ class VideoEditingFragment : Fragment() {
     }
 
     /**
-     * Sets up the crystal range marker for displaying the selected ranges
+     * Sets up the UI and flags for editing
+     */
+    private fun setupForEdit() {
+        speedIndicator.visibility = View.VISIBLE
+        playCon1.visibility = View.VISIBLE
+        playCon2.visibility = View.GONE
+        isEditOnGoing = true
+        player.playWhenReady = false
+    }
+
+    /**
+     * sets up the UI component and indicators with the correct colours for editing
+     */
+    private fun startEditUI() {
+        start.setBackgroundResource(R.drawable.start_curve)
+        end.setBackgroundResource(R.drawable.end_curve)
+    }
+
+    /**
+     * checks if the segment is already taken
+     * @param currentPosition takes in the current position of the video
+     * @return true if the segment is already taken, false if available
+     */
+    private fun checkSegmentTaken(currentPosition: Long): Boolean {
+        if (speedDetails.size > 1) {
+            speedDetails.forEach {
+                if (currentPosition in it.timeDuration?.first!!..it.timeDuration?.second!!) {
+                    Toast.makeText(requireContext(), "segment is already taken", Toast.LENGTH_SHORT).show()
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /**
+     * Sets up the crystal range marker for displaying the selected ranges.
+     *
+     * creates a rangeSeekBar with parameters based on @param startValue and @param endValue
+     * and the details present in the speedDetails sorted set
      */
     private fun setupRangeMarker(startValue: Float, endValue: Float) {
 
-        if (rangeSeekbar == null) {
-            rangeSeekbar = CrystalRangeSeekbar(requireContext())
-
+        if (rangeSegments == null) {
+            rangeSegments = arrayListOf()
+//            rangeSeekbar = CrystalRangeSeekbar(requireContext())
+            rangeSegments?.add(CrystalRangeSeekbar(requireContext()))
             val layoutParam = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            rangeSeekbar?.layoutParams = layoutParam
+            rangeSegments?.last()?.layoutParams = layoutParam
         }
+
         val colour =
                 if (!speedDetails.isNullOrEmpty()) {
-                    if (speedDetails[0].isFast)
+                    if (speedDetails.sortedWith(Comparator { s1, s2 ->
+                                (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
+                            }).toList().last().isFast)
                         resources.getColor(android.R.color.holo_blue_dark, context?.theme)
                     else
                         resources.getColor(android.R.color.holo_green_dark, context?.theme)
@@ -359,7 +452,7 @@ class VideoEditingFragment : Fragment() {
         val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
 
-        rangeSeekbar?.apply {
+        rangeSegments?.last()?.apply {
             minimumHeight = height
             elevation = 1F
             setPadding(padding, 0, padding, 0)
@@ -504,16 +597,14 @@ class VideoEditingFragment : Fragment() {
                     newSeekPosition = startingTimestamps
                 }
 
-                rangeSeekbar?.setMaxStartValue((newSeekPosition * 100 / player.duration).toFloat())?.apply()
+                rangeSegments?.last()?.setMaxStartValue((newSeekPosition * 100 / player.duration).toFloat())?.apply()
             }
 
             if (newSeekPosition < 0)
                 newSeekPosition = 0
             else if (newSeekPosition > player.duration)
                 newSeekPosition = player.duration
-
             emitter.seekFast(newSeekPosition)
-
         }
     }
 
@@ -568,29 +659,34 @@ class VideoEditingFragment : Fragment() {
         private var isChangeAccepted: Boolean = false
 
         override fun run() {
-            if (isChangeAccepted) {
+            if (isChangeAccepted) { //  Edit is present
                 val currentPosition = player.currentPosition
-                if (speedDetailList.isNotEmpty() && currentPosition in speedDetailList[0].timeDuration!!.first..speedDetailList[0].timeDuration!!.second) {
-                    if (speedDetailList[0].isFast) {
-                        val overlayColour = resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
-                        if (!colourOverlay.isShown) {
-                            colourOverlay.visibility = View.VISIBLE
-                            colourOverlay.setBackgroundColor(overlayColour)
+                speedDetailList.forEach {
+                    if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second) {
+                        if (it.isFast) {
+                            val overlayColour = resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
+                            if (!colourOverlay.isShown) {
+                                colourOverlay.visibility = View.VISIBLE
+                                colourOverlay.setBackgroundColor(overlayColour)
+                            }
+                            player.setPlaybackParameters(PlaybackParameters(it.multiplier.toFloat()))
+                        } else {
+                            val overlayColour = resources.getColor(android.R.color.holo_green_dark, requireContext().theme)
+                            if (!colourOverlay.isShown) {
+                                colourOverlay.visibility = View.VISIBLE
+                                colourOverlay.setBackgroundColor(overlayColour)
+                            }
+                            player.setPlaybackParameters(PlaybackParameters(1 / it.multiplier.toFloat()))
                         }
-                        player.setPlaybackParameters(PlaybackParameters(currentSpeed))
+
+                        handler.postDelayed(this, 200 /* ms */)
+                        return
                     } else {
-                        val overlayColour = resources.getColor(android.R.color.holo_green_dark, requireContext().theme)
-                        if (!colourOverlay.isShown) {
-                            colourOverlay.visibility = View.VISIBLE
-                            colourOverlay.setBackgroundColor(overlayColour)
+                        if (player.playbackParameters != PlaybackParameters(1F))
+                            player.setPlaybackParameters(PlaybackParameters(1F))
+                        else {
+                            colourOverlay.visibility = View.GONE
                         }
-                        player.setPlaybackParameters(PlaybackParameters(1 / currentSpeed))
-                    }
-                } else {
-                    if (player.playbackParameters != PlaybackParameters(1F))
-                        player.setPlaybackParameters(PlaybackParameters(1F))
-                    else {
-                        colourOverlay.visibility = View.GONE
                     }
                 }
             } else {
@@ -615,10 +711,11 @@ class VideoEditingFragment : Fragment() {
             isChangeAccepted = isAccepted
         }
 
-        fun addSpeedDetails(speedDetails: ArrayList<SpeedDetails>) {
-            speedDetailList.addAll(speedDetails)
+        fun setSpeedDetails(speedDetails: ArrayList<SpeedDetails>) {
+//            speedDetailList.addAll(speedDetails)
+            speedDetailList = speedDetails
             speedDetailList.sortWith(Comparator { s1, s2 ->
-                (s2.timeDuration?.first!! - s1?.timeDuration!!.first).toInt()
+                (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
             })
         }
 
@@ -630,7 +727,20 @@ class VideoEditingFragment : Fragment() {
         }
     }
 
-    fun getBitmap(vectorDrawable: VectorDrawable): Bitmap? {
+    /**
+     * Enum to show the current edit action
+     */
+    enum class EditAction {
+        NORMAL, FAST, SLOW
+    }
+
+    /**
+     *  Converts vector drawable to bitmap image
+     *
+     *  @param vectorDrawable
+     *  @return Bitmap
+     * */
+    private fun getBitmap(vectorDrawable: VectorDrawable): Bitmap? {
         val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth,
                 vectorDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
