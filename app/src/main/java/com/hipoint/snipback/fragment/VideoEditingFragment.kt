@@ -38,6 +38,8 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.R
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
+import com.hipoint.snipback.enums.EditAction
+import com.hipoint.snipback.enums.EditSeekControl
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.videoControl.SpeedDetails
 import io.reactivex.disposables.CompositeDisposable
@@ -56,39 +58,39 @@ class VideoEditingFragment : Fragment() {
     private val TAG = VideoEditingFragment::class.java.simpleName
 
     //    UI
-    private lateinit var rootView: View
-    private lateinit var back: ImageView         //  for leaving the edit fragment
-    private lateinit var back1: ImageView         //  for leaving the ongoing edit
-    private lateinit var save: ImageView         //  saving the edited file
-    private lateinit var accept: ImageView         //  saving the edited file
-    private lateinit var reject: ImageView         //  closing the ongoing edit
-    private lateinit var playCon1: LinearLayout
-    private lateinit var playCon2: LinearLayout
-    private lateinit var speedIndicator: TextView
-    private lateinit var extentTextBtn: TextView          //  extend or trim the video
-    private lateinit var cutTextBtn: TextView
-    private lateinit var highlightTextBtn: TextView
-    private lateinit var slowTextBtn: TextView
-    private lateinit var speedTextBtn: TextView
-    private lateinit var end: TextView
-    private lateinit var start: TextView
-    private lateinit var playBtn: ImageButton       //  playback the video
-    private lateinit var pauseBtn: ImageButton       //  stop video playback
-    private lateinit var toStartBtn: ImageButton       //  seek back to start of video
-    private lateinit var playCon: ConstraintLayout
-    private lateinit var previewTileList: RecyclerView
-    private lateinit var seekBar: DefaultTimeBar
-    private lateinit var timebarHolder: FrameLayout
-    private lateinit var colourOverlay: LinearLayout
+    private lateinit var rootView          : View
+    private lateinit var back              : ImageView         //  for leaving the edit fragment
+    private lateinit var back1             : ImageView         //  for leaving the ongoing edit
+    private lateinit var save              : ImageView         //  saving the edited file
+    private lateinit var accept            : ImageView         //  saving the edited file
+    private lateinit var reject            : ImageView         //  closing the ongoing edit
+    private lateinit var playCon1          : LinearLayout
+    private lateinit var playCon2          : LinearLayout
+    private lateinit var speedIndicator    : TextView
+    private lateinit var extentTextBtn     : TextView          //  extend or trim the video
+    private lateinit var cutTextBtn        : TextView
+    private lateinit var highlightTextBtn  : TextView
+    private lateinit var slowTextBtn       : TextView
+    private lateinit var speedTextBtn      : TextView
+    private lateinit var end               : TextView
+    private lateinit var start             : TextView
+    private lateinit var playBtn           : ImageButton       //  playback the video
+    private lateinit var pauseBtn          : ImageButton       //  stop video playback
+    private lateinit var toStartBtn        : ImageButton       //  seek back to start of video
+    private lateinit var playCon           : ConstraintLayout
+    private lateinit var previewTileList   : RecyclerView
+    private lateinit var seekBar           : DefaultTimeBar
+    private lateinit var timebarHolder     : FrameLayout
+    private lateinit var colourOverlay     : LinearLayout
     private lateinit var previewBarProgress: ProgressBar
-    private lateinit var swipeDetector: SwipeDistanceView //  detects swiping actions for scrolling with preview
+    private lateinit var swipeDetector     : SwipeDistanceView //  detects swiping actions for scrolling with preview
 
     //    Exoplayer
-    private lateinit var playerView: PlayerView
-    private lateinit var player: SimpleExoPlayer
+    private lateinit var playerView           : PlayerView
+    private lateinit var player               : SimpleExoPlayer
     private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
-    private lateinit var dataSourceFactory: DataSource.Factory
-    private lateinit var mediaSource: MediaSource
+    private lateinit var dataSourceFactory    : DataSource.Factory
+    private lateinit var mediaSource          : MediaSource
 
     //    Snip
     private var snip: Snip? = null
@@ -102,17 +104,21 @@ class VideoEditingFragment : Fragment() {
 
     //  speed change
     var isSpeedChanged = false
-    var isEditOnGoing = false
-    private var currentSpeed = 3
+    var isEditOnGoing  = false
+
+    private var currentSpeed       = 3
     private var startingTimestamps = 0L
-    private var endingTimestamps = 0L
-    private var speedDuration = Pair<Long, Long>(0, 0)
-    private var speedDetails = mutableSetOf<SpeedDetails>()
-    private var segmentCount = 0
-    private var editAction = EditAction.NORMAL
+    private var endingTimestamps   = 0L
+    private var speedDuration      = Pair<Long, Long>(0, 0)
+    private var speedDetails       = mutableSetOf<SpeedDetails>()
+    private var segmentCount       = 0
+    private var editAction         = EditAction.NORMAL
+    private var editSeekAction     = EditSeekControl.MOVE_NORMAL
 
     private var tmpSpeedDetails: SpeedDetails? = null
-    private var rangeSegments: ArrayList<CrystalRangeSeekbar>? = null
+    private var uiRangeSegments: ArrayList<CrystalRangeSeekbar>? = null
+
+    private var restrictList: List<SpeedDetails>? = null
 //    private var rangeSeekbar: CrystalRangeSeekbar? = null
 
     private val progressTracker: ProgressTracker by lazy { ProgressTracker(player) }
@@ -145,32 +151,32 @@ class VideoEditingFragment : Fragment() {
      */
     private fun bindViews() {
         with(rootView) {
-            playerView = findViewById(R.id.player_view)
-            playCon = findViewById(R.id.play_con)
-            playCon1 = findViewById(R.id.play_con1)
-            playCon2 = findViewById(R.id.play_con2)
-            speedIndicator = findViewById(R.id.speed_indicator)
-            extentTextBtn = findViewById(R.id.extent_text)
-            cutTextBtn = findViewById(R.id.cut_text_btn)
-            highlightTextBtn = findViewById(R.id.highlight_text_btn)
-            slowTextBtn = findViewById(R.id.slow_text_btn)
-            speedTextBtn = findViewById(R.id.speedup_text_btn)
-            save = findViewById(R.id.save)
-            accept = findViewById(R.id.accept)
-            end = findViewById(R.id.end)
-            start = findViewById(R.id.start)
-            reject = findViewById(R.id.reject)
-            playBtn = findViewById(R.id.exo_play)
-            pauseBtn = findViewById(R.id.exo_pause)
-            toStartBtn = findViewById(R.id.toStartBtn)
-            back = findViewById(R.id.back)
-            back1 = findViewById(R.id.back1)
-            seekBar = findViewById(R.id.exo_progress)
-            timebarHolder = findViewById(R.id.timebar_holder)
-            colourOverlay = findViewById(R.id.colour_overlay)
-            previewTileList = findViewById(R.id.previewFrameList)
+            playerView         = findViewById(R.id.player_view)
+            playCon            = findViewById(R.id.play_con)
+            playCon1           = findViewById(R.id.play_con1)
+            playCon2           = findViewById(R.id.play_con2)
+            speedIndicator     = findViewById(R.id.speed_indicator)
+            extentTextBtn      = findViewById(R.id.extent_text)
+            cutTextBtn         = findViewById(R.id.cut_text_btn)
+            highlightTextBtn   = findViewById(R.id.highlight_text_btn)
+            slowTextBtn        = findViewById(R.id.slow_text_btn)
+            speedTextBtn       = findViewById(R.id.speedup_text_btn)
+            save               = findViewById(R.id.save)
+            accept             = findViewById(R.id.accept)
+            end                = findViewById(R.id.end)
+            start              = findViewById(R.id.start)
+            reject             = findViewById(R.id.reject)
+            playBtn            = findViewById(R.id.exo_play)
+            pauseBtn           = findViewById(R.id.exo_pause)
+            toStartBtn         = findViewById(R.id.toStartBtn)
+            back               = findViewById(R.id.back)
+            back1              = findViewById(R.id.back1)
+            seekBar            = findViewById(R.id.exo_progress)
+            timebarHolder      = findViewById(R.id.timebar_holder)
+            colourOverlay      = findViewById(R.id.colour_overlay)
+            previewTileList    = findViewById(R.id.previewFrameList)
             previewBarProgress = findViewById(R.id.previewBarProgress)
-            swipeDetector = findViewById(R.id.edit_swipe_detector)
+            swipeDetector      = findViewById(R.id.edit_swipe_detector)
         }
         setupIcons()
     }
@@ -179,6 +185,7 @@ class VideoEditingFragment : Fragment() {
      * Sets up UI icons
      */
     private fun setupIcons() {
+
         val density = resources.displayMetrics.density
         val bound1 = Rect(0, 0, (20 * density).roundToInt(), (20 * density).roundToInt())
 
@@ -214,7 +221,13 @@ class VideoEditingFragment : Fragment() {
          */
         start.setOnClickListener {
             startEditUI()
-            segmentCount += 1
+
+            editSeekAction = EditSeekControl.MOVE_START
+            if(tmpSpeedDetails != null){
+                //  this means the end point was already set
+                //  the user wishes to move the starting point only
+                endingTimestamps = player.currentPosition
+            }
         }
 
         /**
@@ -225,6 +238,7 @@ class VideoEditingFragment : Fragment() {
             start.setBackgroundResource(R.drawable.end_curve)
             end.setBackgroundResource(R.drawable.end_curve_red)
             val currentPosition = player.currentPosition
+            editSeekAction = EditSeekControl.MOVE_END
 
             if (checkSegmentTaken(currentPosition))   // checking to see if the start positions is acceptable
                 return@setOnClickListener
@@ -234,20 +248,19 @@ class VideoEditingFragment : Fragment() {
                 val startValue = (startingTimestamps * 100 / player.duration).toFloat()
 
                 speedDuration = Pair(startingTimestamps, startingTimestamps)    //  we only have the starting position now
-                tmpSpeedDetails = SpeedDetails(false, currentSpeed, speedDuration)
+                tmpSpeedDetails = SpeedDetails(editAction == EditAction.FAST, currentSpeed, speedDuration)
                 speedDetails.add(tmpSpeedDetails!!)
 
-                if (segmentCount <= rangeSegments?.size ?: 0) {
-                    rangeSegments = arrayListOf()
-                    rangeSegments?.add(CrystalRangeSeekbar(requireContext()))
+                if (uiRangeSegments == null)
+                    uiRangeSegments = arrayListOf()
+
+                if (segmentCount > uiRangeSegments?.size ?: 0) {
+                    uiRangeSegments?.add(CrystalRangeSeekbar(requireContext()))
                 }
 
                 setupRangeMarker(startValue, 0F)    //  initial value for marker
-
-                if (rangeSegments == null)
-                    rangeSegments = arrayListOf()
-
-                timebarHolder.addView(rangeSegments!!.last())
+                if(timebarHolder.indexOfChild(uiRangeSegments!!.last()) < 0)  //  View doesn't exist and can be added
+                    timebarHolder.addView(uiRangeSegments!!.last())
             }
         }
 
@@ -290,6 +303,7 @@ class VideoEditingFragment : Fragment() {
 
             speedDetails.remove(tmpSpeedDetails)
             progressTracker.removeSpeedDetails(tmpSpeedDetails!!)
+            tmpSpeedDetails = null
 
             speedDuration = Pair(startingTimestamps, endingTimestamps)
             speedDetails.add(SpeedDetails(editAction == EditAction.FAST, currentSpeed, speedDuration))
@@ -313,6 +327,7 @@ class VideoEditingFragment : Fragment() {
 
             startEditUI()
             editAction = EditAction.NORMAL
+            player.seekTo(0)
         }
 
         /**
@@ -326,11 +341,16 @@ class VideoEditingFragment : Fragment() {
             progressTracker.setChangeAccepted(false)
             currentSpeed = 1
             progressTracker.setSpeed(currentSpeed.toFloat())
-            if (tmpSpeedDetails != null)
+
+            if (tmpSpeedDetails != null) {
                 progressTracker.removeSpeedDetails(tmpSpeedDetails!!)
+                val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)
+                timebarHolder.removeView(ref)
+                tmpSpeedDetails = null
+            }
+
             startingTimestamps = 0L
             endingTimestamps = 0L
-//            playerView.setExtraAdGroupMarkers(LongArray(0), BooleanArray(0))    //  hopefully will clear the admarkers
             player.setPlaybackParameters(PlaybackParameters(1F))
             isSpeedChanged = false
             isEditOnGoing = false
@@ -341,6 +361,7 @@ class VideoEditingFragment : Fragment() {
             playCon1.visibility = View.GONE
             playCon2.visibility = View.VISIBLE
             editAction = EditAction.NORMAL
+            player.seekTo(0)
         }
 
         playBtn.setOnClickListener {
@@ -364,19 +385,36 @@ class VideoEditingFragment : Fragment() {
             player.seekTo(0)
         }
 
+        //  prevent touchs on seekbar
         seekBar.setOnTouchListener { _, _ ->
             true
         }
         seekBar.isClickable = false
 
         slowTextBtn.setOnClickListener {
+            val currentPosition = player.currentPosition
+            speedDetails.forEach{
+                if(currentPosition in it.timeDuration?.first!! .. it.timeDuration?.second!!){
+                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            }
             setupForEdit()
             editAction = EditAction.SLOW
+            segmentCount += 1   //  a new segment is active
         }
 
         speedTextBtn.setOnClickListener {
+            val currentPosition = player.currentPosition
+            speedDetails.forEach{
+                if(currentPosition in it.timeDuration?.first!! .. it.timeDuration?.second!!){
+                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+            }
             setupForEdit()
             editAction = EditAction.FAST
+            segmentCount += 1   //  a new segment is active
         }
 
         speedIndicator.setOnClickListener {
@@ -429,12 +467,11 @@ class VideoEditingFragment : Fragment() {
      */
     private fun setupRangeMarker(startValue: Float, endValue: Float) {
 
-        if (rangeSegments == null) {
-            rangeSegments = arrayListOf()
-//            rangeSeekbar = CrystalRangeSeekbar(requireContext())
-            rangeSegments?.add(CrystalRangeSeekbar(requireContext()))
+        if (uiRangeSegments == null) {
+            uiRangeSegments = arrayListOf()
+            uiRangeSegments?.add(CrystalRangeSeekbar(requireContext()))
             val layoutParam = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            rangeSegments?.last()?.layoutParams = layoutParam
+            uiRangeSegments?.last()?.layoutParams = layoutParam
         }
 
         val colour =
@@ -446,13 +483,13 @@ class VideoEditingFragment : Fragment() {
                     else
                         resources.getColor(android.R.color.holo_green_dark, context?.theme)
                 } else
-                    resources.getColor(android.R.color.holo_green_dark, context?.theme)
+                    resources.getColor(android.R.color.transparent, context?.theme)
 
         val thumbImageDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.thumb, context?.theme) as VectorDrawable)
         val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
 
-        rangeSegments?.last()?.apply {
+        uiRangeSegments?.last()?.apply {
             minimumHeight = height
             elevation = 1F
             setPadding(padding, 0, padding, 0)
@@ -558,8 +595,13 @@ class VideoEditingFragment : Fragment() {
         dialog.show()
     }
 
+    /**
+     * Controls the behaviour during swiping actions both during normal seeking and editing
+     */
     private fun initSwipeControls() {
         var startScrollingSeekPosition = 0L
+        var higher = player.duration
+        var lower = 0L
 
         swipeDetector.setOnClickListener {
             if (playerView.isControllerVisible)
@@ -592,12 +634,44 @@ class VideoEditingFragment : Fragment() {
             var newSeekPosition = percentOfDuration.roundToLong()
             /*((percentOfDuration + duration) % duration).roundToLong().absoluteValue*/
 
-            if (isEditOnGoing) {
-                if (newSeekPosition < startingTimestamps) {
-                    newSeekPosition = startingTimestamps
-                }
+            if(restrictList.isNullOrEmpty() || restrictList?.size!! < speedDetails.size){
+                restrictList = speedDetails.sortedWith(Comparator { s1, s2 ->
+                    (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
+                }).toList()
 
-                rangeSegments?.last()?.setMaxStartValue((newSeekPosition * 100 / player.duration).toFloat())?.apply()
+                higher = nearestExistingHigherTS(player.currentPosition)
+                lower = nearestExistingLowerTS(player.currentPosition)
+            }
+
+            if (isEditOnGoing && !uiRangeSegments.isNullOrEmpty()) {
+                when(editSeekAction){
+                    EditSeekControl.MOVE_END -> {
+                        // only the end point is being manipulated
+                        // prevent the user from seeking beyond the fixed start point
+
+                        if (newSeekPosition < startingTimestamps) {
+                            newSeekPosition = startingTimestamps
+                        }
+                        if(newSeekPosition > higher)
+                            newSeekPosition = higher
+
+                        uiRangeSegments?.last()?.setMaxStartValue((newSeekPosition * 100 / player.duration).toFloat())?.apply()
+                    }
+                    EditSeekControl.MOVE_START -> {
+                        // only the starting point is being manipulated
+                        // prevent the user from seeking beyond the fixed start point
+
+                        if (newSeekPosition > endingTimestamps && endingTimestamps != 0L) {
+                           newSeekPosition = endingTimestamps
+                        }
+                        if(newSeekPosition < lower)
+                            newSeekPosition = lower
+
+                        uiRangeSegments?.last()?.setMinStartValue((newSeekPosition * 100 / player.duration).toFloat())?.apply()
+                        uiRangeSegments?.last()?.setMaxStartValue(endingTimestamps.toFloat())?.apply()
+                    }
+                    EditSeekControl.MOVE_NORMAL -> {}
+                }
             }
 
             if (newSeekPosition < 0)
@@ -727,11 +801,32 @@ class VideoEditingFragment : Fragment() {
         }
     }
 
-    /**
-     * Enum to show the current edit action
-     */
-    enum class EditAction {
-        NORMAL, FAST, SLOW
+    private fun nearestExistingLowerTS(current: Long): Long {
+        var lower = current
+        restrictList?.forEach{
+            if(it.timeDuration!!.first < lower){
+                lower = it.timeDuration!!.first
+            }
+        }
+
+        return if(lower == current)
+            0L
+        else
+            lower
+    }
+
+    private fun nearestExistingHigherTS(current: Long): Long{
+        var higher = current
+        restrictList?.forEach{
+            if(it.timeDuration!!.first > higher){
+                higher = it.timeDuration!!.first
+            }
+        }
+
+        return if(higher == current)
+            player.duration
+        else
+            higher
     }
 
     /**

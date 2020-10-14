@@ -280,7 +280,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         fun newInstance(): VideoMode {
             if (videoMode == null)
                 videoMode = VideoMode()
-
             return videoMode!!
         }
 

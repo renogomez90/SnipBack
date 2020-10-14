@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -22,6 +23,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.fragment.FragmentGalleryNew
+import com.hipoint.snipback.fragment.FragmentPlayVideo2
+import com.hipoint.snipback.fragment.VideoEditingFragment
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
@@ -53,9 +56,14 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     //    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
     //    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
+    private val TAG = AppMainActivity::class.java.simpleName
+
     private val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
-    private val TAG = AppMainActivity::class.java.simpleName
+    private val VIDEO_MODE_TAG = "videoMode"
+    private val GALLERY_FRAGMENT_TAG = "gallery_frag"
+    private val PLAY_VIDEO_TAG = "play_frag"
+    private val EDIT_VIDEO_TAG = "edit_frag"
 
     private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
@@ -81,6 +89,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         setContentView(R.layout.appmain_activity)
         if (onTouchListeners == null) {
             onTouchListeners = ArrayList()
@@ -93,7 +102,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
 //        appViewModel.loadGalleryDataFromDB(this);
 
-        if (!videoModeFragment.isAdded) {
+        if (!videoModeFragment.isAdded && supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
             loadFragment(videoModeFragment, false)
         }
         if (!hasPermissions(this, *PERMISSIONS)) {
@@ -154,7 +163,17 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     //    public void loadFragment(Fragment fragment,boolean addtoBackStack) {
     fun loadFragment(fragment: Fragment?, addtoBackStack: Boolean) {
         val ft = supportFragmentManager.beginTransaction()
-        ft.replace(R.id.mainFragment, fragment!!)
+
+        val tag = when(fragment){
+            is VideoMode -> VIDEO_MODE_TAG
+            is FragmentGalleryNew -> GALLERY_FRAGMENT_TAG
+            is FragmentPlayVideo2 -> PLAY_VIDEO_TAG
+            is VideoEditingFragment -> EDIT_VIDEO_TAG
+            else -> ""
+        }
+
+        ft.replace(R.id.mainFragment, fragment!!, tag)
+
         if (addtoBackStack || fragment is FragmentGalleryNew) {
             ft.addToBackStack(null)
         }
