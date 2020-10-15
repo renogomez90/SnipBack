@@ -60,10 +60,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     private val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
-    private val VIDEO_MODE_TAG = "videoMode"
-    private val GALLERY_FRAGMENT_TAG = "gallery_frag"
-    private val PLAY_VIDEO_TAG = "play_frag"
-    private val EDIT_VIDEO_TAG = "edit_frag"
 
     private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
@@ -213,6 +209,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     }
 
     companion object {
+        val VIDEO_MODE_TAG = "videoMode"
+        val GALLERY_FRAGMENT_TAG = "gallery_frag"
+        val PLAY_VIDEO_TAG = "play_frag"
+        val EDIT_VIDEO_TAG = "edit_frag"
+
         fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
             if (context != null) {
                 for (permission in permissions) {

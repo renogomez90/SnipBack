@@ -29,7 +29,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:background="#44AA0000" />
+        tools:background="#44AA0000" >
+
+    </com.exozet.android.core.ui.custom.SwipeDistanceView>
 
     <TextView
         android:id="@+id/speed_indicator"
@@ -280,7 +282,7 @@
                     app:bar_height="40dp"
                     app:buffered_color="@android:color/transparent"
                     app:played_color="@android:color/transparent"
-                    app:scrubber_drawable="@drawable/thumb"
+                    app:scrubber_drawable="@drawable/ic_thumb"
                     app:scrubber_enabled_size="35dp"
                     app:unplayed_color="@android:color/transparent" />
 

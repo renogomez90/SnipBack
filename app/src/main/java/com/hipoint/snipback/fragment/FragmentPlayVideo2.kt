@@ -16,8 +16,10 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.extensions.onClick
 import com.exozet.android.core.ui.custom.SwipeDistanceView
+import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ClippingMediaSource
@@ -42,9 +44,8 @@ import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
@@ -54,6 +55,8 @@ import kotlin.math.roundToLong
 
 class FragmentPlayVideo2 : Fragment() {
     private val TAG = FragmentPlayVideo2::class.java.simpleName
+    private val retries = 3
+    private var tries = 0
 
     private var currentPosi = 0L
     private var subscriptions = CompositeDisposable()
@@ -206,6 +209,24 @@ class FragmentPlayVideo2 : Fragment() {
         player.playWhenReady = true
         playerView.controllerShowTimeoutMs = 2000
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+
+        player.addListener(object : Player.EventListener {
+            override fun onPlayerError(error: ExoPlaybackException) {
+                Log.e(TAG, "onPlayerError: ${error.message}")
+                error.printStackTrace()
+                tries++
+                if (snip?.videoFilePath.isNotNullOrEmpty() && tries < retries) {  //  retry in case of errors
+                    CoroutineScope(Dispatchers.Main).launch {
+                        delay(500)
+                        val frag = requireActivity().supportFragmentManager.findFragmentByTag(AppMainActivity.PLAY_VIDEO_TAG)
+                        requireActivity().supportFragmentManager.beginTransaction()
+                                .detach(frag!!)
+                                .attach(frag)
+                                .commit()
+                    }
+                }
+            }
+        })
     }
 
     private fun bindViews() {
