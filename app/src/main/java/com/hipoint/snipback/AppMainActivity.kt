@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -160,7 +161,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     fun loadFragment(fragment: Fragment?, addtoBackStack: Boolean) {
         val ft = supportFragmentManager.beginTransaction()
 
-        val tag = when(fragment){
+        val tag = when (fragment) {
             is VideoMode -> VIDEO_MODE_TAG
             is FragmentGalleryNew -> GALLERY_FRAGMENT_TAG
             is FragmentPlayVideo2 -> PLAY_VIDEO_TAG
@@ -190,7 +191,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 //            if (myFragment is FragmentGalleryNew) {
 //                supportFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
 //            } else {
-                supportFragmentManager.popBackStack()
+            supportFragmentManager.popBackStack()
 //            }
         }
     }
@@ -501,6 +502,17 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     }
 
     /**
+     * Video speed change was successfully done and is available at processedVideoPath
+     * Processed video is added to snip
+     *
+     * @param processedVideoPath
+     */
+    private fun videoSpeedChangeCompleted(processedVideoPath: String) {
+        Log.d(TAG, "videoSpeedChangeCompleted: Video Saved at $processedVideoPath")
+        Toast.makeText(this, "Video Saved at $processedVideoPath", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
      * Receives events from VideoService
      * */
     private val videoOperationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -511,11 +523,18 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             val showProgress = intent.getIntExtra("progress", -1)
             val processedVideoPath = intent.getStringExtra("processedVideoPath")
 
-            if (showProgress == VideoService.STATUS_SHOW_PROGRESS && videoModeFragment.isVisible) {
-                videoModeFragment.videoProcessing(true)
-            } else {
-                videoModeFragment.videoProcessing(false)
-            }
+            if (isFragmentVisible(VIDEO_MODE_TAG))
+                if (showProgress == VideoService.STATUS_SHOW_PROGRESS) {
+                    videoModeFragment.videoProcessing(true)
+                } else {
+                    videoModeFragment.videoProcessing(false)
+                }
+            if(isFragmentVisible(EDIT_VIDEO_TAG))
+                if(showProgress == VideoService.STATUS_SHOW_PROGRESS){
+//                    (supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as VideoEditingFragment).showProgress()
+                } else{
+//                    (supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as VideoEditingFragment).hideProgress()
+                }
 
             when (intent.getIntExtra("status", VideoService.STATUS_NO_VALUE)) {
                 VideoService.STATUS_OP_SUCCESS -> {
@@ -531,6 +550,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                         IVideoOpListener.VideoOp.SPLIT.name -> {
                             if (processedVideoPath!!.isNotBlank())
                                 videoSplitCompleted(processedVideoPath)
+                        }
+                        IVideoOpListener.VideoOp.SPEED.name -> {
+                            if (processedVideoPath!!.isNotBlank())
+                                videoSpeedChangeCompleted(processedVideoPath)
                         }
                         else -> {
                         }
@@ -568,5 +591,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         }
         retriever.release()
         return durationList
+    }
+
+    private fun isFragmentVisible(fragmentTag: String): Boolean {
+        val frag = supportFragmentManager.findFragmentByTag(fragmentTag)
+        return frag?.isVisible ?: false
     }
 }

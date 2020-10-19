@@ -58,7 +58,7 @@ class FragmentPlayVideo2 : Fragment() {
     private val retries = 3
     private var tries = 0
 
-    private var currentPosi = 0L
+    private var currentPos = 0L
     private var subscriptions = CompositeDisposable()
 
     private lateinit var mediaSource: MediaSource

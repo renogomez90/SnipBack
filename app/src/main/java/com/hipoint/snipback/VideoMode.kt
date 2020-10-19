@@ -1374,7 +1374,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             SENSOR_ORIENTATION_INVERSE_DEGREES -> mMediaRecorder!!.setOrientationHint(INVERSE_ORIENTATIONS[rotation])
         }
         mMediaRecorder!!.apply {
-//            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             //        if (outputFilePath == null || outputFilePath.isEmpty()) {
@@ -1392,9 +1392,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
             setVideoEncodingBitRate(profile.videoBitRate)
             setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-//            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-//            setAudioEncodingBitRate(profile.audioBitRate)
-//            setAudioSamplingRate(profile.audioSampleRate)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setAudioEncodingBitRate(profile.audioBitRate)
+            setAudioSamplingRate(profile.audioSampleRate)
             setInputSurface(persistentSurface)
 
             setOnInfoListener { mr, what, _ ->

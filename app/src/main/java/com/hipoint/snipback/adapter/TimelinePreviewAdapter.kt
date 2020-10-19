@@ -21,6 +21,10 @@ class TimelinePreviewAdapter(val context: Context, val photoList: ArrayList<Bitm
         return photoList.size
     }
 
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
+    }
+
     override fun onBindViewHolder(holder: PreviewTileVH, position: Int) {
         Glide.with(context).load(photoList[position]).into(holder.previewTile)
     }

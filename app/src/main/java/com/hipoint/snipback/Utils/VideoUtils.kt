@@ -7,12 +7,14 @@ import VideoHandle.OnEditorListener
 import android.media.MediaMetadataRetriever
 import android.util.Log
 import com.hipoint.snipback.listener.IVideoOpListener
+import com.hipoint.snipback.videoControl.SpeedDetails
 import java.io.File
 import java.io.FileWriter
 import java.io.IOException
 import java.io.PrintWriter
-import java.util.*
+import java.lang.StringBuilder
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
 
 class VideoUtils(private val opListener: IVideoOpListener) {
     private val TAG = VideoUtils::class.java.simpleName
@@ -176,6 +178,123 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    /**
+     * changes the speed of the video segments detailed through
+     * speedDetailsList
+     *
+     * @param clip video file to be modified
+     * @param speedDetailsList ArrayList of SpeedDetails
+     * @param outputPath Path to save output
+     */
+    fun changeSpeed(clip: File, speedDetailsList: ArrayList<SpeedDetails>, outputPath: String) {
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(clip.absolutePath)
+        val totalDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+
+        val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
+
+        /*val cmd = "-i ${clip.absolutePath} -filter_complex " +
+                "[0:v]trim=0:2,setpts=PTS-STARTPTS[v1]; " + //from 0 to 2 sec normal speed; output reference is [v1]
+                "[0:v]trim=2:5,setpts=2*(PTS-STARTPTS)[v2]; " + //from 2 to 5 sec slow down * 2
+                "[0:v]trim=5,setpts=PTS-STARTPTS[v3]; " +   // 5 sec onwards normal speed
+                "[0:a]atrim=0:2,asetpts=PTS-STARTPTS[a1]; " +   // audio follows the same pattern as above
+                "[0:a]atrim=2:5,asetpts=PTS-STARTPTS,atempo=0.5[a2]; " +
+                "[0:a]atrim=5,asetpts=PTS-STARTPTS[a3]; " +
+                "[v1][a1][v2][a2][v3][a3]concat=n=3:v=1:a=1 " +
+                "-preset superfast -profile:v baseline $outputPath"*/
+
+        val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -preset ultrafast -shortest -y $outputPath"
+
+        Log.d(TAG, "changeSpeed: cmd = $cmd")
+
+        EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+            override fun onSuccess() {
+                Log.d(TAG, "onSuccess: ")
+            }
+
+            override fun onFailure() {
+                Log.d(TAG, "onFailure: ")
+            }
+
+            override fun onProgress(progress: Float) {
+
+            }
+        })
+
+    }
+
+    /**
+     * generates the filter complex for modifying the video speed as per the segment details
+     *
+     * @param speedDetailsList ArrayList of SpeedDetails
+     * @param totalDuration of the video clip
+     *
+     * @return generated filter_complex string for ffmpeg
+     */
+    private fun makeComplexFilter(speedDetailsList: ArrayList<SpeedDetails>, totalDuration: Long): String {
+
+        Log.d(TAG, "makeComplexFilter: received speed details = ")
+        speedDetailsList.forEach { println(it.toString()) }
+
+        var i = 1
+        //  setting up the filter; checking to see if the start time is at 0
+        val vFilterComplex = StringBuffer("")
+        val aFilterComplex = StringBuffer("")
+        if (speedDetailsList.first().timeDuration?.first!! > 0) {
+            vFilterComplex.append("[0:v]trim=0:${speedDetailsList.first().timeDuration?.first!!.toFloat() / 1000},setpts=PTS-STARTPTS[v1];")
+            aFilterComplex.append("[0:a]atrim=0:${speedDetailsList.first().timeDuration?.first!!.toFloat() / 1000},asetpts=PTS-STARTPTS,atempo=1[a1];")
+            i++
+        }
+
+        speedDetailsList.forEach {
+            val startTime = it.timeDuration?.first!!.toFloat() / 1000
+            val endTime = it.timeDuration?.second!!.toFloat() / 1000
+
+            var k = if (it.isFast) it.multiplier.toFloat() else (1 / it.multiplier.toFloat())
+            val audio = StringBuilder("")
+
+            while (2 < k) {
+                k /= 2
+                audio.append("atempo=2.0,")
+            }
+            while (k < 0.5) {
+                k *= 2
+                audio.append("atempo=0.5,")
+            }
+            audio.append("atempo=$k")
+
+            //  video
+            if (it.isFast) {
+                vFilterComplex.append("[0:v]trim=$startTime:$endTime,setpts=(PTS-STARTPTS)/${it.multiplier}[v$i];")
+            } else {
+                vFilterComplex.append("[0:v]trim=$startTime:$endTime,setpts=(PTS-STARTPTS)*${it.multiplier}[v$i];")
+            }
+            //  audio
+            aFilterComplex.append("[0:a]atrim=$startTime:$endTime,asetpts=PTS-STARTPTS,$audio[a$i];")
+            //  increments the counter
+            i++
+        }
+
+        //  handles the video ending speed
+        if (speedDetailsList.last().timeDuration?.second!! < totalDuration) {
+            val startTime = speedDetailsList.last().timeDuration?.second!!.toFloat() / 1000
+            val endTime = totalDuration.toFloat() / 1000
+
+            vFilterComplex.append("[0:v]trim=$startTime:$endTime,setpts=PTS-STARTPTS[v$i];")
+            aFilterComplex.append("[0:a]atrim=$startTime:$endTime,asetpts=PTS-STARTPTS[a$i];")
+            i++
+        }
+
+        val filterComplex = vFilterComplex.append(aFilterComplex)
+
+        for (j in 1 until i) {
+            filterComplex.append("[v$j][a$j]")
+        }
+        filterComplex.append("concat=n=${i - 1}:v=1:a=1[outv][outa]")
+
+        return filterComplex.toString()
     }
 
     private fun createFileList(clip1: File, clip2: File): String {

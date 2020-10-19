@@ -26,17 +26,16 @@ import java.util.*
  */
 class VideoService : JobIntentService(), IVideoOpListener {
     companion object {
-        val ACTION = "com.hipoint.snipback.VideoOpAction"
+        val ACTION        = "com.hipoint.snipback.VideoOpAction"
         val VIDEO_OP_ITEM = "VIDEO_OP_ITEM"
-        val NOTIFICATION_ID = 6020
 
-        val STATUS_NO_VALUE = -1
-        val STATUS_OP_SUCCESS = 1
-        val STATUS_OP_FAILED = 2
+        val STATUS_NO_VALUE      = -1
+        val STATUS_OP_SUCCESS    = 1
+        val STATUS_OP_FAILED     = 2
         val STATUS_SHOW_PROGRESS = 3
         val STATUS_HIDE_PROGRESS = 4
 
-        private var workQueue: Queue<VideoOpItem> = LinkedList<VideoOpItem>()
+        private var workQueue: Queue<VideoOpItem> = LinkedList()
         private var isProcessing = false
 
         fun enqueueWork(context: Context, work:Intent){
@@ -44,41 +43,10 @@ class VideoService : JobIntentService(), IVideoOpListener {
         }
     }
 
-    private val TAG = VideoService::class.java.simpleName
-    private val channelId = "Snipback_notification"
-    private val vUtil = VideoUtils(this@VideoService)
+    private val TAG             = VideoService::class.java.simpleName
+    private val channelId       = "Snipback_notification"
+    private val vUtil           = VideoUtils(this@VideoService)
     private val broadcastIntent = Intent()
-
-/*
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(TAG, "onStartCommand: Service starting")
-*/
-/*
-            createNotificationChannel()
-            val notification: Notification = NotificationCompat.Builder(this, channelId)
-                    .setContentTitle("Foreground Service")
-                    .setContentText("Snipback Video Processing")
-                    .setContentText("Your videos are being prepared and will be available shortly")
-                    .build()
-
-            startForeground(NOTIFICATION_ID, notification)
-//        }*//*
-
-
-        val items = intent?.getParcelableArrayListExtra<VideoOpItem>(VIDEO_OP_ITEM)
-        items?.forEach {
-            workQueue.add(it)
-            Log.d(TAG, "onStartCommand: $it")
-        }
-
-        processQueue()
-        return START_STICKY
-    }
-*/
 
     override fun onHandleWork(intent: Intent) {
 
@@ -91,17 +59,6 @@ class VideoService : JobIntentService(), IVideoOpListener {
         processQueue()
     }
 
-    /*private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceChannel = NotificationChannel(channelId,
-                    "Foreground Service Channel",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            )
-            val manager = getSystemService(NotificationManager::class.java)
-            manager?.createNotificationChannel(serviceChannel)
-        }
-    }
-*/
     private fun processQueue() {
         Log.d(TAG, "processQueue: processing")
         isProcessing = true
@@ -157,6 +114,18 @@ class VideoService : JobIntentService(), IVideoOpListener {
                         } else {
                             CoroutineScope(IO).launch {
                                 VideoUtils(this@VideoService).splitVideo(File(clip1), splitTime, outputPath)
+                                return@launch
+                            }
+                        }
+                    }
+                    IVideoOpListener.VideoOp.SPEED -> {
+                        if (speedDetailsList.isNullOrEmpty()) {
+                            failed(IVideoOpListener.VideoOp.SPEED)
+                            return@with
+                        } else {
+                            CoroutineScope(IO).launch {
+                                if(speedDetailsList != null)
+                                    VideoUtils(this@VideoService).changeSpeed(File(clip1), speedDetailsList, outputPath)
                                 return@launch
                             }
                         }

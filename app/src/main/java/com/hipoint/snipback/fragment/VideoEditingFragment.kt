@@ -1,10 +1,9 @@
 package com.hipoint.snipback.fragment
 
 import android.app.Dialog
+import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Rect
+import android.graphics.*
 import android.graphics.drawable.VectorDrawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
@@ -42,11 +41,18 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
+import com.hipoint.snipback.Utils.VideoUtils
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
+import com.hipoint.snipback.dialog.ProcessingDialog
+import com.hipoint.snipback.dialog.SaveEditDialog
 import com.hipoint.snipback.enums.EditAction
 import com.hipoint.snipback.enums.EditSeekControl
+import com.hipoint.snipback.listener.ISaveListener
+import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.videoControl.SpeedDetails
+import com.hipoint.snipback.videoControl.VideoOpItem
+import com.hipoint.snipback.videoControl.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.*
@@ -54,48 +60,56 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
+import java.io.File
 import java.lang.Runnable
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.TimeUnit
+import kotlin.Comparator
+import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-class VideoEditingFragment : Fragment() {
+class VideoEditingFragment : Fragment(), ISaveListener {
     private val TAG = VideoEditingFragment::class.java.simpleName
+    private val SAVE_DIALOG = "dialog_save"
+    private val PROCESSING_DIALOG = "dialog_processing"
     private val retries = 3
 
     //    UI
-    private lateinit var rootView: View
-    private lateinit var back: ImageView         //  for leaving the edit fragment
-    private lateinit var back1: ImageView         //  for leaving the ongoing edit
-    private lateinit var save: ImageView         //  saving the edited file
-    private lateinit var accept: ImageView         //  saving the edited file
-    private lateinit var reject: ImageView         //  closing the ongoing edit
-    private lateinit var playCon1: LinearLayout
-    private lateinit var playCon2: LinearLayout
-    private lateinit var speedIndicator: TextView
-    private lateinit var extentTextBtn: TextView          //  extend or trim the video
-    private lateinit var cutTextBtn: TextView
-    private lateinit var highlightTextBtn: TextView
-    private lateinit var slowTextBtn: TextView
-    private lateinit var speedTextBtn: TextView
-    private lateinit var end: TextView
-    private lateinit var start: TextView
-    private lateinit var playBtn: ImageButton       //  playback the video
-    private lateinit var pauseBtn: ImageButton       //  stop video playback
-    private lateinit var toStartBtn: ImageButton       //  seek back to start of video
-    private lateinit var playCon: ConstraintLayout
-    private lateinit var previewTileList: RecyclerView
-    private lateinit var seekBar: DefaultTimeBar
-    private lateinit var timebarHolder: FrameLayout
-    private lateinit var colourOverlay: LinearLayout
+    private lateinit var rootView          : View
+    private lateinit var back              : ImageView         //  for leaving the edit fragment
+    private lateinit var back1             : ImageView         //  for leaving the ongoing edit
+    private lateinit var save              : ImageView         //  saving the edited file
+    private lateinit var accept            : ImageView         //  saving the edited file
+    private lateinit var reject            : ImageView         //  closing the ongoing edit
+    private lateinit var playCon1          : LinearLayout
+    private lateinit var playCon2          : LinearLayout
+    private lateinit var speedIndicator    : TextView
+    private lateinit var extentTextBtn     : TextView          //  extend or trim the video
+    private lateinit var cutTextBtn        : TextView
+    private lateinit var highlightTextBtn  : TextView
+    private lateinit var slowTextBtn       : TextView
+    private lateinit var speedTextBtn      : TextView
+    private lateinit var end               : TextView
+    private lateinit var start             : TextView
+    private lateinit var playBtn           : ImageButton       //  playback the video
+    private lateinit var pauseBtn          : ImageButton       //  stop video playback
+    private lateinit var toStartBtn        : ImageButton       //  seek back to start of video
+    private lateinit var playCon           : ConstraintLayout
+    private lateinit var previewTileList   : RecyclerView
+    private lateinit var seekBar           : DefaultTimeBar
+    private lateinit var timebarHolder     : FrameLayout
+    private lateinit var colourOverlay     : LinearLayout
     private lateinit var previewBarProgress: ProgressBar
-    private lateinit var swipeDetector: SwipeDistanceView //  detects swiping actions for scrolling with preview
+    private lateinit var swipeDetector     : SwipeDistanceView //  detects swiping actions for scrolling with preview
 
     //    Exoplayer
-    private lateinit var playerView: PlayerView
-    private lateinit var player: SimpleExoPlayer
+    private lateinit var playerView           : PlayerView
+    private lateinit var player               : SimpleExoPlayer
     private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
-    private lateinit var dataSourceFactory: DataSource.Factory
-    private lateinit var mediaSource: MediaSource
+    private lateinit var dataSourceFactory    : DataSource.Factory
+    private lateinit var mediaSource          : MediaSource
 
     //    Snip
     private var snip: Snip? = null
@@ -105,21 +119,21 @@ class VideoEditingFragment : Fragment() {
 
     //  Seek handling
     private var subscriptions = CompositeDisposable()
-    private var paused = false
+    private var paused        = false
 
     //  speed change
     var isSpeedChanged = false
-    var isEditOnGoing = false
+    var isEditOnGoing  = false
     var isSeekbarShown = true
 
-    private var currentSpeed = 3
+    private var currentSpeed       = 3
     private var startingTimestamps = 0L
-    private var endingTimestamps = 0L
-    private var speedDuration = Pair<Long, Long>(0, 0)
-    private var speedDetailSet = mutableSetOf<SpeedDetails>()
-    private var segmentCount = 0
-    private var editAction = EditAction.NORMAL
-    private var editSeekAction = EditSeekControl.MOVE_NORMAL
+    private var endingTimestamps   = 0L
+    private var speedDuration      = Pair<Long, Long>(0, 0)
+    private var speedDetailSet     = mutableSetOf<SpeedDetails>()
+    private var segmentCount       = 0
+    private var editAction         = EditAction.NORMAL
+    private var editSeekAction     = EditSeekControl.MOVE_NORMAL
 
     private var tmpSpeedDetails: SpeedDetails? = null
     private var uiRangeSegments: ArrayList<CrystalRangeSeekbar>? = null
@@ -128,6 +142,10 @@ class VideoEditingFragment : Fragment() {
 //    private var rangeSeekbar: CrystalRangeSeekbar? = null
 
     private val progressTracker: ProgressTracker by lazy { ProgressTracker(player) }
+
+    //  dialogs
+    private var saveDialog: SaveEditDialog? = null
+    private var processingDialog: ProcessingDialog? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.video_editing_fragment_main2, container, false)
@@ -157,32 +175,32 @@ class VideoEditingFragment : Fragment() {
      */
     private fun bindViews() {
         with(rootView) {
-            playerView = findViewById(R.id.player_view)
-            playCon = findViewById(R.id.play_con)
-            playCon1 = findViewById(R.id.play_con1)
-            playCon2 = findViewById(R.id.play_con2)
-            speedIndicator = findViewById(R.id.speed_indicator)
-            extentTextBtn = findViewById(R.id.extent_text)
-            cutTextBtn = findViewById(R.id.cut_text_btn)
-            highlightTextBtn = findViewById(R.id.highlight_text_btn)
-            slowTextBtn = findViewById(R.id.slow_text_btn)
-            speedTextBtn = findViewById(R.id.speedup_text_btn)
-            save = findViewById(R.id.save)
-            accept = findViewById(R.id.accept)
-            end = findViewById(R.id.end)
-            start = findViewById(R.id.start)
-            reject = findViewById(R.id.reject)
-            playBtn = findViewById(R.id.exo_play)
-            pauseBtn = findViewById(R.id.exo_pause)
-            toStartBtn = findViewById(R.id.toStartBtn)
-            back = findViewById(R.id.back)
-            back1 = findViewById(R.id.back1)
-            seekBar = findViewById(R.id.exo_progress)
-            timebarHolder = findViewById(R.id.timebar_holder)
-            colourOverlay = findViewById(R.id.colour_overlay)
-            previewTileList = findViewById(R.id.previewFrameList)
+            playerView         = findViewById(R.id.player_view)
+            playCon            = findViewById(R.id.play_con)
+            playCon1           = findViewById(R.id.play_con1)
+            playCon2           = findViewById(R.id.play_con2)
+            speedIndicator     = findViewById(R.id.speed_indicator)
+            extentTextBtn      = findViewById(R.id.extent_text)
+            cutTextBtn         = findViewById(R.id.cut_text_btn)
+            highlightTextBtn   = findViewById(R.id.highlight_text_btn)
+            slowTextBtn        = findViewById(R.id.slow_text_btn)
+            speedTextBtn       = findViewById(R.id.speedup_text_btn)
+            save               = findViewById(R.id.save)
+            accept             = findViewById(R.id.accept)
+            end                = findViewById(R.id.end)
+            start              = findViewById(R.id.start)
+            reject             = findViewById(R.id.reject)
+            playBtn            = findViewById(R.id.exo_play)
+            pauseBtn           = findViewById(R.id.exo_pause)
+            toStartBtn         = findViewById(R.id.toStartBtn)
+            back               = findViewById(R.id.back)
+            back1              = findViewById(R.id.back1)
+            seekBar            = findViewById(R.id.exo_progress)
+            timebarHolder      = findViewById(R.id.timebar_holder)
+            colourOverlay      = findViewById(R.id.colour_overlay)
+            previewTileList    = findViewById(R.id.previewFrameList)
             previewBarProgress = findViewById(R.id.previewBarProgress)
-            swipeDetector = findViewById(R.id.edit_swipe_detector)
+            swipeDetector      = findViewById(R.id.edit_swipe_detector)
         }
         setupIcons()
     }
@@ -277,11 +295,14 @@ class VideoEditingFragment : Fragment() {
 
         back1.setOnClickListener {
             speedIndicator.visibility = View.GONE
-            playCon1.visibility = View.GONE
-            playCon2.visibility = View.VISIBLE
+            playCon1.visibility       = View.GONE
+            playCon2.visibility       = View.VISIBLE
         }
 
-        save.setOnClickListener { showDialogSave() }
+        save.setOnClickListener {
+            showDialogSave()
+//            VideoUtils(this).changeSpeed(File(snip!!.videoFilePath), speedDetailSet.toMutableList() as ArrayList<SpeedDetails>, "${File(snip!!.videoFilePath).parent}/output.mp4")
+        }
 
         /**
          * accepts the changes to the edit that were made
@@ -293,7 +314,7 @@ class VideoEditingFragment : Fragment() {
         accept.setOnClickListener {
             val currentPosition = player.currentPosition
 
-            if (checkSegmentTaken(currentPosition))  //  checking to see if the end positions is acceptable
+            if (checkSegmentTaken(currentPosition) || tmpSpeedDetails == null)  //  checking to see if the end positions is acceptable and something is available
                 return@setOnClickListener
 
             if (editSeekAction == EditSeekControl.MOVE_END) {
@@ -448,9 +469,9 @@ class VideoEditingFragment : Fragment() {
      */
     private fun resetPlaybackUI() {
         speedIndicator.visibility = View.GONE
-        playCon1.visibility = View.GONE
-        playCon2.visibility = View.VISIBLE
-        editAction = EditAction.NORMAL
+        playCon1.visibility       = View.GONE
+        playCon2.visibility       = View.VISIBLE
+        editAction                = EditAction.NORMAL
 
         player.seekTo(0)
         seekBar.showScrubber()
@@ -464,43 +485,43 @@ class VideoEditingFragment : Fragment() {
      */
     private fun setupForEdit() {
         speedIndicator.visibility = View.VISIBLE
-        playCon1.visibility = View.VISIBLE
-        playCon2.visibility = View.GONE
-        isEditOnGoing = true
-        player.playWhenReady = false
+        playCon1.visibility       = View.VISIBLE
+        playCon2.visibility       = View.GONE
+        isEditOnGoing             = true
+        player.playWhenReady      = false
 
         blockEditOptions(true)
-        editSeekAction = EditSeekControl.MOVE_START
+        editSeekAction     = EditSeekControl.MOVE_START
         startingTimestamps = 0L
-        endingTimestamps = player.duration
+        endingTimestamps   = player.duration
     }
 
     private fun blockEditOptions(shouldBlock: Boolean) {
-        val enable = !shouldBlock
-        extentTextBtn.isEnabled = enable
-        cutTextBtn.isEnabled = enable
+        val enable                 = !shouldBlock
+        extentTextBtn.isEnabled    = enable
+        cutTextBtn.isEnabled       = enable
         highlightTextBtn.isEnabled = enable
-        slowTextBtn.isEnabled = enable
-        speedTextBtn.isEnabled = enable
+        slowTextBtn.isEnabled      = enable
+        speedTextBtn.isEnabled     = enable
 
-        extentTextBtn.isClickable = enable
-        cutTextBtn.isClickable = enable
+        extentTextBtn.isClickable    = enable
+        cutTextBtn.isClickable       = enable
         highlightTextBtn.isClickable = enable
-        slowTextBtn.isClickable = enable
-        speedTextBtn.isClickable = enable
+        slowTextBtn.isClickable      = enable
+        speedTextBtn.isClickable     = enable
 
         if (enable) {
-            extentTextBtn.alpha = 1.0F
-            cutTextBtn.alpha = 1.0F
+            extentTextBtn.alpha    = 1.0F
+            cutTextBtn.alpha       = 1.0F
             highlightTextBtn.alpha = 1.0F
-            slowTextBtn.alpha = 1.0F
-            speedTextBtn.alpha = 1.0F
+            slowTextBtn.alpha      = 1.0F
+            speedTextBtn.alpha     = 1.0F
         } else {
-            extentTextBtn.alpha = 0.5F
-            cutTextBtn.alpha = 0.5F
+            extentTextBtn.alpha    = 0.5F
+            cutTextBtn.alpha       = 0.5F
             highlightTextBtn.alpha = 0.5F
-            slowTextBtn.alpha = 0.5F
-            speedTextBtn.alpha = 0.5F
+            slowTextBtn.alpha      = 0.5F
+            speedTextBtn.alpha     = 0.5F
         }
     }
 
@@ -555,22 +576,25 @@ class VideoEditingFragment : Fragment() {
                 } else
                     resources.getColor(android.R.color.transparent, context?.theme)
 
-        val thumbImageDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb, context?.theme) as VectorDrawable)
+        val leftThumbImageDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb, context?.theme) as VectorDrawable,
+                resources.getColor(android.R.color.holo_green_dark, context?.theme))
+        val rightThumbImageDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb, context?.theme) as VectorDrawable,
+                resources.getColor(android.R.color.holo_red_light, context?.theme))
+
         val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
 
         uiRangeSegments?.last()?.apply {
             minimumHeight = height
-            scrollBarSize = height
             elevation = 1F
             setPadding(padding, 0, padding, 0)
             setBarColor(resources.getColor(android.R.color.transparent, context?.theme))
+            setBackgroundResource(R.drawable.range_background)
             setBarHighlightColor(colour)
-            foregroundTintList = ColorStateList.valueOf(colour)
             setLeftThumbColor(colour)
             setRightThumbColor(colour)
-            setLeftThumbBitmap(thumbImageDrawable)
-            setRightThumbBitmap(thumbImageDrawable)
+            setLeftThumbBitmap(leftThumbImageDrawable)
+            setRightThumbBitmap(rightThumbImageDrawable)
             setMinValue(0F)
             setMaxValue(100F)
             setMinStartValue(startValue)?.apply()
@@ -667,11 +691,10 @@ class VideoEditingFragment : Fragment() {
     }
 
     protected fun showDialogSave() {
-        val dialog = Dialog(requireActivity())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setCancelable(true)
-        dialog.setContentView(R.layout.warningdialog_savevideo)
-        dialog.show()
+        if(saveDialog == null)
+            saveDialog = SaveEditDialog(this@VideoEditingFragment)
+
+        saveDialog!!.show(requireActivity().supportFragmentManager, SAVE_DIALOG)
     }
 
     protected fun showDialogdelete() {
@@ -804,9 +827,14 @@ class VideoEditingFragment : Fragment() {
             val photoList = arrayListOf<Bitmap>()
             val retriever = MediaMetadataRetriever()
             retriever.setDataSource(snip?.videoFilePath)
-            val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
-            for (i in 0..duration step duration / 9) {
-                photoList.add(retriever.getFrameAtTime(i))
+            val duration = TimeUnit.MILLISECONDS.toMicros(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong())
+            val increment = (duration / 9)
+            for (i in 0..duration step increment) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    photoList.add(retriever.getScaledFrameAtTime(i, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 40, 40))
+                }else {
+                    photoList.add(retriever.getFrameAtTime(i, MediaMetadataRetriever.OPTION_CLOSEST_SYNC))
+                }
             }
             retriever.release()
 
@@ -815,8 +843,10 @@ class VideoEditingFragment : Fragment() {
                     timelinePreviewAdapter = TimelinePreviewAdapter(requireContext(), photoList)
                     //  change context for updating the UI
                     withContext(Main) {
+                        timelinePreviewAdapter!!.setHasStableIds(true)
                         previewTileList.adapter = timelinePreviewAdapter
                         previewTileList.adapter?.notifyDataSetChanged()
+                        previewTileList.scrollToPosition(timelinePreviewAdapter!!.itemCount)
                         previewBarProgress.visibility = View.GONE
                     }
                 }
@@ -956,7 +986,8 @@ class VideoEditingFragment : Fragment() {
      *  @param vectorDrawable
      *  @return Bitmap
      * */
-    private fun getBitmap(vectorDrawable: VectorDrawable): Bitmap? {
+    private fun getBitmap(vectorDrawable: VectorDrawable, colorResource: Int): Bitmap? {
+        vectorDrawable.colorFilter = PorterDuffColorFilter(colorResource, PorterDuff.Mode.SRC_ATOP)
         val bitmap = Bitmap.createBitmap(vectorDrawable.intrinsicWidth,
                 vectorDrawable.intrinsicHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -965,4 +996,62 @@ class VideoEditingFragment : Fragment() {
         return bitmap
     }
 
+    /**
+     * saves as a new file
+     * */
+    override fun saveAs() {
+        saveDialog?.dismiss()
+        val clip = File(snip!!.videoFilePath)
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val outputName = "VID_$timeStamp.mp4"
+        val intentService = Intent(requireContext(), VideoService::class.java)
+        val task = arrayListOf(VideoOpItem(
+                operation = IVideoOpListener.VideoOp.SPEED,
+                clip1 = clip.absolutePath,
+                clip2 = "",
+                outputPath = "${clip.parent}/$outputName",
+                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
+        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+        VideoService.enqueueWork(requireContext(), intentService)
+//        showProgress()
+        Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * save over existing file
+     * */
+    override fun save() {
+        saveDialog?.dismiss()
+        val clip = File(snip!!.videoFilePath)
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val outputName = "VID_$timeStamp.mp4"
+        val intentService = Intent(requireContext(), VideoService::class.java)
+        val task = arrayListOf(VideoOpItem(
+                operation = IVideoOpListener.VideoOp.SPEED,
+                clip1 = clip.absolutePath,
+                clip2 = "",
+                outputPath = "${clip.parent}/$outputName",
+                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
+        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+        VideoService.enqueueWork(requireContext(), intentService)
+//        showProgress()
+        Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * cancels the save action
+     * */
+    override fun cancel() {
+        saveDialog?.dismiss()
+    }
+
+    fun showProgress(){
+        if(processingDialog == null)
+            processingDialog = ProcessingDialog()
+        processingDialog?.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
+    }
+
+    fun hideProgress(){
+        processingDialog?.dismiss()
+    }
 }
