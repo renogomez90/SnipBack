@@ -21,11 +21,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.fragment.FragmentGalleryNew
 import com.hipoint.snipback.fragment.FragmentPlayVideo2
 import com.hipoint.snipback.fragment.VideoEditingFragment
+import com.hipoint.snipback.listener.IReplaceRequired
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
@@ -48,7 +50,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.RuntimeException
 import kotlin.collections.ArrayList
 
-class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepository.OnTaskCompleted {
+class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepository.OnTaskCompleted, IReplaceRequired {
     var PERMISSION_ALL = 1
     var PERMISSIONS = arrayOf(
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -59,22 +61,26 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     //    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
     private val TAG = AppMainActivity::class.java.simpleName
 
-    private val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
+    private val VIDEO_DIRECTORY_NAME  = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
 
     private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
     private var onTouchListeners: MutableList<MyOnTouchListener>? = null
-    private var appViewModel: AppViewModel? = null
-    private var parentSnip: Snip? = null
-    private var addedToSnip: ArrayList<String> = arrayListOf()
+    private var appViewModel    : AppViewModel?                   = null
+    private var parentSnip      : Snip?                           = null
+    private var addedToSnip     : ArrayList<String>               = arrayListOf()
 
     var swipeProcessed: Boolean = false
     var showInGallery: ArrayList<String> = arrayListOf() //  names of files that need to be displayed in the gallery
 
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
 
-    //    private ArrayList<String> thumbs = new ArrayList<>();
+    //  edit file replacement
+    private var fileToReplace: String? = null
+    private var replacedWith : String? = null
+    private var doReplace    : Boolean = false
+    private var parentChanged: Boolean = false
 
     /**
      * Registers a listener for receiving service broadcast for video operation status
@@ -247,8 +253,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             end_time = 0.0
             is_virtual_version = 0
             parent_snip_id = if (parentSnip != null) {
-                if (File(snipFilePath).nameWithoutExtension.contains(File(parentSnip!!.videoFilePath).nameWithoutExtension)) {
-                    parentSnip!!.snip_id
+                if (File(snipFilePath).nameWithoutExtension.contains(File(parentSnip!!.videoFilePath).nameWithoutExtension) &&
+                        isFragmentVisible(VIDEO_MODE_TAG) ||    //  while in videoMode check with file names for parent
+                        isFragmentVisible(EDIT_VIDEO_TAG)) {    //  while in editMode check is parentSnip was already set
+                    parentSnip?.snip_id ?: 0
                 } else 0
             } else 0
             snip_duration = snipDuration.toDouble()
@@ -280,7 +288,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             val hdSnips = Hd_snips()
             hdSnips.video_path_processed = snip.videoFilePath
             hdSnips.snip_id = snip.snip_id
-            if (!File(snip.videoFilePath).name.contains("-")) { //  files names with - are edited from original
+            if (!File(snip.videoFilePath).name.contains("-") && !parentChanged) { //  files names with - are edited from original
                 parentSnip = snip
             }
 
@@ -510,6 +518,29 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     private fun videoSpeedChangeCompleted(processedVideoPath: String) {
         Log.d(TAG, "videoSpeedChangeCompleted: Video Saved at $processedVideoPath")
         Toast.makeText(this, "Video Saved at $processedVideoPath", Toast.LENGTH_SHORT).show()
+        val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+        if(doReplace){
+            /*
+            * todo: find the original snip, update the durations, delete the old video, rename the new video to old video
+            */
+            CoroutineScope(IO).launch{
+                if(fileToReplace.isNotNullOrEmpty() && replacedWith.equals(processedVideoPath)) {
+                    parentSnip = appRepository.getSnipByVideoPath(fileToReplace!!)
+                    parentSnip?.snip_duration = duration.toDouble()
+                    parentSnip?.total_video_duration = duration
+                    appRepository.updateSnip(parentSnip!!)
+
+                    File(parentSnip?.videoFilePath!!).delete()
+                    File(processedVideoPath).renameTo(File(parentSnip?.videoFilePath!!))
+
+                    fileToReplace = null
+                    replacedWith = null
+                }
+            }
+        }else{
+            //  IReplaceRequired.parent must be called before this point
+            addSnip(processedVideoPath, duration, duration)
+        }
     }
 
     /**
@@ -596,5 +627,18 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     private fun isFragmentVisible(fragmentTag: String): Boolean {
         val frag = supportFragmentManager.findFragmentByTag(fragmentTag)
         return frag?.isVisible ?: false
+    }
+
+    override fun replace(oldFilePath: String, newFilePath: String) {
+        fileToReplace = oldFilePath
+        replacedWith = newFilePath
+        doReplace = true
+    }
+
+    override fun parent(parentSnipId: Int) {
+        CoroutineScope(IO).launch {
+            parentSnip = appRepository.getSnipById(parentSnipId)
+            parentChanged = true
+        }
     }
 }

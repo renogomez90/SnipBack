@@ -30,6 +30,9 @@ public interface SnipsDao {
     @Query("SELECT * FROM Snip WHERE snip_id LIKE :id")
     Snip getSnipById(Integer id);
 
+    @Query("SELECT * FROM Snip WHERE videoFilePath LIKE :videoPath")
+    Snip getSnipByVideoPath(String videoPath);
+
     @Query("SELECT * from Snip")
     LiveData<List<Snip>> getSnipsData();
 }

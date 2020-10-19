@@ -47,6 +47,7 @@ import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.dialog.SaveEditDialog
 import com.hipoint.snipback.enums.EditAction
 import com.hipoint.snipback.enums.EditSeekControl
+import com.hipoint.snipback.listener.IReplaceRequired
 import com.hipoint.snipback.listener.ISaveListener
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Snip
@@ -139,9 +140,9 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     private var uiRangeSegments: ArrayList<CrystalRangeSeekbar>? = null
 
     private var restrictList: List<SpeedDetails>? = null    //  speed details to prevent users from selecting an existing edit
-//    private var rangeSeekbar: CrystalRangeSeekbar? = null
 
     private val progressTracker: ProgressTracker by lazy { ProgressTracker(player) }
+    private val replaceRequired: IReplaceRequired by lazy { requireActivity() as AppMainActivity }
 
     //  dialogs
     private var saveDialog: SaveEditDialog? = null
@@ -1013,8 +1014,11 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
-//        showProgress()
         Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+
+        //  show in gallery
+        replaceRequired.parent(snip!!.snip_id)
+        (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
     }
 
     /**
@@ -1034,8 +1038,9 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
-//        showProgress()
+
         Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+        replaceRequired.replace(snip!!.videoFilePath, "${clip.parent}/$outputName")
     }
 
     /**

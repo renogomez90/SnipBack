@@ -195,6 +195,13 @@ class AppRepository(context: Context?) {
         }
         return snip.await()
     }
+
+    suspend fun getSnipByVideoPath(videoPath: String): Snip {
+        val snip = CoroutineScope(IO).async {
+            snipsDao.getSnipByVideoPath(videoPath)
+        }
+        return snip.await()
+    }
 /*
     private inner class InsertSnipAsync(private val listener: OnTaskCompleted, private val dao: SnipsDao) : AsyncTask<Snip?, Void?, Snip>() {
         private var snipId = 0

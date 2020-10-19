@@ -211,11 +211,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
-                Log.d(TAG, "onSuccess: ")
+                opListener.changed(IVideoOpListener.VideoOp.SPEED, outputPath)
             }
 
             override fun onFailure() {
-                Log.d(TAG, "onFailure: ")
+                opListener.failed(IVideoOpListener.VideoOp.SPEED)
             }
 
             override fun onProgress(progress: Float) {
