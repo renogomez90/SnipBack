@@ -18,7 +18,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.exozet.android.core.extensions.isNotNullOrEmpty
@@ -27,6 +26,7 @@ import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.fragment.FragmentGalleryNew
 import com.hipoint.snipback.fragment.FragmentPlayVideo2
 import com.hipoint.snipback.fragment.VideoEditingFragment
+import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IReplaceRequired
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
@@ -47,7 +47,6 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.RuntimeException
 import kotlin.collections.ArrayList
 
 class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepository.OnTaskCompleted, IReplaceRequired {
@@ -105,16 +104,16 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
 //        appViewModel.loadGalleryDataFromDB(this);
 
-        if (!videoModeFragment.isAdded && supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
-            loadFragment(videoModeFragment, false)
-        }
         if (!hasPermissions(this, *PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL)
         }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) !=
                 PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA),
-                    50)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 50)
+        }
+
+        if (!videoModeFragment.isAdded && supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
+            loadFragment(videoModeFragment, false)
         }
     }
 
@@ -292,7 +291,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             val hdSnips = Hd_snips()
             hdSnips.video_path_processed = snip.videoFilePath
             hdSnips.snip_id = snip.snip_id
-            if (!File(snip.videoFilePath).name.contains("-") && !parentChanged) { //  files names with - are edited from original
+            if (!File(snip.videoFilePath).name.contains("-") && !parentChanged) { //  files names with - are edited from original todo: This is a mess
                 parentSnip = snip
             }
 

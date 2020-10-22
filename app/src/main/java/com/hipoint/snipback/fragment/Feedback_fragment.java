@@ -12,7 +12,6 @@ import androidx.fragment.app.Fragment;
 
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
-import com.hipoint.snipback.VideoMode;
 
 public class Feedback_fragment extends Fragment {
     private View rootView;

@@ -39,7 +39,6 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
-import com.hipoint.snipback.VideoMode;
 
 import com.hipoint.snipback.adapter.MainRecyclerAdapter;
 import com.hipoint.snipback.application.AppClass;
