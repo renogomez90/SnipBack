@@ -307,11 +307,11 @@ public class FragmentGalleryNew extends Fragment {
 //        getFilePathFromInternalStorage();
         List<Event> allEvents = new ArrayList<>();
         appViewModel.getEventLiveData().observe(getViewLifecycleOwner(), events -> {
-            if (events != null && events.size() > 0) {
+            if (events != null && events.size() > 0) {  //  get available events
                 allEvents.addAll(events);
                 List<Hd_snips> hdSnips = new ArrayList<>();
                 appViewModel.getHDSnipsLiveData().observe(getViewLifecycleOwner(), hd_snips -> {
-                    if (hd_snips != null && hd_snips.size() > 0) {
+                    if (hd_snips != null && hd_snips.size() > 0) {  //  get available HD Snips
                         hdSnips.addAll(hd_snips);
                         appViewModel.getSnipsLiveData().observe(getViewLifecycleOwner(), snips -> {
                             if (snips != null && snips.size() > 0) {

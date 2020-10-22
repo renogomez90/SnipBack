@@ -2,7 +2,6 @@ package com.hipoint.snipback.fragment
 
 import android.app.Dialog
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
 import android.media.MediaMetadataRetriever
@@ -22,14 +21,12 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar
-import com.exozet.android.core.extensions.hide
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.PlaybackParameters
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
@@ -41,7 +38,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
-import com.hipoint.snipback.Utils.VideoUtils
+import com.hipoint.snipback.adapter.EditChangeListAdapter
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.dialog.SaveEditDialog
@@ -56,18 +53,19 @@ import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
-import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.Comparator
-import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -99,6 +97,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     private lateinit var toStartBtn        : ImageButton       //  seek back to start of video
     private lateinit var playCon           : ConstraintLayout
     private lateinit var previewTileList   : RecyclerView
+    private lateinit var changeList        : RecyclerView
     private lateinit var seekBar           : DefaultTimeBar
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var colourOverlay     : LinearLayout
@@ -115,8 +114,9 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     //    Snip
     private var snip: Snip? = null
 
-    //  preview tile adapter
+    //  adapters
     private var timelinePreviewAdapter: TimelinePreviewAdapter? = null
+    private var editListAdapter: EditChangeListAdapter? = null
 
     //  Seek handling
     private var subscriptions = CompositeDisposable()
@@ -200,6 +200,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             timebarHolder      = findViewById(R.id.timebar_holder)
             colourOverlay      = findViewById(R.id.colour_overlay)
             previewTileList    = findViewById(R.id.previewFrameList)
+            changeList         = findViewById(R.id.change_list)
             previewBarProgress = findViewById(R.id.previewBarProgress)
             swipeDetector      = findViewById(R.id.edit_swipe_detector)
         }
@@ -481,6 +482,11 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         blockEditOptions(false)
     }
 
+    private fun showEditList(){
+        changeList.visibility = View.VISIBLE
+        editListAdapter = EditChangeListAdapter(requireContext(), arrayListOf())
+    }
+
     /**
      * Sets up the UI and flags for editing
      */
@@ -667,10 +673,11 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 Log.e(TAG, "onPlayerError: ${error.message}")
                 error.printStackTrace()
                 tries++
+                val fragManager = requireActivity().supportFragmentManager
                 if (snip?.videoFilePath.isNotNullOrEmpty() && tries < retries) { //  retry in case of errors
                     CoroutineScope(Main).launch {
                         delay(500)
-                        val frag = requireActivity().supportFragmentManager.findFragmentByTag(AppMainActivity.EDIT_VIDEO_TAG)
+                        val frag = fragManager.findFragmentByTag(AppMainActivity.EDIT_VIDEO_TAG)
                         requireActivity().supportFragmentManager.beginTransaction()
                                 .detach(frag!!)
                                 .attach(frag)
@@ -1018,7 +1025,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
         //  show in gallery
         replaceRequired.parent(snip!!.snip_id)
-        (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
+//        (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
     }
 
     /**

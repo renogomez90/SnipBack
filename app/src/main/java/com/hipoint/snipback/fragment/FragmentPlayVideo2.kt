@@ -290,9 +290,9 @@ class FragmentPlayVideo2 : Fragment() {
         rootView.setOnKeyListener(View.OnKeyListener { _, keyCode, _ ->
             if (keyCode == KeyEvent.KEYCODE_BACK) {
                 player.release()
-                requireActivity().onBackPressed()
+//                requireActivity().onBackPressed()
                 //                    ((AppMainActivity) requireActivity()).loadFragment(FragmentGalleryNew.newInstance(), true);
-                return@OnKeyListener true
+                return@OnKeyListener false
             }
             false
         })
@@ -406,7 +406,6 @@ class FragmentPlayVideo2 : Fragment() {
         subscriptions.dispose()
         if (this::player.isInitialized)
             player.apply {
-                playWhenReady = false
                 stop(true)
                 setVideoSurface(null)
                 release()

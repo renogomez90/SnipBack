@@ -177,7 +177,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
         ft.replace(R.id.mainFragment, fragment!!, tag)
 
-        if (addtoBackStack || fragment is FragmentGalleryNew) {
+        if (addtoBackStack/* || fragment is FragmentGalleryNew*/) {
             ft.addToBackStack(null)
         }
         ft.commitAllowingStateLoss()
@@ -191,6 +191,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     override fun onBackPressed() {
         val myFragment = supportFragmentManager.findFragmentById(R.id.mainFragment)
         val count = supportFragmentManager.backStackEntryCount
+        Log.d(TAG, "onBackPressed: stack count $count")
+        for(entry in 0 until count)
+            Log.d(TAG, "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}")
+
         if (count == 0) {
             super.onBackPressed()
         } else {
@@ -216,10 +220,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     }
 
     companion object {
-        val VIDEO_MODE_TAG = "videoMode"
-        val GALLERY_FRAGMENT_TAG = "gallery_frag"
-        val PLAY_VIDEO_TAG = "play_frag"
-        val EDIT_VIDEO_TAG = "edit_frag"
+        const val VIDEO_MODE_TAG = "videoMode"
+        const val GALLERY_FRAGMENT_TAG = "gallery_frag"
+        const val PLAY_VIDEO_TAG = "play_frag"
+        const val EDIT_VIDEO_TAG = "edit_frag"
 
         fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
             if (context != null) {
@@ -256,7 +260,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 if (File(snipFilePath).nameWithoutExtension.contains(File(parentSnip!!.videoFilePath).nameWithoutExtension) &&
                         isFragmentVisible(VIDEO_MODE_TAG) ||    //  while in videoMode check with file names for parent
                         isFragmentVisible(EDIT_VIDEO_TAG)) {    //  while in editMode check is parentSnip was already set
-                    parentSnip?.snip_id ?: 0
+                    parentSnip?.snip_id!!
                 } else 0
             } else 0
             snip_duration = snipDuration.toDouble()
