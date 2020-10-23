@@ -49,7 +49,6 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-import kotlinx.android.synthetic.main.fragment_gallery.*
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -145,7 +144,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         var recordClips = true //  to check if short clips should be recorded
 
         const val MIN_DISTANCE = 150
-        private val VIDEO_PERMISSIONS = arrayOf(
+        val VIDEO_PERMISSIONS = arrayOf(
                 Manifest.permission.CAMERA,
                 Manifest.permission.RECORD_AUDIO)
 
@@ -190,7 +189,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private var timerSecond                 : Int              = 0
-    private var lastUserRecordedPath        : String?          = null
     private var appRepository               : AppRepository?   = null
     private var animBlink                   : Animation?       = null
     private var thumbnailProcessingCompleted: OnTaskCompleted? = null
@@ -340,15 +338,19 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         super.onResume()
 
         cameraControl.startBackgroundThread()
-        if (mTextureView.isAvailable) {
-            cameraControl.openCamera(mTextureView.width, mTextureView.height)
-        } else {
-            mTextureView.surfaceTextureListener = mSurfaceTextureListener
+        if(hasPermissionsGranted(VIDEO_PERMISSIONS)) {
+            if (mTextureView.isAvailable) {
+                cameraControl.openCamera(mTextureView.width, mTextureView.height)
+            } else {
+                mTextureView.surfaceTextureListener = mSurfaceTextureListener
+            }
+        }else{
+            requestVideoPermissions()
         }
     }
 
     /**
-     * Closes the camrea and stops the background thread when fragment is not in the foreground
+     * Closes the camera and stops the background thread when fragment is not in the foreground
      * */
     override fun onPause() {
         cameraControl.closeCamera()
@@ -530,19 +532,20 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         (requireActivity() as AppMainActivity).swipeProcessed = true
 
         if (swipedRecording != null) {
-            if (swipedRecording?.fileName.equals(lastUserRecordedPath)) {
+            if (swipedRecording?.originalFilePath.equals(cameraControl.getLastUserRecordedPath())) {
                 val intentService = Intent(requireContext(), VideoService::class.java)
                 val task = arrayListOf<VideoOpItem>()
+
                 swipedRecording?.timestamps?.forEachIndexed { index, timeStamp ->
 
-                    val outputFileName = "${File(swipedRecording?.fileName!!).parent}/${File(swipedRecording?.fileName!!).nameWithoutExtension}-$index.mp4"
+                    val outputFileName = "${File(swipedRecording?.originalFilePath!!).parent}/${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}-$index.mp4"
 
                     (requireActivity() as AppMainActivity).showInGallery.add(File(outputFileName).nameWithoutExtension)
                     Log.d(TAG, "processPendingSwipes: \n Output = $outputFileName, \n start = ${(timeStamp - (swipeValue / 1000)).toInt()} \n end = $timeStamp")
 
                     task.add(VideoOpItem(
                             operation = VideoOp.TRIMMED,
-                            clip1 = swipedRecording?.fileName!!,
+                            clip1 = swipedRecording?.originalFilePath!!,
                             clip2 = "",
                             startTime = max((timeStamp - (swipeValue / 1000)).toInt(), 0),
                             endTime = timeStamp,
@@ -632,7 +635,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             if (swipedRecording == null) {
                 swipedRecording = cameraControl.getCurrentOutputPath()?.let { SwipedRecording(it) }
             }
-            if (swipedRecording!!.fileName?.equals(cameraControl.getCurrentOutputPath())!!) {
+            if (swipedRecording!!.originalFilePath?.equals(cameraControl.getCurrentOutputPath())!!) {
                 swipedRecording!!.timestamps.add(timerSecond)
             }
         }
@@ -649,7 +652,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             try {
                 restartRecording()
             } catch (e: IllegalStateException) {
-                //  attempt to reopent the camera
+                //  attempt to reopen the camera
                 closeCamera()
                 if (mTextureView.isAvailable) {
                     openCamera(mTextureView.width, mTextureView.height)
@@ -692,9 +695,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
         dialog.setContentView(R.layout.fragment_settings)
-        val con6 = dialog.findViewById<ConstraintLayout>(R.id.con6)
+        val con6 = dialog.findViewById<RelativeLayout>(R.id.con6)
         con6.setOnClickListener { showDialogSettingsResolution() }
-        val feedback = dialog.findViewById<ConstraintLayout>(R.id.con2)
+        val feedback = dialog.findViewById<RelativeLayout>(R.id.con2)
         feedback.setOnClickListener {
             (activity as AppMainActivity?)!!.loadFragment(Feedback_fragment.newInstance(), true)
             dialog.dismiss()
@@ -758,7 +761,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    private fun hasPermissionsGranted(permissions: Array<String>): Boolean {
+    fun hasPermissionsGranted(permissions: Array<String>): Boolean {
         for (permission in permissions) {
             if (ActivityCompat.checkSelfPermission(requireActivity(), permission)
                     != PackageManager.PERMISSION_GRANTED) {
@@ -943,6 +946,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             Log.d(TAG, "IOException while closing the stream")
             e.printStackTrace()
         }
+    }
+
+    fun getSwipedRecording(): SwipedRecording{
+        if(swipedRecording == null)
+            swipedRecording = SwipedRecording("")
+
+        return swipedRecording!!
     }
 
     fun videoProcessing(isProcessing: Boolean) {

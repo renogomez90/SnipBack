@@ -16,7 +16,6 @@ import android.view.MotionEvent
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -104,6 +103,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
 //        appViewModel.loadGalleryDataFromDB(this);
 
+        if (!videoModeFragment.isAdded && supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
+            loadFragment(videoModeFragment, false)
+        }
+        /*
         if (!hasPermissions(this, *PERMISSIONS)) {
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSION_ALL)
         }
@@ -111,10 +114,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 50)
         }
-
-        if (!videoModeFragment.isAdded && supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
-            loadFragment(videoModeFragment, false)
-        }
+        */
     }
 
     /**
@@ -291,9 +291,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             val hdSnips = Hd_snips()
             hdSnips.video_path_processed = snip.videoFilePath
             hdSnips.snip_id = snip.snip_id
-            if (!File(snip.videoFilePath).name.contains("-") && !parentChanged) { //  files names with - are edited from original todo: This is a mess
+            if (!File(snip.videoFilePath).name.contains("-") && !parentChanged ||
+                    videoModeFragment.getSwipedRecording().originalFilePath!!.contains(snip.videoFilePath)) { //  files names with - are edited from original todo: This is a mess
                 parentSnip = snip
             }
+
+            Log.d(TAG, "onTaskCompleted: \n snip path: ${snip.videoFilePath} \n snip parent: ${parentSnip?.videoFilePath}")
+            showInGallery.forEach { Log.d(TAG, "onTaskCompleted: show in gallery Item = $it") }
 
             if (isInList(showInGallery, snip.videoFilePath)) {
                 appRepository.insertHd_snips(hdSnips)

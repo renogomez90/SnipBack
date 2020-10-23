@@ -1,6 +1,7 @@
 package com.hipoint.snipback.control
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.CAMERA_SERVICE
 import android.content.pm.PackageManager
@@ -137,6 +138,7 @@ class CameraControl(val activity: FragmentActivity) {
             //  else preview is shown without recording.
             if (recordClips && !stopPressed) {
 //                parentSnipId = AppClass.getAppInstance().lastSnipId + 1
+                Log.d(TAG, "AVA onOpened: ")
                 startRecordingVideo()
             } else startPreview()
             mCameraOpenCloseLock.release()
@@ -264,10 +266,15 @@ class CameraControl(val activity: FragmentActivity) {
         return outputFilePath
     }
 
+    fun getLastUserRecordedPath(): String?{
+        return lastUserRecordedPath
+    }
     /**
      * Tries to open a [CameraDevice]. The result is listened by `mStateCallback`.
      */
+    @SuppressLint("MissingPermission")
     internal fun openCamera(width: Int, height: Int) {
+        Log.d(TAG, "openCamera AVA $width, $height")
         if (activity.isFinishing) {
             return
         }
@@ -275,7 +282,7 @@ class CameraControl(val activity: FragmentActivity) {
         try {
             Log.d(TAG, "tryAcquire")
             if (!mCameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
-                /*throw RuntimeException("Time out waiting to lock camera opening.")*/
+//                throw RuntimeException("Time out waiting to lock camera opening.")
                 Toast.makeText(activity, "Unable to open camera", Toast.LENGTH_SHORT).show()
                 activity.finish()
             }
@@ -300,11 +307,7 @@ class CameraControl(val activity: FragmentActivity) {
             }
             configureTransform(width, height)
             mMediaRecorder = MediaRecorder()
-            if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                /*(context as VideoMode).requestPermission()*/
-                recordUIListener?.confirmCamPermission()
-                return
-            }
+
             manager.openCamera(cameraId, mStateCallback, mBackgroundHandler)
         } catch (e: CameraAccessException) {
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show()

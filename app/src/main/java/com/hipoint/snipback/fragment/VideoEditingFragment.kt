@@ -1025,7 +1025,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
         //  show in gallery
         replaceRequired.parent(snip!!.snip_id)
-//        (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
+        (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
     }
 
     /**
@@ -1047,7 +1047,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         VideoService.enqueueWork(requireContext(), intentService)
 
         Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
-        replaceRequired.replace(snip!!.videoFilePath, "${clip.parent}/$outputName")
+        replaceRequired.replace(clip.absolutePath, "${clip.parent}/$outputName")
     }
 
     /**
