@@ -1,10 +1,12 @@
 package com.hipoint.snipback.fragment
 
 import android.app.Dialog
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
-import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -58,22 +60,20 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.Comparator
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 class VideoEditingFragment : Fragment(), ISaveListener {
-    private val TAG = VideoEditingFragment::class.java.simpleName
-    private val SAVE_DIALOG = "dialog_save"
+    private val TAG               = VideoEditingFragment::class.java.simpleName
+    private val SAVE_DIALOG       = "dialog_save"
     private val PROCESSING_DIALOG = "dialog_processing"
-    private val retries = 3
+    private val retries           = 3
 
     //    UI
     private lateinit var rootView          : View
@@ -116,7 +116,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
     //  adapters
     private var timelinePreviewAdapter: TimelinePreviewAdapter? = null
-    private var editListAdapter: EditChangeListAdapter? = null
+    private var editListAdapter       : EditChangeListAdapter?  = null
 
     //  Seek handling
     private var subscriptions = CompositeDisposable()
@@ -148,6 +148,29 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     private var saveDialog: SaveEditDialog? = null
     private var processingDialog: ProcessingDialog? = null
 
+    private var previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let {
+                val previewThumbs = File(intent.getStringExtra("preview_path")!!)
+                if(previewThumbs.exists()){
+                    val thumbList = previewThumbs.listFiles()
+                    val imageList = arrayListOf<Bitmap>()
+                    thumbList?.forEach {
+                        imageList.add(BitmapFactory.decodeFile(it.absolutePath))
+                    }
+                    timelinePreviewAdapter = TimelinePreviewAdapter(requireContext(), imageList)
+                    previewTileList.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
+                    //  change context for updating the UI
+                    timelinePreviewAdapter!!.setHasStableIds(true)
+                    previewTileList.adapter = timelinePreviewAdapter
+                    previewTileList.adapter?.notifyDataSetChanged()
+                    previewTileList.scrollToPosition(timelinePreviewAdapter!!.itemCount)
+                    previewBarProgress.visibility = View.GONE
+                }
+            }
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.video_editing_fragment_main2, container, false)
         snip = requireArguments().getParcelable("snip")
@@ -157,6 +180,16 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         setupPlayer()
 
         return rootView
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
+    }
+
+    override fun onPause() {
+        requireActivity().unregisterReceiver(previewTileReceiver)
+        super.onPause()
     }
 
     override fun onDestroy() {
@@ -826,42 +859,20 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     /**
      * Populates preview frames in the seekBar area from the video
      */
-    private suspend fun getVideoPreviewFrames() {
-        withContext(Main) {
-            previewTileList.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
-        }
-
-        if (snip?.videoFilePath.isNotNullOrEmpty()) {
-            val photoList = arrayListOf<Bitmap>()
-            val retriever = MediaMetadataRetriever()
-            retriever.setDataSource(snip?.videoFilePath)
-            val duration = TimeUnit.MILLISECONDS.toMicros(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong())
-            val increment = (duration / 9)
-            for (i in 0..duration step increment) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                    photoList.add(retriever.getScaledFrameAtTime(i, MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 40, 40))
-                }else {
-                    photoList.add(retriever.getFrameAtTime(i, MediaMetadataRetriever.OPTION_CLOSEST_SYNC))
-                }
-            }
-            retriever.release()
-
-            if (fragment != null && context != null)
-                if (fragment!!.isVisible) {  //  in case the is not visible the UI cannot be updated
-                    timelinePreviewAdapter = TimelinePreviewAdapter(requireContext(), photoList)
-                    //  change context for updating the UI
-                    withContext(Main) {
-                        timelinePreviewAdapter!!.setHasStableIds(true)
-                        previewTileList.adapter = timelinePreviewAdapter
-                        previewTileList.adapter?.notifyDataSetChanged()
-                        previewTileList.scrollToPosition(timelinePreviewAdapter!!.itemCount)
-                        previewBarProgress.visibility = View.GONE
-                    }
-                }
-        }
+    private fun getVideoPreviewFrames() {
+        val intentService = Intent(requireContext(), VideoService::class.java)
+        val task = arrayListOf(VideoOpItem(
+                operation = IVideoOpListener.VideoOp.FRAMES,
+                clip1 = snip!!.videoFilePath,
+                clip2 = "",
+                outputPath = File(snip!!.videoFilePath).parent!!,
+                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
+        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+        VideoService.enqueueWork(requireContext(), intentService)
     }
 
     companion object {
+        val PREVIEW_ACTION = "com.hipoint.snipback.previewTile"
         private var tries = 0
         var fragment: VideoEditingFragment? = null
 

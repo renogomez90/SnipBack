@@ -550,6 +550,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         }
     }
 
+    private fun videoPreviewFramesCompleted(processedVideoPath: String) {
+        val previewIntent = Intent()
+        previewIntent.putExtra("preview_path", processedVideoPath)
+        previewIntent.action = VideoEditingFragment.PREVIEW_ACTION
+        sendBroadcast(previewIntent)
+    }
+
     /**
      * Receives events from VideoService
      * */
@@ -574,24 +581,26 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 //                    (supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as VideoEditingFragment).hideProgress()
                 }
 
+            if(processedVideoPath.isNullOrBlank())
+                return
+
             when (intent.getIntExtra("status", VideoService.STATUS_NO_VALUE)) {
                 VideoService.STATUS_OP_SUCCESS -> {
                     when (operation) {
                         IVideoOpListener.VideoOp.CONCAT.name -> {
-                            if (processedVideoPath!!.isNotBlank())
-                                videoConcatCompleted(processedVideoPath)
+                            videoConcatCompleted(processedVideoPath)
                         }
                         IVideoOpListener.VideoOp.TRIMMED.name -> {
-                            if (processedVideoPath!!.isNotBlank())
-                                videoTrimCompleted(processedVideoPath)
+                            videoTrimCompleted(processedVideoPath)
                         }
                         IVideoOpListener.VideoOp.SPLIT.name -> {
-                            if (processedVideoPath!!.isNotBlank())
-                                videoSplitCompleted(processedVideoPath)
+                            videoSplitCompleted(processedVideoPath)
                         }
                         IVideoOpListener.VideoOp.SPEED.name -> {
-                            if (processedVideoPath!!.isNotBlank())
-                                videoSpeedChangeCompleted(processedVideoPath)
+                            videoSpeedChangeCompleted(processedVideoPath)
+                        }
+                        IVideoOpListener.VideoOp.FRAMES.name -> {
+                            videoPreviewFramesCompleted(processedVideoPath)
                         }
                         else -> {
                         }

@@ -1,10 +1,8 @@
 package com.hipoint.snipback.control
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.CAMERA_SERVICE
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Matrix
 import android.graphics.Rect
@@ -22,10 +20,7 @@ import android.util.Size
 import android.util.SparseIntArray
 import android.view.MotionEvent
 import android.view.Surface
-import android.view.TextureView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.fragment.app.FragmentActivity
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.Utils.AutoFitTextureView
@@ -138,7 +133,6 @@ class CameraControl(val activity: FragmentActivity) {
             //  else preview is shown without recording.
             if (recordClips && !stopPressed) {
 //                parentSnipId = AppClass.getAppInstance().lastSnipId + 1
-                Log.d(TAG, "AVA onOpened: ")
                 startRecordingVideo()
             } else startPreview()
             mCameraOpenCloseLock.release()
@@ -274,7 +268,6 @@ class CameraControl(val activity: FragmentActivity) {
      */
     @SuppressLint("MissingPermission")
     internal fun openCamera(width: Int, height: Int) {
-        Log.d(TAG, "openCamera AVA $width, $height")
         if (activity.isFinishing) {
             return
         }
@@ -325,18 +318,9 @@ class CameraControl(val activity: FragmentActivity) {
     /**
      * Switches between front and back facing cameras
      */
-    internal fun switchCamera() {
+    internal fun closeToSwitchCamera() {
         isBackFacingRequired = !isBackFacingRequired
         closeCamera()
-        reOpenCamera()
-    }
-
-    private fun reOpenCamera() {
-        if (mTextureView!!.isAvailable) {
-            openCamera(mTextureView!!.width, mTextureView!!.height)
-        } /*else {
-            mTextureView!!.surfaceTextureListener = textureListener
-        }*/
     }
 
     private fun getCameraId(lens: Int): String {
@@ -358,14 +342,10 @@ class CameraControl(val activity: FragmentActivity) {
         try {
             mCameraOpenCloseLock.acquire()
             closePreviewSession()
-            if (null != mCameraDevice) {
-                mCameraDevice!!.close()
-                mCameraDevice = null
-            }
-            if (null != mMediaRecorder) {
-                mMediaRecorder!!.release()
-                mMediaRecorder = null
-            }
+            mCameraDevice?.close()
+            mCameraDevice = null
+            mMediaRecorder?.release()
+            mMediaRecorder = null
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock camera closing.")
         } finally {
@@ -446,6 +426,7 @@ class CameraControl(val activity: FragmentActivity) {
      * @param viewHeight The height of `mTextureView`
      */
     fun configureTransform(viewWidth: Int, viewHeight: Int) {
+
         if (null == mPreviewSize || null == activity) {
             return
         }
@@ -485,8 +466,6 @@ class CameraControl(val activity: FragmentActivity) {
      */
     @Throws(IOException::class)
     private fun setUpMediaRecorder() {
-        if (activity == null)
-            return
         //  ensuring the media recorder is recreated
         try {
             mMediaRecorder!!.reset()
@@ -664,7 +643,8 @@ class CameraControl(val activity: FragmentActivity) {
         val w = aspectRatio!!.width
         val h = aspectRatio.height
         for (option in choices) {
-            if (option.height == option.width * h / w) {
+            /*if (option.height == option.width * h / w) {*/
+            if(option.height == h || option.width == w) {
                 if (option.width >= width && option.height >= height || option.width >= height && option.height >= width) {
                     bigEnough.add(option)
                 } else {

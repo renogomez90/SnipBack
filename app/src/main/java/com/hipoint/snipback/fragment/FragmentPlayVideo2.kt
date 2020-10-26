@@ -271,9 +271,7 @@ class FragmentPlayVideo2 : Fragment() {
         buttonCamera.setOnClickListener {
 //            (AppMainActivity).loadFragment(VideoMode.newInstance(),true);
             player.release()
-            val intent1 = Intent(activity, AppMainActivity::class.java)
-            startActivity(intent1)
-            requireActivity().finishAffinity()
+            popToVideoMode()
         }
 
         tag.setOnClickListener {
@@ -298,6 +296,15 @@ class FragmentPlayVideo2 : Fragment() {
         })
 
         initSwipeControls()
+    }
+
+    private fun popToVideoMode() {
+        val fm = requireActivity().supportFragmentManager
+
+        for(i in fm.backStackEntryCount - 1 downTo 0){
+            if(!fm.getBackStackEntryAt(i).name.equals(AppMainActivity.VIDEO_MODE_TAG, true))
+                fm.popBackStack()
+        }
     }
 
     private fun initSwipeControls() {

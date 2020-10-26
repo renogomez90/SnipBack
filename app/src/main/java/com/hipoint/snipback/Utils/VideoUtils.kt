@@ -188,7 +188,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param speedDetailsList ArrayList of SpeedDetails
      * @param outputPath Path to save output
      */
-    fun changeSpeed(clip: File, speedDetailsList: ArrayList<SpeedDetails>, outputPath: String) {
+    suspend fun changeSpeed(clip: File, speedDetailsList: ArrayList<SpeedDetails>, outputPath: String) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip.absolutePath)
         val totalDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
@@ -295,6 +295,38 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         filterComplex.append("concat=n=${i - 1}:v=1:a=1[outv][outa]")
 
         return filterComplex.toString()
+    }
+
+    suspend fun getThumbnails(clip: File, outputParent: String){
+        val outputPath = File("$outputParent/previewThumbs/")
+        if(outputPath.exists())
+            outputPath.deleteRecursively()
+        outputPath.mkdirs()
+
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(clip.absolutePath)
+        var duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong() // in miliseconds
+        retriever.release()
+
+        duration = TimeUnit.MILLISECONDS.toSeconds(duration)
+        val interval = duration.toFloat() / 9
+
+        val cmd = "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -y $outputParent/previewThumbs/thumb%03d.bmp"
+        Log.d(TAG, "getThumbnails: cmd = $cmd")
+
+        EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+            override fun onSuccess() {
+                opListener.changed(IVideoOpListener.VideoOp.FRAMES, outputPath.absolutePath)
+            }
+
+            override fun onFailure() {
+                opListener.failed(IVideoOpListener.VideoOp.FRAMES)
+            }
+
+            override fun onProgress(progress: Float) {
+
+            }
+        })
     }
 
     private fun createFileList(clip1: File, clip2: File): String {

@@ -106,13 +106,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 if (abs(deltaX) > MIN_DISTANCE) {
                     // Left to Right swipe action
                     if (x2 > x1) {
-                        if (cameraControl.isRecordingVideo()) {
+                        if (cameraControl!!.isRecordingVideo()) {
                             saveSnipTimeToLocal()
                         }
                     }
                     //  Right to left swipe action
                     if (x2 < x1) {
-                        if (cameraControl.isRecordingVideo()) {
+                        if (cameraControl!!.isRecordingVideo()) {
                             handleLeftSwipe()
                         }
                     }
@@ -120,7 +120,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
         }
 
-        if (cameraControl.handleZoomEvent(event)) return false
+        if (cameraControl!!.handleZoomEvent(event)) return false
         return true
     }
 
@@ -173,12 +173,12 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private val mSurfaceTextureListener: TextureView.SurfaceTextureListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(surfaceTexture: SurfaceTexture,
                                                width: Int, height: Int) {
-            cameraControl.openCamera(width, height)
+            cameraControl!!.openCamera(width, height)
         }
 
         override fun onSurfaceTextureSizeChanged(surfaceTexture: SurfaceTexture,
                                                  width: Int, height: Int) {
-            cameraControl.configureTransform(width, height)
+            cameraControl!!.configureTransform(width, height)
         }
 
         override fun onSurfaceTextureDestroyed(surfaceTexture: SurfaceTexture): Boolean {
@@ -192,8 +192,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var appRepository               : AppRepository?   = null
     private var animBlink                   : Animation?       = null
     private var thumbnailProcessingCompleted: OnTaskCompleted? = null
-
-    private lateinit var cameraControl: CameraControl
+    private var cameraControl               : CameraControl?   = null
+    
     //Views
     private lateinit var rootView         : View
     private lateinit var gallery          : ImageButton
@@ -231,10 +231,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private fun setupCameraControl() {
-        if(!this::cameraControl.isInitialized)
+        if(cameraControl == null)
             cameraControl = CameraControl(requireActivity())
         
-        cameraControl.apply {
+        cameraControl!!.apply {
             setRecordUIListener(this@VideoMode)
             setPreviewTexture(mTextureView)
             setClipDuration(clipDuration)
@@ -296,7 +296,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         mTextureView.setOnTouchListener(this)
         gallery.setOnClickListener { (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance(), true) }
         settings.setOnClickListener { showDialogSettingsMain() }
-        changeCamera.setOnClickListener { cameraControl.switchCamera() }
+        changeCamera.setOnClickListener {
+            cameraControl!!.closeToSwitchCamera()
+            if (mTextureView.isAvailable) {
+                cameraControl?.openCamera(mTextureView.width, mTextureView.height)
+            } else {
+                mTextureView.surfaceTextureListener = mSurfaceTextureListener
+            }
+        }
+
         appRepository = instance
         mChronometer.onChronometerTickListener = OnChronometerTickListener {
             //                if (!resume) {
@@ -313,18 +321,18 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             //                    elapsedTime = SystemClock.elapsedRealtime();
             Log.d(TAG, "onChronometerTick: $minutes : $seconds")
         }
-        mMinZoom = cameraControl.getMinZoom()
-        mMaxZoom = cameraControl.getMaxZoom() - 1
+        mMinZoom = cameraControl!!.getMinZoom()
+        mMaxZoom = cameraControl!!.getMaxZoom() - 1
         seekBar.max = (mMaxZoom - mMinZoom).roundToInt()
         seekBar.setOnSeekBarChangeListener(
                 object : OnSeekBarChangeListener {
                     override fun onStopTrackingTouch(seekBar: SeekBar) {
-                        cameraControl.setCurrentZoom((mMinZoom + 1 + mProgress * zoomStep).roundToInt().toFloat())
+                        cameraControl?.setCurrentZoom((mMinZoom + 1 + mProgress * zoomStep).roundToInt().toFloat())
                     }
 
                     override fun onStartTrackingTouch(seekBar: SeekBar) {}
                     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                        cameraControl.setCurrentZoom((mMinZoom + 1 + progress.toFloat() * zoomStep).roundToInt().toFloat())
+                        cameraControl?.setCurrentZoom((mMinZoom + 1 + progress.toFloat() * zoomStep).roundToInt().toFloat())
                         if (fromUser) mProgress = progress.toFloat()
                     }
                 }
@@ -336,11 +344,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * */
     override fun onResume() {
         super.onResume()
+        if(cameraControl == null){
+            setupCameraControl()
+        }
 
-        cameraControl.startBackgroundThread()
+        cameraControl?.startBackgroundThread()
         if(hasPermissionsGranted(VIDEO_PERMISSIONS)) {
             if (mTextureView.isAvailable) {
-                cameraControl.openCamera(mTextureView.width, mTextureView.height)
+                cameraControl?.openCamera(mTextureView.width, mTextureView.height)
             } else {
                 mTextureView.surfaceTextureListener = mSurfaceTextureListener
             }
@@ -353,8 +364,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Closes the camera and stops the background thread when fragment is not in the foreground
      * */
     override fun onPause() {
-        cameraControl.closeCamera()
-        cameraControl.stopBackgroundThread()
+        cameraControl?.closeCamera()
+        cameraControl?.stopBackgroundThread()
+        cameraControl = null
 
         super.onPause()
     }
@@ -371,7 +383,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 updateFlags(recordClips = recordClips, recordPressed = true, stopPressed = false)
                 userRecordDuration = 0
 //                startRecordingVideo()
-                with(cameraControl){
+                with(cameraControl!!){
                     if (isRecordingVideo() && isRecordingClips()) {
                         try {
                             restartRecording()
@@ -392,42 +404,42 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
 
                 swipedRecording = null
-                while (cameraControl.clipQueueSize() > 2) {
-                    cameraControl.removeClipQueueItem()?.delete()
+                while (cameraControl!!.clipQueueSize() > 2) {
+                    cameraControl?.removeClipQueueItem()?.delete()
                 }
             }
             R.id.rec_stop -> {  // sets up UI and stops user triggered recording
                 bottomContainer.visibility = View.VISIBLE
                 recStartLayout.visibility = View.INVISIBLE
-                (requireActivity() as AppMainActivity).showInGallery.add(File(cameraControl.getCurrentOutputPath()!!).nameWithoutExtension)
+                (requireActivity() as AppMainActivity).showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
                 parentSnip = null   //  resetting the session parent Snip
-                cameraControl.stopRecordingVideo()    // don't close session here since we have to resume saving clips
+                cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
                 attemptClipConcat() //  merge what is in the buffer with the recording
                 // we can restart recoding clips if it is required at this point
                 recordClips = true
                 updateFlags(recordClips = recordClips, recordPressed = false, stopPressed = true)
-                cameraControl.startRecordingVideo()
+                cameraControl?.startRecordingVideo()
             }
             R.id.r_3_bookmark -> {
                 saveSnipTimeToLocal()
             }
             R.id.zoom_out_btn -> {
-                if (cameraControl.getZoomLevel() <= mMaxZoom + 1) {
+                if (cameraControl!!.getZoomLevel() <= mMaxZoom + 1) {
                     if (mProgress > mMinZoom) {
                         mProgress--
-                        cameraControl.setCurrentZoom((mMinZoom + mProgress * zoomStep).roundToInt().toFloat())
-                        seekBar.progress = cameraControl.getCurrentZoom().toInt()
+                        cameraControl?.setCurrentZoom((mMinZoom + mProgress * zoomStep).roundToInt().toFloat())
+                        seekBar.progress = cameraControl!!.getCurrentZoom().toInt()
                     } else {
                         mProgress = 0f
                     }
                 }
             }
             R.id.zoom_in_btn -> {
-                if (cameraControl.getCurrentZoom() <= mMaxZoom) {
+                if (cameraControl!!.getCurrentZoom() <= mMaxZoom) {
                     if (mProgress < mMaxZoom) {
                         mProgress++
-                        cameraControl.setCurrentZoom((mMinZoom + mProgress * zoomStep).roundToInt().toFloat())
-                        seekBar.progress = cameraControl.getCurrentZoom().toInt()
+                        cameraControl?.setCurrentZoom((mMinZoom + mProgress * zoomStep).roundToInt().toFloat())
+                        seekBar.progress = cameraControl!!.getCurrentZoom().toInt()
                     } else {
                         mProgress = 3f
                     }
@@ -446,7 +458,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             }
                         })
 
-//                File filevideopath = new File(cameraControl.getCurrentOutputPath());
+//                File filevideopath = new File(cameraControl?.getCurrentOutputPath());
 //
 //                try {
 //
@@ -504,7 +516,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //                    Log.d(TAG, "IOException while closing the stream");
 //                    e.printStackTrace();
 //                }
-                getVideoThumbnailClick(File(cameraControl.getCurrentOutputPath()!!))
+                getVideoThumbnailClick(File(cameraControl?.getCurrentOutputPath()!!))
                 rlVideo.clearAnimation()
             }
             R.id.texture -> {
@@ -517,7 +529,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private fun updateFlags(recordClips: Boolean, recordPressed: Boolean, stopPressed: Boolean) {
-        cameraControl.apply {
+        cameraControl?.apply {
             setRecordClips(recordClips)
             setRecordPressed(recordPressed)
             setStopPressed(stopPressed)
@@ -532,7 +544,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         (requireActivity() as AppMainActivity).swipeProcessed = true
 
         if (swipedRecording != null) {
-            if (swipedRecording?.originalFilePath.equals(cameraControl.getLastUserRecordedPath())) {
+            if (swipedRecording?.originalFilePath.equals(cameraControl?.getLastUserRecordedPath())) {
                 val intentService = Intent(requireContext(), VideoService::class.java)
                 val task = arrayListOf<VideoOpItem>()
 
@@ -561,30 +573,30 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     private fun handleLeftSwipe() {
 
-        if (cameraControl.isRecordingClips()) {
+        if (cameraControl!!.isRecordingClips()) {
             val t1Animation = ObjectAnimator.ofFloat(recordButton, "translationX", 0f, -80f, 0f)
             t1Animation.duration = 1500
             t1Animation.start()
         }
 
-        if (cameraControl.isRecordingClips()) {    //  if clips are being recorded
+        if (cameraControl!!.isRecordingClips()) {    //  if clips are being recorded
 
-            if (cameraControl.clipQueueSize() > 1) { // there is more than 1 items in the queue
+            if (cameraControl!!.clipQueueSize() > 1) { // there is more than 1 items in the queue
                 //  1.  remove the 1st item - clip1
                 //  2.  restart recording session so that the recording doesn't stop and we get the file we need to merge
                 //  3.  remove the next item - clip 2
                 //  4.  merge and split
 
-                val clip1 = cameraControl.removeClipQueueItem()!!
+                val clip1 = cameraControl?.removeClipQueueItem()!!
                 ensureRecordingRestart()
-                val clip2 = cameraControl.removeClipQueueItem()!!
+                val clip2 = cameraControl?.removeClipQueueItem()!!
 
                 if (clip1.length() == 0L || clip2.length() == 0L)
                     return
 
                 val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val mergeFilePath = "${clip1.parent!!}/merged-$timeStamp.mp4"
-                swipedFileNames.add("${File(cameraControl.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+                swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
                 (requireActivity() as AppMainActivity).showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
 
                 val intentService = Intent(requireContext(), VideoService::class.java)
@@ -601,10 +613,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 //      1.  restart recording session
                 //      2.  remove item from queue and split the video
                 //  2.  else save what we have. restart the recording inform user.
-                if (cameraControl.clipQueueSize() > 0) {
+                if (cameraControl!!.clipQueueSize() > 0) {
                     ensureRecordingRestart()
 
-                    val clip = cameraControl.removeClipQueueItem()!!
+                    val clip = cameraControl?.removeClipQueueItem()!!
                     val actualClipTime = (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
                     val swipeClipDuration = swipeValue / 1000
                     if (actualClipTime >= swipeClipDuration) {
@@ -631,11 +643,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
             }
         } else {    // swiped during video recording
-            swipedFileNames.add(File(cameraControl.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
+            swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
             if (swipedRecording == null) {
-                swipedRecording = cameraControl.getCurrentOutputPath()?.let { SwipedRecording(it) }
+                swipedRecording = cameraControl?.getCurrentOutputPath()?.let { SwipedRecording(it) }
             }
-            if (swipedRecording!!.originalFilePath?.equals(cameraControl.getCurrentOutputPath())!!) {
+            if (swipedRecording!!.originalFilePath?.equals(cameraControl?.getCurrentOutputPath())!!) {
                 swipedRecording!!.timestamps.add(timerSecond)
             }
         }
@@ -648,7 +660,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private fun ensureRecordingRestart() {
-        with(cameraControl) {
+        with(cameraControl!!) {
             try {
                 restartRecording()
             } catch (e: IllegalStateException) {
@@ -666,9 +678,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Check if recorded files can be concatenated, else proceed to process left swipes
      */
     private fun attemptClipConcat() {
-        if (cameraControl.clipQueueSize() >= 2) {
-            val clip1: File = cameraControl.removeClipQueueItem()!!
-            val clip2: File = cameraControl.removeClipQueueItem()!!
+        if (cameraControl!!.clipQueueSize() >= 2) {
+            val clip1: File = cameraControl?.removeClipQueueItem()!!
+            val clip2: File = cameraControl?.removeClipQueueItem()!!
 
             if (clip1.length() == 0L || clip2.length() == 0L)    // the file is not formed and concat will not work
                 return
@@ -781,7 +793,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         // check if all permissions are granted or not
                         if (report.areAllPermissionsGranted()) {
                             if (mTextureView.isAvailable) {
-                                cameraControl.openCamera(mTextureView.width, mTextureView.height)
+                                cameraControl?.openCamera(mTextureView.width, mTextureView.height)
                             } else {
                                 mTextureView.surfaceTextureListener = mSurfaceTextureListener
                             }

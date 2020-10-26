@@ -26,26 +26,26 @@ import java.util.*
  */
 class VideoService : JobIntentService(), IVideoOpListener {
     companion object {
-        val ACTION        = "com.hipoint.snipback.VideoOpAction"
+        val ACTION = "com.hipoint.snipback.VideoOpAction"
         val VIDEO_OP_ITEM = "VIDEO_OP_ITEM"
 
-        val STATUS_NO_VALUE      = -1
-        val STATUS_OP_SUCCESS    = 1
-        val STATUS_OP_FAILED     = 2
+        val STATUS_NO_VALUE = -1
+        val STATUS_OP_SUCCESS = 1
+        val STATUS_OP_FAILED = 2
         val STATUS_SHOW_PROGRESS = 3
         val STATUS_HIDE_PROGRESS = 4
 
         private var workQueue: Queue<VideoOpItem> = LinkedList()
         private var isProcessing = false
 
-        fun enqueueWork(context: Context, work:Intent){
+        fun enqueueWork(context: Context, work: Intent) {
             enqueueWork(context, VideoService::class.java, 10, work)
         }
     }
 
-    private val TAG             = VideoService::class.java.simpleName
-    private val channelId       = "Snipback_notification"
-    private val vUtil           = VideoUtils(this@VideoService)
+    private val TAG = VideoService::class.java.simpleName
+    private val channelId = "Snipback_notification"
+    private val vUtil = VideoUtils(this@VideoService)
     private val broadcastIntent = Intent()
 
     override fun onHandleWork(intent: Intent) {
@@ -124,13 +124,24 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                if(speedDetailsList != null)
-                                    VideoUtils(this@VideoService).changeSpeed(File(clip1), speedDetailsList, outputPath)
+                                VideoUtils(this@VideoService).changeSpeed(File(clip1), speedDetailsList, outputPath)
                                 return@launch
                             }
                         }
                     }
-                    else ->{}
+                    IVideoOpListener.VideoOp.FRAMES -> {
+                        if (outputPath.isBlank() || clip1.isBlank()) {
+                            failed(IVideoOpListener.VideoOp.FRAMES)
+                            return@with
+                        } else {
+                            CoroutineScope(IO).launch {
+                                VideoUtils(this@VideoService).getThumbnails(File(clip1), outputPath)
+                                return@launch
+                            }
+                        }
+                    }
+                    else -> {
+                    }
                 }
             }
         } else {
