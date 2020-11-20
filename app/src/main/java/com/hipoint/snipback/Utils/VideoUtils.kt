@@ -83,7 +83,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         retriever.release()
 
         val tmpFile = createFileList(clip1, clip2)
-        val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -c copy -y -b:v 1M $outputPath"
+        val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -c copy -threads 4 -y -b:v 1M $outputPath"
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
         try {
@@ -127,7 +127,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             end = sec.toInt()
 
 //        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -preset ultrafast -y $outputPath"   // with re-encoding
-        val cmd = "-hide_banner -loglevel panic -ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -c copy -copyts -y $outputPath"   // without re-encoding
+        val cmd = "-hide_banner -loglevel panic -ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -c copy -copyts -threads 4 -y $outputPath"   // without re-encoding
 
         Log.d(TAG, "trimToClip: cmd= $cmd")
         try {
@@ -157,7 +157,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (splitTime > duration)
             throw IllegalArgumentException("splitTime must be within video duration")
 
-        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -c copy -reset_timestamps 1 -map 0 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
+        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -c copy -reset_timestamps 1 -map 0 -threads 4 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
 
         Log.d(TAG, "splitVideo: cmd= $cmd")
 
@@ -194,7 +194,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val totalDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
 
         val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
-
+        Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
         /*val cmd = "-i ${clip.absolutePath} -filter_complex " +
                 "[0:v]trim=0:2,setpts=PTS-STARTPTS[v1]; " + //from 0 to 2 sec normal speed; output reference is [v1]
                 "[0:v]trim=2:5,setpts=2*(PTS-STARTPTS)[v2]; " + //from 2 to 5 sec slow down * 2
@@ -205,7 +205,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 "[v1][a1][v2][a2][v3][a3]concat=n=3:v=1:a=1 " +
                 "-preset superfast -profile:v baseline $outputPath"*/
 
-        val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -preset ultrafast -shortest -y $outputPath"
+        val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -preset ultrafast -shortest -threads 4 -y $outputPath"
 
         Log.d(TAG, "changeSpeed: cmd = $cmd")
 
@@ -248,7 +248,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             i++
         }
 
-        speedDetailsList.forEach {
+        speedDetailsList.forEachIndexed { index, it ->
             val startTime = it.timeDuration?.first!!.toFloat() / 1000
             val endTime = it.timeDuration?.second!!.toFloat() / 1000
 
@@ -275,6 +275,22 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             aFilterComplex.append("[0:a]atrim=$startTime:$endTime,asetpts=PTS-STARTPTS,$audio[a$i];")
             //  increments the counter
             i++
+
+            //reset inbetween speed changes
+            if(index < speedDetailsList.size - 1) {
+                val nextStart = speedDetailsList[index + 1].timeDuration?.first!!.toFloat() / 1000
+
+                //  video
+                if (it.isFast) {
+                    vFilterComplex.append("[0:v]trim=$endTime:$nextStart,setpts=PTS-STARTPTS[v$i];")
+                } else {
+                    vFilterComplex.append("[0:v]trim=$endTime:$nextStart,setpts=PTS-STARTPTS[v$i];")
+                }
+                //  audio
+                aFilterComplex.append("[0:a]atrim=$endTime:$nextStart,asetpts=PTS-STARTPTS[a$i];")
+
+                i++
+            }
         }
 
         //  handles the video ending speed
@@ -297,9 +313,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         return filterComplex.toString()
     }
 
-    suspend fun getThumbnails(clip: File, outputParent: String){
+    suspend fun getThumbnails(clip: File, outputParent: String) {
         val outputPath = File("$outputParent/previewThumbs/")
-        if(outputPath.exists())
+        if (outputPath.exists())
             outputPath.deleteRecursively()
         outputPath.mkdirs()
 
@@ -309,9 +325,14 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         retriever.release()
 
         duration = TimeUnit.MILLISECONDS.toSeconds(duration)
+
         val interval = duration.toFloat() / 9
 
-        val cmd = "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -y $outputParent/previewThumbs/thumb%03d.bmp"
+        val cmd = if (duration >= 9)
+            "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"
+        else    //  since we may not have enough key frames to skip over
+            "-i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"
+
         Log.d(TAG, "getThumbnails: cmd = $cmd")
 
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {

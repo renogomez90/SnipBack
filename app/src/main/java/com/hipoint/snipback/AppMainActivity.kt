@@ -78,7 +78,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     private var fileToReplace: String? = null
     private var replacedWith : String? = null
     private var doReplace    : Boolean = false
-    private var parentChanged: Boolean = false
 
     /**
      * Registers a listener for receiving service broadcast for video operation status
@@ -163,7 +162,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     }
 
     //    public void loadFragment(Fragment fragment,boolean addtoBackStack) {
-    fun loadFragment(fragment: Fragment?, addtoBackStack: Boolean) {
+    fun loadFragment(fragment: Fragment?, addToBackStack: Boolean) {
         val ft = supportFragmentManager.beginTransaction()
 
         val tag = when (fragment) {
@@ -174,12 +173,25 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             else -> ""
         }
 
-        ft.replace(R.id.mainFragment, fragment!!, tag)
-
-        if (addtoBackStack/* || fragment is FragmentGalleryNew*/) {
-            ft.addToBackStack(null)
+        //  don't add is already present
+        val count = supportFragmentManager.backStackEntryCount
+        Log.d(TAG, "onBackPressed: stack count $count")
+        var isAlreadyPresent = false
+        for(entry in 0 until count){
+            if(supportFragmentManager.getBackStackEntryAt(entry).name == tag) {
+                isAlreadyPresent = true
+                break
+            }
         }
-        ft.commitAllowingStateLoss()
+
+        if(!isAlreadyPresent) {
+            ft.replace(R.id.mainFragment, fragment!!, tag)
+
+            if (addToBackStack/* || fragment is FragmentGalleryNew*/) {
+                ft.addToBackStack(null)
+            }
+            ft.commitAllowingStateLoss()
+        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -219,6 +231,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     }
 
     companion object {
+        private var parentChanged: Boolean = false
+
         const val VIDEO_MODE_TAG = "videoMode"
         const val GALLERY_FRAGMENT_TAG = "gallery_frag"
         const val PLAY_VIDEO_TAG = "play_frag"
@@ -258,7 +272,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             parent_snip_id = if (parentSnip != null) {
                 if (File(snipFilePath).nameWithoutExtension.contains(File(parentSnip!!.videoFilePath).nameWithoutExtension) &&
                         isFragmentVisible(VIDEO_MODE_TAG) ||    //  while in videoMode check with file names for parent
-                        isFragmentVisible(EDIT_VIDEO_TAG)) {    //  while in editMode check is parentSnip was already set
+                        isFragmentVisible(EDIT_VIDEO_TAG) ||
+                        parentChanged) {    //  while in editMode check is parentSnip was already set
                     parentSnip?.snip_id!!
                 } else 0
             } else 0
@@ -305,6 +320,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 getVideoThumbnail(snip, File(hdSnips.video_path_processed))
                 showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
             }
+
+            if(parentChanged)   //  resetting the parent changed flag if it was set, since at this point it must have been consumed
+                parentChanged = false
+
 //            parentSnipId = AppClass.getAppInstance().lastSnipId + 1
         }
     }
@@ -487,32 +506,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             VideoService.enqueueWork(this, intentService)
 
-        } else {    // concat was triggered when user recording was completed
-            /*
-             hdSnips!!.video_path_unprocessed = processedVideoPath
-           hdSnips!!.hd_snip_id = AppClass.getAppInstance().lastHDSnipId.toInt()
-
-           val splitTime = if (swipedFileNames.contains(File(processedVideoPath).nameWithoutExtension)) {
-               (totalDuration[0] - swipeClipDuration).toInt()
-           } else {
-               totalDuration[0] - userRecordDuration
-           }
-
-           CoroutineScope(IO).launch {
-               appRepository!!.updateHDSnip(hdSnips!!)
-           }
-
-           val intentService = Intent(requireContext(), VideoService::class.java)  //  todo: changed now
-           val task = arrayListOf(VideoOpItem(
-                   operation = VideoOp.TRIMMED,
-                   clip1 = processedVideoPath,
-                   clip2 = "",
-                   startTime = splitTime,
-                   endTime = totalDuration[0],
-                   outputPath = File(processedVideoPath).parent!!))
-           intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-           startForegroundService(requireContext(), intentService)
-           */
         }
     }
 
@@ -653,6 +646,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     override fun parent(parentSnipId: Int) {
         CoroutineScope(IO).launch {
+            Log.d(TAG, "parent snip set")
             parentSnip = appRepository.getSnipById(parentSnipId)
             parentChanged = true
         }

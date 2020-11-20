@@ -120,7 +120,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
     //  Seek handling
     private var subscriptions = CompositeDisposable()
-    private var paused        = false
+    private var paused        = true
 
     //  speed change
     var isSpeedChanged = false
@@ -128,8 +128,8 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     var isSeekbarShown = true
 
     private var currentSpeed       = 3
-    private var startingTimestamps = 0L
-    private var endingTimestamps   = 0L
+    private var startingTimestamps = -1L
+    private var endingTimestamps   = -1L
     private var speedDuration      = Pair<Long, Long>(0, 0)
     private var speedDetailSet     = mutableSetOf<SpeedDetails>()
     private var segmentCount       = 0
@@ -148,7 +148,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     private var saveDialog: SaveEditDialog? = null
     private var processingDialog: ProcessingDialog? = null
 
-    private var previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+    private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
                 val previewThumbs = File(intent.getStringExtra("preview_path")!!)
@@ -301,7 +301,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
             if (checkSegmentTaken(currentPosition))   // checking to see if the start positions is acceptable
                 return@setOnClickListener
-
+            Log.d(TAG, "end clicked : starting time stamp = $startingTimestamps, current position = $currentPosition")
             if (startingTimestamps != currentPosition) {
                 startingTimestamps = currentPosition  //    take the starting point when end is pressed
                 val startValue = (startingTimestamps * 100 / player.duration).toFloat()
@@ -409,8 +409,8 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 tmpSpeedDetails = null
             }
 
-            startingTimestamps = 0L
-            endingTimestamps = 0L
+            startingTimestamps = -1L
+            endingTimestamps = -1L
             player.setPlaybackParameters(PlaybackParameters(1F))
             isSpeedChanged = false
             isEditOnGoing = false
@@ -532,7 +532,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
         blockEditOptions(true)
         editSeekAction     = EditSeekControl.MOVE_START
-        startingTimestamps = 0L
+        startingTimestamps = -1L
         endingTimestamps   = player.duration
     }
 
@@ -698,7 +698,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             showController()
         }
 
-        player.playWhenReady = true
+        player.playWhenReady = false
         previewBarProgress.visibility = View.VISIBLE
 
         player.addListener(object : Player.EventListener {
@@ -895,44 +895,46 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         private var isChangeAccepted: Boolean = false
 
         override fun run() {
-            if (isChangeAccepted) { //  Edit is present
-                val currentPosition = player.currentPosition
-                speedDetailList.forEach {
-                    if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second) {
-                        if (it.isFast) {
-                            val overlayColour = resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
-                            if (!colourOverlay.isShown) {
-                                colourOverlay.visibility = View.VISIBLE
-                                colourOverlay.setBackgroundColor(overlayColour)
+            if(context != null) {
+                if (isChangeAccepted) { //  Edit is present
+                    val currentPosition = player.currentPosition
+                    speedDetailList.forEach {
+                        if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second) {
+                            if (it.isFast) {
+                                val overlayColour = resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
+                                if (!colourOverlay.isShown) {
+                                    colourOverlay.visibility = View.VISIBLE
+                                    colourOverlay.setBackgroundColor(overlayColour)
+                                }
+                                player.setPlaybackParameters(PlaybackParameters(it.multiplier.toFloat()))
+                            } else {
+                                val overlayColour = resources.getColor(android.R.color.holo_green_dark, requireContext().theme)
+                                if (!colourOverlay.isShown) {
+                                    colourOverlay.visibility = View.VISIBLE
+                                    colourOverlay.setBackgroundColor(overlayColour)
+                                }
+                                player.setPlaybackParameters(PlaybackParameters(1 / it.multiplier.toFloat()))
                             }
-                            player.setPlaybackParameters(PlaybackParameters(it.multiplier.toFloat()))
-                        } else {
-                            val overlayColour = resources.getColor(android.R.color.holo_green_dark, requireContext().theme)
-                            if (!colourOverlay.isShown) {
-                                colourOverlay.visibility = View.VISIBLE
-                                colourOverlay.setBackgroundColor(overlayColour)
-                            }
-                            player.setPlaybackParameters(PlaybackParameters(1 / it.multiplier.toFloat()))
-                        }
 
-                        handler.postDelayed(this, 200 /* ms */)
-                        return
-                    } else {
-                        if (player.playbackParameters != PlaybackParameters(1F))
-                            player.setPlaybackParameters(PlaybackParameters(1F))
-                        else {
-                            colourOverlay.visibility = View.GONE
+                            handler.postDelayed(this, 200 /* ms */)
+                            return
+                        } else {
+                            if (player.playbackParameters != PlaybackParameters(1F))
+                                player.setPlaybackParameters(PlaybackParameters(1F))
+                            else {
+                                colourOverlay.visibility = View.GONE
+                            }
                         }
                     }
+                } else {
+                    if (player.playbackParameters != PlaybackParameters(1F))
+                        player.setPlaybackParameters(PlaybackParameters(1F))
+                    else {
+                        colourOverlay.visibility = View.GONE
+                    }
                 }
-            } else {
-                if (player.playbackParameters != PlaybackParameters(1F))
-                    player.setPlaybackParameters(PlaybackParameters(1F))
-                else {
-                    colourOverlay.visibility = View.GONE
-                }
+                handler.postDelayed(this, 200 /* ms */)
             }
-            handler.postDelayed(this, 200 /* ms */)
         }
 
         init {
@@ -960,6 +962,10 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 speedDetailList.remove(speedDetail)
             } else
                 false
+        }
+
+        fun stopTracking(){
+            handler.removeCallbacksAndMessages(null)
         }
     }
 
@@ -1020,23 +1026,13 @@ class VideoEditingFragment : Fragment(), ISaveListener {
      * */
     override fun saveAs() {
         saveDialog?.dismiss()
-        val clip = File(snip!!.videoFilePath)
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val outputName = "VID_$timeStamp.mp4"
-        val intentService = Intent(requireContext(), VideoService::class.java)
-        val task = arrayListOf(VideoOpItem(
-                operation = IVideoOpListener.VideoOp.SPEED,
-                clip1 = clip.absolutePath,
-                clip2 = "",
-                outputPath = "${clip.parent}/$outputName",
-                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
-        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-        VideoService.enqueueWork(requireContext(), intentService)
-        Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
-
         //  show in gallery
+        Log.d(TAG, "saveAs: will save as child of snip id = ${snip!!.snip_id}")
         replaceRequired.parent(snip!!.snip_id)
+
+        val (clip, outputName) = createSpeedChangedVideo()
         (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
+        Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
     }
 
     /**
@@ -1044,6 +1040,17 @@ class VideoEditingFragment : Fragment(), ISaveListener {
      * */
     override fun save() {
         saveDialog?.dismiss()
+        val (clip, outputName) = createSpeedChangedVideo()
+        replaceRequired.replace(clip.absolutePath, "${clip.parent}/$outputName")
+        Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+    }
+
+    /**
+     * Creates a video with the required speed changes
+     *
+     * @return Pair<File, String>   Pair of <Parent file, output filename>
+     */
+    private fun createSpeedChangedVideo(): Pair<File, String> {
         val clip = File(snip!!.videoFilePath)
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val outputName = "VID_$timeStamp.mp4"
@@ -1056,9 +1063,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
-
-        Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
-        replaceRequired.replace(clip.absolutePath, "${clip.parent}/$outputName")
+        return Pair(clip, outputName)
     }
 
     /**
