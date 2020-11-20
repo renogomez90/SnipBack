@@ -148,32 +148,39 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     private var saveDialog: SaveEditDialog? = null
     private var processingDialog: ProcessingDialog? = null
 
+    private var thumbnailExtractionStarted:Boolean = false
+
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
                 val previewThumbs = File(intent.getStringExtra("preview_path")!!)
-                if(previewThumbs.exists()){
-                    val thumbList = previewThumbs.listFiles()
-                    val imageList = arrayListOf<Bitmap>()
-                    thumbList?.forEach {
-                        imageList.add(BitmapFactory.decodeFile(it.absolutePath))
-                    }
-                    timelinePreviewAdapter = TimelinePreviewAdapter(requireContext(), imageList)
-                    previewTileList.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
-                    //  change context for updating the UI
-                    timelinePreviewAdapter!!.setHasStableIds(true)
-                    previewTileList.adapter = timelinePreviewAdapter
-                    previewTileList.adapter?.notifyDataSetChanged()
-                    previewTileList.scrollToPosition(timelinePreviewAdapter!!.itemCount)
-                    previewBarProgress.visibility = View.GONE
-                }
+                showThumbnailsIfAvailable(previewThumbs)
             }
+        }
+    }
+
+    private fun showThumbnailsIfAvailable(previewThumbs: File) {
+        if (previewThumbs.exists()) {
+            val thumbList = previewThumbs.listFiles()
+            val imageList = arrayListOf<Bitmap>()
+            thumbList?.forEach {
+                imageList.add(BitmapFactory.decodeFile(it.absolutePath))
+            }
+            timelinePreviewAdapter = TimelinePreviewAdapter(requireContext(), imageList)
+            previewTileList.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
+            //  change context for updating the UI
+            timelinePreviewAdapter!!.setHasStableIds(true)
+            previewTileList.adapter = timelinePreviewAdapter
+            previewTileList.adapter?.notifyDataSetChanged()
+            previewTileList.scrollToPosition(timelinePreviewAdapter!!.itemCount)
+            previewBarProgress.visibility = View.GONE
         }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.video_editing_fragment_main2, container, false)
         snip = requireArguments().getParcelable("snip")
+        thumbnailExtractionStarted = requireArguments().getBoolean("thumbnailExtractionStarted")
 
         bindViews()
         bindListeners()
@@ -672,12 +679,18 @@ class VideoEditingFragment : Fragment(), ISaveListener {
      * Setting up the player to play the require snip for editing
      */
     private fun setupPlayer() {
-
-        CoroutineScope(Default).launch {
-            getVideoPreviewFrames()
-        }
-
         val videoUri = Uri.parse(snip!!.videoFilePath)
+
+        previewBarProgress.visibility = View.VISIBLE
+
+        if(!thumbnailExtractionStarted) {
+            CoroutineScope(Default).launch {
+                getVideoPreviewFrames()
+            }
+        }else {
+            val parentFilePath = File(snip!!.videoFilePath).parent
+            showThumbnailsIfAvailable(File("$parentFilePath/previewThumbs/"))
+        }
 
         defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
         dataSourceFactory = DefaultDataSourceFactory(activity,
@@ -699,7 +712,6 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         }
 
         player.playWhenReady = false
-        previewBarProgress.visibility = View.VISIBLE
 
         player.addListener(object : Player.EventListener {
             override fun onPlayerError(error: ExoPlaybackException) {
@@ -877,10 +889,11 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         var fragment: VideoEditingFragment? = null
 
         @JvmStatic
-        fun newInstance(aSnip: Snip?): VideoEditingFragment {
+        fun newInstance(aSnip: Snip?, thumbnailExtractionStarted: Boolean): VideoEditingFragment {
             fragment = VideoEditingFragment()
             val bundle = Bundle()
             bundle.putParcelable("snip", aSnip)
+            bundle.putBoolean("thumbnailExtractionStarted", thumbnailExtractionStarted)
             fragment!!.arguments = bundle
             return fragment!!
         }

@@ -37,11 +37,15 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.Utils.TrimmerUtils
 import com.hipoint.snipback.application.AppClass
+import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
+import com.hipoint.snipback.videoControl.SpeedDetails
+import com.hipoint.snipback.videoControl.VideoOpItem
+import com.hipoint.snipback.videoControl.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.*
@@ -49,6 +53,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
+import java.util.ArrayList
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
@@ -93,6 +98,7 @@ class FragmentPlayVideo2 : Fragment() {
     // new added
     private var snip: Snip? = null
     private var paused = false
+    private var thumbnailExtractionStarted = false
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false)
@@ -227,6 +233,7 @@ class FragmentPlayVideo2 : Fragment() {
                 }
             }
         })
+        getVideoPreviewFrames()
     }
 
     private fun bindViews() {
@@ -280,7 +287,8 @@ class FragmentPlayVideo2 : Fragment() {
 
         editBtn.setOnClickListener {
             player.playWhenReady = false
-            (activity as AppMainActivity?)!!.loadFragment(VideoEditingFragment.newInstance(snip), true)
+            (activity as AppMainActivity?)!!.loadFragment(VideoEditingFragment.newInstance(snip, thumbnailExtractionStarted), true)
+            thumbnailExtractionStarted = false
         }
 
         rootView.isFocusableInTouchMode = true
@@ -417,4 +425,20 @@ class FragmentPlayVideo2 : Fragment() {
             }
         super.onDestroy()
     }
+
+    /**
+     * Populates preview frames in the seekBar area from the video
+     */
+    private fun getVideoPreviewFrames() {
+        val intentService = Intent(requireContext(), VideoService::class.java)
+        val task = arrayListOf(VideoOpItem(
+                operation = IVideoOpListener.VideoOp.FRAMES,
+                clip1 = snip!!.videoFilePath,
+                clip2 = "",
+                outputPath = File(snip!!.videoFilePath).parent!!))
+        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+        VideoService.enqueueWork(requireContext(), intentService)
+        thumbnailExtractionStarted = true
+    }
+
 }

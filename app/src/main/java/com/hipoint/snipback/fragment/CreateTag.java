@@ -169,7 +169,7 @@ public class CreateTag extends Fragment {
         edit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((AppMainActivity) requireActivity()).loadFragment(VideoEditingFragment.newInstance(snip), true);
+                ((AppMainActivity) requireActivity()).loadFragment(VideoEditingFragment.newInstance(snip, false), true);
             }
         });
 
