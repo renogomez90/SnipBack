@@ -312,12 +312,12 @@ public class FragmentGalleryNew extends Fragment {
                 appViewModel.getHDSnipsLiveData().observe(getViewLifecycleOwner(), hd_snips -> {
                     if (hd_snips != null && hd_snips.size() > 0) {  //  get available HD Snips
                         hdSnips.addAll(hd_snips);
-                        appViewModel.getSnipsLiveData().observe(getViewLifecycleOwner(), snips -> {
+                        appViewModel.getSnipsLiveData().observe(getViewLifecycleOwner(), snips -> { //get snips
                             if (snips != null && snips.size() > 0) {
                                 for (Snip snip : snips) {
                                     for (Hd_snips hdSnip : hdSnips) {
-                                        if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {
-                                            snip.setVideoFilePath(hdSnip.getVideo_path_processed());
+                                        if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {  //  if HD snip is a parent of a snip or HR snip is the current snip
+                                            snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
                                             for (Event event : allEvents) {
                                                 if (event.getEvent_id() == snip.getEvent_id()) {
                                                     AppClass.getAppInstance().setEventSnipsFromDb(event, snip);

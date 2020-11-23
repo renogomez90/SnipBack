@@ -130,7 +130,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     companion object {
         private var videoMode: VideoMode? = null
-//        var swipeProcessed: Boolean = false
         private const val TAG = "Camera2VideoFragment"
         private const val FRAGMENT_DIALOG = "dialog"
         private const val REQUEST_VIDEO_PERMISSIONS = 1
@@ -582,32 +581,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         if (cameraControl!!.isRecordingClips()) {    //  if clips are being recorded
 
             if (cameraControl!!.clipQueueSize() > 1) { // there is more than 1 items in the queue
-                //  1.  remove the 1st item - clip1
-                //  2.  restart recording session so that the recording doesn't stop and we get the file we need to merge
-                //  3.  remove the next item - clip 2
-                //  4.  merge and split
-
-                val clip1 = cameraControl?.removeClipQueueItem()!!
-                ensureRecordingRestart()
-                val clip2 = cameraControl?.removeClipQueueItem()!!
-
-                if (clip1.length() == 0L || clip2.length() == 0L)
+                if (concatOnSwipeDuringClipRecording())
                     return
-
-                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val mergeFilePath = "${clip1.parent!!}/merged-$timeStamp.mp4"
-                swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
-                (requireActivity() as AppMainActivity).showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
-
-                val intentService = Intent(requireContext(), VideoService::class.java)
-                val task = arrayListOf(VideoOpItem(
-                        operation = VideoOp.CONCAT,
-                        clip1 = clip1.absolutePath,
-                        clip2 = clip2.absolutePath,
-                        outputPath = mergeFilePath))
-                intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-                VideoService.enqueueWork(requireContext(), intentService)
-
             } else {    //  there is only  item in the queue
                 //  1.  check duration of clip and if swipe duration < video duration
                 //      1.  restart recording session
@@ -615,31 +590,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 //  2.  else save what we have. restart the recording inform user.
                 if (cameraControl!!.clipQueueSize() > 0) {
                     ensureRecordingRestart()
-
-                    val clip = cameraControl?.removeClipQueueItem()!!
-                    val actualClipTime = (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
-                    val swipeClipDuration = swipeValue / 1000
-                    if (actualClipTime >= swipeClipDuration) {
-                        //  splitting may not work for this so we opt for trim
-                        Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
-                        swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
-                        (requireActivity() as AppMainActivity).showInGallery.add("trimmed-${clip.nameWithoutExtension}")
-
-                        val intentService = Intent(requireContext(), VideoService::class.java)
-                        val task = arrayListOf(VideoOpItem(
-                                operation = VideoOp.TRIMMED,
-                                clip1 = clip.absolutePath,
-                                clip2 = "",
-                                startTime = max((actualClipTime - swipeClipDuration).toInt(), 0),
-                                endTime = actualClipTime,
-                                outputPath = "${clip.parent}/trimmed-${clip.name}").also { toString() })
-                        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-                        VideoService.enqueueWork(requireContext(), intentService)
-                    } else { //  save what we have
-                        swipedFileNames.add(clip.nameWithoutExtension)
-                        (requireActivity() as AppMainActivity).showInGallery.add(clip.nameWithoutExtension)
-                        (requireActivity() as AppMainActivity).addSnip(clip.absolutePath, actualClipTime, actualClipTime)
-                    }
+                    trimOnSwipeDuringClipRecording()
                 }
             }
         } else {    // swiped during video recording
@@ -657,6 +608,85 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         blinkAnimation()
 
         (requireActivity() as AppMainActivity).swipeProcessed = false
+    }
+
+    /**
+     * handles right swipes that take a clip of length suggested by swipeValue and uses that to take pictures
+     */
+    private fun handleRightSwipe(){
+        if(cameraControl!!.clipQueueSize() > 1){    //  more han 1 item is available in the queue
+            concatOnSwipeDuringClipRecording()
+        }else { //  only 1 items is available
+            if(cameraControl!!.clipQueueSize() == 1){
+                trimOnSwipeDuringClipRecording()
+            }
+        }
+    }
+
+    /**
+     * called during swipe operation for concatenating videos while clip recording
+     * 1.  remove the 1st item - clip1
+     * 2.  restart recording session so that the recording doesn't stop and we get the file we need to merge
+     * 3.  remove the next item - clip 2@return Boolean
+     * 4.  merge and split
+     *
+     * @return Boolean  to determine if we should exit the calling function.
+     * */
+    private fun concatOnSwipeDuringClipRecording(): Boolean {
+
+        val clip1 = cameraControl?.removeClipQueueItem()!!
+        ensureRecordingRestart()
+        val clip2 = cameraControl?.removeClipQueueItem()!!
+
+        if (clip1.length() == 0L || clip2.length() == 0L)
+            return true
+
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val mergeFilePath = "${clip1.parent!!}/merged-$timeStamp.mp4"
+        swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+        (requireActivity() as AppMainActivity).showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+
+        val intentService = Intent(requireContext(), VideoService::class.java)
+        val task = arrayListOf(VideoOpItem(
+                operation = VideoOp.CONCAT,
+                clip1 = clip1.absolutePath,
+                clip2 = clip2.absolutePath,
+                outputPath = mergeFilePath))
+        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+        VideoService.enqueueWork(requireContext(), intentService)
+        return false
+    }
+
+    /**
+     * Trims the clip in the queue to @link{swipeValue},
+     * clip recording to be restarted before calling this, since this is designed to be called when the queue only contains the
+     * currently recording clip.
+     **/
+    private fun trimOnSwipeDuringClipRecording() {
+        val clip = cameraControl?.removeClipQueueItem()!!
+        val actualClipTime = (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
+        val swipeClipDuration = swipeValue / 1000
+        if (actualClipTime >= swipeClipDuration) {
+            //  splitting may not work for this so we opt for trim
+            Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
+            swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
+            (requireActivity() as AppMainActivity).showInGallery.add("trimmed-${clip.nameWithoutExtension}")
+
+            val intentService = Intent(requireContext(), VideoService::class.java)
+            val task = arrayListOf(VideoOpItem(
+                    operation = VideoOp.TRIMMED,
+                    clip1 = clip.absolutePath,
+                    clip2 = "",
+                    startTime = max((actualClipTime - swipeClipDuration).toInt(), 0),
+                    endTime = actualClipTime,
+                    outputPath = "${clip.parent}/trimmed-${clip.name}").also { toString() })
+            intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+            VideoService.enqueueWork(requireContext(), intentService)
+        } else { //  save what we have
+            swipedFileNames.add(clip.nameWithoutExtension)
+            (requireActivity() as AppMainActivity).showInGallery.add(clip.nameWithoutExtension)
+            (requireActivity() as AppMainActivity).addSnip(clip.absolutePath, actualClipTime, actualClipTime)
+        }
     }
 
     private fun ensureRecordingRestart() {
@@ -880,12 +910,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
 
     private fun saveSnipTimeToLocal() {
-        if (timerSecond != 0) {
+        if (timerSecond != 0) { //  user recording is in progress
             val endSecond = timerSecond
             AppClass.getAppInstance().setSnipDurations(endSecond)
             // on screen tap blinking starts
             blinkAnimation()
 //        Log.d("seconds", String.valueOf(endSecond));
+        }else{
+            //todo: show the clip that we captured.
+            blinkAnimation()
         }
     }
 

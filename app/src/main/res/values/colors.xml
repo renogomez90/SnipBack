@@ -27,5 +27,6 @@
     <color name="colorGreyLt">#AD87868A</color>
     <color name="red_tag">#F53A27</color>
 
-
+    <color name="blueOverlay">#800099CC</color>
+    <color name="greenOverlay">#80669900</color>
 </resources>

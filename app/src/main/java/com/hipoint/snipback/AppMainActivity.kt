@@ -59,15 +59,15 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     //    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
     private val TAG = AppMainActivity::class.java.simpleName
 
-    private val VIDEO_DIRECTORY_NAME  = "SnipBackVirtual"
+    private val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
 
     private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
     private var onTouchListeners: MutableList<MyOnTouchListener>? = null
-    private var appViewModel    : AppViewModel?                   = null
-    private var parentSnip      : Snip?                           = null
-    private var addedToSnip     : ArrayList<String>               = arrayListOf()
+    private var appViewModel: AppViewModel? = null
+    private var parentSnip: Snip? = null
+    private var addedToSnip: ArrayList<String> = arrayListOf()
 
     var swipeProcessed: Boolean = false
     var showInGallery: ArrayList<String> = arrayListOf() //  names of files that need to be displayed in the gallery
@@ -76,8 +76,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     //  edit file replacement
     private var fileToReplace: String? = null
-    private var replacedWith : String? = null
-    private var doReplace    : Boolean = false
+    private var replacedWith: String? = null
+    private var doReplace: Boolean = false
 
     /**
      * Registers a listener for receiving service broadcast for video operation status
@@ -177,14 +177,14 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         val count = supportFragmentManager.backStackEntryCount
         Log.d(TAG, "onBackPressed: stack count $count")
         var isAlreadyPresent = false
-        for(entry in 0 until count){
-            if(supportFragmentManager.getBackStackEntryAt(entry).name == tag) {
+        for (entry in 0 until count) {
+            if (supportFragmentManager.getBackStackEntryAt(entry).name == tag) {
                 isAlreadyPresent = true
                 break
             }
         }
 
-        if(!isAlreadyPresent) {
+        if (!isAlreadyPresent) {
             ft.replace(R.id.mainFragment, fragment!!, tag)
 
             if (addToBackStack/* || fragment is FragmentGalleryNew*/) {
@@ -203,7 +203,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         val myFragment = supportFragmentManager.findFragmentById(R.id.mainFragment)
         val count = supportFragmentManager.backStackEntryCount
         Log.d(TAG, "onBackPressed: stack count $count")
-        for(entry in 0 until count)
+        for (entry in 0 until count)
             Log.d(TAG, "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}")
 
         if (count == 0) {
@@ -279,8 +279,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             } else 0
             snip_duration = snipDuration.toDouble()
             total_video_duration = totalDuration
-            vid_creation_date = System.currentTimeMillis()
-            event_id = AppClass.getAppInstance().lastEventId
+            if (parentChanged && parentSnip != null) {  //  if we are coming from edit
+                vid_creation_date = parentSnip!!.vid_creation_date
+                event_id = parentSnip!!.event_id
+            } else {
+                vid_creation_date = System.currentTimeMillis()
+                event_id = AppClass.getAppInstance().lastEventId
+            }
             has_virtual_versions = (if (AppClass.getAppInstance().snipDurations.size > 0) 1 else 0)
             videoFilePath = snipFilePath
         }
@@ -321,7 +326,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
             }
 
-            if(parentChanged)   //  resetting the parent changed flag if it was set, since at this point it must have been consumed
+            if (parentChanged)   //  resetting the parent changed flag if it was set, since at this point it must have been consumed
                 parentChanged = false
 
 //            parentSnipId = AppClass.getAppInstance().lastSnipId + 1
@@ -453,7 +458,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      */
     private fun videoTrimCompleted(processedVideoPath: String) {
         Log.d(TAG, "$processedVideoPath Completed")
-        CoroutineScope(IO).launch {
+        CoroutineScope(IO).launch { //  todo: check if this was from right swipe
             val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
             addSnip(processedVideoPath, duration, duration)
         }
@@ -493,7 +498,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
         val swipeClipDuration = videoModeFragment.swipeValue / 1000
         if (VideoMode.recordClips) {  //  concat was triggered when automatic capture was ongoing
-
+            //  merged clips to be trimmed to size
             val intentService = Intent(this, VideoService::class.java)
             val split2File = "${File(processedVideoPath).parent}/${File(processedVideoPath).nameWithoutExtension}-1.mp4"
             val task = arrayListOf(VideoOpItem(
@@ -505,7 +510,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                     outputPath = split2File))
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             VideoService.enqueueWork(this, intentService)
-
         }
     }
 
@@ -519,12 +523,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         Log.d(TAG, "videoSpeedChangeCompleted: Video Saved at $processedVideoPath")
         Toast.makeText(this, "Video Saved at $processedVideoPath", Toast.LENGTH_SHORT).show()
         val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-        if(doReplace){
+        if (doReplace) {
             /*
             * todo: find the original snip, update the durations, delete the old video, rename the new video to old video
             */
-            CoroutineScope(IO).launch{
-                if(fileToReplace.isNotNullOrEmpty() && replacedWith.equals(processedVideoPath)) {
+            CoroutineScope(IO).launch {
+                if (fileToReplace.isNotNullOrEmpty() && replacedWith.equals(processedVideoPath)) {
                     parentSnip = appRepository.getSnipByVideoPath(fileToReplace!!)
                     parentSnip?.snip_duration = duration.toDouble()
                     parentSnip?.total_video_duration = duration
@@ -537,7 +541,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                     replacedWith = null
                 }
             }
-        }else{
+        } else {
             //  IReplaceRequired.parent must be called before this point
             addSnip(processedVideoPath, duration, duration)
         }
@@ -567,14 +571,14 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 } else {
                     videoModeFragment.videoProcessing(false)
                 }
-            if(isFragmentVisible(EDIT_VIDEO_TAG))
-                if(showProgress == VideoService.STATUS_SHOW_PROGRESS){
+            if (isFragmentVisible(EDIT_VIDEO_TAG))
+                if (showProgress == VideoService.STATUS_SHOW_PROGRESS) {
 //                    (supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as VideoEditingFragment).showProgress()
-                } else{
+                } else {
 //                    (supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as VideoEditingFragment).hideProgress()
                 }
 
-            if(processedVideoPath.isNullOrBlank())
+            if (processedVideoPath.isNullOrBlank())
                 return
 
             when (intent.getIntExtra("status", VideoService.STATUS_NO_VALUE)) {

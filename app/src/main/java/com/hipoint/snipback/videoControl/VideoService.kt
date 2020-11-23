@@ -35,8 +35,8 @@ class VideoService : JobIntentService(), IVideoOpListener {
         val STATUS_SHOW_PROGRESS = 3
         val STATUS_HIDE_PROGRESS = 4
 
+        var isProcessing = false
         private var workQueue: Queue<VideoOpItem> = LinkedList()
-        private var isProcessing = false
 
         fun enqueueWork(context: Context, work: Intent) {
             enqueueWork(context, VideoService::class.java, 10, work)

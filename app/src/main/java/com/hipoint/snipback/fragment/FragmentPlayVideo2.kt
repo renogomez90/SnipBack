@@ -233,7 +233,9 @@ class FragmentPlayVideo2 : Fragment() {
                 }
             }
         })
-        getVideoPreviewFrames()
+        
+        if(!VideoService.isProcessing)  //  in case we are coming from video editing there is a chance for crash
+            getVideoPreviewFrames()
     }
 
     private fun bindViews() {

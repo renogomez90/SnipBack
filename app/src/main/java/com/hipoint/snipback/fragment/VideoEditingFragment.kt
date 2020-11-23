@@ -40,6 +40,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
+import com.hipoint.snipback.RangeSeekbarCustom
 import com.hipoint.snipback.adapter.EditChangeListAdapter
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.dialog.ProcessingDialog
@@ -137,7 +138,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     private var editSeekAction     = EditSeekControl.MOVE_NORMAL
 
     private var tmpSpeedDetails: SpeedDetails? = null
-    private var uiRangeSegments: ArrayList<CrystalRangeSeekbar>? = null
+    private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
 
     private var restrictList: List<SpeedDetails>? = null    //  speed details to prevent users from selecting an existing edit
 
@@ -475,7 +476,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 uiRangeSegments = arrayListOf()
 
             if (segmentCount > uiRangeSegments?.size ?: 0) {
-                uiRangeSegments?.add(CrystalRangeSeekbar(requireContext()))
+                uiRangeSegments?.add(RangeSeekbarCustom(requireContext()))
             }
         }
 
@@ -496,7 +497,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 uiRangeSegments = arrayListOf()
 
             if (segmentCount > uiRangeSegments?.size ?: 0) {
-                uiRangeSegments?.add(CrystalRangeSeekbar(requireContext()))
+                uiRangeSegments?.add(RangeSeekbarCustom(requireContext()))
             }
         }
 
@@ -607,7 +608,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
         if (uiRangeSegments == null) {
             uiRangeSegments = arrayListOf()
-            uiRangeSegments?.add(CrystalRangeSeekbar(requireContext()))
+            uiRangeSegments?.add(RangeSeekbarCustom(requireContext()))
             val layoutParam = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
             uiRangeSegments?.last()?.layoutParams = layoutParam
         }
@@ -617,9 +618,9 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                     if (speedDetailSet.sortedWith(Comparator { s1, s2 ->
                                 (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
                             }).toList().last().isFast)
-                        resources.getColor(android.R.color.holo_blue_dark, context?.theme)
+                        resources.getColor(R.color.blueOverlay, context?.theme)
                     else
-                        resources.getColor(android.R.color.holo_green_dark, context?.theme)
+                        resources.getColor(R.color.greenOverlay, context?.theme)
                 } else
                     resources.getColor(android.R.color.transparent, context?.theme)
 
@@ -642,13 +643,15 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             setRightThumbColor(colour)
             setLeftThumbBitmap(leftThumbImageDrawable)
             setRightThumbBitmap(rightThumbImageDrawable)
+            setLeftThumbHighlightBitmap(leftThumbImageDrawable)
+            setRightThumbHighlightBitmap(rightThumbImageDrawable)
             setMinValue(0F)
             setMaxValue(100F)
-            setMinStartValue(startValue)?.apply()
+            setMinStartValue(startValue).apply()
             setGap(endValue - startValue)
-            setMaxStartValue(endValue)?.apply()
+            setMaxStartValue(endValue).apply()
 
-            setOnTouchListener { view, motionEvent -> true }
+            setOnTouchListener { _, _ -> true }
         }
     }
 
@@ -912,20 +915,20 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 if (isChangeAccepted) { //  Edit is present
                     val currentPosition = player.currentPosition
                     speedDetailList.forEach {
-                        if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second) {
+                         if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second) {
                             if (it.isFast) {
-                                val overlayColour = resources.getColor(android.R.color.holo_blue_dark, requireContext().theme)
+                                val overlayColour = resources.getColor(R.color.blueOverlay, requireContext().theme)
                                 if (!colourOverlay.isShown) {
                                     colourOverlay.visibility = View.VISIBLE
-                                    colourOverlay.setBackgroundColor(overlayColour)
                                 }
+                                colourOverlay.setBackgroundColor(overlayColour)
                                 player.setPlaybackParameters(PlaybackParameters(it.multiplier.toFloat()))
                             } else {
-                                val overlayColour = resources.getColor(android.R.color.holo_green_dark, requireContext().theme)
+                                val overlayColour = resources.getColor(R.color.greenOverlay, requireContext().theme)
                                 if (!colourOverlay.isShown) {
                                     colourOverlay.visibility = View.VISIBLE
-                                    colourOverlay.setBackgroundColor(overlayColour)
                                 }
+                                colourOverlay.setBackgroundColor(overlayColour)
                                 player.setPlaybackParameters(PlaybackParameters(1 / it.multiplier.toFloat()))
                             }
 
