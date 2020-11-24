@@ -77,11 +77,11 @@ class CameraControl(val activity: FragmentActivity) {
     private var stopPressed   = false      //  to know if the user has actively ended recording, todo: this can be removed once a better handing is in place
     private var recordClips   = true       //  to check if short clips should be recorded
     
-    private var hdSnips             : Hd_snips?    = null
-    private var mSensorOrientation  : Int?         = null
-    private var outputFilePath      : String?      = null
-    private var lastUserRecordedPath: String?      = null
-    private var clipQueue           : Queue<File>? = null
+    private var chosenCProfile      : CamcorderProfile? = null
+    private var mSensorOrientation  : Int?              = null
+    private var outputFilePath      : String?           = null
+    private var lastUserRecordedPath: String?           = null
+    private var clipQueue           : Queue<File>?      = null
 
     //two finger pinch zoom
     private var finger_spacing = 0f
@@ -320,6 +320,7 @@ class CameraControl(val activity: FragmentActivity) {
      */
     internal fun closeToSwitchCamera() {
         isBackFacingRequired = !isBackFacingRequired
+        chosenCProfile = null
         closeCamera()
     }
 
@@ -472,6 +473,7 @@ class CameraControl(val activity: FragmentActivity) {
         } catch (e: IllegalStateException) {
             e.printStackTrace()
         }
+        outputFilePath = outputMediaFile!!.absolutePath
 
         val rotation = activity.windowManager?.defaultDisplay?.rotation
         when (mSensorOrientation) {
@@ -481,34 +483,23 @@ class CameraControl(val activity: FragmentActivity) {
         mMediaRecorder!!.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            //        if (outputFilePath == null || outputFilePath.isEmpty()) {
-            outputFilePath = outputMediaFile!!.absolutePath
-            //        }
-            setOutputFile(outputFilePath)
             if (recordClips) {    //  so that the actual recording is not affected by clip duration.
                 setMaxDuration(clipDuration.toInt())
             } else {
                 setMaxDuration(0)
             }
-            //        CamcorderProfile profile = CamcorderProfile.get(CamcorderProfile.QUALITY_480P);
             val profile = chooseCamcorderProfile()
-            setVideoFrameRate(profile.videoFrameRate)
-            setVideoSize(profile.videoFrameWidth, profile.videoFrameHeight)
-            setVideoEncodingBitRate(profile.videoBitRate)
-            setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setAudioEncodingBitRate(profile.audioBitRate)
-            setAudioSamplingRate(profile.audioSampleRate)
+            setProfile(profile)
             setInputSurface(persistentSurface)
+            setOutputFile(outputFilePath)
 
-            setOnInfoListener { mr, what, _ ->
+            setOnInfoListener { _, what, _ ->
                 if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED && recordClips) {
                     try {
                         restartRecording()
                     } catch (e: IllegalStateException) {
                         e.printStackTrace()
-                        //  attempt to reopent the camera
+                        //  attempt to reopen the camera
                         closeCamera()
                         if (mTextureView!!.isAvailable) {
                             openCamera(mTextureView!!.width, mTextureView!!.height)
@@ -568,6 +559,7 @@ class CameraControl(val activity: FragmentActivity) {
         try {
 //            closePreviewSession();
             setUpMediaRecorder()
+
             val texture = mTextureView!!.surfaceTexture!!
             texture.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
             mPreviewBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
@@ -582,7 +574,7 @@ class CameraControl(val activity: FragmentActivity) {
 //            val recorderSurface = mMediaRecorder!!.surface
             surfaces.add(persistentSurface)
             mPreviewBuilder!!.addTarget(persistentSurface)
-
+            val startRecTime = System.currentTimeMillis()
             // Start a capture session
             // Once the session starts, we can update the UI and start recording
             mCameraDevice!!.createCaptureSession(surfaces, object : CameraCaptureSession.StateCallback() {
@@ -603,8 +595,10 @@ class CameraControl(val activity: FragmentActivity) {
                     mIsRecordingVideo = true
                     val vmFrag = activity.supportFragmentManager.findFragmentByTag(AppMainActivity.VIDEO_MODE_TAG)
                     if (vmFrag != null) {
-                        if ((vmFrag as VideoMode).isVisible)
+                        if ((vmFrag as VideoMode).isVisible) {
                             mMediaRecorder!!.start()
+                            Log.d(TAG, "setUpMediaRecorder start time = ${System.currentTimeMillis() - startRecTime}")
+                        }
                     }
                 }
 
@@ -678,6 +672,9 @@ class CameraControl(val activity: FragmentActivity) {
      * @return CamcorderProfile
      */
     private fun chooseCamcorderProfile(): CamcorderProfile {
+        if(chosenCProfile!=null)
+            return chosenCProfile!!
+
         val cameraProfiles = ArrayList<Int>()
         val candidateProfiles = ArrayList<CamcorderProfile>()
         cameraProfiles.add(CamcorderProfile.QUALITY_2160P)
@@ -693,7 +690,8 @@ class CameraControl(val activity: FragmentActivity) {
         }
         val comparator = Comparator<CamcorderProfile?> { p1, p2 -> if (p1 != null && p2 != null) p2.videoFrameWidth * p2.videoFrameHeight - p1.videoFrameWidth * p1.videoFrameHeight else 0 }
         candidateProfiles.sortWith(comparator)
-        return if (candidateProfiles.size != 0) candidateProfiles[0] else CamcorderProfile.get(CamcorderProfile.QUALITY_LOW)
+        chosenCProfile = if (candidateProfiles.size != 0) candidateProfiles[0] else CamcorderProfile.get(CamcorderProfile.QUALITY_LOW)
+        return chosenCProfile!!
     }
 
     private fun closePreviewSession() {
@@ -716,7 +714,7 @@ class CameraControl(val activity: FragmentActivity) {
         
         // Stop recording
         mMediaRecorder!!.stop()
-        mMediaRecorder!!.reset()
+//        mMediaRecorder!!.reset()
         lastUserRecordedPath = outputFilePath
 
         val retriever = MediaMetadataRetriever()

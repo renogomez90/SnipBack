@@ -49,6 +49,7 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import kotlinx.android.synthetic.main.fragment_gallery.*
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -229,6 +230,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         return rootView
     }
 
+    override fun onDestroyView() {  //  so that clutter is removed
+        while(cameraControl?.clipQueueSize()?:0 > 0){
+            cameraControl?.removeClipQueueItem()!!.delete()
+        }
+        super.onDestroyView()
+    }
+
     private fun setupCameraControl() {
         if(cameraControl == null)
             cameraControl = CameraControl(requireActivity())
@@ -382,12 +390,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 updateFlags(recordClips = recordClips, recordPressed = true, stopPressed = false)
                 userRecordDuration = 0
 //                startRecordingVideo()
-                with(cameraControl!!){
+                with(cameraControl!!) {
                     if (isRecordingVideo() && isRecordingClips()) {
                         try {
                             restartRecording()
                         } catch (e: IllegalStateException) {
                             //  attempt to reopen the camera
+                            Log.e(TAG, "Forcing camera restart")
                             closeCamera()
                             if (mTextureView.isAvailable) {
                                 openCamera(mTextureView.width, mTextureView.height)
@@ -695,6 +704,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 restartRecording()
             } catch (e: IllegalStateException) {
                 //  attempt to reopen the camera
+                Log.e(TAG, "Forcing camera restart")
                 closeCamera()
                 if (mTextureView.isAvailable) {
                     openCamera(mTextureView.width, mTextureView.height)
