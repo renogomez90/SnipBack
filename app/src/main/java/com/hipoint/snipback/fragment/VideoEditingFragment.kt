@@ -832,10 +832,10 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                         // only the starting point is being manipulated
                         // prevent the user from seeking beyond the fixed start point
 
-                        if (newSeekPosition > endingTimestamps && endingTimestamps != 0L) {
+                        if (newSeekPosition >= endingTimestamps && endingTimestamps != 0L) {
                             newSeekPosition = endingTimestamps
                         }
-                        if (newSeekPosition < lower) {
+                        if (newSeekPosition <= lower) {
                             newSeekPosition = lower
                             seekBar.hideScrubber()
                             isSeekbarShown = false
@@ -986,39 +986,74 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     }
 
     private fun nearestExistingLowerTS(current: Long): Long {
+        if(restrictList.isNullOrEmpty()){
+            return 0L
+        }
+
         var lower = current
+        val diff = arrayListOf<Long>()
         restrictList?.forEach {
-            if (it.timeDuration!!.first < lower || it.timeDuration!!.second < lower) {
+            val one = it.timeDuration!!.first - current
+            val two = it.timeDuration!!.second - current
+            if(one < 0)
+                diff.add(one)
+            if(two < 0)
+                diff.add(two)
+            /*if (it.timeDuration!!.first < lower || it.timeDuration!!.second < lower) {
                 lower = if (lower - it.timeDuration!!.first < lower - it.timeDuration!!.second) {  //  value closer to current
                     it.timeDuration!!.first
                 } else {
                     it.timeDuration!!.second
                 }
-            }
+            }*/
         }
 
-        return if (lower == current)
+        if(diff.isEmpty()){
+            return 0
+        }else {
+            diff.sortDescending()
+            return current + diff[0]   //   + because the value is already negative
+        }
+        /*return if (lower == current)
             0L
         else
-            lower
+            lower*/
     }
 
     private fun nearestExistingHigherTS(current: Long): Long {
+        if(restrictList.isNullOrEmpty()){
+            return player.duration
+        }
+
         var higher = current
+        val diff = arrayListOf<Long>()
         restrictList?.forEach {
+            val one = it.timeDuration!!.first - current
+            val two = it.timeDuration!!.second - current
+
+            if(one > 0)
+                diff.add(one)
+            if(two > 0)
+                diff.add(two)
+            /*
             if (it.timeDuration!!.first > higher || it.timeDuration!!.second > higher) {
-                higher = if (it.timeDuration!!.first - higher < it.timeDuration!!.second - higher) {  //  value closer to current
+                higher = if (it.timeDuration!!.first - current < it.timeDuration!!.second - current) {  //  value closer to current
                     it.timeDuration!!.first
                 } else {
                     it.timeDuration!!.second
                 }
-            }
+            }*/
         }
-
-        return if (higher == current)
+        if(diff.isEmpty()){
+            return player.duration
+        }else {
+            diff.sort()
+            return diff[0] + current
+        }
+        /*return if (higher == current)
             player.duration
         else
-            higher
+            higher*/
     }
 
     /**
