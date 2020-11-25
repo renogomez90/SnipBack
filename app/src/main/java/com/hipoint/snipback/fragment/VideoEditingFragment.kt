@@ -137,6 +137,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     private var segmentCount       = 0
     private var editAction         = EditAction.NORMAL
     private var editSeekAction     = EditSeekControl.MOVE_NORMAL
+    private var currentEditSegment = -1
 
     private var tmpSpeedDetails: SpeedDetails? = null
     private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
@@ -327,8 +328,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                 speedDetailSet.add(tmpSpeedDetails!!)
 
                 setupRangeMarker(startValue, startValue)    //  initial value for marker
-                if (timebarHolder.indexOfChild(uiRangeSegments!!.last()) < 0)  //  View doesn't exist and can be added
-                    timebarHolder.addView(uiRangeSegments!!.last())
+                if (timebarHolder.indexOfChild(uiRangeSegments!![currentEditSegment]) < 0)  //  View doesn't exist and can be added
+                    timebarHolder.addView(uiRangeSegments!![currentEditSegment])
             }
             acceptRejectHolder.visibility = View.VISIBLE
         }
@@ -448,6 +449,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             isEditOnGoing = false
 
             segmentCount -= 1
+            currentEditSegment -= 1
             startRangeUI()
             resetPlaybackUI()
 
@@ -495,6 +497,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             setupForEdit()
             editAction = EditAction.SLOW
             segmentCount += 1   //  a new segment is active
+            currentEditSegment += 1
 
             if (uiRangeSegments == null)
                 uiRangeSegments = arrayListOf()
@@ -516,6 +519,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             setupForEdit()
             editAction = EditAction.FAST
             segmentCount += 1   //  a new segment is active
+            currentEditSegment += 1
 
             if (uiRangeSegments == null)
                 uiRangeSegments = arrayListOf()
@@ -659,14 +663,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             uiRangeSegments = arrayListOf()
             uiRangeSegments?.add(RangeSeekbarCustom(requireContext()))
             val layoutParam = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            uiRangeSegments?.last()?.layoutParams = layoutParam
+            uiRangeSegments!![currentEditSegment].layoutParams = layoutParam
         }
 
         val colour =
                 if (!speedDetailSet.isNullOrEmpty()) {
                     if (speedDetailSet.sortedWith { s1, s2 ->
                                 (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
-                            }.toList().last().isFast)
+                            }.toList()[currentEditSegment].isFast)
                         resources.getColor(R.color.blueOverlay, context?.theme)
                     else
                         resources.getColor(R.color.greenOverlay, context?.theme)
@@ -681,7 +685,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
 
-        uiRangeSegments?.last()?.apply {
+        uiRangeSegments!![currentEditSegment].apply {
             minimumHeight = height
             elevation = 1F
             setPadding(padding, 0, padding, 0)
@@ -704,13 +708,24 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
 
 
     private fun fixRangeMarker(startValue: Float, endValue: Float) {
+        val colour =
+                if (!speedDetailSet.isNullOrEmpty()) {
+                    if (speedDetailSet.sortedWith { s1, s2 ->
+                                (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
+                            }.toList()[currentEditSegment].isFast)
+                        resources.getColor(R.color.blueOverlay, context?.theme)
+                    else
+                        resources.getColor(R.color.greenOverlay, context?.theme)
+                } else
+                    resources.getColor(android.R.color.transparent, context?.theme)
+
         val thumbDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb_transparent, context?.theme) as VectorDrawable,
                 resources.getColor(android.R.color.transparent, context?.theme))
 
         val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
 
-        uiRangeSegments?.last()?.apply {
+        uiRangeSegments!![currentEditSegment].apply {
             minimumHeight = height
             elevation = 1F
             setPadding(padding, 0, padding, 0)
@@ -718,10 +733,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             setBackgroundResource(R.drawable.range_background)
             setLeftThumbBitmap(thumbDrawable)
             setRightThumbBitmap(thumbDrawable)
+            setBarHighlightColor(colour)
             setMinValue(0F)
             setMaxValue(100F)
             setMinStartValue(startValue).apply()
-//            setGap(endValue - startValue)
             setMaxStartValue(endValue).apply()
 
             setOnTouchListener { _, _ -> true }
@@ -831,7 +846,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         saveDialog!!.show(requireActivity().supportFragmentManager, SAVE_DIALOG)
     }
 
-    private fun showDialogdelete() {
+    private fun showDialogDelete() {
         val dialog = Dialog(requireActivity())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
@@ -904,7 +919,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                         if (newSeekPosition > higher)
                             newSeekPosition = higher
 
-                        uiRangeSegments?.last()?.setMaxStartValue((newSeekPosition * 100 / player.duration).toFloat())?.apply()
+                        uiRangeSegments!![currentEditSegment].setMaxStartValue((newSeekPosition * 100 / player.duration).toFloat()).apply()
                     }
                     EditSeekControl.MOVE_START -> {
                         // only the starting point is being manipulated
@@ -912,20 +927,21 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
 
                         if (newSeekPosition >= endingTimestamps && endingTimestamps != 0L) {
                             newSeekPosition = endingTimestamps
-                        }
-                        if (newSeekPosition <= lower) {
-                            newSeekPosition = lower
-                            seekBar.hideScrubber()
-                            isSeekbarShown = false
                         } else {
-                            if (!isSeekbarShown) {
-                                seekBar.showScrubber()
-                                isSeekbarShown = true
+                            if (newSeekPosition <= lower) {
+                                newSeekPosition = lower
+                                seekBar.hideScrubber()
+                                isSeekbarShown = false
+                            } else {
+                                if (!isSeekbarShown) {
+                                    seekBar.showScrubber()
+                                    isSeekbarShown = true
+                                }
                             }
                         }
 
-                        uiRangeSegments?.last()?.setMinStartValue((newSeekPosition * 100 / player.duration).toFloat())?.apply()
-                        /*uiRangeSegments?.last()?.setMaxStartValue(endingTimestamps.toFloat())?.apply()*/
+                        uiRangeSegments!![currentEditSegment].setMinStartValue((newSeekPosition * 100 / player.duration).toFloat()).apply()
+//                        uiRangeSegments!![currentEditSegment].setMaxStartValue((endingTimestamps * 100 / player.duration).toFloat()).apply()
                     }
                     EditSeekControl.MOVE_NORMAL -> {
                     }
@@ -1221,16 +1237,22 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         if (tmpSpeedDetails != null) {
             progressTracker.removeSpeedDetails(tmpSpeedDetails!!)
             val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)
+            speedDetailSet.remove(tmpSpeedDetails)
             timebarHolder.removeView(ref)
             tmpSpeedDetails = null
             segmentCount -= 1
         }
 
-        /*startingTimestamps = speedDetails.timeDuration!!.first
-        endingTimestamps = speedDetails.timeDuration!!.second
-        player.setPlaybackParameters(PlaybackParameters(speedDetails.multiplier.toFloat()))*/
+        tmpSpeedDetails = speedDetails
 
+        player.setPlaybackParameters(PlaybackParameters(speedDetails.multiplier.toFloat()))
+        currentEditSegment = position
         player.seekTo(speedDetails.timeDuration!!.first)
+        start.performClick()
+        startingTimestamps = speedDetails.timeDuration!!.first
+        endingTimestamps = speedDetails.timeDuration!!.second
+        editAction = if(speedDetails.isFast) EditAction.FAST else EditAction.SLOW
+        acceptRejectHolder.visibility = View.VISIBLE
     }
 
     fun confirmExitOnBackPressed(){
