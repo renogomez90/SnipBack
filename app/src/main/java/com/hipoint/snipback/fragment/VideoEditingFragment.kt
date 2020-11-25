@@ -344,10 +344,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         }
 
         back.setOnClickListener {
-            if(speedDetailSet.isNotEmpty()) //  todo: should work for all edits not just speed change
-                showDialogConfirmation()
-            else
-                requireActivity().supportFragmentManager.popBackStack()
+            confirmExitOnBackPressed()
         }
 
         back1.setOnClickListener {
@@ -409,6 +406,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             val endValue = (endingTimestamps * 100 / player.duration).toFloat()
 
             setupRangeMarker(startValue, endValue)
+            fixRangeMarker(startValue, endValue)
             startRangeUI()
             resetPlaybackUI()
 
@@ -694,8 +692,32 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             setRightThumbColor(colour)
             setLeftThumbBitmap(leftThumbImageDrawable)
             setRightThumbBitmap(rightThumbImageDrawable)
-            setLeftThumbHighlightBitmap(leftThumbImageDrawable)
-            setRightThumbHighlightBitmap(rightThumbImageDrawable)
+            setMinValue(0F)
+            setMaxValue(100F)
+            setMinStartValue(startValue).apply()
+//            setGap(endValue - startValue)
+            setMaxStartValue(endValue).apply()
+
+            setOnTouchListener { _, _ -> true }
+        }
+    }
+
+
+    private fun fixRangeMarker(startValue: Float, endValue: Float) {
+        val thumbDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb_transparent, context?.theme) as VectorDrawable,
+                resources.getColor(android.R.color.transparent, context?.theme))
+
+        val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
+        val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
+
+        uiRangeSegments?.last()?.apply {
+            minimumHeight = height
+            elevation = 1F
+            setPadding(padding, 0, padding, 0)
+            setBarColor(resources.getColor(android.R.color.transparent, context?.theme))
+            setBackgroundResource(R.drawable.range_background)
+            setLeftThumbBitmap(thumbDrawable)
+            setRightThumbBitmap(thumbDrawable)
             setMinValue(0F)
             setMaxValue(100F)
             setMinStartValue(startValue).apply()
@@ -1209,6 +1231,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         player.setPlaybackParameters(PlaybackParameters(speedDetails.multiplier.toFloat()))*/
 
         player.seekTo(speedDetails.timeDuration!!.first)
+    }
+
+    fun confirmExitOnBackPressed(){
+        if(speedDetailSet.isNotEmpty()) //  todo: should work for all edits not just speed change
+            showDialogConfirmation()
+        else
+            requireActivity().supportFragmentManager.popBackStack()
     }
 }
 
