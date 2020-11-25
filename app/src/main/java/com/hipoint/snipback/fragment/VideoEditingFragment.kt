@@ -19,7 +19,6 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.crystal.crystalrangeseekbar.widgets.CrystalRangeSeekbar
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.ExoPlaybackException
@@ -65,6 +64,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.Comparator
+import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -84,6 +84,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     private lateinit var reject            : ImageView         //  closing the ongoing edit
     private lateinit var playCon1          : LinearLayout
     private lateinit var playCon2          : LinearLayout
+    private lateinit var acceptRejectHolder: LinearLayout
     private lateinit var speedIndicator    : TextView
     private lateinit var extentTextBtn     : TextView          //  extend or trim the video
     private lateinit var cutTextBtn        : TextView
@@ -160,6 +161,10 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         }
     }
 
+    private val speedDetailsComparator = Comparator<SpeedDetails> { s1, s2 ->
+        (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
+    }
+
     private fun showThumbnailsIfAvailable(previewThumbs: File) {
         if (previewThumbs.exists()) {
             val thumbList = previewThumbs.listFiles()
@@ -221,6 +226,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             playCon            = findViewById(R.id.play_con)
             playCon1           = findViewById(R.id.play_con1)
             playCon2           = findViewById(R.id.play_con2)
+            acceptRejectHolder = findViewById(R.id.accept_reject_holder)
             speedIndicator     = findViewById(R.id.speed_indicator)
             extentTextBtn      = findViewById(R.id.extent_text)
             cutTextBtn         = findViewById(R.id.cut_text_btn)
@@ -294,6 +300,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 //  this means the end point was already set
                 //  the user wishes to move the starting point only
                 endingTimestamps = player.currentPosition
+                acceptRejectHolder.visibility = View.VISIBLE
             }
         }
 
@@ -322,6 +329,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 if (timebarHolder.indexOfChild(uiRangeSegments!!.last()) < 0)  //  View doesn't exist and can be added
                     timebarHolder.addView(uiRangeSegments!!.last())
             }
+            acceptRejectHolder.visibility = View.VISIBLE
         }
 
         extentTextBtn.setOnClickListener {
@@ -344,6 +352,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         back1.setOnClickListener {
             speedIndicator.visibility = View.GONE
             playCon1.visibility       = View.GONE
+            changeList.visibility     = View.GONE
             playCon2.visibility       = View.VISIBLE
             reject.performClick()
         }
@@ -402,6 +411,13 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             restrictList = speedDetailSet.sortedWith { s1, s2 ->
                 (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
             }.toList()
+
+            if(editListAdapter == null) {
+                setupEditList()
+            }else{
+                updateEditList()
+            }
+            changeList.visibility = View.GONE   //  todo: animate changelist in and out on visibility change
         }
 
         /**
@@ -517,10 +533,12 @@ class VideoEditingFragment : Fragment(), ISaveListener {
      * resets the UI to playback the video inclusive of any edits made
      */
     private fun resetPlaybackUI() {
-        speedIndicator.visibility = View.GONE
-        playCon1.visibility       = View.GONE
-        playCon2.visibility       = View.VISIBLE
-        editAction                = EditAction.NORMAL
+        speedIndicator.visibility     = View.GONE
+        playCon1.visibility           = View.GONE
+        changeList.visibility         = View.GONE
+        acceptRejectHolder.visibility = View.INVISIBLE
+        playCon2.visibility           = View.VISIBLE
+        editAction                    = EditAction.NORMAL
 
         player.seekTo(0)
         seekBar.showScrubber()
@@ -529,9 +547,27 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         blockEditOptions(false)
     }
 
-    private fun showEditList(){
-        changeList.visibility = View.VISIBLE
-        editListAdapter = EditChangeListAdapter(requireContext(), arrayListOf())
+    /**
+     * shows the edits as a clickable list
+     */
+    private fun setupEditList(){
+        val editList  = arrayListOf<SpeedDetails>()
+        editList.addAll(speedDetailSet.toMutableList().sortedWith(speedDetailsComparator))
+        editListAdapter = EditChangeListAdapter(requireContext(), editList)
+        changeList.adapter = editListAdapter
+        changeList.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        Log.d(TAG, "setupEditList: list created")
+    }
+
+    /**
+     * Updates the edits list
+     */
+    private fun updateEditList(){
+        if(changeList.visibility != View.VISIBLE)
+            changeList.visibility = View.VISIBLE
+
+        editListAdapter?.updateList(speedDetailSet.toMutableList().sortedWith(speedDetailsComparator))
+        Log.d(TAG, "updateEditList: list updated")
     }
 
     /**
@@ -548,6 +584,10 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         editSeekAction     = EditSeekControl.MOVE_START
         startingTimestamps = -1L
         endingTimestamps   = player.duration
+
+        if(editListAdapter != null){    //  already some edit was saved here
+            changeList.visibility = View.VISIBLE
+        }
     }
 
     private fun blockEditOptions(shouldBlock: Boolean) {
@@ -744,7 +784,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         initSwipeControls()
     }
 
-    protected fun showDialogConfirmation() {
+    private fun showDialogConfirmation() {
         if(exitConfirmation == null){
             exitConfirmation = ExitEditConfirmationDialog(this@VideoEditingFragment)
         }
@@ -757,14 +797,14 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         dialog.show()*/
     }
 
-    protected fun showDialogSave() {
+    private fun showDialogSave() {
         if(saveDialog == null)
             saveDialog = SaveEditDialog(this@VideoEditingFragment)
 
         saveDialog!!.show(requireActivity().supportFragmentManager, SAVE_DIALOG)
     }
 
-    protected fun showDialogdelete() {
+    private fun showDialogdelete() {
         val dialog = Dialog(requireActivity())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
@@ -974,9 +1014,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         fun setSpeedDetails(speedDetails: ArrayList<SpeedDetails>) {
 //            speedDetailList.addAll(speedDetails)
             speedDetailList = speedDetails
-            speedDetailList.sortWith(Comparator { s1, s2 ->
-                (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
-            })
+            speedDetailList.sortWith(speedDetailsComparator)
         }
 
         fun removeSpeedDetails(speedDetail: SpeedDetails): Boolean {

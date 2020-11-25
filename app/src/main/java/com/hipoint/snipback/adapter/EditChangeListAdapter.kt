@@ -1,19 +1,23 @@
 package com.hipoint.snipback.adapter
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.exozet.android.core.extensions.notificationManager
 import com.hipoint.snipback.R
 import com.hipoint.snipback.enums.UserEditType
+import com.hipoint.snipback.videoControl.SpeedDetails
 
-class EditChangeListAdapter(val context: Context, val editList: ArrayList<UserEditType>) : RecyclerView.Adapter<EditChangeListAdapter.PreviewTileVH>() {
+class EditChangeListAdapter(val context: Context, val editList: ArrayList<SpeedDetails>) : RecyclerView.Adapter<EditChangeListAdapter.PreviewTileVH>() {
 
-
+    private var currentEditList = editList
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PreviewTileVH {
         val view = LayoutInflater.from(context).inflate(R.layout.adapter_edit_list_item, parent, false)
@@ -29,10 +33,12 @@ class EditChangeListAdapter(val context: Context, val editList: ArrayList<UserEd
     }
 
     override fun onBindViewHolder(holder: PreviewTileVH, position: Int) {
-        when(editList[position]){
-            UserEditType.SPEED_UP,
-            UserEditType.SLOW_DOWN -> {
+        /*when(editList[position]){
+            UserEditType.SPEED_UP -> {
                 Glide.with(context).load(R.drawable.speed).into(holder.previewTile)
+            }
+            UserEditType.SLOW_DOWN -> {
+                Glide.with(context).load(R.drawable.ic_slow).into(holder.previewTile)
             }
             UserEditType.EXTEND -> {
                 Glide.with(context).load(R.drawable.ic_extend).into(holder.previewTile)
@@ -43,7 +49,28 @@ class EditChangeListAdapter(val context: Context, val editList: ArrayList<UserEd
             UserEditType.HIGHLIGHT -> {
                 Glide.with(context).load(R.drawable.ic_highlight).into(holder.previewTile)
             }
+        }*/
+
+        holder.previewTile.tag = position
+
+        holder.previewTile.setOnClickListener {
+            Toast.makeText(context, "${currentEditList[it.tag as Int].timeDuration!!.first}," +
+                    " ${currentEditList[it.tag as Int].timeDuration!!.second}", Toast.LENGTH_SHORT).show()
         }
+
+        if(editList[position].isFast){
+            holder.previewTile.backgroundTintList = ColorStateList.valueOf(context.getColor(R.color.blue))
+            Glide.with(context).load(R.drawable.speed).into(holder.previewTile)
+        }else{
+            holder.previewTile.backgroundTintList = ColorStateList.valueOf(context.getColor(R.color.green))
+            Glide.with(context).load(R.drawable.ic_slow).into(holder.previewTile)
+        }
+    }
+
+    fun updateList(newList: List<SpeedDetails>){
+        currentEditList.clear()
+        currentEditList.addAll(newList)
+        notifyDataSetChanged()
     }
 
     class PreviewTileVH(view: View) : RecyclerView.ViewHolder(view) {
