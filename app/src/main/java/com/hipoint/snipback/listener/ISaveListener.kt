@@ -18,4 +18,9 @@ interface ISaveListener {
      * cancels the save action
      * */
     fun cancel()
+
+    /**
+     * exit the current screen/fragment
+     * */
+    fun exit()
 }

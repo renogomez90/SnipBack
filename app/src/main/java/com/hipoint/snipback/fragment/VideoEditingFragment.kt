@@ -11,10 +11,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
+import android.view.*
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -43,6 +40,7 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
 import com.hipoint.snipback.adapter.EditChangeListAdapter
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
+import com.hipoint.snipback.dialog.ExitEditConfirmationDialog
 import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.dialog.SaveEditDialog
 import com.hipoint.snipback.enums.EditAction
@@ -71,10 +69,11 @@ import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 class VideoEditingFragment : Fragment(), ISaveListener {
-    private val TAG               = VideoEditingFragment::class.java.simpleName
-    private val SAVE_DIALOG       = "dialog_save"
-    private val PROCESSING_DIALOG = "dialog_processing"
-    private val retries           = 3
+    private val TAG                 = VideoEditingFragment::class.java.simpleName
+    private val SAVE_DIALOG         = "dialog_save"
+    private val EXIT_CONFIRM_DIALOG = "dialog_exit_confirm"
+    private val PROCESSING_DIALOG   = "dialog_processing"
+    private val retries             = 3
 
     //    UI
     private lateinit var rootView          : View
@@ -147,6 +146,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
     //  dialogs
     private var saveDialog: SaveEditDialog? = null
+    private var exitConfirmation: ExitEditConfirmationDialog? = null
     private var processingDialog: ProcessingDialog? = null
 
     private var thumbnailExtractionStarted:Boolean = false
@@ -334,12 +334,18 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             playCon2.visibility = View.GONE
         }
 
-        back.setOnClickListener { showDialogConfirmation() }
+        back.setOnClickListener {
+            if(speedDetailSet.isNotEmpty()) //  todo: should work for all edits not just speed change
+                showDialogConfirmation()
+            else
+                requireActivity().supportFragmentManager.popBackStack()
+        }
 
         back1.setOnClickListener {
             speedIndicator.visibility = View.GONE
             playCon1.visibility       = View.GONE
             playCon2.visibility       = View.VISIBLE
+            reject.performClick()
         }
 
         save.setOnClickListener {
@@ -615,9 +621,9 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
         val colour =
                 if (!speedDetailSet.isNullOrEmpty()) {
-                    if (speedDetailSet.sortedWith(Comparator { s1, s2 ->
+                    if (speedDetailSet.sortedWith { s1, s2 ->
                                 (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
-                            }).toList().last().isFast)
+                            }.toList().last().isFast)
                         resources.getColor(R.color.blueOverlay, context?.theme)
                     else
                         resources.getColor(R.color.greenOverlay, context?.theme)
@@ -648,7 +654,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             setMinValue(0F)
             setMaxValue(100F)
             setMinStartValue(startValue).apply()
-            setGap(endValue - startValue)
+//            setGap(endValue - startValue)
             setMaxStartValue(endValue).apply()
 
             setOnTouchListener { _, _ -> true }
@@ -739,11 +745,16 @@ class VideoEditingFragment : Fragment(), ISaveListener {
     }
 
     protected fun showDialogConfirmation() {
-        val dialog = Dialog(requireActivity())
+        if(exitConfirmation == null){
+            exitConfirmation = ExitEditConfirmationDialog(this@VideoEditingFragment)
+        }
+        exitConfirmation!!.show(requireActivity().supportFragmentManager, EXIT_CONFIRM_DIALOG)
+
+        /*val dialog = Dialog(requireActivity())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
         dialog.setContentView(R.layout.warningdialog_savevideodiscardchanges)
-        dialog.show()
+        dialog.show()*/
     }
 
     protected fun showDialogSave() {
@@ -805,9 +816,9 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                     (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
                 }.toList()
             }
+
             higher = nearestExistingHigherTS(player.currentPosition)
             lower = nearestExistingLowerTS(player.currentPosition)
-
 
             if (isEditOnGoing && !uiRangeSegments.isNullOrEmpty()) {
                 if (isSeekbarShown && editSeekAction == EditSeekControl.MOVE_END) {
@@ -847,12 +858,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                         }
 
                         uiRangeSegments?.last()?.setMinStartValue((newSeekPosition * 100 / player.duration).toFloat())?.apply()
-                        /*uiRangeSegments?.last()?.setMaxStartValue(
-                                if(endingTimestamps == player.duration)
-                                    (newSeekPosition * 100 / player.duration).toFloat()
-                                else
-                                    endingTimestamps.toFloat()
-                        )?.apply()*/
+                        /*uiRangeSegments?.last()?.setMaxStartValue(endingTimestamps.toFloat())?.apply()*/
                     }
                     EditSeekControl.MOVE_NORMAL -> {
                     }
@@ -990,7 +996,6 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             return 0L
         }
 
-        var lower = current
         val diff = arrayListOf<Long>()
         restrictList?.forEach {
             val one = it.timeDuration!!.first - current
@@ -1008,11 +1013,11 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             }*/
         }
 
-        if(diff.isEmpty()){
-            return 0
+        return if(diff.isEmpty()){
+            0
         }else {
             diff.sortDescending()
-            return current + diff[0]   //   + because the value is already negative
+            current + diff[0]   //   + because the value is already negative
         }
         /*return if (lower == current)
             0L
@@ -1025,7 +1030,6 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             return player.duration
         }
 
-        var higher = current
         val diff = arrayListOf<Long>()
         restrictList?.forEach {
             val one = it.timeDuration!!.first - current
@@ -1044,11 +1048,11 @@ class VideoEditingFragment : Fragment(), ISaveListener {
                 }
             }*/
         }
-        if(diff.isEmpty()){
-            return player.duration
+        return if(diff.isEmpty()){
+            player.duration
         }else {
             diff.sort()
-            return diff[0] + current
+            diff[0] + current
         }
         /*return if (higher == current)
             player.duration
@@ -1124,6 +1128,15 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         saveDialog?.dismiss()
     }
 
+    /**
+    * exit from this fragment
+    * */
+    override fun exit() {
+        exitConfirmation?.dismiss()
+        reject.performClick()
+        requireActivity().supportFragmentManager.popBackStack()
+    }
+
     fun showProgress(){
         if(processingDialog == null)
             processingDialog = ProcessingDialog()
@@ -1134,3 +1147,33 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         processingDialog?.dismiss()
     }
 }
+
+/*
+for smooth seeking? todo: give this a shot
+* private static final int RENDERER_COUNT = 1;
+    private static final int BUFFER_SEGMENT_SIZE = 64 * 1024;
+    private static final int BUFFER_SEGMENT_COUNT = 64; // default 256
+.....
+
+        // 1. Instantiate the player. RENDERER_COUNT is the number of renderers to be used.
+        // In this case it’s 1 since we will only use a video renderer. If you need audio and video renderers it should be 2.
+        mExoPlayer = ExoPlayer.Factory.newInstance(RENDERER_COUNT, 0, 0); //disable the buffer and rebuffer for better performance
+
+        // 2. Construct renderer.
+        Uri uri = Uri.parse(mVideoPath);
+        Allocator allocator = new DefaultAllocator(BUFFER_SEGMENT_SIZE);
+        String userAgent = Util.getUserAgent(this, "Android Demo");
+        DataSource dataSource = new DefaultUriDataSource(this, null, userAgent);
+        ExtractorSampleSource sampleSource = new ExtractorSampleSource(uri, dataSource, allocator, BUFFER_SEGMENT_COUNT * BUFFER_SEGMENT_SIZE);
+        MediaCodecVideoTrackRenderer videoRenderer = new MediaCodecVideoTrackRenderer(
+                this, sampleSource, MediaCodecSelector.DEFAULT, MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT);
+
+        // 3. Inject the renderer through prepare.
+        mExoPlayer.prepare(videoRenderer);
+
+        // 4. Pass the surface to the video renderer.
+        mExoPlayer.sendMessage(videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, holder.getSurface());
+
+        // 5. Start playback.
+        mExoPlayer.seekTo(currentVideoPosition);
+* */
