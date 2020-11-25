@@ -44,6 +44,7 @@ import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.dialog.SaveEditDialog
 import com.hipoint.snipback.enums.EditAction
 import com.hipoint.snipback.enums.EditSeekControl
+import com.hipoint.snipback.listener.IJumpToEditPoint
 import com.hipoint.snipback.listener.IReplaceRequired
 import com.hipoint.snipback.listener.ISaveListener
 import com.hipoint.snipback.listener.IVideoOpListener
@@ -68,7 +69,7 @@ import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-class VideoEditingFragment : Fragment(), ISaveListener {
+class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     private val TAG                 = VideoEditingFragment::class.java.simpleName
     private val SAVE_DIALOG         = "dialog_save"
     private val EXIT_CONFIRM_DIALOG = "dialog_exit_confirm"
@@ -354,7 +355,10 @@ class VideoEditingFragment : Fragment(), ISaveListener {
             playCon1.visibility       = View.GONE
             changeList.visibility     = View.GONE
             playCon2.visibility       = View.VISIBLE
-            reject.performClick()
+//            reject.performClick()
+
+            startRangeUI()
+            resetPlaybackUI()
         }
 
         save.setOnClickListener {
@@ -554,6 +558,7 @@ class VideoEditingFragment : Fragment(), ISaveListener {
         val editList  = arrayListOf<SpeedDetails>()
         editList.addAll(speedDetailSet.toMutableList().sortedWith(speedDetailsComparator))
         editListAdapter = EditChangeListAdapter(requireContext(), editList)
+        editListAdapter?.setEditPressListener(this@VideoEditingFragment)
         changeList.adapter = editListAdapter
         changeList.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         Log.d(TAG, "setupEditList: list created")
@@ -1183,6 +1188,27 @@ class VideoEditingFragment : Fragment(), ISaveListener {
 
     fun hideProgress(){
         processingDialog?.dismiss()
+    }
+
+    /**
+     * if there were any ongoing edits stop it
+     * move the cursor to the starting point of the edit segment with start selected.
+     * */
+    override fun editPoint(position: Int, speedDetails: SpeedDetails) {
+
+        if (tmpSpeedDetails != null) {
+            progressTracker.removeSpeedDetails(tmpSpeedDetails!!)
+            val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)
+            timebarHolder.removeView(ref)
+            tmpSpeedDetails = null
+            segmentCount -= 1
+        }
+
+        /*startingTimestamps = speedDetails.timeDuration!!.first
+        endingTimestamps = speedDetails.timeDuration!!.second
+        player.setPlaybackParameters(PlaybackParameters(speedDetails.multiplier.toFloat()))*/
+
+        player.seekTo(speedDetails.timeDuration!!.first)
     }
 }
 
