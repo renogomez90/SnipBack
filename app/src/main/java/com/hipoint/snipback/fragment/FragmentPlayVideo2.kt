@@ -20,6 +20,7 @@ import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.extensions.onClick
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.ExoPlaybackException
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.ClippingMediaSource
@@ -193,11 +194,11 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun initSetup() {
-        defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
+        /*defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
         dataSourceFactory = DefaultDataSourceFactory(activity,
                 Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
 
-        mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))
+        mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))*/
 
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
@@ -206,9 +207,13 @@ class FragmentPlayVideo2 : Fragment() {
         if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
             val clippingMediaSource = ClippingMediaSource(mediaSource, TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()), TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong()))
             seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
-            player.prepare(clippingMediaSource)
+//            player.prepare(clippingMediaSource)
+            player.addMediaSource(clippingMediaSource)
+            player.prepare()
         } else {
-            player.prepare(mediaSource)
+//            player.prepare(mediaSource)
+            player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
+            player.prepare()
         }
 
         player.repeatMode = Player.REPEAT_MODE_OFF

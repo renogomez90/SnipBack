@@ -600,6 +600,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                         IVideoOpListener.VideoOp.FRAMES.name -> {
                             videoPreviewFramesCompleted(processedVideoPath)
                         }
+                        IVideoOpListener.VideoOp.KEY_FRAMES.name -> {
+                            videoFramesAdded(processedVideoPath)
+                        }
                         else -> {
                         }
                     }
@@ -611,6 +614,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 }
             }
         }
+    }
+
+    private fun videoFramesAdded(processedVideoPath: String) {
+        val intent = Intent("frames_added")
+        sendBroadcast(intent)
     }
 
     /**

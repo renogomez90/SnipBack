@@ -83,7 +83,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         retriever.release()
 
         val tmpFile = createFileList(clip1, clip2)
-        val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -c copy -threads 4 -y -b:v 1M $outputPath"
+        val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -g 3 -c copy -threads 4 -y -b:v 1M $outputPath"
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
         try {
@@ -147,6 +147,27 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }
     }
 
+    suspend fun addIDRFrame(clip:File, outputFolder: String){
+
+//        val cmd = "-i ${clip.absolutePath} -c:v libx264 -profile:v baseline -level 3.0 -x264opts keyint=5:min-keyint=5 -g 10 -movflags +faststart+rtphint -maxrate:v 4000k -bufsize:v 4500k -preset ultrafast -threads 4 -y $outputFolder/out.mp4"
+        val cmd = "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=3:min-keyint=3 -g 3 -preset ultrafast -threads 4 -y $outputFolder/out.mp4"
+        EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+            override fun onSuccess() {
+                //mv $outputFolder/out.mp4 ava_${clip.absolutePath}
+                File("$outputFolder/out.mp4").renameTo(clip)
+                opListener.changed(IVideoOpListener.VideoOp.KEY_FRAMES, clip.absolutePath)
+            }
+
+            override fun onFailure() {
+                opListener.failed(IVideoOpListener.VideoOp.KEY_FRAMES)
+            }
+
+            override fun onProgress(progress: Float) {
+            }
+        })
+
+    }
+
     suspend fun splitVideo(clip: File, splitTime: Int, outputFolder: String) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip.absolutePath)
@@ -157,7 +178,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (splitTime > duration)
             throw IllegalArgumentException("splitTime must be within video duration")
 
-        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -c copy -reset_timestamps 1 -map 0 -threads 4 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
+        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -g 3 -c copy -reset_timestamps 1 -map 0 -threads 4 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
 
         Log.d(TAG, "splitVideo: cmd= $cmd")
 
@@ -205,7 +226,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 "[v1][a1][v2][a2][v3][a3]concat=n=3:v=1:a=1 " +
                 "-preset superfast -profile:v baseline $outputPath"*/
 
-        val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -preset ultrafast -shortest -threads 4 -y $outputPath"
+        val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -g 3 -preset ultrafast -shortest -threads 4 -y $outputPath"
 
         Log.d(TAG, "changeSpeed: cmd = $cmd")
 

@@ -17,6 +17,7 @@ import com.hipoint.snipback.listener.IVideoOpListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
+import okhttp3.internal.lockAndWaitNanos
 import java.io.File
 import java.util.*
 
@@ -137,6 +138,16 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             CoroutineScope(IO).launch {
                                 VideoUtils(this@VideoService).getThumbnails(File(clip1), outputPath)
                                 return@launch
+                            }
+                        }
+                    }
+                    IVideoOpListener.VideoOp.KEY_FRAMES -> {
+                        if(outputPath.isBlank() || clip1.isBlank()){
+                            failed(IVideoOpListener.VideoOp.KEY_FRAMES)
+                            return@with
+                        }else{
+                            CoroutineScope(IO).launch {
+                                VideoUtils(this@VideoService).addIDRFrame(File(clip1), outputPath)
                             }
                         }
                     }

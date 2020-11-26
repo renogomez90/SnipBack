@@ -7,11 +7,15 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
+import android.media.MediaCodec
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.Window
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -21,19 +25,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
-import com.google.android.exoplayer2.ExoPlaybackException
-import com.google.android.exoplayer2.PlaybackParameters
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.mediacodec.MediaCodecSelector
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.*
 import com.google.android.exoplayer2.util.Util
+import com.google.android.exoplayer2.MediaItem
+import com.google.android.exoplayer2.util.MimeTypes
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
@@ -65,7 +67,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.Comparator
-import kotlin.collections.ArrayList
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -109,9 +111,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     //    Exoplayer
     private lateinit var playerView           : PlayerView
     private lateinit var player               : SimpleExoPlayer
-    private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
+    /*private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
     private lateinit var dataSourceFactory    : DataSource.Factory
-    private lateinit var mediaSource          : MediaSource
+    private lateinit var mediaSource          : MediaSource*/
 
     //    Snip
     private var snip: Snip? = null
@@ -127,6 +129,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     //  speed change
     var isSpeedChanged = false
     var isEditOnGoing  = false
+    var isEditExisting  = false
     var isSeekbarShown = true
 
     private var currentSpeed       = 3
@@ -163,6 +166,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         }
     }
 
+    private val frameAddedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            setupPlayer()
+        }
+    }
+
     private val speedDetailsComparator = Comparator<SpeedDetails> { s1, s2 ->
         (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
     }
@@ -193,22 +202,34 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         bindViews()
         bindListeners()
         setupPlayer()
-
+        /*
+        val addFrameIntent = Intent(requireContext(), VideoService::class.java)
+        val task = arrayListOf<VideoOpItem>()
+        task.add(VideoOpItem(
+                operation = IVideoOpListener.VideoOp.KEY_FRAMES,
+                clip1 = snip!!.videoFilePath,
+                clip2 = "",
+                outputPath = File(snip!!.videoFilePath).parent!!))
+        addFrameIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+        VideoService.enqueueWork(requireContext(), addFrameIntent)
+        */
         return rootView
     }
 
     override fun onResume() {
         super.onResume()
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
+        requireActivity().registerReceiver(frameAddedReceiver, IntentFilter("frames_added"))
     }
 
     override fun onPause() {
         requireActivity().unregisterReceiver(previewTileReceiver)
+        requireActivity().unregisterReceiver(frameAddedReceiver)
         super.onPause()
     }
 
     override fun onDestroy() {
-        if (this::player.isInitialized)
+        if (this::player.isInitialized) {
             player.apply {
                 playWhenReady = false
                 stop(true)
@@ -216,6 +237,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                 release()
             }
 
+            subscriptions.dispose()
+        }
         super.onDestroy()
     }
 
@@ -316,21 +339,30 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             val currentPosition = player.currentPosition
             editSeekAction = EditSeekControl.MOVE_END
 
-            if (checkSegmentTaken(currentPosition))   // checking to see if the start positions is acceptable
-                return@setOnClickListener
+            if(!isEditExisting) {
+                if (checkSegmentTaken(currentPosition))   // checking to see if the start positions is acceptable
+                    return@setOnClickListener
+            }
+
             Log.d(TAG, "end clicked : starting time stamp = $startingTimestamps, current position = $currentPosition")
-            if (startingTimestamps != currentPosition) {
+//            if (startingTimestamps != currentPosition) {
                 startingTimestamps = currentPosition  //    take the starting point when end is pressed
                 val startValue = (startingTimestamps * 100 / player.duration).toFloat()
-
-                speedDuration = Pair(startingTimestamps, startingTimestamps)    //  we only have the starting position now
+                var endValue = startValue
+                speedDuration = if(isEditExisting) {
+                    player.seekTo(endingTimestamps)
+                    endValue = (endingTimestamps * 100 / player.duration).toFloat()
+                    Pair(startingTimestamps, endingTimestamps)  //  we may have come from edit
+                }else {
+                    Pair(startingTimestamps, startingTimestamps)    //  we only have the starting position now
+                }
                 tmpSpeedDetails = SpeedDetails(editAction == EditAction.FAST, currentSpeed, speedDuration)
                 speedDetailSet.add(tmpSpeedDetails!!)
 
-                setupRangeMarker(startValue, startValue)    //  initial value for marker
+                setupRangeMarker(startValue, endValue)    //  initial value for marker
                 if (timebarHolder.indexOfChild(uiRangeSegments!![currentEditSegment]) < 0)  //  View doesn't exist and can be added
                     timebarHolder.addView(uiRangeSegments!![currentEditSegment])
-            }
+//            }
             acceptRejectHolder.visibility = View.VISIBLE
         }
 
@@ -353,10 +385,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             playCon1.visibility       = View.GONE
             changeList.visibility     = View.GONE
             playCon2.visibility       = View.VISIBLE
-//            reject.performClick()
 
             startRangeUI()
             resetPlaybackUI()
+            isEditOnGoing = false
+            isEditExisting = false
         }
 
         save.setOnClickListener {
@@ -652,7 +685,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     }
 
     /**
-     * Sets up the crystal range marker for displaying the selected ranges.
+     * Sets up the range marker for displaying the selected ranges.
      *
      * creates a rangeSeekBar with parameters based on @param startValue and @param endValue
      * and the details present in the speedDetails sorted set
@@ -666,24 +699,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             uiRangeSegments!![currentEditSegment].layoutParams = layoutParam
         }
 
-        val colour =
-                if (!speedDetailSet.isNullOrEmpty()) {
-                    if (speedDetailSet.sortedWith { s1, s2 ->
-                                (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
-                            }.toList()[currentEditSegment].isFast)
-                        resources.getColor(R.color.blueOverlay, context?.theme)
-                    else
-                        resources.getColor(R.color.greenOverlay, context?.theme)
-                } else
-                    resources.getColor(android.R.color.transparent, context?.theme)
+        val (colour, height, padding) = setupCommonRangeUiElements()
 
         val leftThumbImageDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb, context?.theme) as VectorDrawable,
                 resources.getColor(android.R.color.holo_green_dark, context?.theme))
         val rightThumbImageDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb, context?.theme) as VectorDrawable,
                 resources.getColor(android.R.color.holo_red_light, context?.theme))
 
-        val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
-        val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
 
         uiRangeSegments!![currentEditSegment].apply {
             minimumHeight = height
@@ -706,24 +728,17 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         }
     }
 
-
+    /**
+     * Sets up the final UI for the range marker once editing is done
+     *
+     * @param startValue Float
+     * @param endValue Float
+     */
     private fun fixRangeMarker(startValue: Float, endValue: Float) {
-        val colour =
-                if (!speedDetailSet.isNullOrEmpty()) {
-                    if (speedDetailSet.sortedWith { s1, s2 ->
-                                (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
-                            }.toList()[currentEditSegment].isFast)
-                        resources.getColor(R.color.blueOverlay, context?.theme)
-                    else
-                        resources.getColor(R.color.greenOverlay, context?.theme)
-                } else
-                    resources.getColor(android.R.color.transparent, context?.theme)
+        val (colour, height, padding) = setupCommonRangeUiElements()
 
         val thumbDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb_transparent, context?.theme) as VectorDrawable,
                 resources.getColor(android.R.color.transparent, context?.theme))
-
-        val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
-        val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
 
         uiRangeSegments!![currentEditSegment].apply {
             minimumHeight = height
@@ -741,6 +756,26 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
 
             setOnTouchListener { _, _ -> true }
         }
+    }
+
+    /**
+     * Sets up the common ui parameters for range bar
+     * */
+    private fun setupCommonRangeUiElements(): Triple<Int, Int, Int> {
+        val colour =
+                if (!speedDetailSet.isNullOrEmpty()) {
+                    if (speedDetailSet.sortedWith { s1, s2 ->
+                                (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
+                            }.toList()[currentEditSegment].isFast)
+                        resources.getColor(R.color.blueOverlay, context?.theme)
+                    else
+                        resources.getColor(R.color.greenOverlay, context?.theme)
+                } else
+                    resources.getColor(android.R.color.transparent, context?.theme)
+
+        val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
+        val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
+        return Triple(colour, height, padding)
     }
 
     private fun changeSpeedText(): CharSequence? {
@@ -783,16 +818,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             showThumbnailsIfAvailable(File("$parentFilePath/previewThumbs/"))
         }
 
-        defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
-        dataSourceFactory = DefaultDataSourceFactory(activity,
-                Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
-
-        mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(videoUri)
+        val mediaItem = MediaItem.fromUri(videoUri)
 
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
-        player.prepare(mediaSource)
+        player.setMediaItem(mediaItem)
+        player.prepare()
         player.repeatMode = Player.REPEAT_MODE_OFF
+        player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -976,7 +1009,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     }
 
     companion object {
-        val PREVIEW_ACTION = "com.hipoint.snipback.previewTile"
+        const val PREVIEW_ACTION = "com.hipoint.snipback.previewTile"
         private var tries = 0
         var fragment: VideoEditingFragment? = null
 
@@ -1085,13 +1118,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                 diff.add(one)
             if(two < 0)
                 diff.add(two)
-            /*if (it.timeDuration!!.first < lower || it.timeDuration!!.second < lower) {
-                lower = if (lower - it.timeDuration!!.first < lower - it.timeDuration!!.second) {  //  value closer to current
-                    it.timeDuration!!.first
-                } else {
-                    it.timeDuration!!.second
-                }
-            }*/
         }
 
         return if(diff.isEmpty()){
@@ -1100,10 +1126,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             diff.sortDescending()
             current + diff[0]   //   + because the value is already negative
         }
-        /*return if (lower == current)
-            0L
-        else
-            lower*/
     }
 
     private fun nearestExistingHigherTS(current: Long): Long {
@@ -1120,14 +1142,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                 diff.add(one)
             if(two > 0)
                 diff.add(two)
-            /*
-            if (it.timeDuration!!.first > higher || it.timeDuration!!.second > higher) {
-                higher = if (it.timeDuration!!.first - current < it.timeDuration!!.second - current) {  //  value closer to current
-                    it.timeDuration!!.first
-                } else {
-                    it.timeDuration!!.second
-                }
-            }*/
         }
         return if(diff.isEmpty()){
             player.duration
@@ -1135,10 +1149,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             diff.sort()
             diff[0] + current
         }
-        /*return if (higher == current)
-            player.duration
-        else
-            higher*/
     }
 
     /**
@@ -1213,6 +1223,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     * exit from this fragment
     * */
     override fun exit() {
+        isEditExisting = false
         exitConfirmation?.dismiss()
         reject.performClick()
         requireActivity().supportFragmentManager.popBackStack()
@@ -1233,11 +1244,17 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
      * move the cursor to the starting point of the edit segment with start selected.
      * */
     override fun editPoint(position: Int, speedDetails: SpeedDetails) {
-
-        if (tmpSpeedDetails != null) {
+        isEditExisting = true
+        /*if (tmpSpeedDetails != null ) {
             progressTracker.removeSpeedDetails(tmpSpeedDetails!!)
-            val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)
+            val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)    //  this needs to be called outside after checking size same as speedDetails
             speedDetailSet.remove(tmpSpeedDetails)
+            timebarHolder.removeView(ref)
+            tmpSpeedDetails = null
+            segmentCount -= 1
+        }*/
+        if(uiRangeSegments?.size!! > speedDetailSet.size){
+            val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)    //  this needs to be called outside after checking size same as speedDetails
             timebarHolder.removeView(ref)
             tmpSpeedDetails = null
             segmentCount -= 1
@@ -1258,8 +1275,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     fun confirmExitOnBackPressed(){
         if(speedDetailSet.isNotEmpty()) //  todo: should work for all edits not just speed change
             showDialogConfirmation()
-        else
+        else {
+            isEditExisting = false
             requireActivity().supportFragmentManager.popBackStack()
+        }
     }
 }
 
