@@ -8,10 +8,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.os.Environment
 import android.util.Log
-import android.view.KeyEvent
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -19,10 +16,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.extensions.onClick
 import com.exozet.android.core.ui.custom.SwipeDistanceView
-import com.google.android.exoplayer2.ExoPlaybackException
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -100,6 +94,49 @@ class FragmentPlayVideo2 : Fragment() {
     private var snip: Snip? = null
     private var paused = false
     private var thumbnailExtractionStarted = false
+
+    /**
+     * To dynamically change the seek parameters so that seek appears to be more responsive
+     */
+    private val gestureDetector by lazy {
+        GestureDetector(requireContext(), object : GestureDetector.OnGestureListener {
+            override fun onDown(e: MotionEvent?): Boolean {
+                return false
+            }
+
+            override fun onShowPress(e: MotionEvent?) {
+            }
+
+            override fun onSingleTapUp(e: MotionEvent?): Boolean {
+                return false
+            }
+
+            override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+                if (e1 != null && e2 != null) {
+                    val speed = (distanceX / (e2.eventTime - e1.eventTime)).absoluteValue
+                    if ((speed * 100) < 1.0F) {  // slow
+                        if (player.seekParameters != SeekParameters.EXACT) {
+                            player.setSeekParameters(SeekParameters.EXACT)
+                        }
+                    } else { //  fast
+                        if (player.seekParameters != SeekParameters.CLOSEST_SYNC) {
+                            player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                        }
+                    }
+
+                }
+                return false
+            }
+
+            override fun onLongPress(e: MotionEvent?) {
+            }
+
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
+                return false
+            }
+        })
+    }
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false)
@@ -217,6 +254,7 @@ class FragmentPlayVideo2 : Fragment() {
         }
 
         player.repeatMode = Player.REPEAT_MODE_OFF
+        player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
         player.playWhenReady = true
         playerView.controllerShowTimeoutMs = 2000
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -346,8 +384,11 @@ class FragmentPlayVideo2 : Fragment() {
                 }, { Log.e(TAG, "${it.message}") })
                 .addTo(subscriptions)
 
-        swipeDetector.onScroll { percentX, _ ->
+        swipeDetector.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+        }
 
+        swipeDetector.onScroll { percentX, _ ->
             val duration = player.duration
 
             val maxPercent = 0.75f

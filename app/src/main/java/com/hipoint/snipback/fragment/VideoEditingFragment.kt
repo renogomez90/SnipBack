@@ -7,15 +7,11 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
-import android.media.MediaCodec
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
+import android.view.*
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -26,16 +22,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.mediacodec.MediaCodecSelector
-import com.google.android.exoplayer2.source.MediaSource
-import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.*
-import com.google.android.exoplayer2.util.Util
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.util.MimeTypes
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
@@ -67,7 +56,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.Comparator
-import kotlin.math.max
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -111,9 +100,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     //    Exoplayer
     private lateinit var playerView           : PlayerView
     private lateinit var player               : SimpleExoPlayer
-    /*private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
-    private lateinit var dataSourceFactory    : DataSource.Factory
-    private lateinit var mediaSource          : MediaSource*/
 
     //    Snip
     private var snip: Snip? = null
@@ -170,6 +156,48 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         override fun onReceive(context: Context?, intent: Intent?) {
             setupPlayer()
         }
+    }
+
+    /**
+     * To dynamically change the seek parameters so that seek appears to be more responsive
+     */
+    private val gestureDetector by lazy {
+        GestureDetector(requireContext(), object : GestureDetector.OnGestureListener {
+            override fun onDown(e: MotionEvent?): Boolean {
+                return false
+            }
+
+            override fun onShowPress(e: MotionEvent?) {
+            }
+
+            override fun onSingleTapUp(e: MotionEvent?): Boolean {
+                return false
+            }
+
+            override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+                if (e1 != null && e2 != null) {
+                    val speed = (distanceX / (e2.eventTime - e1.eventTime)).absoluteValue
+                    if ((speed * 100) < 1.0F) {  // slow
+                        if (player.seekParameters != SeekParameters.EXACT) {
+                            player.setSeekParameters(SeekParameters.EXACT)
+                        }
+                    } else { //  fast
+                        if (player.seekParameters != SeekParameters.CLOSEST_SYNC) {
+                            player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                        }
+                    }
+
+                }
+                return false
+            }
+
+            override fun onLongPress(e: MotionEvent?) {
+            }
+
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
+                return false
+            }
+        })
     }
 
     private val speedDetailsComparator = Comparator<SpeedDetails> { s1, s2 ->
@@ -915,6 +943,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                     Log.v(TAG, "seekTo=${it.first} isSeeking=${it.second}")
                 }, { Log.e(TAG, "${it.message}") })
                 .addTo(subscriptions)
+
+        swipeDetector.setOnTouchListener { _, event ->
+            gestureDetector.onTouchEvent(event)
+        }
 
         swipeDetector.onScroll { percentX, _ ->
             // left swipe is positive, right is negative
