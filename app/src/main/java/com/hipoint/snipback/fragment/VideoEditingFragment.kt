@@ -146,6 +146,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     private var exitConfirmation: ExitEditConfirmationDialog? = null
     private var processingDialog: ProcessingDialog?           = null
 
+    private var saveAction: SaveActionType = SaveActionType.CANCEL
     private var thumbnailExtractionStarted:Boolean = false
 
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -157,9 +158,27 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         }
     }
 
-    private val frameAddedReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+    private val toRealCompletionReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            setupPlayer()
+            intent?.let{
+                val realVideoPath = intent.getStringExtra("video_path")
+                when(saveAction){
+                    SaveActionType.SAVE, /*-> {    //  for virtual versions there is no overwritting, it has to be a new file
+
+                        val (clip, outputName) = createSpeedChangedVideo(realVideoPath)
+                        replaceRequired.replace(clip.absolutePath, "${clip.parent}/$outputName")
+                        Toast.makeText(requireContext(), "Saving Edits", Toast.LENGTH_SHORT).show()
+
+
+                    }   */
+                    SaveActionType.SAVE_AS -> {
+                        val (clip, outputName) = createSpeedChangedVideo(realVideoPath!!)
+                        (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
+                        Toast.makeText(requireContext(), "Saving Edits", Toast.LENGTH_SHORT).show()
+                    }
+                    else ->{}
+                }
+            }
         }
     }
 
@@ -252,12 +271,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     override fun onResume() {
         super.onResume()
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
-        requireActivity().registerReceiver(frameAddedReceiver, IntentFilter("frames_added"))
+        requireActivity().registerReceiver(toRealCompletionReceiver, IntentFilter(VIRTUAL_TO_REAL_ACTION))
     }
 
     override fun onPause() {
         requireActivity().unregisterReceiver(previewTileReceiver)
-        requireActivity().unregisterReceiver(frameAddedReceiver)
+        requireActivity().unregisterReceiver(toRealCompletionReceiver)
         super.onPause()
     }
 
@@ -1062,6 +1081,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
 
     companion object {
         const val PREVIEW_ACTION = "com.hipoint.snipback.previewTile"
+        const val VIRTUAL_TO_REAL_ACTION = "com.hipoint.snipback.virtualToReal"
         private var tries = 0
         var fragment: VideoEditingFragment? = null
 
@@ -1223,35 +1243,68 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
      * saves as a new file
      * */
     override fun saveAs() {
+        saveAction = SaveActionType.SAVE_AS
         saveDialog?.dismiss()
         showProgress()
         //  show in gallery
         Log.d(TAG, "saveAs: will save as child of snip id = ${snip!!.snip_id}")
         replaceRequired.parent(snip!!.snip_id)
 
-        val (clip, outputName) = createSpeedChangedVideo()
-        (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
-        Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+        if(snip!!.is_virtual_version == 1){
+            (requireActivity() as AppMainActivity).setVirtualToReal(true)
+            makeVirtualReal(snip!!.start_time.toInt(), snip!!.end_time.toInt())
+        }else {
+            val (clip, outputName) = createSpeedChangedVideo()
+            (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
+            Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+        }
     }
 
     /**
      * save over existing file
      * */
     override fun save() {
+        saveAction = SaveActionType.SAVE
         saveDialog?.dismiss()
         showProgress()
-        val (clip, outputName) = createSpeedChangedVideo()
-        replaceRequired.replace(clip.absolutePath, "${clip.parent}/$outputName")
-        Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+
+        if(snip!!.is_virtual_version == 1){
+            (requireActivity() as AppMainActivity).setVirtualToReal(true)
+            makeVirtualReal(snip!!.start_time.toInt(), snip!!.end_time.toInt())
+        }else {
+            val (clip, outputName) = createSpeedChangedVideo()
+            replaceRequired.replace(clip.absolutePath, "${clip.parent}/$outputName")
+            Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * cancels the save action
+     * */
+    override fun cancel() {
+        saveAction = SaveActionType.CANCEL
+        saveDialog?.dismiss()
+    }
+
+    /**
+     * exit from this fragment
+     * */
+    override fun exit() {
+        saveAction = SaveActionType.CANCEL
+        isEditExisting = false
+        exitConfirmation?.dismiss()
+        reject.performClick()
+        requireActivity().supportFragmentManager.popBackStack()
     }
 
     /**
      * Creates a video with the required speed changes
      *
+     * @param inputPath String Defaults to "snip!!.videoFilePath" to get the current playing video path
      * @return Pair<File, String>   Pair of <Parent file, output filename>
      */
-    private fun createSpeedChangedVideo(): Pair<File, String> {
-        val clip = File(snip!!.videoFilePath)
+    private fun createSpeedChangedVideo(inputPath: String = snip!!.videoFilePath): Pair<File, String> {
+        val clip = File(inputPath)
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val outputName = "VID_$timeStamp.mp4"
         val intentService = Intent(requireContext(), VideoService::class.java)
@@ -1267,21 +1320,28 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     }
 
     /**
-     * cancels the save action
-     * */
-    override fun cancel() {
-        saveDialog?.dismiss()
+     * Trims down the original video file to the required durations,
+     * This is to be called before any edits are performed on the file.
+     *
+     * @param startTime Int
+     * @param endTime Int
+     */
+    private fun makeVirtualReal(startTime: Int, endTime: Int){
+        val clip = File(snip!!.videoFilePath)
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val outputName = "VID_$timeStamp.mp4"
+        val intentService = Intent(requireContext(), VideoService::class.java)
+        val task = arrayListOf(VideoOpItem(
+                operation = IVideoOpListener.VideoOp.TRIMMED,
+                clip1 = clip.absolutePath,
+                clip2 = "",
+                outputPath = "${clip.parent}/$outputName",
+                startTime = startTime,
+                endTime = endTime))
+        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+        VideoService.enqueueWork(requireContext(), intentService)
     }
 
-    /**
-    * exit from this fragment
-    * */
-    override fun exit() {
-        isEditExisting = false
-        exitConfirmation?.dismiss()
-        reject.performClick()
-        requireActivity().supportFragmentManager.popBackStack()
-    }
 
     fun showProgress(){
         if(processingDialog == null)
@@ -1327,5 +1387,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             isEditExisting = false
             requireActivity().supportFragmentManager.popBackStack()
         }
+    }
+
+    enum class SaveActionType{
+        SAVE, SAVE_AS, CANCEL
     }
 }

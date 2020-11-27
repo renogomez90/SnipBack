@@ -25,6 +25,7 @@ import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.fragment.FragmentGalleryNew
 import com.hipoint.snipback.fragment.FragmentPlayVideo2
 import com.hipoint.snipback.fragment.VideoEditingFragment
+import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.VIRTUAL_TO_REAL_ACTION
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IReplaceRequired
 import com.hipoint.snipback.listener.IVideoOpListener
@@ -114,6 +115,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), 50)
         }
         */
+
+        parentChanged = false
+        virtualToReal = false
     }
 
     /**
@@ -233,6 +237,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     companion object {
         private var parentChanged: Boolean = false
+        private var virtualToReal: Boolean = false  //  set this to true before trimming, so that additional operations may be applied on the new video eg. speed change
 
         const val VIDEO_MODE_TAG       = "videoMode"
         const val GALLERY_FRAGMENT_TAG = "gallery_frag"
@@ -250,6 +255,17 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             return true
         }
     }
+
+
+    /**
+     * To be set before converting a virtual snip to a real snip
+     *
+     * @param isConverting Boolean
+     */
+    fun setVirtualToReal(isConverting: Boolean){
+        virtualToReal = isConverting
+    }
+
 
     /**
      * Adds the required snip with durations to the snip DB
@@ -459,12 +475,19 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      */
     private fun videoTrimCompleted(processedVideoPath: String) {
         Log.d(TAG, "$processedVideoPath Completed")
-        CoroutineScope(IO).launch { //  todo: check if this was from right swipe
-            val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-            addSnip(processedVideoPath, duration, duration)
-        }
-        if (!swipeProcessed) {
-            videoModeFragment.processPendingSwipes()
+        if(virtualToReal){
+            virtualToReal = false
+            val virtualToRealCompletedIntent = Intent(VIRTUAL_TO_REAL_ACTION)
+            virtualToRealCompletedIntent.putExtra("video_path", processedVideoPath)
+            sendBroadcast(virtualToRealCompletedIntent)
+        }else {
+            CoroutineScope(IO).launch { //  todo: check if this was from right swipe
+                val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+                addSnip(processedVideoPath, duration, duration)
+            }
+            if (!swipeProcessed) {
+                videoModeFragment.processPendingSwipes()
+            }
         }
     }
 
@@ -543,9 +566,16 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             //  IReplaceRequired.parent must be called before this point
             addSnip(processedVideoPath, duration, duration)
         }
+        dismissEditFragmentProcessingDialog()
+    }
+
+    /**
+     * Dismisses the progress dialog in edit fragment if available
+     */
+    private fun dismissEditFragmentProcessingDialog() {
         //  If EditVideoFragment is available dismiss the processing dialog
         val editFrag = supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
-        if(editFrag != null) {
+        if (editFrag != null) {
             editFrag.hideProgress()
             supportFragmentManager.popBackStack()
         }
@@ -612,6 +642,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 }
                 VideoService.STATUS_OP_FAILED -> {
                     Log.e(TAG, "onReceive: $operation failed")
+                    dismissEditFragmentProcessingDialog()
                 }
                 else -> {
                 }
