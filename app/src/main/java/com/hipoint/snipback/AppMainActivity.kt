@@ -36,10 +36,9 @@ import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers.Main
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -192,7 +191,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             ft.replace(R.id.mainFragment, fragment!!, tag)
 
             if (addToBackStack/* || fragment is FragmentGalleryNew*/) {
-                ft.addToBackStack(null)
+                ft.addToBackStack(tag)
             }
             ft.commitAllowingStateLoss()
         }
@@ -566,18 +565,47 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             //  IReplaceRequired.parent must be called before this point
             addSnip(processedVideoPath, duration, duration)
         }
-        dismissEditFragmentProcessingDialog()
+        dismissEditFragmentProcessingDialog(processedVideoPath)
     }
 
     /**
      * Dismisses the progress dialog in edit fragment if available
      */
-    private fun dismissEditFragmentProcessingDialog() {
+    private fun dismissEditFragmentProcessingDialog(processedVideoPath: String?) {
         //  If EditVideoFragment is available dismiss the processing dialog
-        val editFrag = supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
+        val fm = supportFragmentManager
+        val editFrag = fm.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
+
         if (editFrag != null) {
             editFrag.hideProgress()
-            supportFragmentManager.popBackStack()
+
+            val playbackFragment = fm.findFragmentByTag(PLAY_VIDEO_TAG) as? FragmentPlayVideo2
+            if (playbackFragment != null) {
+                var index = fm.backStackEntryCount - 1
+
+                while(fm.getBackStackEntryAt(index).name != PLAY_VIDEO_TAG){
+                    fm.popBackStack()
+                    index--
+                }
+            }
+            fm.popBackStack()
+            //  now we are at the gallery and can play the modified video
+            if(processedVideoPath != null){
+                CoroutineScope(IO).launch {
+                    var snip: Snip? = null
+                    var tries = 0
+                    while(snip == null && tries < 5){
+                        delay(50)
+                        snip = appRepository.getSnipByVideoPath(processedVideoPath)
+                        tries++
+                    }
+                    withContext(Main) {
+                        if (snip != null) {
+                            loadFragment(FragmentPlayVideo2.newInstance(snip), true)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -642,7 +670,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 }
                 VideoService.STATUS_OP_FAILED -> {
                     Log.e(TAG, "onReceive: $operation failed")
-                    dismissEditFragmentProcessingDialog()
+                    dismissEditFragmentProcessingDialog(null)
                 }
                 else -> {
                 }

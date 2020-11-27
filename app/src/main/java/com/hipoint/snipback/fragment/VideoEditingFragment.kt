@@ -12,6 +12,10 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.view.*
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.AnimationSet
+import android.view.animation.TranslateAnimation
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
@@ -367,7 +371,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     private fun bindListeners() {
         /**
          * sets up the start position UI and increments the segmentCount indicating the number of edit segments available
-         * todo: ensure the start point is the one moving and end point if selected remains as is.
          */
         start.setOnClickListener {
             startRangeUI()
@@ -451,7 +454,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
 
         /**
          * accepts the changes to the edit that were made
-         * todo: place checks to ensure that edit is completed before the details are accepted
          * takes in the end position and updates the rangeSeekBar.
          * progress tracker is run to make sure playback is in accordance with the edit.
          * reset the UI for new edit
@@ -505,7 +507,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             }else{
                 updateEditList()
             }
-            changeList.visibility = View.GONE   //  todo: animate changelist in and out on visibility change
+
+            slideDownAnimation(changeList)
+//            changeList.visibility = View.GONE
         }
 
         /**
@@ -655,8 +659,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
      * Updates the edits list
      */
     private fun updateEditList(){
-        if(changeList.visibility != View.VISIBLE)
-            changeList.visibility = View.VISIBLE
+        if(changeList.visibility != View.VISIBLE) {
+            slideUpAnimation(changeList)
+//            changeList.visibility = View.VISIBLE
+        }
 
         editListAdapter?.updateList(speedDetailSet.toMutableList().sortedWith(speedDetailsComparator))
         Log.d(TAG, "updateEditList: list updated")
@@ -678,7 +684,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         endingTimestamps   = player.duration
 
         if(editListAdapter != null){    //  already some edit was saved here
-            changeList.visibility = View.VISIBLE
+            slideUpAnimation(changeList)
+//            changeList.visibility = View.VISIBLE
         }
     }
 
@@ -1387,6 +1394,83 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             isEditExisting = false
             requireActivity().supportFragmentManager.popBackStack()
         }
+    }
+
+    /**
+     * Slides up the passed in view
+     *
+     * @param view View
+     */
+    private fun slideUpAnimation(view: View){
+        val animation = AnimationSet(true)
+
+        val slideAnimation = TranslateAnimation(
+                0.0F,
+                0.0F,
+                0.0F,
+                view.height.toFloat())
+        slideAnimation.duration = 700
+        slideAnimation.fillAfter = true
+
+        val alphaAnimation = AlphaAnimation(0.0F, 1.0F)
+        alphaAnimation.startOffset = 500
+        alphaAnimation.duration = 200
+        alphaAnimation.fillAfter
+
+        animation.addAnimation(slideAnimation)
+        animation.addAnimation(alphaAnimation)
+        animation.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {
+                view.visibility = View.VISIBLE
+            }
+
+            override fun onAnimationEnd(animation: Animation?) {
+
+            }
+
+            override fun onAnimationRepeat(animation: Animation?) {
+
+            }
+        })
+        view.startAnimation(animation)
+    }
+
+    /**
+     * Slides down the passed in view
+     *
+     * @param view View
+     */
+    private fun slideDownAnimation(view: View){
+        val animation = AnimationSet(true)
+
+        val slideAnimation = TranslateAnimation(
+                0.0F,
+                0.0F,
+                0.0F,
+                view.height.toFloat())
+        slideAnimation.duration = 700
+        slideAnimation.fillAfter = true
+
+        val alphaAnimation = AlphaAnimation(1.0F, 0.0F)
+        alphaAnimation.duration = 200
+        alphaAnimation.fillAfter = true
+
+        animation.addAnimation(slideAnimation)
+        animation.addAnimation(alphaAnimation)
+        animation.setAnimationListener(object : Animation.AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {
+
+            }
+
+            override fun onAnimationEnd(animation: Animation?) {
+                view.visibility = View.GONE
+            }
+
+            override fun onAnimationRepeat(animation: Animation?) {
+
+            }
+        })
+        view.startAnimation(animation)
     }
 
     enum class SaveActionType{
