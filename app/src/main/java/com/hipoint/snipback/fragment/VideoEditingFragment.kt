@@ -22,9 +22,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.source.ClippingMediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
 import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
@@ -55,6 +60,7 @@ import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.Comparator
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
@@ -128,18 +134,17 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     private var editSeekAction     = EditSeekControl.MOVE_NORMAL
     private var currentEditSegment = -1
 
-    private var tmpSpeedDetails: SpeedDetails? = null
+    private var tmpSpeedDetails: SpeedDetails?                  = null
     private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
-
-    private var restrictList: List<SpeedDetails>? = null    //  speed details to prevent users from selecting an existing edit
+    private var restrictList   : List<SpeedDetails>?            = null //  speed details to prevent users from selecting an existing edit
 
     private val progressTracker: ProgressTracker by lazy { ProgressTracker(player) }
     private val replaceRequired: IReplaceRequired by lazy { requireActivity() as AppMainActivity }
 
     //  dialogs
-    private var saveDialog: SaveEditDialog? = null
+    private var saveDialog      : SaveEditDialog?             = null
     private var exitConfirmation: ExitEditConfirmationDialog? = null
-    private var processingDialog: ProcessingDialog? = null
+    private var processingDialog: ProcessingDialog?           = null
 
     private var thumbnailExtractionStarted:Boolean = false
 
@@ -850,7 +855,22 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
 
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
-        player.setMediaItem(mediaItem)
+
+        //  TODO: on saving, if the video is a virtual version, trim the original first and then apply the changes on that.
+        if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
+            val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
+            val dataSourceFactory = DefaultDataSourceFactory(requireContext(),
+                    Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
+
+            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))
+
+            val clippingMediaSource = ClippingMediaSource(mediaSource, TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()), TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong()))
+            seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
+            player.addMediaSource(clippingMediaSource)
+        } else {
+            player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
+        }
+
         player.prepare()
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
@@ -1204,6 +1224,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
      * */
     override fun saveAs() {
         saveDialog?.dismiss()
+        showProgress()
         //  show in gallery
         Log.d(TAG, "saveAs: will save as child of snip id = ${snip!!.snip_id}")
         replaceRequired.parent(snip!!.snip_id)
@@ -1218,6 +1239,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
      * */
     override fun save() {
         saveDialog?.dismiss()
+        showProgress()
         val (clip, outputName) = createSpeedChangedVideo()
         replaceRequired.replace(clip.absolutePath, "${clip.parent}/$outputName")
         Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
@@ -1264,7 +1286,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     fun showProgress(){
         if(processingDialog == null)
             processingDialog = ProcessingDialog()
-        processingDialog?.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
+        processingDialog!!.isCancelable = false
+        processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
     }
 
     fun hideProgress(){
@@ -1277,14 +1300,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
      * */
     override fun editPoint(position: Int, speedDetails: SpeedDetails) {
         isEditExisting = true
-        /*if (tmpSpeedDetails != null ) {
-            progressTracker.removeSpeedDetails(tmpSpeedDetails!!)
-            val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)    //  this needs to be called outside after checking size same as speedDetails
-            speedDetailSet.remove(tmpSpeedDetails)
-            timebarHolder.removeView(ref)
-            tmpSpeedDetails = null
-            segmentCount -= 1
-        }*/
+
         if(uiRangeSegments?.size!! > speedDetailSet.size){
             val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)    //  this needs to be called outside after checking size same as speedDetails
             timebarHolder.removeView(ref)
@@ -1313,33 +1329,3 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         }
     }
 }
-
-/*
-for smooth seeking? todo: give this a shot
-* private static final int RENDERER_COUNT = 1;
-    private static final int BUFFER_SEGMENT_SIZE = 64 * 1024;
-    private static final int BUFFER_SEGMENT_COUNT = 64; // default 256
-.....
-
-        // 1. Instantiate the player. RENDERER_COUNT is the number of renderers to be used.
-        // In this case it’s 1 since we will only use a video renderer. If you need audio and video renderers it should be 2.
-        mExoPlayer = ExoPlayer.Factory.newInstance(RENDERER_COUNT, 0, 0); //disable the buffer and rebuffer for better performance
-
-        // 2. Construct renderer.
-        Uri uri = Uri.parse(mVideoPath);
-        Allocator allocator = new DefaultAllocator(BUFFER_SEGMENT_SIZE);
-        String userAgent = Util.getUserAgent(this, "Android Demo");
-        DataSource dataSource = new DefaultUriDataSource(this, null, userAgent);
-        ExtractorSampleSource sampleSource = new ExtractorSampleSource(uri, dataSource, allocator, BUFFER_SEGMENT_COUNT * BUFFER_SEGMENT_SIZE);
-        MediaCodecVideoTrackRenderer videoRenderer = new MediaCodecVideoTrackRenderer(
-                this, sampleSource, MediaCodecSelector.DEFAULT, MediaCodec.VIDEO_SCALING_MODE_SCALE_TO_FIT);
-
-        // 3. Inject the renderer through prepare.
-        mExoPlayer.prepare(videoRenderer);
-
-        // 4. Pass the surface to the video renderer.
-        mExoPlayer.sendMessage(videoRenderer, MediaCodecVideoTrackRenderer.MSG_SET_SURFACE, holder.getSurface());
-
-        // 5. Start playback.
-        mExoPlayer.seekTo(currentVideoPosition);
-* */

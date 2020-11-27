@@ -349,10 +349,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         val interval = duration.toFloat() / 9
 
-        val cmd = if (duration >= 9)
+        val cmd = "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"
+        /*val cmd = if (duration >= 9)
             "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"
         else    //  since we may not have enough key frames to skip over
-            "-i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"
+            "-i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"*/
 
         Log.d(TAG, "getThumbnails: cmd = $cmd")
 

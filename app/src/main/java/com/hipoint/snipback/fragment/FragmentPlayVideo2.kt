@@ -231,28 +231,26 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun initSetup() {
-        /*defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
-        dataSourceFactory = DefaultDataSourceFactory(activity,
-                Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
-
-        mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))*/
 
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
 
         if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
+            defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
+            dataSourceFactory = DefaultDataSourceFactory(requireContext(),
+                    Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
+
+            mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))
+
             val clippingMediaSource = ClippingMediaSource(mediaSource, TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()), TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong()))
             seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
-//            player.prepare(clippingMediaSource)
             player.addMediaSource(clippingMediaSource)
-            player.prepare()
         } else {
-//            player.prepare(mediaSource)
             player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
-            player.prepare()
         }
 
+        player.prepare()
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
         player.playWhenReady = true

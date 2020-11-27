@@ -234,10 +234,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     companion object {
         private var parentChanged: Boolean = false
 
-        const val VIDEO_MODE_TAG = "videoMode"
+        const val VIDEO_MODE_TAG       = "videoMode"
         const val GALLERY_FRAGMENT_TAG = "gallery_frag"
-        const val PLAY_VIDEO_TAG = "play_frag"
-        const val EDIT_VIDEO_TAG = "edit_frag"
+        const val PLAY_VIDEO_TAG       = "play_frag"
+        const val EDIT_VIDEO_TAG       = "edit_frag"
 
         fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
             if (context != null) {
@@ -525,9 +525,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         Toast.makeText(this, "Video Saved at $processedVideoPath", Toast.LENGTH_SHORT).show()
         val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
         if (doReplace) {
-            /*
-            * todo: find the original snip, update the durations, delete the old video, rename the new video to old video
-            */
             CoroutineScope(IO).launch {
                 if (fileToReplace.isNotNullOrEmpty() && replacedWith.equals(processedVideoPath)) {
                     parentSnip = appRepository.getSnipByVideoPath(fileToReplace!!)
@@ -545,6 +542,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         } else {
             //  IReplaceRequired.parent must be called before this point
             addSnip(processedVideoPath, duration, duration)
+        }
+        //  If EditVideoFragment is available dismiss the processing dialog
+        val editFrag = supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
+        if(editFrag != null) {
+            editFrag.hideProgress()
+            supportFragmentManager.popBackStack()
         }
     }
 
@@ -661,6 +664,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         CoroutineScope(IO).launch {
             Log.d(TAG, "parent snip set")
             parentSnip = appRepository.getSnipById(parentSnipId)
+
+            while(parentSnip?.parent_snip_id != 0){ //  to find the top level parent
+                parentSnip = appRepository.getSnipById(parentSnip?.parent_snip_id!!)
+            }
             parentChanged = true
         }
     }
