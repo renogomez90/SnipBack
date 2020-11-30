@@ -5,9 +5,9 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class SpeedDetails(
-     val isFast      : Boolean   = false,
-     var multiplier  : Int       = 1,
-     var timeDuration: Pair<Long, Long>? = null
+        var isFast      : Boolean   = false,
+        var multiplier  : Int       = 1,
+        var timeDuration: Pair<Long, Long>? = null
 ):Parcelable{
     /**
      * Returns a string representation of the object.

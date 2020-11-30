@@ -55,6 +55,7 @@ import kotlin.math.roundToLong
 
 class FragmentPlayVideo2 : Fragment() {
     private val TAG = FragmentPlayVideo2::class.java.simpleName
+    private val VIDEO_DIRECTORY_NAME = "Snipback"
     private val retries = 3
     private var tries = 0
 
@@ -231,7 +232,6 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     private fun initSetup() {
-
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
         playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
@@ -400,7 +400,6 @@ class FragmentPlayVideo2 : Fragment() {
         }
     }
 
-    private val VIDEO_DIRECTORY_NAME = "Snipback"
     private fun validateVideo(snip: Snip?) {
         val destinationPath = snip!!.videoFilePath
         val mediaStorageDir = File(Environment.getExternalStorageDirectory(),

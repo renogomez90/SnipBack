@@ -345,6 +345,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             if (parentChanged)   //  resetting the parent changed flag if it was set, since at this point it must have been consumed
                 parentChanged = false
 
+            //  restart the video playback fragment with the modified video, if we have just arrived here from saving the edit
+            val editFrag = supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
+            if(editFrag != null &&
+                    editFrag.isVisible &&
+                    VideoEditingFragment.saveAction != VideoEditingFragment.SaveActionType.CANCEL)
+                dismissEditFragmentProcessingDialog(snip.videoFilePath)
+
 //            parentSnipId = AppClass.getAppInstance().lastSnipId + 1
         }
     }
@@ -548,6 +555,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
         if (doReplace) {
             CoroutineScope(IO).launch {
+                //  DB update is not required since we are just replacing the existing file with modified content
                 if (fileToReplace.isNotNullOrEmpty() && replacedWith.equals(processedVideoPath)) {
                     parentSnip = appRepository.getSnipByVideoPath(fileToReplace!!)
                     parentSnip?.snip_duration = duration.toDouble()
@@ -559,17 +567,21 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
                     fileToReplace = null
                     replacedWith = null
+
+                    dismissEditFragmentProcessingDialog(processedVideoPath)
                 }
             }
         } else {
-            //  IReplaceRequired.parent must be called before this point
+            //  IReplaceRequired.parent must be called before this point for proper functioning
             addSnip(processedVideoPath, duration, duration)
         }
-        dismissEditFragmentProcessingDialog(processedVideoPath)
     }
 
     /**
-     * Dismisses the progress dialog in edit fragment if available
+     * Dismisses the progress dialog in edit fragment if available,
+     * starts the FragmentPlayVideo2 with the edited video for playback
+     *
+     * @param processedVideoPath String - path of edited video to be played
      */
     private fun dismissEditFragmentProcessingDialog(processedVideoPath: String?) {
         //  If EditVideoFragment is available dismiss the processing dialog

@@ -150,7 +150,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     private var exitConfirmation: ExitEditConfirmationDialog? = null
     private var processingDialog: ProcessingDialog?           = null
 
-    private var saveAction: SaveActionType = SaveActionType.CANCEL
     private var thumbnailExtractionStarted:Boolean = false
 
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -254,6 +253,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         rootView = inflater.inflate(R.layout.video_editing_fragment_main2, container, false)
         snip = requireArguments().getParcelable("snip")
         thumbnailExtractionStarted = requireArguments().getBoolean("thumbnailExtractionStarted")
+        saveAction = SaveActionType.CANCEL
 
         bindViews()
         bindListeners()
@@ -373,6 +373,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
          * sets up the start position UI and increments the segmentCount indicating the number of edit segments available
          */
         start.setOnClickListener {
+            if(checkSegmentTaken(player.currentPosition))
+                return@setOnClickListener
+
             startRangeUI()
 
             editSeekAction = EditSeekControl.MOVE_START
@@ -389,15 +392,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
          * range indicator starts off with tmpSpeedDetails which should then be replaced with the actual details
          */
         end.setOnClickListener {
+            if(!isEditExisting) {
+                if (checkSegmentTaken(player.currentPosition))   // checking to see if the start positions is acceptable
+                    return@setOnClickListener
+            }
+
             start.setBackgroundResource(R.drawable.end_curve)
             end.setBackgroundResource(R.drawable.end_curve_red)
             val currentPosition = player.currentPosition
             editSeekAction = EditSeekControl.MOVE_END
-
-            if(!isEditExisting) {
-                if (checkSegmentTaken(currentPosition))   // checking to see if the start positions is acceptable
-                    return@setOnClickListener
-            }
 
             Log.d(TAG, "end clicked : starting time stamp = $startingTimestamps, current position = $currentPosition")
 //            if (startingTimestamps != currentPosition) {
@@ -443,6 +446,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
 
             startRangeUI()
             resetPlaybackUI()
+            if(tmpSpeedDetails != null){
+                uiRangeSegments?.removeAt(currentEditSegment)
+                tmpSpeedDetails = null
+            }
             isEditOnGoing = false
             isEditExisting = false
         }
@@ -577,50 +584,81 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         slowTextBtn.setOnClickListener {
             player.playWhenReady = false
             val currentPosition = player.currentPosition
-            speedDetailSet.forEach {
-                if (currentPosition in it.timeDuration?.first!!..it.timeDuration?.second!!) {
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
+            if(!isEditOnGoing){
+                handleNewSpeedChange(currentPosition)
+            }else{
+                //  update the currently changing section to slow
+                handleExistingSpeedChange(currentPosition, false)
             }
-            setupForEdit()
             editAction = EditAction.SLOW
-            segmentCount += 1   //  a new segment is active
-            currentEditSegment += 1
-
-            if (uiRangeSegments == null)
-                uiRangeSegments = arrayListOf()
-
-            if (segmentCount > uiRangeSegments?.size ?: 0) {
-                uiRangeSegments?.add(RangeSeekbarCustom(requireContext()))
-            }
         }
 
         speedTextBtn.setOnClickListener {
             player.playWhenReady = false
             val currentPosition = player.currentPosition
-            speedDetailSet.forEach {
-                if (currentPosition in it.timeDuration?.first!!..it.timeDuration?.second!!) {
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return@setOnClickListener
-                }
+            if(!isEditOnGoing){  //  we are editing afresh
+                handleNewSpeedChange(currentPosition)
+            }else{
+                handleExistingSpeedChange(currentPosition, true)
             }
-            setupForEdit()
             editAction = EditAction.FAST
-            segmentCount += 1   //  a new segment is active
-            currentEditSegment += 1
-
-            if (uiRangeSegments == null)
-                uiRangeSegments = arrayListOf()
-
-            if (segmentCount > uiRangeSegments?.size ?: 0) {
-                uiRangeSegments?.add(RangeSeekbarCustom(requireContext()))
-            }
         }
 
         speedIndicator.setOnClickListener {
             speedIndicator.text = changeSpeedText()
             progressTracker.setSpeed(currentSpeed.toFloat())
+        }
+    }
+
+    /**
+     * Handles changing an ongoing speed edit
+     *
+     * @param currentPosition Long
+     * @param isFast Boolean
+     */
+    private fun handleExistingSpeedChange(currentPosition: Long, isFast: Boolean) {
+        if (tmpSpeedDetails != null) {
+            speedDetailSet.remove(tmpSpeedDetails)
+            if (editSeekAction == EditSeekControl.MOVE_END &&
+                    currentPosition != player.duration) {
+                endingTimestamps = currentPosition
+            } else if (editSeekAction == EditSeekControl.MOVE_START &&
+                    currentPosition != 0L) {
+                startingTimestamps = currentPosition
+            }
+
+            tmpSpeedDetails = SpeedDetails(isFast, currentSpeed, Pair(startingTimestamps, endingTimestamps))
+            speedDetailSet.add(tmpSpeedDetails!!)
+
+    //                    uiRangeSegments?.removeAt(currentEditSegment)
+            val startValue = (startingTimestamps * 100 / player.duration).toFloat()
+            val endValue = (endingTimestamps * 100 / player.duration).toFloat()
+            setupRangeMarker(startValue, endValue)
+        }
+    }
+
+    /**
+     * speed change clicked for new edit. (Not modification of existing edit)
+     *
+     * @param currentPosition Long
+     */
+    private fun handleNewSpeedChange(currentPosition: Long) {
+        speedDetailSet.forEach {
+            if (currentPosition in it.timeDuration?.first!!..it.timeDuration?.second!!) {
+                Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                return
+            }
+        }
+
+        setupForEdit()
+        segmentCount += 1   //  a new segment is active
+        currentEditSegment += 1
+
+        if (uiRangeSegments == null)
+            uiRangeSegments = arrayListOf()
+
+        if (segmentCount > uiRangeSegments?.size ?: 0) {
+            uiRangeSegments?.add(RangeSeekbarCustom(requireContext()))
         }
     }
 
@@ -694,27 +732,27 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         extentTextBtn.isEnabled    = enable
         cutTextBtn.isEnabled       = enable
         highlightTextBtn.isEnabled = enable
-        slowTextBtn.isEnabled      = enable
-        speedTextBtn.isEnabled     = enable
+//        slowTextBtn.isEnabled      = enable
+//        speedTextBtn.isEnabled     = enable
 
         extentTextBtn.isClickable    = enable
         cutTextBtn.isClickable       = enable
         highlightTextBtn.isClickable = enable
-        slowTextBtn.isClickable      = enable
-        speedTextBtn.isClickable     = enable
+//        slowTextBtn.isClickable      = enable
+//        speedTextBtn.isClickable     = enable
 
         if (enable) {
             extentTextBtn.alpha    = 1.0F
             cutTextBtn.alpha       = 1.0F
             highlightTextBtn.alpha = 1.0F
-            slowTextBtn.alpha      = 1.0F
-            speedTextBtn.alpha     = 1.0F
+//            slowTextBtn.alpha      = 1.0F
+//            speedTextBtn.alpha     = 1.0F
         } else {
             extentTextBtn.alpha    = 0.5F
             cutTextBtn.alpha       = 0.5F
             highlightTextBtn.alpha = 0.5F
-            slowTextBtn.alpha      = 0.5F
-            speedTextBtn.alpha     = 0.5F
+//            slowTextBtn.alpha      = 0.5F
+//            speedTextBtn.alpha     = 0.5F
         }
     }
 
@@ -732,9 +770,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
      * @return true if the segment is already taken, false if available
      */
     private fun checkSegmentTaken(currentPosition: Long): Boolean {
-        if (speedDetailSet.size > 1) {
+        if (speedDetailSet.size > 0) {
             speedDetailSet.forEach {
-                if (currentPosition in it.timeDuration?.first!!..it.timeDuration?.second!!) {
+                if (currentPosition in it.timeDuration?.first!! until it.timeDuration?.second!!) {
                     Toast.makeText(requireContext(), "segment is already taken", Toast.LENGTH_SHORT).show()
                     return true
                 }
@@ -1090,6 +1128,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         const val PREVIEW_ACTION = "com.hipoint.snipback.previewTile"
         const val VIRTUAL_TO_REAL_ACTION = "com.hipoint.snipback.virtualToReal"
         private var tries = 0
+
+        var saveAction: SaveActionType = SaveActionType.CANCEL
         var fragment: VideoEditingFragment? = null
 
         @JvmStatic
