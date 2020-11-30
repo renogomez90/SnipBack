@@ -72,4 +72,7 @@
     <string name="dialog_confirm_exit_without_saving">Please save the changes before you leave. Do you want to continue without saving?</string>
     <string name="dialog_confirm_title">Confirmation</string>
     <string name="dialog_processing">Processing</string>
+    <string name="dialog_btn_overwrite">OVERWRITE</string>
+    <string name="dialog_btn_save_as">SAVE AS NEW VERSION</string>
+    <string name="dialog_btn_cancel">CANCEL</string>
 </resources>

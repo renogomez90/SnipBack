@@ -568,7 +568,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                     fileToReplace = null
                     replacedWith = null
 
-                    dismissEditFragmentProcessingDialog(processedVideoPath)
+                    dismissEditFragmentProcessingDialog(parentSnip?.videoFilePath!!)
                 }
             }
         } else {

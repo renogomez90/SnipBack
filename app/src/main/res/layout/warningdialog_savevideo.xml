@@ -1,83 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="270dp"
-    android:layout_height="285dp"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="20dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center"
     android:layout_gravity="center"
     android:orientation="vertical"
     android:layout_centerInParent="true"
     android:background="@drawable/background_warningdialog">
 
-    <TextView
-        android:id="@+id/dialog_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="27dp"
-        android:fontFamily="@font/barlow_semibold"
-        android:text="Save the Video"
-        android:textColor="@color/colorPrimary"
-        android:textSize="20sp" />
-
-    <TextView
-        android:id="@+id/dialog_subtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/barlow_regular"
-        android:layout_marginTop="15dp"
-        android:text="@string/savevideo"
-        android:textSize="13sp"
-        android:gravity="center"
-        android:textColor="@color/colorPrimary" />
+    <ImageView
+        android:id="@+id/saveIcon"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/dialog_save_icon"
+        android:scaleType="fitXY"
+        app:tint="@color/colorBlack"/>
 
     <TextView
         android:id="@+id/dialog_savebutton"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/barlow_bold"
         android:layout_marginTop="20dp"
         android:background="@drawable/background_savebutton"
         android:paddingTop="13dp"
         android:paddingBottom="13dp"
+        android:paddingStart="30dp"
+        android:paddingEnd="30dp"
+        android:text="@string/dialog_btn_overwrite"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:textColor="@color/colorDefaultBg" />
+
+    <TextView
+        android:id="@+id/dialog_ok"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/barlow_bold"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/background_saveas_button"
+        android:paddingTop="13dp"
+        android:paddingBottom="13dp"
+        android:paddingStart="30dp"
+        android:paddingEnd="30dp"
+        android:text="@string/dialog_btn_save_as"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:textColor="@color/colorDefaultBg" />
+
+    <TextView
+        android:id="@+id/dialog_cancel"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/barlow_bold"
+        android:layout_marginTop="20dp"
+        android:paddingTop="13dp"
+        android:paddingBottom="13dp"
         android:paddingStart="33dp"
         android:paddingEnd="33dp"
-        android:text="SAVE THE VIDEO"
+        android:text="@string/dialog_btn_cancel"
         android:textSize="12sp"
         android:gravity="center"
         android:textColor="@color/colorPrimary" />
-
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right">
-
-        <TextView
-            android:id="@+id/dialog_ok"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="SAVE AS"
-            android:fontFamily="@font/barlow_semibold"
-            android:textSize="15sp"
-            android:layout_marginBottom="20dp"
-            android:textAllCaps="true"
-            android:layout_marginTop="46dp"
-            android:textColor="@color/colorPrimary" />
-
-        <TextView
-            android:id="@+id/dialog_cancel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/barlow_semibold"
-            android:text="Cancel"
-            android:textSize="15sp"
-            android:layout_toEndOf="@id/dialog_ok"
-            android:textAllCaps="true"
-            android:layout_marginTop="46dp"
-            android:layout_marginBottom="20dp"
-            android:gravity="center"
-            android:layout_marginEnd="26dp"
-            android:layout_marginStart="22dp"
-            android:textColor="@color/colorPrimaryAccentRed" />
-    </RelativeLayout>
-
 
 </LinearLayout>
