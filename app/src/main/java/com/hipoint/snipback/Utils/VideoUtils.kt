@@ -6,6 +6,7 @@ import VideoHandle.EpVideo
 import VideoHandle.OnEditorListener
 import android.media.MediaMetadataRetriever
 import android.util.Log
+import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.videoControl.SpeedDetails
 import java.io.File
@@ -28,7 +29,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip2      Second clip to be merged
      * @param outputPath Path to save output
      */
-    suspend fun mergeRecordedFiles(clip1: File, clip2: File, outputPath: String) {
+    suspend fun mergeRecordedFiles(clip1: File, clip2: File, outputPath: String, comingFrom: CurrentOperation) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip1.absolutePath)
         val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH).toInt()
@@ -51,12 +52,12 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         EpEditor.merge(epVideos, options, object : OnEditorListener {
             override fun onSuccess() {
                 Log.d(TAG, "Merge Success")
-                opListener.changed(IVideoOpListener.VideoOp.MERGED, outputPath)
+                opListener.changed(IVideoOpListener.VideoOp.MERGED, comingFrom, outputPath)
             }
 
             override fun onFailure() {
                 Log.d(TAG, "Merge Failed")
-                opListener.failed(IVideoOpListener.VideoOp.MERGED)
+                opListener.failed(IVideoOpListener.VideoOp.MERGED, comingFrom)
             }
 
             override fun onProgress(progress: Float) {}
@@ -73,7 +74,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip2      Second clip to be merged
      * @param outputPath Path to save output
      */
-    suspend fun concatenateFiles(clip1: File, clip2: File, outputPath: String) {
+    suspend fun concatenateFiles(clip1: File, clip2: File, outputPath: String, comingFrom: CurrentOperation) {
         val retriever = MediaMetadataRetriever()
 
         retriever.setDataSource(clip1.absolutePath)
@@ -91,12 +92,12 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 override fun onSuccess() {
                     File(tmpFile).delete()
                     Log.d(TAG, "Concat Success")
-                    opListener.changed(IVideoOpListener.VideoOp.CONCAT, outputPath)
+                    opListener.changed(IVideoOpListener.VideoOp.CONCAT, comingFrom, outputPath)
                 }
 
                 override fun onFailure() {
                     Log.d(TAG, "Concat Failed")
-                    opListener.failed(IVideoOpListener.VideoOp.CONCAT)
+                    opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
                 }
 
                 override fun onProgress(progress: Float) {}
@@ -111,7 +112,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip clip to be trimmed
      * @param parentFolder Path to save output
      */
-    suspend fun trimToClip(clip: File, outputPath: String, startSecond: Int, endSecond: Int) {
+    suspend fun trimToClip(clip: File, outputPath: String, startSecond: Int, endSecond: Int, comingFrom: CurrentOperation) {
         var start = startSecond
         var end = endSecond
         val retriever = MediaMetadataRetriever()
@@ -133,11 +134,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         try {
             EpEditor.execCmd(cmd, 1, object : OnEditorListener {
                 override fun onSuccess() {
-                    opListener.changed(IVideoOpListener.VideoOp.TRIMMED, outputPath)
+                    opListener.changed(IVideoOpListener.VideoOp.TRIMMED, comingFrom, outputPath)
                 }
 
                 override fun onFailure() {
-                    opListener.failed(IVideoOpListener.VideoOp.TRIMMED)
+                    opListener.failed(IVideoOpListener.VideoOp.TRIMMED, comingFrom)
                 }
 
                 override fun onProgress(progress: Float) {}
@@ -147,7 +148,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }
     }
 
-    suspend fun addIDRFrame(clip:File, outputFolder: String){
+    suspend fun addIDRFrame(clip:File, outputFolder: String, comingFrom: CurrentOperation){
 
 //        val cmd = "-i ${clip.absolutePath} -c:v libx264 -profile:v baseline -level 3.0 -x264opts keyint=5:min-keyint=5 -g 10 -movflags +faststart+rtphint -maxrate:v 4000k -bufsize:v 4500k -preset ultrafast -threads 4 -y $outputFolder/out.mp4"
         val cmd = "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=3:min-keyint=3 -g 2 -preset ultrafast -threads 4 -y $outputFolder/out.mp4"
@@ -155,11 +156,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             override fun onSuccess() {
                 //mv $outputFolder/out.mp4 ava_${clip.absolutePath}
                 File("$outputFolder/out.mp4").renameTo(clip)
-                opListener.changed(IVideoOpListener.VideoOp.KEY_FRAMES, clip.absolutePath)
+                opListener.changed(IVideoOpListener.VideoOp.KEY_FRAMES, comingFrom, clip.absolutePath)
             }
 
             override fun onFailure() {
-                opListener.failed(IVideoOpListener.VideoOp.KEY_FRAMES)
+                opListener.failed(IVideoOpListener.VideoOp.KEY_FRAMES, comingFrom)
             }
 
             override fun onProgress(progress: Float) {
@@ -168,7 +169,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
     }
 
-    suspend fun splitVideo(clip: File, splitTime: Int, outputFolder: String) {
+    suspend fun splitVideo(clip: File, splitTime: Int, outputFolder: String, comingFrom: CurrentOperation) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip.absolutePath)
         var duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong() // in miliseconds
@@ -185,11 +186,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         try {
             EpEditor.execCmd(cmd, 1, object : OnEditorListener {
                 override fun onSuccess() {
-                    opListener.changed(IVideoOpListener.VideoOp.SPLIT, "$outputFolder/${clip.nameWithoutExtension}")
+                    opListener.changed(IVideoOpListener.VideoOp.SPLIT, comingFrom, "$outputFolder/${clip.nameWithoutExtension}")
                 }
 
                 override fun onFailure() {
-                    opListener.failed(IVideoOpListener.VideoOp.SPLIT)
+                    opListener.failed(IVideoOpListener.VideoOp.SPLIT, comingFrom)
                 }
 
                 override fun onProgress(progress: Float) {
@@ -209,7 +210,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param speedDetailsList ArrayList of SpeedDetails
      * @param outputPath Path to save output
      */
-    suspend fun changeSpeed(clip: File, speedDetailsList: ArrayList<SpeedDetails>, outputPath: String) {
+    suspend fun changeSpeed(clip: File, speedDetailsList: ArrayList<SpeedDetails>, outputPath: String, comingFrom: CurrentOperation) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip.absolutePath)
         val totalDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
@@ -232,11 +233,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
-                opListener.changed(IVideoOpListener.VideoOp.SPEED, outputPath)
+                opListener.changed(IVideoOpListener.VideoOp.SPEED, comingFrom, outputPath)
             }
 
             override fun onFailure() {
-                opListener.failed(IVideoOpListener.VideoOp.SPEED)
+                opListener.failed(IVideoOpListener.VideoOp.SPEED, comingFrom)
             }
 
             override fun onProgress(progress: Float) {
@@ -334,7 +335,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         return filterComplex.toString()
     }
 
-    suspend fun getThumbnails(clip: File, outputParent: String) {
+    suspend fun getThumbnails(clip: File, outputParent: String, comingFrom: CurrentOperation) {
         val outputPath = File("$outputParent/previewThumbs/")
         if (outputPath.exists())
             outputPath.deleteRecursively()
@@ -359,11 +360,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
-                opListener.changed(IVideoOpListener.VideoOp.FRAMES, outputPath.absolutePath)
+                opListener.changed(IVideoOpListener.VideoOp.FRAMES, comingFrom, outputPath.absolutePath)
             }
 
             override fun onFailure() {
-                opListener.failed(IVideoOpListener.VideoOp.FRAMES)
+                opListener.failed(IVideoOpListener.VideoOp.FRAMES, comingFrom)
             }
 
             override fun onProgress(progress: Float) {

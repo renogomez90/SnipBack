@@ -32,6 +32,7 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.Utils.TrimmerUtils
 import com.hipoint.snipback.application.AppClass
+import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
@@ -480,7 +481,8 @@ class FragmentPlayVideo2 : Fragment() {
                 operation = IVideoOpListener.VideoOp.FRAMES,
                 clip1 = snip!!.videoFilePath,
                 clip2 = "",
-                outputPath = File(snip!!.videoFilePath).parent!!))
+                outputPath = File(snip!!.videoFilePath).parent!!,
+                comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
         thumbnailExtractionStarted = true

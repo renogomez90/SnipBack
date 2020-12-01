@@ -1,23 +1,15 @@
 package com.hipoint.snipback.videoControl
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import android.os.IBinder
-import android.os.SystemClock
 import android.util.Log
 import androidx.core.app.JobIntentService
-import androidx.core.app.NotificationCompat
 import com.hipoint.snipback.Utils.VideoUtils
+import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.listener.IVideoOpListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
-import okhttp3.internal.lockAndWaitNanos
 import java.io.File
 import java.util.*
 
@@ -29,6 +21,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
     companion object {
         val ACTION = "com.hipoint.snipback.VideoOpAction"
         val VIDEO_OP_ITEM = "VIDEO_OP_ITEM"
+        val LAUNCHED_FROM = "LAUNCHED_FROM"
 
         val STATUS_NO_VALUE = -1
         val STATUS_OP_SUCCESS = 1
@@ -65,89 +58,91 @@ class VideoService : JobIntentService(), IVideoOpListener {
         isProcessing = true
 
         if (workQueue.isNotEmpty()) {
+            val work = workQueue.remove()
 
             broadcastIntent.apply {
                 action = ACTION
                 putExtra("progress", STATUS_SHOW_PROGRESS)
+                putExtra("operation", work.operation.name)
+                putExtra(LAUNCHED_FROM, work.comingFrom.name)
             }
             sendBroadcast(broadcastIntent)
 
-            val work = workQueue.remove()
             with(work) {
                 when (operation) {
                     IVideoOpListener.VideoOp.CONCAT -> {
                         if (clip2.isBlank()) {
-                            failed(IVideoOpListener.VideoOp.CONCAT)
+                            failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).concatenateFiles(File(clip1), File(clip2), outputPath)
+                                VideoUtils(this@VideoService).concatenateFiles(File(clip1), File(clip2), outputPath, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.MERGED -> {
                         if (clip2.isBlank()) {
-                            failed(IVideoOpListener.VideoOp.MERGED)
+                            failed(IVideoOpListener.VideoOp.MERGED, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).mergeRecordedFiles(File(clip1), File(clip2), outputPath)
+                                VideoUtils(this@VideoService).mergeRecordedFiles(File(clip1), File(clip2), outputPath, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.TRIMMED -> {
                         if (startTime == -1 || endTime == -1) {
-                            failed(IVideoOpListener.VideoOp.TRIMMED)
+                            failed(IVideoOpListener.VideoOp.TRIMMED, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).trimToClip(File(clip1), outputPath, startTime, endTime)
+                                VideoUtils(this@VideoService).trimToClip(File(clip1), outputPath, startTime, endTime, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.SPLIT -> {
                         if (splitTime == -1) {
-                            failed(IVideoOpListener.VideoOp.SPLIT)
+                            failed(IVideoOpListener.VideoOp.SPLIT, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).splitVideo(File(clip1), splitTime, outputPath)
+                                VideoUtils(this@VideoService).splitVideo(File(clip1), splitTime, outputPath, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.SPEED -> {
                         if (speedDetailsList.isNullOrEmpty()) {
-                            failed(IVideoOpListener.VideoOp.SPEED)
+                            failed(IVideoOpListener.VideoOp.SPEED, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).changeSpeed(File(clip1), speedDetailsList, outputPath)
+                                VideoUtils(this@VideoService).changeSpeed(File(clip1), speedDetailsList, outputPath, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.FRAMES -> {
                         if (outputPath.isBlank() || clip1.isBlank()) {
-                            failed(IVideoOpListener.VideoOp.FRAMES)
+                            failed(IVideoOpListener.VideoOp.FRAMES, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).getThumbnails(File(clip1), outputPath)
+                                VideoUtils(this@VideoService).getThumbnails(File(clip1), outputPath, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.KEY_FRAMES -> {
                         if(outputPath.isBlank() || clip1.isBlank()){
-                            failed(IVideoOpListener.VideoOp.KEY_FRAMES)
+                            failed(IVideoOpListener.VideoOp.KEY_FRAMES, comingFrom)
                             return@with
                         }else{
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).addIDRFrame(File(clip1), outputPath)
+                                VideoUtils(this@VideoService).addIDRFrame(File(clip1), outputPath, comingFrom)
                             }
                         }
                     }
@@ -160,7 +155,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
         }
     }
 
-    override fun failed(operation: IVideoOpListener.VideoOp) {
+    override fun failed(operation: IVideoOpListener.VideoOp, calledFrom: CurrentOperation) {
         Log.e(TAG, "failed: ${operation.name}")
         isProcessing = false
         //  only process the next item after the previous one is completed
@@ -170,13 +165,14 @@ class VideoService : JobIntentService(), IVideoOpListener {
             putExtra("status", STATUS_OP_FAILED)
             putExtra("progress", STATUS_HIDE_PROGRESS)
             putExtra("operation", operation.name)
+            putExtra(LAUNCHED_FROM, calledFrom.name)
         }
         sendBroadcast(broadcastIntent)
 
         processQueue()
     }
 
-    override fun changed(operation: IVideoOpListener.VideoOp, processedVideoPath: String) {
+    override fun changed(operation: IVideoOpListener.VideoOp, calledFrom: CurrentOperation, processedVideoPath: String) {
         Log.i(TAG, "${operation.name} completed: $processedVideoPath")
         isProcessing = false
         broadcastIntent.apply {
@@ -185,6 +181,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
             putExtra("progress", STATUS_HIDE_PROGRESS)
             putExtra("operation", operation.name)
             putExtra("processedVideoPath", processedVideoPath)
+            putExtra(LAUNCHED_FROM, calledFrom.name)
         }
         sendBroadcast(broadcastIntent)
 

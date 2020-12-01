@@ -42,6 +42,7 @@ import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.dialog.ExitEditConfirmationDialog
 import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.dialog.SaveEditDialog
+import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.EditAction
 import com.hipoint.snipback.enums.EditSeekControl
 import com.hipoint.snipback.listener.IJumpToEditPoint
@@ -1119,7 +1120,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                 clip1 = snip!!.videoFilePath,
                 clip2 = "",
                 outputPath = File(snip!!.videoFilePath).parent!!,
-                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
+                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
+                comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
     }
@@ -1360,7 +1362,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                 clip1 = clip.absolutePath,
                 clip2 = "",
                 outputPath = "${clip.parent}/$outputName",
-                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>))
+                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
+                comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
         return Pair(clip, outputName)
@@ -1384,7 +1387,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                 clip2 = "",
                 outputPath = "${clip.parent}/$outputName",
                 startTime = startTime,
-                endTime = endTime))
+                endTime = endTime,
+                comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
     }

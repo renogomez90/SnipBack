@@ -24,6 +24,7 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.Utils.AutoFitTextureView
+import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IRecordUIListener
 import com.hipoint.snipback.room.entities.Hd_snips
@@ -718,16 +719,24 @@ class CameraControl(val activity: FragmentActivity) {
         lastUserRecordedPath = outputFilePath
 
         val retriever = MediaMetadataRetriever()
-        clipQueue!!.forEach(Consumer { file: File ->
+
+        //  save the buffer and the video before merging
+        clipQueue!!.forEachIndexed { index, file ->
             if (file.length() > 0L) {
                 retriever.setDataSource(file.absolutePath)
-                Log.d(TAG, "stopRecordingVideo: file in queue = ${file.absolutePath}")
                 val currentClipDuration: Int = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
+
+                Log.d(TAG, "stopRecordingVideo: file in queue = ${file.absolutePath}")
                 Log.d(TAG, "stopRecordingVideo:\nCurrent clip duration: $currentClipDuration\nTotalDuration: ${totalDuration[0]}")
+
                 totalDuration[0] += currentClipDuration
                 (activity as AppMainActivity).addSnip(file.absolutePath, currentClipDuration,  /*totalDuration[0]*/currentClipDuration)
+
+                if(index == clipQueue!!.size - 1){  //  flags recording to be shown in gallery
+                    activity.showInGallery.add(file.nameWithoutExtension)
+                }
             }
-        })
+        }
         retriever.release()
 //        outputFilePath = null
         startPreview()

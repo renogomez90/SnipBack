@@ -2,6 +2,7 @@ package com.hipoint.snipback.videoControl
 
 import android.os.Parcel
 import android.os.Parcelable
+import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.listener.IVideoOpListener
 import kotlinx.android.parcel.Parcelize
 
@@ -13,7 +14,8 @@ data class VideoOpItem(val operation: IVideoOpListener.VideoOp,
                        var startTime: Int = -1,
                        var endTime: Int = -1,
                        var splitTime: Int = -1,
-                       val speedDetailsList: ArrayList<SpeedDetails>? = arrayListOf()) : Parcelable {
+                       val speedDetailsList: ArrayList<SpeedDetails>? = arrayListOf(),
+                       val comingFrom: CurrentOperation) : Parcelable {
 
     /*constructor(parcel: Parcel) : this(
             operation = parcel.readSerializable() as IVideoOpListener.VideoOp,
@@ -61,7 +63,8 @@ data class VideoOpItem(val operation: IVideoOpListener.VideoOp,
             startTime=$startTime, 
             endTime=$endTime,
             splitTime=$splitTime),
-            speedDetails=$speedDetailsList
+            speedDetails=$speedDetailsList,
+            comingFrom=$comingFrom
             """.trimMargin()
     }
 }
