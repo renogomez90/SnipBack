@@ -24,10 +24,10 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.Utils.AutoFitTextureView
-import com.hipoint.snipback.enums.CurrentOperation
+import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IRecordUIListener
-import com.hipoint.snipback.room.entities.Hd_snips
+import com.hipoint.snipback.videoControl.VideoService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,7 +37,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
-import java.util.function.Consumer
 import kotlin.collections.ArrayList
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -719,22 +718,35 @@ class CameraControl(val activity: FragmentActivity) {
         lastUserRecordedPath = outputFilePath
 
         val retriever = MediaMetadataRetriever()
-
+        if(clipQueueSize() > 2){    // trimming down clutter
+            clipQueue!!.remove().delete()
+        }
         //  save the buffer and the video before merging
+
+        var bufferFile = ""
+        var videoFile = ""
+
         clipQueue!!.forEachIndexed { index, file ->
             if (file.length() > 0L) {
                 retriever.setDataSource(file.absolutePath)
                 val currentClipDuration: Int = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
 
-                Log.d(TAG, "stopRecordingVideo: file in queue = ${file.absolutePath}")
-                Log.d(TAG, "stopRecordingVideo:\nCurrent clip duration: $currentClipDuration\nTotalDuration: ${totalDuration[0]}")
-
                 totalDuration[0] += currentClipDuration
-                (activity as AppMainActivity).addSnip(file.absolutePath, currentClipDuration,  /*totalDuration[0]*/currentClipDuration)
+
+                if(index == clipQueue!!.size -2)
+                    bufferFile = file.absolutePath
 
                 if(index == clipQueue!!.size - 1){  //  flags recording to be shown in gallery
-                    activity.showInGallery.add(file.nameWithoutExtension)
+                    videoFile = file.absolutePath
+                    (activity as AppMainActivity).showInGallery.add(file.nameWithoutExtension)
                 }
+
+                if(bufferFile.isNotEmpty() && videoFile.isNotEmpty()) {
+                    Log.d(TAG, "stopRecordingVideo: buffer value added\n buffer = $bufferFile\n video = $videoFile")
+                    VideoService.bufferDetails.add(BufferDataDetails(bufferFile, videoFile))
+                }
+
+                (activity as AppMainActivity).addSnip(file.absolutePath, currentClipDuration,  /*totalDuration[0]*/currentClipDuration)
             }
         }
         retriever.release()

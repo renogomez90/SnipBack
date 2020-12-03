@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.exozet.android.core.extensions.isNotNullOrEmpty
+import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.CurrentOperation
@@ -46,6 +47,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import java.lang.Integer.max
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -346,24 +348,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             if (parentChanged)   //  resetting the parent changed flag if it was set, since at this point it must have been consumed
                 parentChanged = false
 
-            //  adding the buffer video into the DB
-            if(videoModeFragment != null && videoModeFragment.isVisible) {
-                val bufferDetails = videoModeFragment.getBufferDetails()
-
-                Log.d(TAG, "onTaskCompleted: current snip path ${snip.videoFilePath}")
-
-                bufferDetails.forEach {
-
-                    Log.d(TAG, "onTaskCompleted: $it")
-
-                    if(it.videoPath == snip.videoFilePath){
-                        Log.d(TAG, "onTaskCompleted: Found Buffer")
-                        addToDBAsBuffer(it.bufferPath, snip)
-                        return@forEach
-                    }
-                }
-            }
-
             //  restart the video playback fragment with the modified video, if we have just arrived here from saving the edit
             val editFrag = supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
             if(editFrag != null &&
@@ -372,9 +356,38 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 dismissEditFragmentProcessingDialog(snip.videoFilePath)
 
 //            parentSnipId = AppClass.getAppInstance().lastSnipId + 1
+
+            //  adding the buffer video into the DB
+            checkIfBufferAvailableForSnip(snip)
         }
     }
 
+    /**
+     * Checks the bufferDetails and adds to db if available
+     *
+     * @param snip Snip
+     */
+    private suspend fun checkIfBufferAvailableForSnip(snip: Snip) {
+        val bufferDetails = VideoService.bufferDetails
+
+        Log.d(TAG, "Buffer: current snip path ${snip.videoFilePath}")
+
+        bufferDetails.forEach {
+            Log.d(TAG, "Buffer: $it")
+            if (it.videoPath == snip.videoFilePath) {
+                Log.d(TAG, "Buffer: Found Buffer")
+                addToDBAsBuffer(it.bufferPath, snip)
+                return@forEach
+            }
+        }
+    }
+
+    /**
+     * Adds bufferPath to the DB under the same snip_id as the snip with the video path specified with videoSnip
+     *
+     * @param bufferPath String
+     * @param videoSnip Snip
+     */
     private suspend fun addToDBAsBuffer(bufferPath: String, videoSnip: Snip){
         val hdSnip = Hd_snips()
         hdSnip.video_path_processed = bufferPath
@@ -555,23 +568,44 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             addSnip(processedVideoPath, duration, duration)     //  merged file is saved to DB
         }
         val swipeClipDuration = videoModeFragment.swipeValue / 1000
+        val bufferDuration = videoModeFragment.clipDuration / 1000
 
         if (comingFrom == CurrentOperation.CLIP_RECORDING) {  //  concat was triggered when automatic capture was ongoing
             //  merged clips to be trimmed to size
             val intentService = Intent(this, VideoService::class.java)
+            val buffFile = "${File(processedVideoPath).parent}/buff-${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that is the buffer
             val split2File = "${File(processedVideoPath).parent}/${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
-            val task = arrayListOf(VideoOpItem(
+            val taskList = arrayListOf<VideoOpItem>()
+
+            val bufferFile = VideoOpItem(
+                    operation = IVideoOpListener.VideoOp.TRIMMED,
+                    clip1 = processedVideoPath,
+                    clip2 = "",
+                    startTime = max((duration - swipeClipDuration - bufferDuration).toInt(), 0),
+                    endTime = (duration - swipeClipDuration).toInt(),
+                    outputPath = buffFile,
+                    comingFrom = comingFrom)
+
+            VideoService.bufferDetails.add(BufferDataDetails(buffFile, split2File))
+
+            val videoFile = VideoOpItem(
                     operation = IVideoOpListener.VideoOp.TRIMMED,
                     clip1 = processedVideoPath,
                     clip2 = "",
                     startTime = (duration - swipeClipDuration).toInt(),
                     endTime = duration,
                     outputPath = split2File,
-                    comingFrom = comingFrom))
-            intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+                    comingFrom = comingFrom)
+
+            taskList.add(bufferFile)
+            taskList.add(videoFile)
+
+            intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
             VideoService.enqueueWork(this, intentService)
         }else if(!swipeProcessed && comingFrom == CurrentOperation.VIDEO_RECORDING){
             videoModeFragment.processPendingSwipes(processedVideoPath, comingFrom)
+        }else if(swipeProcessed && comingFrom == CurrentOperation.VIDEO_RECORDING){
+
         }
     }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.JobIntentService
+import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.VideoUtils
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.listener.IVideoOpListener
@@ -30,6 +31,9 @@ class VideoService : JobIntentService(), IVideoOpListener {
         val STATUS_HIDE_PROGRESS = 4
 
         var isProcessing = false
+
+        val bufferDetails: ArrayList<BufferDataDetails> = arrayListOf() // saves path to video and corresponding video-buffer
+
         private var workQueue: Queue<VideoOpItem> = LinkedList()
 
         fun enqueueWork(context: Context, work: Intent) {
@@ -76,6 +80,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
+                                Log.d(TAG, "buffer: added to buffer at concatenateFiles")
                                 VideoUtils(this@VideoService).concatenateFiles(File(clip1), File(clip2), outputPath, comingFrom)
                                 return@launch
                             }
@@ -98,6 +103,9 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
+                                if (work.comingFrom == CurrentOperation.CLIP_RECORDING) {
+                                    Log.d(TAG, "buffer: added to buffer at trimToClip")
+                                }
                                 VideoUtils(this@VideoService).trimToClip(File(clip1), outputPath, startTime, endTime, comingFrom)
                                 return@launch
                             }
