@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -50,6 +51,7 @@ import com.hipoint.snipback.room.repository.AppViewModel;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class FragmentGalleryNew extends Fragment {
@@ -312,6 +314,22 @@ public class FragmentGalleryNew extends Fragment {
                 appViewModel.getHDSnipsLiveData().observe(getViewLifecycleOwner(), hd_snips -> {
                     if (hd_snips != null && hd_snips.size() > 0) {  //  get available HD Snips
                         hdSnips.addAll(hd_snips);
+
+                        hdSnips.sort((snip1, snip2) -> {
+                            if(snip1.getSnip_id() == snip2.getSnip_id()){   //  the video contains a buffer
+                                return snip1.getVideo_path_processed().compareToIgnoreCase(snip2.getVideo_path_processed());
+                            }
+                            return 0;
+                        });
+
+                        for (int i = 1; i < hdSnips.size(); i++) {
+                            if(hdSnips.get(i - 1).getSnip_id() == hdSnips.get(i).getSnip_id()){
+                                hdSnips.remove(i -1);
+                            }
+                        }
+
+                        hdSnips.forEach(snips -> Log.d("AVA", "loadGalleryDataFromDB: " + snips.getVideo_path_processed()));
+
                         appViewModel.getSnipsLiveData().observe(getViewLifecycleOwner(), snips -> { //get snips
                             if (snips != null && snips.size() > 0) {
                                 for (Snip snip : snips) {

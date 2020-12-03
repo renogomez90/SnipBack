@@ -745,11 +745,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         val clip = cameraControl?.removeClipQueueItem()!!
         val actualClipTime = (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
         val swipeClipDuration = swipeValue / 1000
-        if (actualClipTime >= swipeClipDuration) {
+        if (actualClipTime > swipeClipDuration) {
             //  splitting may not work for this so we opt for trim
             Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
             swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
             (requireActivity() as AppMainActivity).showInGallery.add("trimmed-${clip.nameWithoutExtension}")
+
+            val bufferFile = "${clip.parent}/buff-${clip.name}"
+            val videoFile = "${clip.parent}/trimmed-${clip.name}"
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val taskList = arrayListOf<VideoOpItem>()
@@ -759,10 +762,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     clip2 = "",
                     startTime = 0,
                     endTime = (actualClipTime - swipeClipDuration).toInt(),
-                    outputPath = "${clip.parent}/buff-${clip.name}",
-                    comingFrom = CurrentOperation.CLIP_RECORDING).also { toString() }
+                    outputPath = bufferFile,
+                    comingFrom = CurrentOperation.CLIP_RECORDING)
 
-            bufferDetails.add(BufferDataDetails("${clip.parent}/buff-${clip.name}","${clip.parent}/trimmed-${clip.name}"))
+            bufferDetails.add(BufferDataDetails(bufferFile,videoFile))
 
             val videoTask = VideoOpItem(
                     operation = VideoOp.TRIMMED,
@@ -770,8 +773,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     clip2 = "",
                     startTime = max((actualClipTime - swipeClipDuration).toInt(), 0),
                     endTime = actualClipTime,
-                    outputPath = "${clip.parent}/trimmed-${clip.name}",
-                    comingFrom = CurrentOperation.CLIP_RECORDING).also { toString() }
+                    outputPath = videoFile,
+                    comingFrom = CurrentOperation.CLIP_RECORDING)
 
             taskList.add(bufferTask)
             taskList.add(videoTask)

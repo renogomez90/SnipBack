@@ -311,6 +311,16 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             videoFilePath = snipFilePath
         }
 
+        if(!parentChanged) {
+            VideoService.bufferDetails.forEach {
+                Log.d("AVA", "addSnip: buff = ${it.bufferPath}, video = ${it.videoPath}")
+                if(it.bufferPath == snipFilePath) { //  this is a buffer clip
+                    Log.d("AVA", "ignore $snipFilePath")
+                    return
+                }
+            }
+        }
+
         AppClass.getAppInstance().isInsertionInProgress = true
         // So that the order of the videos don't change
         runBlocking {
