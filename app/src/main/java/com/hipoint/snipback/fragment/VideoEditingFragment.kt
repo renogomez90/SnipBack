@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
+import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -27,6 +28,7 @@ import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ClippingMediaSource
+import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
@@ -39,6 +41,7 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
 import com.hipoint.snipback.adapter.EditChangeListAdapter
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
+import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.dialog.ExitEditConfirmationDialog
 import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.dialog.SaveEditDialog
@@ -49,7 +52,9 @@ import com.hipoint.snipback.listener.IJumpToEditPoint
 import com.hipoint.snipback.listener.IReplaceRequired
 import com.hipoint.snipback.listener.ISaveListener
 import com.hipoint.snipback.listener.IVideoOpListener
+import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
+import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.videoControl.SpeedDetails
 import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
@@ -57,9 +62,11 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
@@ -71,7 +78,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
+class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRepository.HDSnipResult {
     private val TAG                 = VideoEditingFragment::class.java.simpleName
     private val SAVE_DIALOG         = "dialog_save"
     private val EXIT_CONFIRM_DIALOG = "dialog_exit_confirm"
@@ -129,12 +136,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
     var isEditExisting  = false
     var isSeekbarShown = true
 
+    private var showBuffer = false
+    private var bufferPath = ""
+
     private var currentSpeed       = 3
     private var startingTimestamps = -1L
     private var endingTimestamps   = -1L
+    private var segmentCount       = 0
     private var speedDuration      = Pair<Long, Long>(0, 0)
     private var speedDetailSet     = mutableSetOf<SpeedDetails>()
-    private var segmentCount       = 0
     private var editAction         = EditAction.NORMAL
     private var editSeekAction     = EditSeekControl.MOVE_NORMAL
     private var currentEditSegment = -1
@@ -186,6 +196,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         }
     }
 
+    /**
+     * to access the DB for getting the buffered video
+     */
+    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
      */
@@ -259,17 +273,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         bindViews()
         bindListeners()
         setupPlayer()
-        /*
-        val addFrameIntent = Intent(requireContext(), VideoService::class.java)
-        val task = arrayListOf<VideoOpItem>()
-        task.add(VideoOpItem(
-                operation = IVideoOpListener.VideoOp.KEY_FRAMES,
-                clip1 = snip!!.videoFilePath,
-                clip2 = "",
-                outputPath = File(snip!!.videoFilePath).parent!!))
-        addFrameIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-        VideoService.enqueueWork(requireContext(), addFrameIntent)
-        */
         return rootView
     }
 
@@ -433,6 +436,18 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
             extentTextBtn.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
             playCon1.visibility = View.VISIBLE
             playCon2.visibility = View.GONE
+
+            /*
+            * todo:
+            *  check if buffer available
+            *  cancel current ongoing edit
+            *  load video
+            * */
+
+            val videoId = snip!!.snip_id
+            CoroutineScope(IO).launch {
+                appRepository.getHDSnipsBySnipID(this@VideoEditingFragment, videoId)
+            }
         }
 
         back.setOnClickListener {
@@ -611,6 +626,42 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         }
     }
 
+    /**
+     * our query result is avaialble here.
+     *
+     * @param hdSnips List<Hd_snips>?
+     */
+    override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
+        hdSnips?.let{
+            val sorted = it.sortedByDescending { hdSnips -> hdSnips.video_path_processed }
+
+            sorted.forEach { item -> Log.d(TAG, "queryResult: ${item.video_path_processed}") }
+
+            if(sorted[0].video_path_processed == sorted[1].video_path_processed){       //  there is no buffer
+                Toast.makeText(requireContext(), "buffered content unavailable", Toast.LENGTH_SHORT).show()
+                return@let
+            }else {
+                addToVideoPlayback(sorted[0].video_path_processed)
+            }
+        }
+    }
+
+    /**
+     * adds the buffed content for playback
+     *
+     * @param videoPathProcessed String? content to be added as buffer
+     */
+    private suspend fun addToVideoPlayback(videoPathProcessed: String?) {
+        videoPathProcessed?.let{
+            withContext(Main) {
+                bufferPath = it
+                showBuffer = true
+                player.playWhenReady = false
+                player.release()
+                setupPlayer()
+            }
+        }
+    }
     /**
      * Handles changing an ongoing speed edit
      *
@@ -921,24 +972,33 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
 
-        //  TODO: on saving, if the video is a virtual version, trim the original first and then apply the changes on that.
-        if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
-            val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
-            val dataSourceFactory = DefaultDataSourceFactory(requireContext(),
-                    Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
+        if(!showBuffer) {
+            if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
+                val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
+                val dataSourceFactory = DefaultDataSourceFactory(requireContext(),
+                        Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
 
-            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))
+                val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))
 
-            val clippingMediaSource = ClippingMediaSource(mediaSource, TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()), TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong()))
-            seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
-            player.addMediaSource(clippingMediaSource)
-        } else {
-            player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
+                val clippingMediaSource = ClippingMediaSource(mediaSource, TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()), TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong()))
+                seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
+                player.addMediaSource(clippingMediaSource)
+            } else {
+                player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
+            }
+        }else{
+            if(bufferPath.isNotEmpty()) {
+                val bufferSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext())).createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
+                val videoSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext())).createMediaSource(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
+                val mediaSource = ConcatenatingMediaSource(bufferSource, videoSource)
+                player.addMediaSource(mediaSource)
+            }
         }
 
         player.prepare()
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+        Log.d(TAG, "setupPlayer: content duration = ${player.contentDuration}, duration = ${player.duration}")
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -1102,10 +1162,21 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint {
                 seekBar.showScrubber()
                 isSeekbarShown = true
             }
-            if (newSeekPosition < 0)
-                newSeekPosition = 0
-            else if (newSeekPosition > player.duration)
-                newSeekPosition = player.duration
+            if (newSeekPosition < 0) {
+                if(showBuffer && player.hasPrevious()){
+                    player.previous()
+                    player.seekTo(player.duration)
+                }else {
+                    newSeekPosition = 0
+                }
+            }else if (newSeekPosition > player.duration) {
+                if(showBuffer && player.hasNext()){
+                    player.next()
+                    player.seekTo(0)
+                }else {
+                    newSeekPosition = player.duration
+                }
+            }
             emitter.seekFast(newSeekPosition)
         }
     }

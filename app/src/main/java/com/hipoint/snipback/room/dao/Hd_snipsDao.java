@@ -23,9 +23,12 @@ public interface Hd_snipsDao {
     @Delete
     void delete(Hd_snips hd_snips);
 
-    @Query("DELETE FROM HD_SNIPS")
+    @Query("DELETE FROM Hd_snips")
     void deleteAll();
 
-    @Query("SELECT * from HD_SNIPS")
+    @Query("SELECT * FROM Hd_snips")
     LiveData<List<Hd_snips>> getHDSnipsData();
+
+    @Query("SELECT * FROM Hd_snips WHERE snip_id LIKE :snipId")
+    List<Hd_snips> getBySnipId(int snipId);
 }

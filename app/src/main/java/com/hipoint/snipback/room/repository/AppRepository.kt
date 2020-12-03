@@ -34,6 +34,10 @@ class AppRepository(context: Context?) {
         suspend fun onTaskCompleted(snip: Snip?)
     }
 
+    interface HDSnipResult{
+        suspend fun queryResult(hdSnips: List<Hd_snips>?)
+    }
+
     fun getEventById(eventId: Int): LiveData<Event> {
         return eventDao.getEventByEventId(eventId)
     }
@@ -46,16 +50,6 @@ class AppRepository(context: Context?) {
         }
     }
 
-    /*
-    private inner class InsertEventAsync(private val dao: EventDao) : AsyncTask<Event?, Void?, Void?>() {
-        protected override fun doInBackground(vararg events: Event): Void? {
-            AppClass.getAppInstance().lastEventId = dao.insert(events[0]).toInt()
-            AppClass.getAppInstance().setLastCreatedEvent(events[0])
-            return null
-        }
-    }
-    */
-
     //data update
     suspend fun updateEvent(event: Event) {
 //        UpdateEventAsync(eventDao).execute(event)
@@ -64,14 +58,6 @@ class AppRepository(context: Context?) {
         }
     }
 
-    /*
-        private inner class UpdateEventAsync(private val dao: EventDao) : AsyncTask<Event?, Void?, Void?>() {
-            protected override fun doInBackground(vararg events: Event): Void? {
-                dao.update(events[0])
-                return null
-            }
-        }
-        */
     //data delete
     suspend fun deleteEvent(event: Event) {
 //        DeleteEventAsync(eventDao).execute(event)
@@ -80,28 +66,10 @@ class AppRepository(context: Context?) {
         }
     }
 
-/*
-    private inner class DeleteEventAsync(private val dao: EventDao) : AsyncTask<Event?, Void?, Void?>() {
-        protected override fun doInBackground(vararg events: Event): Void? {
-            dao.delete(events[0])
-            return null
-        }
-    }
-*/
-
     suspend fun deleteAllEvent() {
 //        DeleteAllEventAsync(eventDao).execute()
         withContext(IO) { eventDao.deleteAll() }
     }
-
-/*
-    private inner class DeleteAllEventAsync(private val dao: EventDao) : AsyncTask<Void?, Void?, Void?>() {
-        protected override fun doInBackground(vararg voids: Void): Void? {
-            dao.deleteAll()
-            return null
-        }
-    }
-*/
 
     //Event Table Actions END//
     //HDSNIP Table Actions START//
@@ -115,15 +83,6 @@ class AppRepository(context: Context?) {
         }
     }
 
-/*
-    private inner class InsertHDSnipAsync(private val dao: Hd_snipsDao) : AsyncTask<Hd_snips?, Void?, Void?>() {
-        protected override fun doInBackground(vararg hd_snips: Hd_snips): Void? {
-            AppClass.getAppInstance().lastHDSnipId = dao.insert(hd_snips[0])
-            return null
-        }
-    }
-*/
-
     //data update
     suspend fun updateHDSnip(hd_snips: Hd_snips) {
 //        UpdateHDSnipAsync(hd_snipsDao).execute(hd_snips)
@@ -132,15 +91,6 @@ class AppRepository(context: Context?) {
         }
     }
 
-/*
-    private inner class UpdateHDSnipAsync(private val dao: Hd_snipsDao) : AsyncTask<Hd_snips?, Void?, Void?>() {
-        protected override fun doInBackground(vararg hd_snips: Hd_snips): Void? {
-            dao.update(hd_snips[0])
-            return null
-        }
-    }
-*/
-
     //data delete
     suspend fun deleteHDSnip(hd_snips: Hd_snips) {
 //        DeleteHDSnipAsync(hd_snipsDao).execute(hd_snips)
@@ -148,13 +98,6 @@ class AppRepository(context: Context?) {
             hd_snipsDao.delete(hd_snips)
         }
     }
-/*
-    private inner class DeleteHDSnipAsync(private val dao: Hd_snipsDao) : AsyncTask<Hd_snips?, Void?, Void?>() {
-        protected override fun doInBackground(vararg hd_snips: Hd_snips): Void? {
-            dao.delete(hd_snips[0])
-            return null
-        }
-    }*/
 
     suspend fun deleteAllHDSnip() {
 //        DeleteAllHDSnipAsync(hd_snipsDao).execute()
@@ -163,14 +106,13 @@ class AppRepository(context: Context?) {
         }
     }
 
-    /*
-    private inner class DeleteAllHDSnipAsync(private val dao: Hd_snipsDao) : AsyncTask<Void?, Void?, Void?>() {
-        protected override fun doInBackground(vararg voids: Void): Void? {
-            dao.deleteAll()
-            return null
+    suspend fun getHDSnipsBySnipID(listener: HDSnipResult, snipId: Int){
+        val result = CoroutineScope(IO).async{
+            hd_snipsDao.getBySnipId(snipId)
         }
+        listener.queryResult(result.await())
     }
-*/
+
     //HDSNIP Table Actions END//
     //SNIP table Actions START//
     val snipsData: LiveData<List<Snip>>
@@ -202,24 +144,6 @@ class AppRepository(context: Context?) {
         }
         return snip.await()
     }
-/*
-    private inner class InsertSnipAsync(private val listener: OnTaskCompleted, private val dao: SnipsDao) : AsyncTask<Snip?, Void?, Snip>() {
-        private var snipId = 0
-        protected override fun doInBackground(vararg snips: Snip): Snip {
-            snipId = dao.insert(snips[0]).toInt()
-            AppClass.getAppInstance().lastSnipId = snipId
-            return snips[0]
-        }
-
-        override fun onPostExecute(aVoid: Snip) {
-//            aVoid.setSnip_id(AppClass.getAppInstance().getLastSnipId());
-//  since lastSnipId is asyncly updated we are not getting the correct snip_id, only the latest one.
-            aVoid.snip_id = snipId
-            listener.onTaskCompleted(aVoid)
-            super.onPostExecute(aVoid)
-        }
-    }
-*/
 
     //data update
     suspend fun updateSnip(snip: Snip) {
@@ -229,15 +153,6 @@ class AppRepository(context: Context?) {
         }
     }
 
-/*
-    private inner class UpdateSnipAsync(private val dao: SnipsDao) : AsyncTask<Snip?, Void?, Void?>() {
-        protected override fun doInBackground(vararg snips: Snip): Void? {
-            dao.update(snips[0])
-            return null
-        }
-    }
-*/
-
     //data delete
     suspend fun deleteSnip(snip: Snip) {
 //        DeleteSnipAsync(snipsDao).execute(snip)
@@ -245,15 +160,6 @@ class AppRepository(context: Context?) {
             snipsDao.delete(snip)
         }
     }
-/*
-
-    private inner class DeleteSnipAsync(private val dao: SnipsDao) : AsyncTask<Snip?, Void?, Void?>() {
-        protected override fun doInBackground(vararg snips: Snip): Void? {
-            dao.delete(snips[0])
-            return null
-        }
-    }
-*/
 
     suspend fun deleteAllSnip() {
 //        DeleteAllSnipAsync(snipsDao).execute()
@@ -261,14 +167,6 @@ class AppRepository(context: Context?) {
             snipsDao.deleteAll()
         }
     }
-
-    /*private inner class DeleteAllSnipAsync(private val dao: SnipsDao) : AsyncTask<Void?, Void?, Void?>() {
-        protected override fun doInBackground(vararg voids: Void): Void? {
-            dao.deleteAll()
-            return null
-        }
-    }
-*/
 
     var eventId = 0
     fun getLastInsertedEventId(activity: AppCompatActivity?): Int {
