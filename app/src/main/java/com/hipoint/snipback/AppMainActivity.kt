@@ -539,7 +539,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                 addSnip(processedVideoPath, duration, duration)
             }
-            if (!swipeProcessed) {
+            if (!swipeProcessed && fromOperation == CurrentOperation.VIDEO_RECORDING) {
                 videoModeFragment.processPendingSwipes()
             }
         }
@@ -571,9 +571,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      * @param processedVideoPath
      */
     fun videoConcatCompleted(processedVideoPath: String, comingFrom: CurrentOperation) {
-        val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+        val totalDuration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
         if(comingFrom != CurrentOperation.VIDEO_RECORDING) {
-            addSnip(processedVideoPath, duration, duration)     //  merged file is saved to DB
+            addSnip(processedVideoPath, totalDuration, totalDuration)     //  merged file is saved to DB
         }
         val swipeClipDuration = videoModeFragment.swipeValue / 1000
         val bufferDuration = videoModeFragment.clipDuration / 1000
@@ -587,10 +587,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
             val bufferFile = VideoOpItem(
                     operation = IVideoOpListener.VideoOp.TRIMMED,
-                    clip1 = processedVideoPath,
-                    clip2 = "",
-                    startTime = max((duration - swipeClipDuration - bufferDuration).toInt(), 0),
-                    endTime = (duration - swipeClipDuration).toInt(),
+                    clips = arrayListOf(processedVideoPath),
+                    startTime = max((totalDuration - swipeClipDuration - bufferDuration).toInt(), 0),
+                    endTime = (totalDuration - swipeClipDuration).toInt(),
                     outputPath = buffFile,
                     comingFrom = comingFrom)
 
@@ -598,10 +597,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
             val videoFile = VideoOpItem(
                     operation = IVideoOpListener.VideoOp.TRIMMED,
-                    clip1 = processedVideoPath,
-                    clip2 = "",
-                    startTime = (duration - swipeClipDuration).toInt(),
-                    endTime = duration,
+                    clips = arrayListOf(processedVideoPath),
+                    startTime = (totalDuration - swipeClipDuration).toInt(),
+                    endTime = totalDuration,
                     outputPath = split2File,
                     comingFrom = comingFrom)
 
@@ -612,8 +610,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             VideoService.enqueueWork(this, intentService)
         }else if(!swipeProcessed && comingFrom == CurrentOperation.VIDEO_RECORDING){
             videoModeFragment.processPendingSwipes(processedVideoPath, comingFrom)
-        }else if(swipeProcessed && comingFrom == CurrentOperation.VIDEO_RECORDING){
-
         }
     }
 

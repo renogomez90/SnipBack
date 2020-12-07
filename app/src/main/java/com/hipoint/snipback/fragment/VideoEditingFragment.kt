@@ -7,6 +7,8 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
+import android.media.MediaMetadata
+import android.media.MediaMetadataRetriever
 import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Bundle
@@ -29,6 +31,7 @@ import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
@@ -116,8 +119,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private lateinit var swipeDetector     : SwipeDistanceView //  detects swiping actions for scrolling with preview
 
     //    Exoplayer
-    private lateinit var playerView           : PlayerView
-    private lateinit var player               : SimpleExoPlayer
+    private lateinit var playerView: PlayerView
+    private lateinit var player    : SimpleExoPlayer
 
     //    Snip
     private var snip: Snip? = null
@@ -133,12 +136,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     //  speed change
     var isSpeedChanged = false
     var isEditOnGoing  = false
-    var isEditExisting  = false
+    var isEditExisting = false
     var isSeekbarShown = true
 
-    private var showBuffer = false
-    private var bufferPath = ""
+    private var showBuffer     = false
+    private var bufferPath     = ""
+    private var bufferDuration = 0L
+    private var videoDuration = 0L
 
+    private var maxDuration        = 0L
     private var currentSpeed       = 3
     private var startingTimestamps = -1L
     private var endingTimestamps   = -1L
@@ -409,11 +415,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             Log.d(TAG, "end clicked : starting time stamp = $startingTimestamps, current position = $currentPosition")
 //            if (startingTimestamps != currentPosition) {
                 startingTimestamps = currentPosition  //    take the starting point when end is pressed
-                val startValue = (startingTimestamps * 100 / player.duration).toFloat()
+                val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
                 var endValue = startValue
                 speedDuration = if(isEditExisting) {
                     player.seekTo(endingTimestamps)
-                    endValue = (endingTimestamps * 100 / player.duration).toFloat()
+                    endValue = (endingTimestamps * 100 / maxDuration).toFloat()
                     Pair(startingTimestamps, endingTimestamps)  //  we may have come from edit
                 }else {
                     Pair(startingTimestamps, startingTimestamps)    //  we only have the starting position now
@@ -513,8 +519,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             isEditOnGoing = false
             isSpeedChanged = true
 
-            val startValue = (startingTimestamps * 100 / player.duration).toFloat()
-            val endValue = (endingTimestamps * 100 / player.duration).toFloat()
+            val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
+            val endValue = (endingTimestamps * 100 / maxDuration).toFloat()
 
             setupRangeMarker(startValue, endValue)
             fixRangeMarker(startValue, endValue)
@@ -571,7 +577,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         playBtn.setOnClickListener {
-            if (player.currentPosition >= player.duration)
+            if (player.currentPosition >= maxDuration)
                 player.seekTo(0)
             player.playWhenReady = true
             paused = false
@@ -633,12 +639,21 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      */
     override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
         hdSnips?.let{
-            val sorted = it.sortedByDescending { hdSnips -> hdSnips.video_path_processed }
+            if(it.size < 2){
+                withContext(Main) {
+                    Toast.makeText(requireContext(), "buffered content unavailable", Toast.LENGTH_SHORT).show()
+                }
+                return@let
+            }
+
+            val sorted = it.sortedBy { hdSnips -> hdSnips.video_path_processed.toLowerCase() }
 
             sorted.forEach { item -> Log.d(TAG, "queryResult: ${item.video_path_processed}") }
 
             if(sorted[0].video_path_processed == sorted[1].video_path_processed){       //  there is no buffer
-                Toast.makeText(requireContext(), "buffered content unavailable", Toast.LENGTH_SHORT).show()
+                withContext(Main) {
+                    Toast.makeText(requireContext(), "buffered content unavailable", Toast.LENGTH_SHORT).show()
+                }
                 return@let
             }else {
                 addToVideoPlayback(sorted[0].video_path_processed)
@@ -672,7 +687,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         if (tmpSpeedDetails != null) {
             speedDetailSet.remove(tmpSpeedDetails)
             if (editSeekAction == EditSeekControl.MOVE_END &&
-                    currentPosition != player.duration) {
+                    currentPosition != maxDuration) {
                 endingTimestamps = currentPosition
             } else if (editSeekAction == EditSeekControl.MOVE_START &&
                     currentPosition != 0L) {
@@ -683,8 +698,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             speedDetailSet.add(tmpSpeedDetails!!)
 
     //                    uiRangeSegments?.removeAt(currentEditSegment)
-            val startValue = (startingTimestamps * 100 / player.duration).toFloat()
-            val endValue = (endingTimestamps * 100 / player.duration).toFloat()
+            val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
+            val endValue = (endingTimestamps * 100 / maxDuration).toFloat()
             setupRangeMarker(startValue, endValue)
         }
     }
@@ -771,7 +786,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         blockEditOptions(true)
         editSeekAction     = EditSeekControl.MOVE_START
         startingTimestamps = -1L
-        endingTimestamps   = player.duration
+        endingTimestamps   = maxDuration
 
         if(editListAdapter != null){    //  already some edit was saved here
             slideUpAnimation(changeList)
@@ -988,23 +1003,39 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
         }else{
             if(bufferPath.isNotEmpty()) {
+                val retriever = MediaMetadataRetriever()
+                retriever.setDataSource(bufferPath)
+                bufferDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+                retriever.setDataSource(snip!!.videoFilePath)
+                videoDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+                retriever.release()
+
                 val bufferSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext())).createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
                 val videoSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext())).createMediaSource(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
-                val mediaSource = ConcatenatingMediaSource(bufferSource, videoSource)
-                player.addMediaSource(mediaSource)
+                //  clippingMediaSource used as workaround for timeline scrubbing
+                val clip1 = ClippingMediaSource(bufferSource, 0, TimeUnit.MILLISECONDS.toMicros(bufferDuration))
+                val clip2 = ClippingMediaSource(videoSource, 0, TimeUnit.MILLISECONDS.toMicros(videoDuration))
+                val mediaSource = ConcatenatingMediaSource(true, clip1, clip2)
+                Log.d(TAG, "initSwipeControls: bufferDuration = $bufferDuration, videoDuration = $videoDuration")
+
+                player.setMediaSource(mediaSource)
+                playerView.setShowMultiWindowTimeBar(true)
+                player.seekTo(0, bufferDuration)
+                showBufferOverlay()
             }
         }
 
         player.prepare()
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
-        Log.d(TAG, "setupPlayer: content duration = ${player.contentDuration}, duration = ${player.duration}")
+        Log.d(TAG, "setupPlayer: content duration = ${player.contentDuration}, duration = ${maxDuration}")
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             controllerAutoShow = false
             controllerShowTimeoutMs = -1
             controllerHideOnTouch = false
+            setShowMultiWindowTimeBar(showBuffer)
             showController()
         }
 
@@ -1027,9 +1058,59 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     }
                 }
             }
+
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_READY) {
+                    maxDuration = 0L
+                    val currentTimeline = player.currentTimeline
+                    for (i in 0 until currentTimeline.windowCount) {
+                        val window = Timeline.Window()
+                        currentTimeline.getWindow(i, window)
+                        maxDuration += window.durationMs
+                    }
+                    if (showBuffer) {
+                        Log.d(TAG, "initSwipeControls: max duration = $maxDuration")
+                        seekBar.setDuration(maxDuration)
+                    }
+                }
+            }
         })
 
         initSwipeControls()
+    }
+
+    /**
+     * shows the overlay for the buffer on the timeline
+     */
+    private fun showBufferOverlay() {
+        //todo: adjust or hide other changed ranges
+        val colour = resources.getColor(R.color.blackOverlay, context?.theme)
+        val (_, height, padding) = setupCommonRangeUiElements()
+
+        val thumbDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb_transparent, context?.theme) as VectorDrawable,
+                resources.getColor(android.R.color.transparent, context?.theme))
+
+        val endValue = (bufferDuration * 100 / (bufferDuration + videoDuration)).toFloat()
+
+        val bufferOverlay = RangeSeekbarCustom(requireContext())
+        bufferOverlay.apply {
+            minimumHeight = height
+            elevation = 1F
+            setPadding(padding, 0, padding, 0)
+            setBarColor(resources.getColor(android.R.color.transparent, context?.theme))
+            setBackgroundResource(R.drawable.range_background)
+            setLeftThumbBitmap(thumbDrawable)
+            setRightThumbBitmap(thumbDrawable)
+            setBarHighlightColor(colour)
+            setMinValue(0F)
+            setMaxValue(100F)
+            setMinStartValue(0F).apply()
+            setMaxStartValue(endValue).apply()
+
+            setOnTouchListener { _, _ -> true }
+        }
+
+        timebarHolder.addView(bufferOverlay)
     }
 
     private fun showDialogConfirmation() {
@@ -1065,7 +1146,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      */
     private fun initSwipeControls() {
         var startScrollingSeekPosition = 0L
-        var higher = player.duration
+        var higher = maxDuration
         var lower = 0L
 
         swipeDetector.setOnClickListener {
@@ -1076,9 +1157,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         swipeDetector.onIsScrollingChanged {
-            if (it)
+            if (it) {
                 startScrollingSeekPosition = player.currentPosition
-
+            }
             player.playWhenReady = !paused
         }
 
@@ -1095,10 +1176,17 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         swipeDetector.onScroll { percentX, _ ->
             // left swipe is positive, right is negative
-            val duration = player.duration
+
             val maxPercent = 0.75f
             val scaledPercent = percentX * maxPercent
-            val percentOfDuration = scaledPercent * -1 * duration + startScrollingSeekPosition
+            val percentOfDuration = if (showBuffer) {
+                if (player.currentWindowIndex == 0)
+                    scaledPercent * -1 * bufferDuration + startScrollingSeekPosition
+                else
+                    scaledPercent * -1 * videoDuration + startScrollingSeekPosition
+            } else
+                scaledPercent * -1 * maxDuration + startScrollingSeekPosition
+
             // shift in position domain and ensure circularity
             var newSeekPosition = percentOfDuration.roundToLong()
             /*((percentOfDuration + duration) % duration).roundToLong().absoluteValue*/
@@ -1129,7 +1217,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         if (newSeekPosition > higher)
                             newSeekPosition = higher
 
-                        uiRangeSegments!![currentEditSegment].setMaxStartValue((newSeekPosition * 100 / player.duration).toFloat()).apply()
+                        uiRangeSegments!![currentEditSegment].setMaxStartValue((newSeekPosition * 100 / maxDuration).toFloat()).apply()
                     }
                     EditSeekControl.MOVE_START -> {
                         // only the starting point is being manipulated
@@ -1150,7 +1238,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             }
                         }
 
-                        uiRangeSegments!![currentEditSegment].setMinStartValue((newSeekPosition * 100 / player.duration).toFloat()).apply()
+                        uiRangeSegments!![currentEditSegment].setMinStartValue((newSeekPosition * 100 / maxDuration).toFloat()).apply()
 //                        uiRangeSegments!![currentEditSegment].setMaxStartValue((endingTimestamps * 100 / player.duration).toFloat()).apply()
                     }
                     EditSeekControl.MOVE_NORMAL -> {
@@ -1163,21 +1251,26 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 isSeekbarShown = true
             }
             if (newSeekPosition < 0) {
-                if(showBuffer && player.hasPrevious()){
-                    player.previous()
-                    player.seekTo(player.duration)
-                }else {
-                    newSeekPosition = 0
+                newSeekPosition = 0
+            }else if (newSeekPosition > maxDuration) {
+                newSeekPosition = maxDuration
+            }
+
+            if(showBuffer) {
+                if (player.currentPosition >= player.contentDuration && player.currentWindowIndex == 0) {
+                    if (player.hasNext()) {
+                        player.next()
+                        startScrollingSeekPosition = 0
+                    }
                 }
-            }else if (newSeekPosition > player.duration) {
-                if(showBuffer && player.hasNext()){
-                    player.next()
-                    player.seekTo(0)
-                }else {
-                    newSeekPosition = player.duration
+                if (newSeekPosition <= 0L && player.currentWindowIndex == 1) {
+                    if (player.hasPrevious()) {
+                        player.previous()
+                        startScrollingSeekPosition = bufferDuration
+                    }
                 }
             }
-            emitter.seekFast(newSeekPosition)
+            player.seekTo(newSeekPosition)
         }
     }
 
@@ -1188,8 +1281,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
                 operation = IVideoOpListener.VideoOp.FRAMES,
-                clip1 = snip!!.videoFilePath,
-                clip2 = "",
+                clips = arrayListOf(snip!!.videoFilePath),
                 outputPath = File(snip!!.videoFilePath).parent!!,
                 speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
                 comingFrom = CurrentOperation.VIDEO_EDITING))
@@ -1297,6 +1389,29 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
     }
 
+    private fun nearestExistingHigherTS(current: Long): Long {
+        if(restrictList.isNullOrEmpty()){
+            return maxDuration
+        }
+
+        val diff = arrayListOf<Long>()
+        restrictList?.forEach {
+            val one = it.timeDuration!!.first - current
+            val two = it.timeDuration!!.second - current
+
+            if(one > 0)
+                diff.add(one)
+            if(two > 0)
+                diff.add(two)
+        }
+        return if(diff.isEmpty()){
+            maxDuration
+        }else {
+            diff.sort()
+            diff[0] + current
+        }
+    }
+
     private fun nearestExistingLowerTS(current: Long): Long {
         if(restrictList.isNullOrEmpty()){
             return 0L
@@ -1317,29 +1432,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }else {
             diff.sortDescending()
             current + diff[0]   //   + because the value is already negative
-        }
-    }
-
-    private fun nearestExistingHigherTS(current: Long): Long {
-        if(restrictList.isNullOrEmpty()){
-            return player.duration
-        }
-
-        val diff = arrayListOf<Long>()
-        restrictList?.forEach {
-            val one = it.timeDuration!!.first - current
-            val two = it.timeDuration!!.second - current
-
-            if(one > 0)
-                diff.add(one)
-            if(two > 0)
-                diff.add(two)
-        }
-        return if(diff.isEmpty()){
-            player.duration
-        }else {
-            diff.sort()
-            diff[0] + current
         }
     }
 
@@ -1430,8 +1522,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
                 operation = IVideoOpListener.VideoOp.SPEED,
-                clip1 = clip.absolutePath,
-                clip2 = "",
+                clips = arrayListOf(clip.absolutePath),
                 outputPath = "${clip.parent}/$outputName",
                 speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
                 comingFrom = CurrentOperation.VIDEO_EDITING))
@@ -1454,8 +1545,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
                 operation = IVideoOpListener.VideoOp.TRIMMED,
-                clip1 = clip.absolutePath,
-                clip2 = "",
+                clips = arrayListOf(clip.absolutePath),
                 outputPath = "${clip.parent}/$outputName",
                 startTime = startTime,
                 endTime = endTime,

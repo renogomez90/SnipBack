@@ -74,7 +74,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip2      Second clip to be merged
      * @param outputPath Path to save output
      */
-    suspend fun concatenateFiles(clip1: File, clip2: File, outputPath: String, comingFrom: CurrentOperation) {
+    /*suspend fun concatenateFiles(clip1: File, clip2: File, outputPath: String, comingFrom: CurrentOperation) {
         val retriever = MediaMetadataRetriever()
 
         retriever.setDataSource(clip1.absolutePath)
@@ -83,7 +83,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val duration2 = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
         retriever.release()
 
-        val tmpFile = createFileList(clip1, clip2)
+        val tmpFile = createFileList(arrayListOf(clip1, clip2))
         val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -g 2 -c copy -threads 4 -y -b:v 1M $outputPath"
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
@@ -105,6 +105,42 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }*/
+
+    suspend fun concatenateMultiple(fileList: List<File>, outputPath: String, comingFrom: CurrentOperation){
+        val retriever = MediaMetadataRetriever()
+        var totalDuration = 0L
+        fileList.forEach {
+            if(it.exists() && it.length() > 0) {
+                retriever.setDataSource(it.absolutePath)
+                totalDuration += retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+            }
+        }
+        retriever.release()
+
+        val tmpFile = createFileList(fileList)
+        val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -g 2 -c copy -threads 4 -y -b:v 1M $outputPath"
+
+        Log.d(TAG, "concatenateFiles: cmd= $cmd")
+        try {
+            EpEditor.execCmd(cmd, totalDuration, object : OnEditorListener {
+                override fun onSuccess() {
+                    File(tmpFile).delete()
+                    Log.d(TAG, "Concat Success")
+                    opListener.changed(IVideoOpListener.VideoOp.CONCAT, comingFrom, outputPath)
+                }
+
+                override fun onFailure() {
+                    Log.d(TAG, "Concat Failed")
+                    opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
+                }
+
+                override fun onProgress(progress: Float) {}
+            })
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
     }
 
     /**
@@ -373,12 +409,13 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         })
     }
 
-    private fun createFileList(clip1: File, clip2: File): String {
-        val f = File("${clip1.parent}/tmp.txt")
+    private fun createFileList(clipList: List<File>): String {
+        val f = File("${clipList[0].parent}/tmp.txt")
         try {
             with(PrintWriter(FileWriter(f))) {
-                print("file '${clip1.absolutePath}'\n")
-                print("file '${clip2.absolutePath}'")
+                clipList.forEach {
+                    print("file '${it.absolutePath}'\n")
+                }
                 flush()
                 close()
             }

@@ -479,8 +479,7 @@ class FragmentPlayVideo2 : Fragment() {
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
                 operation = IVideoOpListener.VideoOp.FRAMES,
-                clip1 = snip!!.videoFilePath,
-                clip2 = "",
+                clips = arrayListOf(snip!!.videoFilePath),
                 outputPath = File(snip!!.videoFilePath).parent!!,
                 comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)

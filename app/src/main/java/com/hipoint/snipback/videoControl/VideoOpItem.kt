@@ -8,8 +8,7 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class VideoOpItem(val operation: IVideoOpListener.VideoOp,
-                       var clip1: String,
-                       var clip2: String,
+                       var clips: List<String>,
                        var outputPath: String,
                        var startTime: Int = -1,
                        var endTime: Int = -1,
@@ -57,12 +56,11 @@ data class VideoOpItem(val operation: IVideoOpListener.VideoOp,
         return """
             VideoOpItem(
             operation=$operation, 
-            clip1='$clip1', 
-            clip2='$clip2', 
+            clips='$clips', 
             outputPath='$outputPath', 
             startTime=$startTime, 
             endTime=$endTime,
-            splitTime=$splitTime),
+            splitTime=$splitTime,
             speedDetails=$speedDetailsList,
             comingFrom=$comingFrom
             """.trimMargin()

@@ -20,13 +20,13 @@ import java.util.*
  */
 class VideoService : JobIntentService(), IVideoOpListener {
     companion object {
-        val ACTION = "com.hipoint.snipback.VideoOpAction"
+        val ACTION        = "com.hipoint.snipback.VideoOpAction"
         val VIDEO_OP_ITEM = "VIDEO_OP_ITEM"
         val LAUNCHED_FROM = "LAUNCHED_FROM"
 
-        val STATUS_NO_VALUE = -1
-        val STATUS_OP_SUCCESS = 1
-        val STATUS_OP_FAILED = 2
+        val STATUS_NO_VALUE      = -1
+        val STATUS_OP_SUCCESS    = 1
+        val STATUS_OP_FAILED     = 2
         val STATUS_SHOW_PROGRESS = 3
         val STATUS_HIDE_PROGRESS = 4
 
@@ -75,23 +75,27 @@ class VideoService : JobIntentService(), IVideoOpListener {
             with(work) {
                 when (operation) {
                     IVideoOpListener.VideoOp.CONCAT -> {
-                        if (clip2.isBlank()) {
+                        if (clips.isEmpty() || clips.size < 2) {
                             failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
                                 Log.d(TAG, "buffer: added to buffer at concatenateFiles")
-                                VideoUtils(this@VideoService).concatenateFiles(File(clip1), File(clip2), outputPath, comingFrom)
+                                val clipFiles = arrayListOf<File>()
+                                clips.forEach { clipFiles.add(File(it)) }
+                                VideoUtils(this@VideoService).concatenateMultiple(clipFiles, outputPath, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.MERGED -> {
-                        if (clip2.isBlank()) {
+                        if (clips.isEmpty()) {
                             failed(IVideoOpListener.VideoOp.MERGED, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
+                                val clip1 = clips[0]
+                                val clip2 = clips[1]
                                 VideoUtils(this@VideoService).mergeRecordedFiles(File(clip1), File(clip2), outputPath, comingFrom)
                                 return@launch
                             }
@@ -106,7 +110,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                                 if (work.comingFrom == CurrentOperation.CLIP_RECORDING) {
                                     Log.d(TAG, "buffer: added to buffer at trimToClip")
                                 }
-                                VideoUtils(this@VideoService).trimToClip(File(clip1), outputPath, startTime, endTime, comingFrom)
+                                VideoUtils(this@VideoService).trimToClip(File(clips[0]), outputPath, startTime, endTime, comingFrom)
                                 return@launch
                             }
                         }
@@ -117,7 +121,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).splitVideo(File(clip1), splitTime, outputPath, comingFrom)
+                                VideoUtils(this@VideoService).splitVideo(File(clips[0]), splitTime, outputPath, comingFrom)
                                 return@launch
                             }
                         }
@@ -128,29 +132,29 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).changeSpeed(File(clip1), speedDetailsList, outputPath, comingFrom)
+                                VideoUtils(this@VideoService).changeSpeed(File(clips[0]), speedDetailsList, outputPath, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.FRAMES -> {
-                        if (outputPath.isBlank() || clip1.isBlank()) {
+                        if (outputPath.isBlank() || clips[0].isBlank()) {
                             failed(IVideoOpListener.VideoOp.FRAMES, comingFrom)
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).getThumbnails(File(clip1), outputPath, comingFrom)
+                                VideoUtils(this@VideoService).getThumbnails(File(clips[0]), outputPath, comingFrom)
                                 return@launch
                             }
                         }
                     }
                     IVideoOpListener.VideoOp.KEY_FRAMES -> {
-                        if(outputPath.isBlank() || clip1.isBlank()){
+                        if(outputPath.isBlank() || clips[0].isBlank()){
                             failed(IVideoOpListener.VideoOp.KEY_FRAMES, comingFrom)
                             return@with
                         }else{
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).addIDRFrame(File(clip1), outputPath, comingFrom)
+                                VideoUtils(this@VideoService).addIDRFrame(File(clips[0]), outputPath, comingFrom)
                             }
                         }
                     }
