@@ -393,7 +393,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     }
                 }
                 EditAction.EXTEND_TRIM -> {
-                    endingTimestamps = player.currentPosition
+                    if(startingTimestamps < bufferDuration)
+                        player.seekTo(0, startingTimestamps)
+                    else
+                        player.seekTo(1, startingTimestamps - bufferDuration)
                 }
                 else -> {}
             }
@@ -417,11 +420,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             Log.d(TAG, "end clicked : starting time stamp = $startingTimestamps, current position = $currentPosition")
 //            if (startingTimestamps != currentPosition) {
-                startingTimestamps = currentPosition  //    take the starting point when end is pressed
 
             when(editAction) {
                 EditAction.FAST,
                 EditAction.SLOW -> {
+                    startingTimestamps = currentPosition  //    take the starting point when end is pressed
+
                     val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
                     var endValue = startValue
 
@@ -441,6 +445,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
 
                 EditAction.EXTEND_TRIM -> {
+                    startingTimestamps = getCorrectedTimebarStartPosition()
                     if(endingTimestamps > bufferDuration)
                         player.seekTo(1, endingTimestamps)
                     else
@@ -461,8 +466,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             extentTextBtn.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
 
             resetPlaybackUI()
-            acceptRejectHolder.visibility = View.VISIBLE
             playCon1.visibility           = View.VISIBLE
+            playCon2.visibility           = View.GONE
+            acceptRejectHolder.visibility = View.VISIBLE
 
             val videoId = snip!!.snip_id
             CoroutineScope(IO).launch {
@@ -676,7 +682,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 startingTimestamps = bufferDuration
                 endingTimestamps = bufferDuration + videoDuration
                 val startValue = (startingTimestamps * 100 / (bufferDuration + videoDuration)).toFloat()
-                val endValue = (endingTimestamps * 100 / (bufferDuration + videoDuration)).toFloat()
+                val endValue = 100F
                 extendRangeMarker(startValue, endValue)
             }
         }
@@ -1102,7 +1108,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         maxDuration += window.durationMs
                     }
                     if (showBuffer) {
-                        Log.d(TAG, "initSwipeControls: max duration = $maxDuration")
                         seekBar.setDuration(maxDuration)
                     }
                 }
@@ -1239,67 +1244,45 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     isSeekbarShown = false
                 }
 
-                when(editAction){
-                    EditAction.FAST,
-                    EditAction.SLOW -> {
-                        when (editSeekAction) {
-                            EditSeekControl.MOVE_START -> {
-                                if (newSeekPosition >= endingTimestamps && endingTimestamps != 0L) {
-                                    newSeekPosition = endingTimestamps
+                if (editAction == EditAction.FAST || editAction == EditAction.SLOW) {
+                    when (editSeekAction) {
+                        EditSeekControl.MOVE_START -> {
+                            if (newSeekPosition >= endingTimestamps && endingTimestamps != 0L) {
+                                newSeekPosition = endingTimestamps
+                            } else {
+                                // prevent the user from seeking beyond the fixed start point
+                                if (newSeekPosition <= lower) {
+                                    newSeekPosition = lower
+                                    seekBar.hideScrubber()
+                                    isSeekbarShown = false
                                 } else {
-                                    // prevent the user from seeking beyond the fixed start point
-                                    if (newSeekPosition <= lower) {
-                                        newSeekPosition = lower
-                                        seekBar.hideScrubber()
-                                        isSeekbarShown = false
-                                    } else {
-                                        if (!isSeekbarShown) {
-                                            seekBar.showScrubber()
-                                            isSeekbarShown = true
-                                        }
+                                    if (!isSeekbarShown) {
+                                        seekBar.showScrubber()
+                                        isSeekbarShown = true
                                     }
                                 }
+                            }
 
-                                uiRangeSegments!![currentEditSegment].setMinStartValue((newSeekPosition * 100 / maxDuration).toFloat()).apply()
+                            uiRangeSegments!![currentEditSegment].setMinStartValue((newSeekPosition * 100 / maxDuration).toFloat()).apply()
+                        }
+                        EditSeekControl.MOVE_END -> {
+                            if (newSeekPosition < startingTimestamps) {
+                                newSeekPosition = startingTimestamps
                             }
-                            EditSeekControl.MOVE_END -> {
-                                if (newSeekPosition < startingTimestamps) {
-                                    newSeekPosition = startingTimestamps
-                                }
-                                if (newSeekPosition > higher)
-                                    newSeekPosition = higher
+                            if (newSeekPosition > higher)
+                                newSeekPosition = higher
 
-                                uiRangeSegments!![currentEditSegment].setMaxStartValue((newSeekPosition * 100 / maxDuration).toFloat()).apply()
-                            }
-                            else -> {
-                            }
+                            uiRangeSegments!![currentEditSegment].setMaxStartValue((newSeekPosition * 100 / maxDuration).toFloat()).apply()
+                        }
+                        else -> {
                         }
                     }
-                    EditAction.EXTEND_TRIM -> {
-                        when(editSeekAction){
-                            EditSeekControl.MOVE_START -> {
-                                trimSegment?.setMinStartValue((newSeekPosition * 100 / maxDuration).toFloat())?.apply()
-                            }
-                            EditSeekControl.MOVE_END -> {
-                                trimSegment?.setMaxStartValue((newSeekPosition * 100 / maxDuration).toFloat())?.apply()
-                            }
-                            else -> {
-
-                            }
-                        }
-                    }
-                    else -> {}
                 }
             }
 
             if (!isSeekbarShown && !isEditOnGoing) {
                 seekBar.showScrubber()
                 isSeekbarShown = true
-            }
-            if (newSeekPosition < 0) {
-                newSeekPosition = 0
-            }else if (newSeekPosition > maxDuration) {
-                newSeekPosition = maxDuration
             }
 
             if(showBuffer) {
@@ -1317,7 +1300,78 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
             }
 
+            if (editAction == EditAction.EXTEND_TRIM) {
+                when (editSeekAction) {
+                    EditSeekControl.MOVE_START -> {
+                        if (getCorrectedTimebarStartPosition() > endingTimestamps) {
+                            newSeekPosition = endingTimestamps
+                        } else {
+                            trimSegment!!.setMinStartValue((getCorrectedTimebarStartPosition() * 100 / maxDuration).toFloat()).apply()
+                            startingTimestamps = getCorrectedTimebarStartPosition()
+                        }
+                        /*if(player.currentWindowIndex == 1){
+                            if((bufferDuration + player.currentPosition) >= trimSegment!!.selectedMinValue.toLong())
+                                trimSegment?.setMinStartValue(((bufferDuration + player.currentPosition) * 100 / maxDuration).toFloat())?.apply()
+                            else
+                                newSeekPosition = trimSegment!!.selectedMinValue.toLong()
+                        }else {
+                            if(trimSegment!!.selectedMinValue.toLong() <= player.currentPosition)
+                                trimSegment?.setMinStartValue((player.currentPosition * 100 / maxDuration).toFloat())?.apply()
+                            else
+                                newSeekPosition = trimSegment!!.selectedMinValue.toLong()
+                        }*/
+                    }
+                    EditSeekControl.MOVE_END -> {
+                        if(getCorrectedTimebarEndPosition() < startingTimestamps){
+                            newSeekPosition = startingTimestamps
+                        }else {
+                            trimSegment!!.setMaxStartValue((getCorrectedTimebarEndPosition() * 100 / maxDuration).toFloat()).apply()
+                            endingTimestamps = getCorrectedTimebarEndPosition()
+                        }
+                        /*if(player.currentWindowIndex == 1) {
+                            if((bufferDuration + player.currentPosition) >= trimSegment!!.selectedMinValue.toLong())
+                                trimSegment?.setMaxStartValue(((bufferDuration + player.currentPosition) * 100 / maxDuration).toFloat())?.apply()
+                            else
+                                newSeekPosition = trimSegment!!.selectedMinValue.toLong()
+                        }else {
+                            if(trimSegment!!.selectedMinValue.toLong() <= player.currentPosition)
+                                trimSegment?.setMaxStartValue((player.currentPosition * 100 / maxDuration).toFloat())?.apply()
+                            else
+                                newSeekPosition = trimSegment!!.selectedMinValue.toLong()
+                        }*/
+                    }
+                    else -> {
+
+                    }
+                }
+            }
+
+            if (newSeekPosition < 0) {
+                newSeekPosition = 0
+            }else if (newSeekPosition > maxDuration) {
+                newSeekPosition = maxDuration
+            }
+
             player.seekTo(newSeekPosition)
+        }
+    }
+
+    private fun getCorrectedTimebarStartPosition(): Long {
+        return if(player.currentWindowIndex == 0){
+            player.currentPosition
+        }else{  //  exoplayer can be messed up
+            if(player.currentPosition + bufferDuration > maxDuration)
+                player.currentPosition
+            else
+                player.currentPosition + bufferDuration
+        }
+    }
+
+    private fun getCorrectedTimebarEndPosition(): Long {
+        return if(player.currentWindowIndex == 0){
+            player.currentPosition
+        }else{  //  exoplayer can be messed up
+                player.currentPosition + bufferDuration
         }
     }
 
