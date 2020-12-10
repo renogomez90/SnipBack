@@ -5,15 +5,19 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class SpeedDetails(
-        var isFast      : Boolean   = false,
-        var multiplier  : Int       = 1,
-        var timeDuration: Pair<Long, Long>? = null
-):Parcelable{
+        var startWindowIndex: Int       = 0,
+        var endWindowIndex  : Int       = 0,
+        var isFast          : Boolean   = false,
+        var multiplier      : Int       = 1,
+        var timeDuration    : Pair<Long, Long>? = null
+): Parcelable{
     /**
      * Returns a string representation of the object.
      */
     override fun toString(): String {
-        return "isFast = $isFast\n" +
+        return "startWindowIndex = ${startWindowIndex}\n" +
+                "endWindowIndex = ${endWindowIndex}\n" +
+                "isFast = $isFast\n" +
                 "multiplier = $multiplier\n" +
                 "timeDuration = ${timeDuration?.first}:${timeDuration?.second}"
     }
