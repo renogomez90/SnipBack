@@ -29,6 +29,7 @@ import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
+import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
@@ -74,6 +75,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.Comparator
+import kotlin.collections.ArrayList
 import kotlin.math.absoluteValue
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -151,16 +153,17 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private var editedStart    = -1L
     private var editedEnd      = -1L
 
-    private var maxDuration        = 0L
-    private var currentSpeed       = 3
-    private var startingTimestamps = -1L
-    private var endingTimestamps   = -1L
-    private var segmentCount       = 0
-    private var speedDuration      = Pair<Long, Long>(0, 0)
-    private var speedDetailSet     = mutableSetOf<SpeedDetails>()
-    private var editAction         = EditAction.NORMAL
-    private var editSeekAction     = EditSeekControl.MOVE_NORMAL
-    private var currentEditSegment = -1
+    private var maxDuration         = 0L
+    private var previousMaxDuration = 0L
+    private var currentSpeed        = 3
+    private var startingTimestamps  = -1L
+    private var endingTimestamps    = -1L
+    private var segmentCount        = 0
+    private var speedDuration       = Pair<Long, Long>(0, 0)
+    private var speedDetailSet      = mutableSetOf<SpeedDetails>()
+    private var editAction          = EditAction.NORMAL
+    private var editSeekAction      = EditSeekControl.MOVE_NORMAL
+    private var currentEditSegment  = -1
 
     private var tmpSpeedDetails: SpeedDetails?                  = null
     private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
@@ -706,17 +709,29 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val removeSet = setOf<SpeedDetails>()
         var shouldRemove =false
 
+        var counter = 0
+        speedDetailSet.forEach { // check if some edit exists in buffered video from a previous extension/trim
+            if(it.startWindowIndex == 0 && it.endWindowIndex == 0)
+                counter++
+        }
+
+        val existingEditInBuffer = counter != speedDetailSet.size //  previous edits in buffer
+        val difference = maxDuration - previousMaxDuration
+
         speedDetailSet.forEach{
+            Log.d(TAG, "adjustPreviousSpeedEdits: original speed detail = $it")
+
             if(it.startWindowIndex == 0 && it.endWindowIndex == 0){
                 it.startWindowIndex = 1
                 it.endWindowIndex = 1
             }
-            var s = it.timeDuration!!.first + moveBy
-            var e = it.timeDuration!!.second + moveBy
+
+            var s = if(!existingEditInBuffer) it.timeDuration!!.first + moveBy else it.timeDuration!!.first + difference
+            var e = if(!existingEditInBuffer) it.timeDuration!!.second + moveBy else it.timeDuration!!.second + difference
 
             //  checking the starting points
             if(s < 0){  //  the starting portion is trimmed out
-                s = editedStart
+                s = 0
                 if(e < 0){  //  both starting and ending changes are out of range
                     shouldRemove = true
                 }
@@ -739,12 +754,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 removeSet.plus(it)
                 shouldRemove = false
             }
+            Log.d(TAG, "adjustPreviousSpeedEdits: updated speed detail = $it")
         }
 
         removeSet.forEach{
             speedDetailSet.remove(it)
         }
 
+        previousMaxDuration = maxDuration
         maxDuration = editedEnd - editedStart
         bufferDuration = max(bufferDuration - editedStart, 0)
     }
@@ -791,7 +808,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 editedEnd = endingTimestamps
             }
         } else {
-            clip2 = ClippingMediaSource(bufferSource, TimeUnit.MILLISECONDS.toMicros(startingTimestamps - bufferDuration), TimeUnit.MILLISECONDS.toMicros(endingTimestamps - bufferDuration))
+            clip2 = ClippingMediaSource(videoSource, TimeUnit.MILLISECONDS.toMicros(startingTimestamps - bufferDuration), TimeUnit.MILLISECONDS.toMicros(endingTimestamps - bufferDuration))
             editedStart = startingTimestamps - bufferDuration
             editedEnd = endingTimestamps - bufferDuration
         }
@@ -1352,7 +1369,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     }
                     if (showBuffer) {
                         seekBar.setDuration(maxDuration)
+                        if(previousMaxDuration != maxDuration)
+                            previousMaxDuration = maxDuration
                     }
+                    Log.d(TAG, "onPlaybackStateChanged: prev duration = $previousMaxDuration, max duration = $maxDuration")
                 }
             }
         })
@@ -1844,49 +1864,56 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
             }
         }else{
-            /*todo:
-            *  trim buffer video and actual video
-            *  concatenate trimmed videos
-            *  make edits on the concatenated video
-            * */
-
-            var trimBufferTask: VideoOpItem? = null
-            var trimVideoTask: VideoOpItem? = null
-//            var onlyInBuffer = false
-            /*if(editedStart in 0..bufferDuration) {  //  starting is in the buffer video
-                trimBufferTask = if(editedEnd in editedStart..bufferDuration) {
-                    onlyInBuffer = true
-                    taskTrimBufferVideoTo(editedStart, editedEnd)
-                }else
-                    taskTrimBufferVideoTo(editedStart, bufferDuration)
-            } else {    //  starting is in the video
-
-                taskTrimVideoTo(bufferDuration - editedStart, )
-            }*/
+            createModifiedVideo()
         }
     }
 
-    private fun taskTrimBufferVideoTo(start: Long, end: Long): VideoOpItem {
+    /**
+     *  prepares the concatenated and trimmed video with any edits
+     *  concatenate buffer and video
+     *  trimmed video to spec
+     *  make edits
+     *  save to db
+     */
+    private fun createModifiedVideo() {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        return VideoOpItem(
+        val videoPath = snip!!.videoFilePath
+        val concatOutputPath = "${File(videoPath).parent}/$timeStamp.mp4"
+        val trimmedOutputPath = "${File(videoPath).parent}/trimmed-$timeStamp.mp4"
+        val speedChangedPath = "${File(videoPath).parent}/VID_$timeStamp.mp4"
+
+        val concatenateTask = VideoOpItem(
+                operation = IVideoOpListener.VideoOp.CONCAT,
+                clips = arrayListOf(bufferPath, snip!!.videoFilePath),
+                outputPath = concatOutputPath,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
+
+        val trimTask = VideoOpItem(
                 operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(bufferPath),
-                outputPath = "${File(bufferPath).parent}/$timeStamp.mp4",
-                startTime = TimeUnit.MILLISECONDS.toSeconds(start).toInt(),
-                endTime = TimeUnit.MILLISECONDS.toSeconds(end).toInt(),
-                comingFrom = CurrentOperation.VIDEO_EDITING
-        )
-    }
-    private fun taskTrimVideoTo(start: Long, end: Long): VideoOpItem {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        return VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(bufferPath),
-                outputPath = "${File(bufferPath).parent}/$timeStamp.mp4",
-                startTime = TimeUnit.MILLISECONDS.toSeconds(start).toInt(),
-                endTime = TimeUnit.MILLISECONDS.toSeconds(bufferDuration).toInt(),
-                comingFrom = CurrentOperation.VIDEO_EDITING
-        )
+                clips = arrayListOf(concatOutputPath),
+                startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
+                outputPath = trimmedOutputPath,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
+
+        val speedChangeTask = VideoOpItem(
+                operation = IVideoOpListener.VideoOp.SPEED,
+                clips = arrayListOf(trimmedOutputPath),
+                outputPath = speedChangedPath,
+                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
+
+        val taskList = arrayListOf<VideoOpItem>()
+
+        taskList.apply {
+            add(concatenateTask)
+            add(trimTask)
+            add(speedChangeTask)
+        }
+
+        val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
+        createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+        VideoService.enqueueWork(requireContext(), createNewVideoIntent)
     }
 
     /**

@@ -534,8 +534,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
             val virtualToRealCompletedIntent = Intent(VIRTUAL_TO_REAL_ACTION)
             virtualToRealCompletedIntent.putExtra("video_path", processedVideoPath)
             sendBroadcast(virtualToRealCompletedIntent)
-        }else {
-            CoroutineScope(IO).launch { //  todo: check if this was from right swipe
+        }else if(fromOperation != CurrentOperation.VIDEO_EDITING){
+            CoroutineScope(IO).launch {
                 val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                 addSnip(processedVideoPath, duration, duration)
             }
