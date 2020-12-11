@@ -561,6 +561,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             startRangeUI()
             resetPlaybackUI()
+            if(showBuffer){
+                undoExtendTrim()
+            }
             if(tmpSpeedDetails != null){
                 uiRangeSegments?.removeAt(currentEditSegment)
                 tmpSpeedDetails = null
@@ -591,14 +594,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 removeBufferOverlays()
                 acceptTrimChanges()
                 showAdjustedSpeedChanges()
-
-                progressTracker = null
-                progressTracker = ProgressTracker(player)
-                with(progressTracker!!) {
-                    setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
-                    setChangeAccepted(true)
-                    run()
-                }
             }
 
             editHistory.add(editAction)
@@ -622,6 +617,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)
                 timebarHolder.removeView(ref)
                 tmpSpeedDetails = null
+            }
+
+            if(showBuffer){
+                undoExtendTrim()
             }
 
             startingTimestamps = -1L
@@ -696,6 +695,19 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     }
 
     /**
+     * resets the editor to play the original video
+     */
+    private fun undoExtendTrim() {
+        removeBufferOverlays()
+        showBuffer = false
+        bufferDuration = 0L
+        bufferPath = ""
+        maxDuration = videoDuration
+        setupPlayer()
+        showAdjustedSpeedChanges()
+    }
+
+    /**
      * adjusts the speed changes so that they remain as is regardless of extend/trim
      */
     private fun showAdjustedSpeedChanges() {
@@ -732,6 +744,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             uiRangeSegments?.add(tmp)
             timebarHolder.addView(tmp)
+
+            //  start tracking these changes
+            progressTracker = null
+            progressTracker = ProgressTracker(player)
+            with(progressTracker!!) {
+                setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
+                setChangeAccepted(true)
+                run()
+            }
         }
     }
 
