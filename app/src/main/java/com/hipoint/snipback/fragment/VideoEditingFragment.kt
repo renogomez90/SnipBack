@@ -698,6 +698,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * resets the editor to play the original video
      */
     private fun undoExtendTrim() {
+
         removeBufferOverlays()
         showBuffer = false
         bufferDuration = 0L
@@ -1854,6 +1855,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private suspend fun showContentUnavailableToast() {
         withContext(Main) {
             Toast.makeText(requireContext(), "buffered content unavailable", Toast.LENGTH_SHORT).show()
+            removeBufferOverlays()
+            resetPlaybackUI()
         }
     }
 
@@ -1890,7 +1893,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
                     if(bufferDuration > 0L && videoDuration > 0L)
                         addToVideoPlayback(sorted[0].video_path_processed)
-                    else showContentUnavailableToast()
+                    else {
+                        showContentUnavailableToast()
+                    }
 
                 }catch (e: IllegalArgumentException){
                     showContentUnavailableToast()
