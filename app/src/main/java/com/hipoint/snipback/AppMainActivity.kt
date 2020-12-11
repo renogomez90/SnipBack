@@ -39,6 +39,7 @@ import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
 import com.hipoint.snipback.videoControl.VideoService.Companion.LAUNCHED_FROM
+import com.hipoint.snipback.videoControl.VideoService.Companion.ignoreResultOf
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
@@ -280,6 +281,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      * @param totalDuration Int
      */
     fun addSnip(snipFilePath: String, snipDuration: Int, totalDuration: Int) {
+        Log.d(TAG, "addSnip: adding snip $snipFilePath")
         if (addedToSnip.contains(snipFilePath))  //  This is a work around till we figure out the cause of duplication
             return
         else
@@ -378,12 +380,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     private suspend fun checkIfBufferAvailableForSnip(snip: Snip) {
         val bufferDetails = VideoService.bufferDetails
 
-        Log.d(TAG, "Buffer: current snip path ${snip.videoFilePath}")
-
         bufferDetails.forEach {
-            Log.d(TAG, "Buffer: $it")
             if (it.videoPath == snip.videoFilePath) {
-                Log.d(TAG, "Buffer: Found Buffer")
                 addToDBAsBuffer(it.bufferPath, snip)
                 return@forEach
             }
@@ -528,14 +526,30 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      * @param processedVideoPath String
      */
     private fun videoTrimCompleted(processedVideoPath: String, fromOperation: CurrentOperation) {
-        Log.d(TAG, "$processedVideoPath Completed")
+        if(ignoreResultOf.isNotEmpty()) {
+            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.TRIMMED) {
+                ignoreResultOf.removeAt(0)
+
+                val trimCompleteReceiver = Intent(VideoEditingFragment.EXTEND_TRIM_ACTION)
+                trimCompleteReceiver.putExtra("operation", IVideoOpListener.VideoOp.TRIMMED.name)
+                trimCompleteReceiver.putExtra("fileName", processedVideoPath)
+                sendBroadcast(trimCompleteReceiver)
+                return
+            }
+        }
+
+        Log.d(TAG, "videoTrimCompleted $processedVideoPath Completed")
         if(virtualToReal){
             virtualToReal = false
             val virtualToRealCompletedIntent = Intent(VIRTUAL_TO_REAL_ACTION)
             virtualToRealCompletedIntent.putExtra("video_path", processedVideoPath)
             sendBroadcast(virtualToRealCompletedIntent)
-        }else if(fromOperation != CurrentOperation.VIDEO_EDITING){
+        }else {
+            if(fromOperation == CurrentOperation.VIDEO_EDITING)
+                return
+
             CoroutineScope(IO).launch {
+                Log.d(TAG, "videoTrimCompleted: entered coroutine")
                 val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                 addSnip(processedVideoPath, duration, duration)
             }
@@ -552,7 +566,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      * @param processedVideoPath String
      */
     private fun videoSplitCompleted(processedVideoPath: String, comingFrom: CurrentOperation) {
-        Log.d(TAG, "$processedVideoPath Completed")
+        if(ignoreResultOf.isNotEmpty()) {
+            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.SPLIT) {
+                ignoreResultOf.removeAt(0)
+                return
+            }
+        }
+            Log.d(TAG, "$processedVideoPath Completed")
         CoroutineScope(IO).launch {
             val pathList = arrayListOf("$processedVideoPath-0.mp4", "$processedVideoPath-1.mp4")
             getMetadataDurations(pathList).forEachIndexed { index, dur ->
@@ -571,6 +591,17 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      * @param processedVideoPath
      */
     fun videoConcatCompleted(processedVideoPath: String, comingFrom: CurrentOperation) {
+        if(ignoreResultOf.isNotEmpty()){
+            if(ignoreResultOf[0] == IVideoOpListener.VideoOp.CONCAT) {
+                ignoreResultOf.removeAt(0)
+                val concatCompleteReceiver = Intent(VideoEditingFragment.EXTEND_TRIM_ACTION)
+                concatCompleteReceiver.putExtra("operation", IVideoOpListener.VideoOp.CONCAT.name)
+                concatCompleteReceiver.putExtra("fileName", processedVideoPath)
+                sendBroadcast(concatCompleteReceiver)
+                return
+            }
+        }
+
         val totalDuration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
         if(comingFrom != CurrentOperation.VIDEO_RECORDING) {
             addSnip(processedVideoPath, totalDuration, totalDuration)     //  merged file is saved to DB
@@ -620,6 +651,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
      * @param processedVideoPath
      */
     private fun videoSpeedChangeCompleted(processedVideoPath: String, comingFrom: CurrentOperation) {
+        if(ignoreResultOf.isNotEmpty()) {
+            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.SPEED) {
+                ignoreResultOf.removeAt(0)
+                return
+            }
+        }
+
         Log.d(TAG, "videoSpeedChangeCompleted: Video Saved at $processedVideoPath")
         Toast.makeText(this, "Video Saved at $processedVideoPath", Toast.LENGTH_SHORT).show()
         val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
@@ -692,6 +730,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     }
 
     private fun videoPreviewFramesCompleted(processedVideoPath: String, comingFrom: CurrentOperation) {
+        if(ignoreResultOf.isNotEmpty()) {
+            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.FRAMES) {
+                ignoreResultOf.removeAt(0)
+                return
+            }
+        }
+
         val previewIntent = Intent()
         previewIntent.putExtra("preview_path", processedVideoPath)
         previewIntent.action = VideoEditingFragment.PREVIEW_ACTION
@@ -763,6 +808,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
     }
 
     private fun videoFramesAdded(processedVideoPath: String, comingFrom: CurrentOperation) {
+        if(ignoreResultOf.isNotEmpty()) {
+            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.KEY_FRAMES) {
+                ignoreResultOf.removeAt(0)
+                return
+            }
+        }
+
         val intent = Intent("frames_added")
         sendBroadcast(intent)
     }

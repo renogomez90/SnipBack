@@ -74,39 +74,6 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip2      Second clip to be merged
      * @param outputPath Path to save output
      */
-    /*suspend fun concatenateFiles(clip1: File, clip2: File, outputPath: String, comingFrom: CurrentOperation) {
-        val retriever = MediaMetadataRetriever()
-
-        retriever.setDataSource(clip1.absolutePath)
-        val duration1 = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
-        retriever.setDataSource(clip2.absolutePath)
-        val duration2 = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
-        retriever.release()
-
-        val tmpFile = createFileList(arrayListOf(clip1, clip2))
-        val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -g 2 -c copy -threads 4 -y -b:v 1M $outputPath"
-
-        Log.d(TAG, "concatenateFiles: cmd= $cmd")
-        try {
-            EpEditor.execCmd(cmd, duration1 + duration2, object : OnEditorListener {
-                override fun onSuccess() {
-                    File(tmpFile).delete()
-                    Log.d(TAG, "Concat Success")
-                    opListener.changed(IVideoOpListener.VideoOp.CONCAT, comingFrom, outputPath)
-                }
-
-                override fun onFailure() {
-                    Log.d(TAG, "Concat Failed")
-                    opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
-                }
-
-                override fun onProgress(progress: Float) {}
-            })
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }*/
-
     suspend fun concatenateMultiple(fileList: List<File>, outputPath: String, comingFrom: CurrentOperation){
         val retriever = MediaMetadataRetriever()
         var totalDuration = 0L
@@ -123,7 +90,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
         try {
-            EpEditor.execCmd(cmd, totalDuration, object : OnEditorListener {
+            EpEditor.execCmd(cmd, TimeUnit.MILLISECONDS.toMicros(totalDuration), object : OnEditorListener {
                 override fun onSuccess() {
                     File(tmpFile).delete()
                     Log.d(TAG, "Concat Success")
@@ -168,7 +135,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         Log.d(TAG, "trimToClip: cmd= $cmd")
         try {
-            EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+            EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), object : OnEditorListener {
                 override fun onSuccess() {
                     opListener.changed(IVideoOpListener.VideoOp.TRIMMED, comingFrom, outputPath)
                 }
@@ -220,7 +187,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         Log.d(TAG, "splitVideo: cmd= $cmd")
 
         try {
-            EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+            EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), object : OnEditorListener {
                 override fun onSuccess() {
                     opListener.changed(IVideoOpListener.VideoOp.SPLIT, comingFrom, "$outputFolder/${clip.nameWithoutExtension}")
                 }
@@ -247,28 +214,26 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param outputPath Path to save output
      */
     suspend fun changeSpeed(clip: File, speedDetailsList: ArrayList<SpeedDetails>, outputPath: String, comingFrom: CurrentOperation) {
+        Log.d(TAG, "changeSpeed: output = $outputPath")
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip.absolutePath)
         val totalDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
 
-        val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
+        val complexFilter = if (speedDetailsList.isEmpty()) {
+            "[0:v]trim=0:$totalDuration,setpts=PTS-STARTPTS[v1];[0:a]atrim=0:$totalDuration,asetpts=PTS-STARTPTS[a1];[v1][a1]concat=n=1:v=1:a=1[outv][outa]"
+        } else {
+            makeComplexFilter(speedDetailsList, totalDuration)
+        }
+
         Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
-        /*val cmd = "-i ${clip.absolutePath} -filter_complex " +
-                "[0:v]trim=0:2,setpts=PTS-STARTPTS[v1]; " + //from 0 to 2 sec normal speed; output reference is [v1]
-                "[0:v]trim=2:5,setpts=2*(PTS-STARTPTS)[v2]; " + //from 2 to 5 sec slow down * 2
-                "[0:v]trim=5,setpts=PTS-STARTPTS[v3]; " +   // 5 sec onwards normal speed
-                "[0:a]atrim=0:2,asetpts=PTS-STARTPTS[a1]; " +   // audio follows the same pattern as above
-                "[0:a]atrim=2:5,asetpts=PTS-STARTPTS,atempo=0.5[a2]; " +
-                "[0:a]atrim=5,asetpts=PTS-STARTPTS[a3]; " +
-                "[v1][a1][v2][a2][v3][a3]concat=n=3:v=1:a=1 " +
-                "-preset superfast -profile:v baseline $outputPath"*/
 
         val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -g 2 -preset ultrafast -shortest -threads 4 -y $outputPath"
 
         Log.d(TAG, "changeSpeed: cmd = $cmd")
 
-        EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+        EpEditor.execCmd(cmd, TimeUnit.MILLISECONDS.toMicros(totalDuration), object : OnEditorListener {
             override fun onSuccess() {
+                Log.d(TAG, "changeSpeed: success output = $outputPath")
                 opListener.changed(IVideoOpListener.VideoOp.SPEED, comingFrom, outputPath)
             }
 
@@ -394,7 +359,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         Log.d(TAG, "getThumbnails: cmd = $cmd")
 
-        EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+        EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), object : OnEditorListener {
             override fun onSuccess() {
                 opListener.changed(IVideoOpListener.VideoOp.FRAMES, comingFrom, outputPath.absolutePath)
             }

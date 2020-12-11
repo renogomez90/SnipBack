@@ -180,6 +180,46 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
     private var thumbnailExtractionStarted:Boolean = false
 
+    private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let{
+                val operation = it.getStringExtra("operation")
+                val inputName = it.getStringExtra("fileName")
+
+                val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val trimmedOutputPath = "${File(inputName).parent}/trimmed-$timeStamp.mp4"
+                val speedChangedPath = "${File(inputName).parent}/VID_$timeStamp.mp4"
+
+                val taskList = arrayListOf<VideoOpItem>()
+
+                if(operation == IVideoOpListener.VideoOp.CONCAT.name){
+                    val trimTask = VideoOpItem(
+                            operation = IVideoOpListener.VideoOp.TRIMMED,
+                            clips = arrayListOf(inputName),
+                            startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                            endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
+                            outputPath = trimmedOutputPath,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
+
+                    taskList.add(trimTask)
+                }else if(operation == IVideoOpListener.VideoOp.TRIMMED.name) {
+                    val speedChangeTask = VideoOpItem(
+                            operation = IVideoOpListener.VideoOp.SPEED,
+                            clips = arrayListOf(inputName),
+                            outputPath = speedChangedPath,
+                            speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
+
+                    taskList.add(speedChangeTask)
+                }
+
+                val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
+                createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+                VideoService.enqueueWork(requireContext(), createNewVideoIntent)
+            }
+        }
+    }
+
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
@@ -290,11 +330,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         super.onResume()
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
         requireActivity().registerReceiver(toRealCompletionReceiver, IntentFilter(VIRTUAL_TO_REAL_ACTION))
+        requireActivity().registerReceiver(extendTrimReceiver, IntentFilter(EXTEND_TRIM_ACTION))
     }
 
     override fun onPause() {
         requireActivity().unregisterReceiver(previewTileReceiver)
         requireActivity().unregisterReceiver(toRealCompletionReceiver)
+        requireActivity().unregisterReceiver(extendTrimReceiver)
         super.onPause()
     }
 
@@ -804,7 +846,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 editedEnd = endBClip
             } else {
                 clip1 = ClippingMediaSource(bufferSource, TimeUnit.MILLISECONDS.toMicros(startBClip), TimeUnit.MILLISECONDS.toMicros(bufferDuration))
-                clip2 = ClippingMediaSource(videoSource, TimeUnit.MILLISECONDS.toMicros(0), TimeUnit.MILLISECONDS.toMicros(endingTimestamps))
+                clip2 = ClippingMediaSource(videoSource, TimeUnit.MILLISECONDS.toMicros(0), TimeUnit.MILLISECONDS.toMicros(endingTimestamps - bufferDuration))
                 editedEnd = endingTimestamps
             }
         } else {
@@ -1639,6 +1681,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     companion object {
         const val PREVIEW_ACTION = "com.hipoint.snipback.previewTile"
         const val VIRTUAL_TO_REAL_ACTION = "com.hipoint.snipback.virtualToReal"
+        const val EXTEND_TRIM_ACTION = "com.hipoint.snipback.extendTrim"
         private var tries = 0
 
         var saveAction: SaveActionType = SaveActionType.CANCEL
@@ -1879,8 +1922,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val videoPath = snip!!.videoFilePath
         val concatOutputPath = "${File(videoPath).parent}/$timeStamp.mp4"
-        val trimmedOutputPath = "${File(videoPath).parent}/trimmed-$timeStamp.mp4"
-        val speedChangedPath = "${File(videoPath).parent}/VID_$timeStamp.mp4"
 
         val concatenateTask = VideoOpItem(
                 operation = IVideoOpListener.VideoOp.CONCAT,
@@ -1888,28 +1929,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 outputPath = concatOutputPath,
                 comingFrom = CurrentOperation.VIDEO_EDITING)
 
-        val trimTask = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(concatOutputPath),
-                startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
-                endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
-                outputPath = trimmedOutputPath,
-                comingFrom = CurrentOperation.VIDEO_EDITING)
-
-        val speedChangeTask = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.SPEED,
-                clips = arrayListOf(trimmedOutputPath),
-                outputPath = speedChangedPath,
-                speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
-                comingFrom = CurrentOperation.VIDEO_EDITING)
-
         val taskList = arrayListOf<VideoOpItem>()
 
         taskList.apply {
             add(concatenateTask)
-            add(trimTask)
-            add(speedChangeTask)
         }
+        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)
+        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
 
         val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
         createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)

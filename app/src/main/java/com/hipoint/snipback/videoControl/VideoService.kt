@@ -31,7 +31,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
         val STATUS_HIDE_PROGRESS = 4
 
         var isProcessing = false
-
+        val ignoreResultOf: ArrayList<IVideoOpListener.VideoOp> = arrayListOf()
         val bufferDetails: ArrayList<BufferDataDetails> = arrayListOf() // saves path to video and corresponding video-buffer
 
         private var workQueue: Queue<VideoOpItem> = LinkedList()
@@ -58,7 +58,6 @@ class VideoService : JobIntentService(), IVideoOpListener {
     }
 
     private fun processQueue() {
-        Log.d(TAG, "processQueue: processing")
         isProcessing = true
 
         if (workQueue.isNotEmpty()) {
@@ -73,6 +72,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
             sendBroadcast(broadcastIntent)
 
             with(work) {
+                Log.d(TAG, "processQueue: operation = $operation")
                 when (operation) {
                     IVideoOpListener.VideoOp.CONCAT -> {
                         if (clips.isEmpty() || clips.size < 2) {
@@ -80,7 +80,6 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                Log.d(TAG, "buffer: added to buffer at concatenateFiles")
                                 val clipFiles = arrayListOf<File>()
                                 clips.forEach { clipFiles.add(File(it)) }
                                 VideoUtils(this@VideoService).concatenateMultiple(clipFiles, outputPath, comingFrom)
@@ -107,9 +106,6 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                if (work.comingFrom == CurrentOperation.CLIP_RECORDING) {
-                                    Log.d(TAG, "buffer: added to buffer at trimToClip")
-                                }
                                 VideoUtils(this@VideoService).trimToClip(File(clips[0]), outputPath, startTime, endTime, comingFrom)
                                 return@launch
                             }
@@ -127,7 +123,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                         }
                     }
                     IVideoOpListener.VideoOp.SPEED -> {
-                        if (speedDetailsList.isNullOrEmpty()) {
+                        if (speedDetailsList == null) {
                             failed(IVideoOpListener.VideoOp.SPEED, comingFrom)
                             return@with
                         } else {
