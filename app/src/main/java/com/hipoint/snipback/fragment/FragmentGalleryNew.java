@@ -145,7 +145,10 @@ public class FragmentGalleryNew extends Fragment {
             }
         });
 
-        camera_button.setOnClickListener(v -> ((AppMainActivity) requireActivity()).loadFragment(VideoMode.newInstance(), false));
+        camera_button.setOnClickListener(v -> {
+
+            ((AppMainActivity) requireActivity()).loadFragment(VideoMode.newInstance(), false);
+        });
         menu_button.setOnClickListener(v -> {
             final Dialog dialog = new Dialog(requireActivity());
             view_button.setImageResource(R.drawable.ic_view_unselected);
@@ -316,33 +319,14 @@ public class FragmentGalleryNew extends Fragment {
                     if (hd_snips != null && hd_snips.size() > 0) {  //  get available HD Snips
                         hdSnips.addAll(hd_snips);
 
-                        // sort by Snip ID then by name
-                        Collections.sort(hdSnips, (o1, o2) -> {
-                            Integer id1 = o1.getSnip_id();
-                            Integer id2 = o2.getSnip_id();
-                            int comp = id1.compareTo(id2);
-
-                            if(comp != 0){
-                                return comp;
-                            }
-
-                            String n1 = o1.getVideo_path_processed().toLowerCase();
-                            String n2 = o2.getVideo_path_processed().toLowerCase();
-
-                            return n1.compareTo(n2);
-                        });
-
-                        for (int i = 1; i < hdSnips.size(); i++) {
-                            if(hdSnips.get(i - 1).getSnip_id() == hdSnips.get(i).getSnip_id()){
-                                hdSnips.remove(i -1);
-                            }
-                        }
+                        // sort by Snip ID then by name, to weed out the buffer videos
+                        removeBufferContent(hdSnips);
 
                         appViewModel.getSnipsLiveData().observe(getViewLifecycleOwner(), snips -> { //get snips
                             if (snips != null && snips.size() > 0) {
                                 for (Snip snip : snips) {
                                     for (Hd_snips hdSnip : hdSnips) {
-                                        if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {  //  if HD snip is a parent of a snip or HR snip is the current snip
+                                        if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {  //  if HD snip is a parent of a snip or HD snip is the current snip
                                             snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
                                             for (Event event : allEvents) {
                                                 if (event.getEvent_id() == snip.getEvent_id()) {
@@ -371,6 +355,34 @@ public class FragmentGalleryNew extends Fragment {
                 });
             }
         });
+    }
+
+    /**
+     * filters out the buffered content from the DB list by sorting and removing from list
+     *
+     * @param hdSnips
+     */
+    private void removeBufferContent(List<Hd_snips> hdSnips) {
+        hdSnips.sort((o1, o2) -> {
+            Integer id1 = o1.getSnip_id();
+            Integer id2 = o2.getSnip_id();
+            int comp = id1.compareTo(id2);
+
+            if (comp != 0) {
+                return comp;
+            }
+
+            String n1 = o1.getVideo_path_processed().toLowerCase();
+            String n2 = o2.getVideo_path_processed().toLowerCase();
+
+            return n1.compareTo(n2);
+        });
+
+        for (int i = 1; i < hdSnips.size(); i++) {
+            if(hdSnips.get(i - 1).getSnip_id() == hdSnips.get(i).getSnip_id()){
+                hdSnips.remove(i -1);
+            }
+        }
     }
 
     private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";

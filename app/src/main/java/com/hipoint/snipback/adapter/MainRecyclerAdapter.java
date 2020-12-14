@@ -2,29 +2,22 @@ package com.hipoint.snipback.adapter;
 
 import android.content.Context;
 import android.text.format.DateFormat;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
-import com.hipoint.snipback.room.entities.AllCategory;
-import com.hipoint.snipback.room.entities.CategoryItem;
-import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Snip;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapter.MainViewHolder> {
 
@@ -92,7 +85,29 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange, Integer orientation) {
         ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange, orientation);
         itemRecyclerAdapter.notifyDataSetChanged();
-        recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
+//        recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
+        GridLayoutManager layoutManager = new GridLayoutManager(context, 4, RecyclerView.VERTICAL, false);
+
+        Set<Integer> hasChildren = new HashSet<>();
+        for(Snip snip: allEventSnips){
+            List<Snip> tmp = AppClass.getAppInstance().getChildSnipsByParentSnipId(eventId, snip.getSnip_id());
+            if(tmp.size() > 1){
+                hasChildren.add(snip.getSnip_id());
+            }
+        }
+
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                if(allEventSnips.get(position).getHas_virtual_versions() == 1 ||
+                    hasChildren.contains(allEventSnips.get(position).getSnip_id())){
+                    return 4;
+                }
+
+                return 1;
+            }
+        });
+        recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(itemRecyclerAdapter);
     }
 

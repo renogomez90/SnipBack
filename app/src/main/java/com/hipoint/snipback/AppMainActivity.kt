@@ -189,6 +189,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         for (entry in 0 until count) {
             if (supportFragmentManager.getBackStackEntryAt(entry).name == tag) {
                 isAlreadyPresent = true
+                supportFragmentManager.popBackStack(entry, 0)
                 break
             }
         }
