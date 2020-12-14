@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="214dp"
+    android:layout_height="196dp"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:orientation="vertical"
+    android:layout_centerInParent="true"
+    android:background="@drawable/background_warningdialog">
+
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="52dp"
+        android:fontFamily="@font/barlow_semibold"
+        android:text="Confirmation"
+        android:textColor="@color/colorPrimaryDimRed"
+        android:textSize="21sp" />
+
+    <TextView
+        android:id="@+id/dialog_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/barlow_regular"
+        android:layout_marginTop="5dp"
+        android:text="Are you sure, do you want \nto delete this snip?"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:textColor="@color/colorPrimary" />
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right">
+
+        <TextView
+            android:id="@+id/dialog_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            android:fontFamily="@font/barlow_semibold"
+            android:textSize="13sp"
+            android:layout_marginBottom="20dp"
+            android:textAllCaps="true"
+            android:layout_marginTop="30dp"
+            android:textColor="@color/colorPrimaryDimRed" />
+
+        <TextView
+            android:id="@+id/dialog_cancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/barlow_semibold"
+            android:text="Cancel"
+            android:textSize="13sp"
+            android:layout_toEndOf="@id/dialog_ok"
+            android:textAllCaps="true"
+            android:layout_marginTop="30dp"
+            android:layout_marginBottom="20dp"
+            android:gravity="center"
+            android:layout_marginEnd="26dp"
+            android:layout_marginStart="22dp"
+            android:textColor="@color/colorPrimary" />
+    </RelativeLayout>
+
+
+</LinearLayout>

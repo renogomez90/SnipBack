@@ -1,0 +1,31 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="TextAppearance.Design.Tab" parent="TextAppearance.AppCompat.Button">
+        <item name="android:textSize">14sp</item>
+        <!--        <item name="android:textColor">@color/mtrl_tabs_legacy_text_color_selector</item>-->
+        <item name="textAllCaps">true</item>
+    </style>
+
+    <style name="CustomTabText" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">20sp</item>
+        <item name="textAllCaps">true</item>
+    </style>
+
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <style name="SeekBar" parent="AppTheme">
+        <item name="android:colorControlActivated">#EA3C2A</item>
+        <item name="played_color">#EA3C2A</item>
+        <item name="unplayed_color">#f8f9fa</item>
+        <item name="android:colorControlNormal">#f8f9fa</item>
+    </style>
+
+</resources>

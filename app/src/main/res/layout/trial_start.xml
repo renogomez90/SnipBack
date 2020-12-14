@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:padding="37dp">
+
+    <ImageView
+        android:contentDescription="@string/no_desc"
+        android:id="@+id/reject"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:src="@drawable/close" />
+
+    <ImageView
+        android:contentDescription="@string/no_desc"
+        android:id="@+id/image1"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/ic_gift"
+        android:layout_below="@id/reject" />
+
+    <TextView
+        android:id="@+id/tv_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/image1"
+        android:layout_marginTop="26dp"
+        android:fontFamily="@font/barlow_bold"
+        android:text="FREE TOTAL"
+        android:textColor="#ffffff"
+        android:gravity="center"
+        android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/tv_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_1"
+        android:fontFamily="@font/barlow_bold"
+        android:text="ACCESS FOR 14 DAYS"
+        android:textColor="#ffffff"
+        android:gravity="center"
+        android:textSize="22dp" />
+
+    <TextView
+        android:id="@+id/tv_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_2"
+        android:padding="12dp"
+        android:fontFamily="@font/barlow_light"
+        android:text="Thanks for trying out SnipBack.\nTo help you get started,we've given you\n TOTAL ACCESS for 14 days. "
+        android:textColor="#ffffff"
+        android:gravity="center"
+        android:textSize="15sp" />
+
+    <Button
+        android:id="@+id/bt1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#EA3C2A"
+        android:text="Enjoy!"
+        android:textColor="#ffffff"
+        android:layout_alignParentBottom="true" />
+
+
+</RelativeLayout>

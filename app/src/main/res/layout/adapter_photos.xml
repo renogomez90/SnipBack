@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimary">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sunday, 24 May 2020"
+        android:id="@+id/datelabel"
+        android:textColor="@color/colorPrimaryWhite"
+        android:fontFamily="@font/barlow_semibold"
+        android:textSize="15sp" />
+
+    <ImageView
+        android:contentDescription="@string/no_desc"
+        android:layout_width="145dp"
+        android:layout_height="88dp"
+        android:id="@+id/image"
+        android:layout_below="@id/datelabel"
+        android:src="@drawable/wallpaper_beach" />
+
+</RelativeLayout>

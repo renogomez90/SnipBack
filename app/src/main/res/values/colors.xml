@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#000000</color>
+    <color name="colorPrimaryDark">#000000</color>
+    <color name="colorAccent">#000000</color>
+    <color name="bottom_menu">#212737</color>
+    <color name="colorDarkGrey">#2E2E2E</color>
+    <color name="colorDarkGreyDim">#989DA5</color>
+    <color name="colorPrimaryWhite">#ffffff</color>
+    <color name="colorPrimaryRed">#FF1B00</color>
+    <color name="colorPrimaryDimRed">#EA3C2A</color>
+    <color name="colorPrimaryAccentRed">#C9503A</color>
+    <color name="colorPrimaryGrey">#989DA5</color>
+    <color name="progress_color">#C1C1C1</color>
+
+    <color name="colorTheme">#000000</color>
+    <color name="colorSkyTheme">#000000</color>
+    <color name="colorWhite">#fff</color>
+    <color name="colorBlack">#000</color>
+    <color name="colorTxt">#212121</color>
+    <color name="colorHint">#707070</color>
+    <color name="colorPrimaryLt">#615C5585</color>
+    <color name="colorBlackLt">#80000000</color>
+    <color name="colorWhiteLt">#80FFFFFF</color>
+    <color name="colorThemeRed">#F00606</color>
+    <color name="colorDefaultBg">#f8f9fa</color>
+    <color name="colorGreyLt">#AD87868A</color>
+    <color name="red_tag">#F53A27</color>
+
+    <color name="blueOverlay">#800099CC</color>
+    <color name="greenOverlay">#80669900</color>
+    <color name="blackOverlay">#80000000</color>
+    <color name="blue">#0099CC</color>
+    <color name="green">#669900</color>
+</resources>

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary">
+
+    <TextView
+        android:id="@+id/photolabel"
+        android:layout_width="101dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="44dp"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/photo_button_background"
+        android:fontFamily="@font/barlow_bold"
+        android:gravity="center"
+        android:text="PHOTOS"
+        android:textColor="@color/colorPrimaryWhite"
+        android:textSize="13sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/photolabel"
+        android:layout_above="@id/llfooter"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="14dp"
+        android:visibility="visible" />
+
+    <RelativeLayout
+        android:id="@+id/import_con"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/photolabel"
+        android:visibility="gone">
+
+        <ImageView
+            android:contentDescription="@string/no_desc"
+            android:id="@+id/player_view_image"
+            android:layout_width="145dp"
+            android:layout_height="145dp"
+            android:layout_marginStart="44dp"
+            android:layout_marginTop="24dp"
+            android:scaleType="fitXY"
+            android:visibility="visible" />
+
+        <RelativeLayout
+            android:id="@+id/click"
+            android:layout_width="145dp"
+            android:layout_height="145dp"
+            android:layout_marginStart="44dp"
+            android:layout_marginTop="24dp"
+            android:background="@android:color/transparent"
+            android:focusable="true"
+            android:hardwareAccelerated="true"
+            android:visibility="visible" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/llfooter"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/bottom_menu"
+        android:baselineAligned="false"
+        android:gravity="center">
+
+        <RelativeLayout
+            android:id="@+id/layout_camera"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="2dp"
+            android:layout_weight="0.2"
+            android:gravity="center">
+
+            <ImageButton
+            android:contentDescription="@string/no_desc"
+                android:id="@+id/camera"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_camera" />
+
+            <TextView
+                android:id="@+id/camera_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/camera"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/barlow_regular"
+                android:gravity="center"
+                android:text="Camera"
+                android:textColor="@color/colorPrimaryGrey"
+                android:textSize="10sp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/layout_link"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_weight="0.2"
+            android:gravity="center">
+
+            <ImageButton
+            android:contentDescription="@string/no_desc"
+                android:id="@+id/link"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_link" />
+
+            <TextView
+                android:id="@+id/link_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/link"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/barlow_regular"
+                android:gravity="center"
+                android:text="Link"
+                android:textColor="@color/colorPrimaryGrey"
+                android:textSize="10sp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/layout_filter"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_weight="0.2"
+            android:gravity="center">
+
+            <ImageButton
+            android:contentDescription="@string/no_desc"
+                android:id="@+id/filter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_filter_results_button" />
+
+            <TextView
+                android:id="@+id/highlight_text_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/filter"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/barlow_regular"
+                android:gravity="center"
+                android:text="Filter"
+                android:textColor="@color/colorPrimaryGrey"
+                android:textSize="10sp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/layout_view"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_weight="0.2"
+            android:gravity="center">
+
+            <ImageButton
+            android:contentDescription="@string/no_desc"
+                android:id="@+id/_button_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_view" />
+
+            <TextView
+                android:id="@+id/slow_text_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/_button_view"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/barlow_regular"
+                android:gravity="center"
+                android:text="View"
+                android:textColor="@color/colorPrimaryRed"
+                android:textSize="10sp" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/layout_menu"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="20dp"
+            android:layout_weight="0.2"
+            android:gravity="center">
+
+            <ImageButton
+            android:contentDescription="@string/no_desc"
+                android:id="@+id/dropdown_menu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_menu" />
+
+            <TextView
+                android:id="@+id/speedup_text_btn"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/dropdown_menu"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/barlow_regular"
+                android:gravity="center"
+                android:text="Menu"
+                android:textColor="@color/colorPrimaryGrey"
+                android:textSize="10sp" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</RelativeLayout>
