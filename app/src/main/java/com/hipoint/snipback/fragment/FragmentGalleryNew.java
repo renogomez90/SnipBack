@@ -327,7 +327,7 @@ public class FragmentGalleryNew extends Fragment {
                                 for (Snip snip : snips) {
                                     for (Hd_snips hdSnip : hdSnips) {
                                         if (hdSnip.getSnip_id() == snip.getParent_snip_id() || hdSnip.getSnip_id() == snip.getSnip_id()) {  //  if HD snip is a parent of a snip or HD snip is the current snip
-                                            snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
+//                                            snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
                                             for (Event event : allEvents) {
                                                 if (event.getEvent_id() == snip.getEvent_id()) {
                                                     AppClass.getAppInstance().setEventSnipsFromDb(event, snip);

@@ -232,6 +232,16 @@ class FragmentPlayVideo2 : Fragment() {
         return rootView
     }
 
+    /**
+     * restarts the player with the updated snips.
+     * To be called after an edited file has been saved
+     */
+    fun updatePlaybackFile(updatedSnip: Snip){
+        snip = updatedSnip
+        player.release()
+        initSetup()
+    }
+
     private fun initSetup() {
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
@@ -444,15 +454,19 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     companion object {
+        var fragment: FragmentPlayVideo2? = null
+
         @JvmStatic
         fun newInstance(snip: Snip?): FragmentPlayVideo2 {
             //  we need to create new fragments for each video
             // otherwise the smooth scrolling is having issues for some reason
-            val fragment = FragmentPlayVideo2()
+            if(fragment == null)
+                fragment = FragmentPlayVideo2()
+
             val bundle = Bundle()
             bundle.putParcelable("snip", snip)
-            fragment.arguments = bundle
-            return fragment
+            fragment!!.arguments = bundle
+            return fragment!!
         }
     }
 

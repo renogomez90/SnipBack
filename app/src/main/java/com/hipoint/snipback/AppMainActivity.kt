@@ -709,8 +709,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                     index--
                 }
             }
-            fm.popBackStack()
-            //  now we are at the gallery and can play the modified video
+//            fm.popBackStack()             //  now we are at the gallery and can play the modified video
             if(processedVideoPath != null){
                 CoroutineScope(IO).launch {
                     var snip: Snip? = null
@@ -722,7 +721,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                     }
                     withContext(Main) {
                         if (snip != null) {
-                            loadFragment(FragmentPlayVideo2.newInstance(snip), true)
+                            playbackFragment?.updatePlaybackFile(snip)
                         }
                     }
                 }
