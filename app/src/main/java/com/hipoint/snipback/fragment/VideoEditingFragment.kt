@@ -1430,6 +1430,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             controllerAutoShow = false
             controllerShowTimeoutMs = -1
             controllerHideOnTouch = false
+            setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
             setShowMultiWindowTimeBar(showBuffer)
             showController()
         }
