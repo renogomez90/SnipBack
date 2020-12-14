@@ -455,6 +455,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
                 else -> {}
             }
+
+            Log.d(TAG, "bindListeners: start: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
         /**
@@ -525,6 +527,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 else -> {}
             }
 //            }
+            Log.d(TAG, "bindListeners: end: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
             acceptRejectHolder.visibility = View.VISIBLE
         }
 
@@ -599,6 +602,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             editHistory.add(editAction)
             startRangeUI()
             resetPlaybackUI()
+            Log.d(TAG, "bindListeners: accept: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
         /**
@@ -675,6 +679,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 handleExistingSpeedChange(currentPosition, false)
             }
             editAction = EditAction.SLOW
+
+            Log.d(TAG, "bindListeners: slow: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
         speedTextBtn.setOnClickListener {
@@ -686,6 +692,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 handleExistingSpeedChange(currentPosition, true)
             }
             editAction = EditAction.FAST
+
+            Log.d(TAG, "bindListeners: speed: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
         speedIndicator.setOnClickListener {
@@ -1058,7 +1066,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             val correctBy =
                 if (it.startWindowIndex != it.endWindowIndex)   //  correction is required if the previous ranges span across two clips
                     bufferDuration
-                else 0L
+                else if(it.startWindowIndex == 1) bufferDuration else 0L
 
             if(correctBy != 0L){
                 if(player.currentWindowIndex == 1 && currentPosition in (0 .. (it.timeDuration?.second!! - bufferDuration))){
@@ -1194,7 +1202,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 val correctBy =
                     if (it.startWindowIndex != it.endWindowIndex)   //  correction is required if the previous ranges span across two clips
                         bufferDuration
-                    else 0L
+                    else if(it.startWindowIndex == 1) bufferDuration else 0L
 
                 if(correctBy != 0L){
                     if(player.currentWindowIndex == 1 && currentPosition in (0 .. (it.timeDuration?.second!! - bufferDuration))){
@@ -2071,7 +2079,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         tmpSpeedDetails = speedDetails
 
         player.setPlaybackParameters(PlaybackParameters(speedDetails.multiplier.toFloat()))
-        currentEditSegment = position
+        speedDetailSet.forEachIndexed { index, it ->
+            if(it.timeDuration!!.first == speedDetails.timeDuration!!.first && it.timeDuration!!.second == speedDetails.timeDuration!!.second){
+                currentEditSegment = index
+            }
+        }
+//        currentEditSegment = position
         if(tmpSpeedDetails!!.startWindowIndex == 1) {
             player.seekTo(tmpSpeedDetails!!.startWindowIndex, tmpSpeedDetails!!.timeDuration!!.first - bufferDuration)
         }else{
