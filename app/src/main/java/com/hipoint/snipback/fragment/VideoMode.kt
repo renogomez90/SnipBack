@@ -10,6 +10,7 @@ import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.*
@@ -68,7 +69,8 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, IRecordUIListener, ISettingsClosedListener {
-    val swipeValue = 5 * 1000L  //  swipeBack duration
+    
+    var swipeValue = 5 * 1000L  //  swipeBack duration
     var clipDuration = 30 * 1000L
     var userRecordDuration    = 0             //  duration of user recorded time
 
@@ -76,7 +78,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private val swipedFileNames : ArrayList<String>            = arrayListOf()                   //  names of files generated from swiping left
     private var parentSnip      : Snip?                        = null
     private var swipedRecording : SwipedRecording?             = null
-
     private var currentOperation: CurrentOperation             = CurrentOperation.CLIP_RECORDING
 
     //dialogs
@@ -222,6 +223,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var zoomOut          : ImageButton
     private lateinit var zoomIn           : ImageButton
 
+    private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(SettingsDialog.SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
+
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -247,6 +250,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun setupCameraControl() {
         if(cameraControl == null)
             cameraControl = CameraControl(requireActivity())
+
+        clipDuration = (pref.getInt(SettingsDialog.BUFFER_DURATION, 1) * 60 * 1000).toLong()
+        swipeValue = (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong()
         
         cameraControl!!.apply {
             setRecordUIListener(this@VideoMode)
@@ -1245,6 +1251,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     override fun settingsSaved() {
-        Log.d(TAG, "saveSettings: Settings dialog closed")
+        clipDuration = (pref.getInt(SettingsDialog.BUFFER_DURATION, 1) * 60 * 1000).toLong()  
+        swipeValue = (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong()
+        cameraControl!!.setClipDuration(clipDuration)
+        Toast.makeText(requireContext(), "settings updated", Toast.LENGTH_SHORT).show()
+        cameraControl!!.restartRecording()
     }
 }

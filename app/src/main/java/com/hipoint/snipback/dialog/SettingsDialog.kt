@@ -23,7 +23,7 @@ import com.hipoint.snipback.listener.ISettingsClosedListener
 
 class SettingsDialog(context: Context,val closeListener: ISettingsClosedListener) : DialogFragment() {
     private val TAG = SettingsDialog::class.java.simpleName
-    private val pref: SharedPreferences by lazy { context.getSharedPreferences("preference", Context.MODE_PRIVATE) }
+    private val pref: SharedPreferences by lazy { context.getSharedPreferences(SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
 
     private lateinit var quality              : RelativeLayout
     private lateinit var feedback             : RelativeLayout
@@ -33,8 +33,9 @@ class SettingsDialog(context: Context,val closeListener: ISettingsClosedListener
     private lateinit var qbValue              : TextView
 
     companion object {
-        const val BUFFER_DURATION = "BUFFER_DURATION"
-        const val QB_DURATION     = "QUICKBACK_DURATION"
+        const val BUFFER_DURATION      = "BUFFER_DURATION"
+        const val QB_DURATION          = "QUICKBACK_DURATION"
+        const val SETTINGS_PREFERENCES = "PREFERENCES"
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -87,10 +88,10 @@ class SettingsDialog(context: Context,val closeListener: ISettingsClosedListener
     }
 
     private fun initialize() {
-        val currentBuffer = pref.getInt(BUFFER_DURATION, 5)
+        val currentBuffer = pref.getInt(BUFFER_DURATION, 1)
         val currentQb = pref.getInt(QB_DURATION, 5)
 
-        bufferDurationSeekbar.min = 5
+        bufferDurationSeekbar.min = 1
         bufferDurationSeekbar.max = 60
 
         quickbackSeekbar.min = 5
@@ -123,7 +124,6 @@ class SettingsDialog(context: Context,val closeListener: ISettingsClosedListener
     }
 
     override fun onCancel(dialog: DialogInterface) {
-        Log.d(TAG, "bindListener: cancelled")
         updateSettings()
         closeListener.settingsSaved()
         super.onCancel(dialog)

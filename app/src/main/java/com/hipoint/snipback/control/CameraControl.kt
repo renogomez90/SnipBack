@@ -224,6 +224,10 @@ class CameraControl(val activity: FragmentActivity) {
         clipDuration = duration
     }
 
+    fun setSwipeDuration(duration: Long){
+        clipDuration = duration
+    }
+
     fun setRecordPressed(isPressed: Boolean){
         recordPressed = isPressed
     }
