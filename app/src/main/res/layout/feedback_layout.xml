@@ -41,7 +41,7 @@
     </RelativeLayout>
 
     <RelativeLayout
-        android:id="@+id/con2"
+        android:id="@+id/feedback_holder"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_below="@id/con1">
@@ -78,7 +78,7 @@
         android:id="@+id/con3"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:layout_below="@id/con2">
+        android:layout_below="@id/feedback_holder">
 
         <EditText
             android:id="@+id/tv3"

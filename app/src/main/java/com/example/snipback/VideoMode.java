@@ -69,14 +69,14 @@ public class VideoMode extends Fragment {
         dialog.setCancelable(true);
         dialog.setContentView(R.layout.fragment_settings);
 
-        RelativeLayout con6 = dialog.findViewById(R.id.con6);
+        RelativeLayout con6 = dialog.findViewById(R.id.quality_holder);
         con6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showDialogSettingsResolution();
             }
         });
-        RelativeLayout feedback = dialog.findViewById(R.id.con2);
+        RelativeLayout feedback = dialog.findViewById(R.id.feedback_holder);
         feedback.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -6,7 +6,6 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.AlertDialog
-import android.app.Application
 import android.app.Dialog
 import android.content.Context
 import android.content.DialogInterface
@@ -39,9 +38,10 @@ import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.control.CameraControl
+import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.listener.IRecordUIListener
-import com.hipoint.snipback.listener.IVideoOpListener
+import com.hipoint.snipback.listener.ISettingsClosedListener
 import com.hipoint.snipback.listener.IVideoOpListener.VideoOp
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
@@ -67,7 +67,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, IRecordUIListener {
+class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, IRecordUIListener, ISettingsClosedListener {
     val swipeValue = 5 * 1000L  //  swipeBack duration
     var clipDuration = 30 * 1000L
     var userRecordDuration    = 0             //  duration of user recorded time
@@ -78,6 +78,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var swipedRecording : SwipedRecording?             = null
 
     private var currentOperation: CurrentOperation             = CurrentOperation.CLIP_RECORDING
+
+    //dialogs
+    var settingsDialog: SettingsDialog? = null
 
     var zoomFactor: TextView? = null
 
@@ -924,18 +927,22 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private fun showDialogSettingsMain() {
-        val dialog = Dialog(requireActivity())
+        settingsDialog = SettingsDialog(requireContext(), this@VideoMode)
+        settingsDialog?.show(requireActivity().supportFragmentManager, "Settings Frag")
+
+
+    /*val dialog = Dialog(requireActivity())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
         dialog.setContentView(R.layout.fragment_settings)
-        val con6 = dialog.findViewById<RelativeLayout>(R.id.con6)
+        val con6 = dialog.findViewById<RelativeLayout>(R.id.quality_holder)
         con6.setOnClickListener { showDialogSettingsResolution() }
-        val feedback = dialog.findViewById<RelativeLayout>(R.id.con2)
+        val feedback = dialog.findViewById<RelativeLayout>(R.id.feedback_holder)
         feedback.setOnClickListener {
             (activity as AppMainActivity?)!!.loadFragment(Feedback_fragment.newInstance(), true)
             dialog.dismiss()
         }
-        dialog.show()
+        dialog.show()*/
     }
 
     private fun showDialogSettingsResolution() {
@@ -1235,5 +1242,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         mChronometer.stop()
         mChronometer.visibility = View.INVISIBLE
         mChronometer.text = ""
+    }
+
+    override fun settingsSaved() {
+        Log.d(TAG, "saveSettings: Settings dialog closed")
     }
 }

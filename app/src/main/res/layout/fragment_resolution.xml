@@ -43,7 +43,7 @@
 
 
     <RelativeLayout
-        android:id="@+id/con2"
+        android:id="@+id/feedback_holder"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_below="@id/con1">
@@ -66,7 +66,7 @@
         android:id="@+id/vvv1"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_below="@id/con2"
+        android:layout_below="@id/feedback_holder"
         android:layout_marginStart="28.5dp"
         android:layout_marginEnd="29.11dp"
         android:layout_marginTop="10dp"
@@ -166,7 +166,7 @@
         android:background="#707070" />
 
     <RelativeLayout
-        android:id="@+id/con6"
+        android:id="@+id/quality_holder"
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_below="@id/v2">
@@ -189,7 +189,7 @@
         android:id="@+id/v4"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_below="@id/con6"
+        android:layout_below="@id/quality_holder"
         android:layout_marginStart="28.5dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="29.11dp"
