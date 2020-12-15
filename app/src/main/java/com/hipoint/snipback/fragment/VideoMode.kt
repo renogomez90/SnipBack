@@ -253,7 +253,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         clipDuration = (pref.getInt(SettingsDialog.BUFFER_DURATION, 1) * 60 * 1000).toLong()
         swipeValue = (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong()
-        
+
         cameraControl!!.apply {
             setRecordUIListener(this@VideoMode)
             setPreviewTexture(mTextureView)
@@ -315,7 +315,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         //        accessRoomDatabase();
         mTextureView.setOnClickListener(this)
         mTextureView.setOnTouchListener(this)
-        gallery.setOnClickListener { (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance(), true) }
+        gallery.setOnClickListener {
+            Log.d(TAG, "bindListeners: gallery btn clicked")
+            (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance(), true)
+        }
         settings.setOnClickListener { showDialogSettingsMain() }
         changeCamera.setOnClickListener {
             cameraControl!!.closeToSwitchCamera()

@@ -146,8 +146,8 @@ public class FragmentGalleryNew extends Fragment {
         });
 
         camera_button.setOnClickListener(v -> {
-
-            ((AppMainActivity) requireActivity()).loadFragment(VideoMode.newInstance(), false);
+//            ((AppMainActivity) requireActivity()).loadFragment(VideoMode.newInstance(), false);
+            requireActivity().getSupportFragmentManager().popBackStack();   //  assuming that FragmentGalleryNew is loaded only from VideoMode
         });
         menu_button.setOnClickListener(v -> {
             final Dialog dialog = new Dialog(requireActivity());
@@ -266,7 +266,6 @@ public class FragmentGalleryNew extends Fragment {
         List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
         mainRecyclerAdapter = new MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange, orientation);
         mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-
     }
 
 

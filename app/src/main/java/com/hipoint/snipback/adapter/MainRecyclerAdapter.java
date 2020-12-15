@@ -1,6 +1,7 @@
 package com.hipoint.snipback.adapter;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.R;
+import com.hipoint.snipback.Swipper;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Snip;
@@ -83,11 +85,11 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 
 
     private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange, Integer orientation) {
+        int spanCount = getSpanCount();
         ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange, orientation);
         itemRecyclerAdapter.notifyDataSetChanged();
 //        recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
-        GridLayoutManager layoutManager = new GridLayoutManager(context, 4, RecyclerView.VERTICAL, false);
-
+        GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount, RecyclerView.VERTICAL, false);
         Set<Integer> hasChildren = new HashSet<>();
         for(Snip snip: allEventSnips){
             List<Snip> tmp = AppClass.getAppInstance().getChildSnipsByParentSnipId(eventId, snip.getSnip_id());
@@ -101,7 +103,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
             public int getSpanSize(int position) {
                 if(allEventSnips.get(position).getHas_virtual_versions() == 1 ||
                     hasChildren.contains(allEventSnips.get(position).getSnip_id())){
-                    return 4;
+                    return spanCount;
                 }
 
                 return 1;
@@ -109,6 +111,14 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         });
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(itemRecyclerAdapter);
+    }
+
+    private int getSpanCount() {
+        int orientation = context.getResources().getConfiguration().orientation;
+        if(orientation == Configuration.ORIENTATION_PORTRAIT)
+            return 4;
+        else
+            return 8;
     }
 
     public static String getDate(long time) {

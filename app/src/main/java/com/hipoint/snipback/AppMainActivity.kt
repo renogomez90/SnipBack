@@ -109,7 +109,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 //        appViewModel.loadGalleryDataFromDB(this);
 
         if (!videoModeFragment.isAdded && supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
-            loadFragment(videoModeFragment, false)
+            loadFragment(videoModeFragment, true)
         }
         /*
         if (!hasPermissions(this, *PERMISSIONS)) {
@@ -197,7 +197,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         if (!isAlreadyPresent) {
             ft.replace(R.id.mainFragment, fragment!!, tag)
 
-            if (addToBackStack/* || fragment is FragmentGalleryNew*/) {
+            if (addToBackStack) {
                 ft.addToBackStack(tag)
             }
             ft.commitAllowingStateLoss()
@@ -215,6 +215,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         Log.d(TAG, "onBackPressed: stack count $count")
         for (entry in 0 until count)
             Log.d(TAG, "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}")
+
+        if(videoModeFragment.isVisible || count == 1){    //  we are at the first fragment when back was pressed. we can exit
+            finish()
+        }
 
         if (count == 0) {
             super.onBackPressed()
