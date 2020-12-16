@@ -11,7 +11,6 @@ import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.media.CamcorderProfile
 import android.media.MediaCodec
-import android.media.MediaMetadataRetriever
 import android.media.MediaRecorder
 import android.os.Handler
 import android.os.HandlerThread
@@ -24,10 +23,8 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.Utils.AutoFitTextureView
-import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IRecordUIListener
-import com.hipoint.snipback.videoControl.VideoService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,7 +42,7 @@ import kotlin.math.sqrt
 class CameraControl(val activity: FragmentActivity) {
     companion object {
         private val TAG = CameraControl::class.java.simpleName
-        
+
         //Camera Orientation
         const val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
         const val SENSOR_ORIENTATION_INVERSE_DEGREES = 270
@@ -65,18 +62,18 @@ class CameraControl(val activity: FragmentActivity) {
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 90)
         INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0)
     }
-    
+
     private var recordUIListener : IRecordUIListener?      = null
     private val totalDuration    : IntArray                = intArrayOf(0)                             //  total combined duration of merged clip
     private var mTextureView     : AutoFitTextureView?     = null
     private var persistentSurface: Surface                 = MediaCodec.createPersistentInputSurface()
-    private var mPreviewBuilder  : CaptureRequest.Builder? = null
+    private var mRequestBuilder  : CaptureRequest.Builder? = null
 
     private var clipDuration  = 30 * 1000L //  Buffer duration
     private var recordPressed = false      //  to know if the user has actively started recording
     private var stopPressed   = false      //  to know if the user has actively ended recording, todo: this can be removed once a better handing is in place
     private var recordClips   = true       //  to check if short clips should be recorded
-    
+
     private var chosenCProfile      : CamcorderProfile? = null
     private var mSensorOrientation  : Int?              = null
     private var outputFilePath      : String?           = null
@@ -88,7 +85,7 @@ class CameraControl(val activity: FragmentActivity) {
     private var zoomLevel      = 1.0
 
     private var zoom: Rect? = null
-    
+
 
     /**
      * The [android.util.Size] of camera preview.
@@ -99,7 +96,7 @@ class CameraControl(val activity: FragmentActivity) {
      * The [android.util.Size] of video recording.
      */
     private var mVideoSize: Size? = null
-    
+
     /**
      * A reference to the opened [android.hardware.camera2.CameraDevice].
      */
@@ -134,7 +131,7 @@ class CameraControl(val activity: FragmentActivity) {
             if (recordClips && !stopPressed) {
 //                parentSnipId = AppClass.getAppInstance().lastSnipId + 1
                 startRecordingVideo()
-            } else startPreview()
+            } /*else startPreview()*/
             mCameraOpenCloseLock.release()
             configureTransform(mTextureView!!.width, mTextureView!!.height)
         }
@@ -172,7 +169,7 @@ class CameraControl(val activity: FragmentActivity) {
      * Whether the app is recording video now
      */
     private var mIsRecordingVideo = false
-    
+
     /**
      * Stops and restarts the mediaRecorder,
      * assuming the mediaRecorder is initialized and already recording
@@ -215,7 +212,7 @@ class CameraControl(val activity: FragmentActivity) {
     fun setRecordUIListener(uiListener: IRecordUIListener){
         recordUIListener = uiListener
     }
-    
+
     fun setPreviewTexture(previewTexture: AutoFitTextureView){
         mTextureView = previewTexture
     }
@@ -235,15 +232,15 @@ class CameraControl(val activity: FragmentActivity) {
     fun setStopPressed(isPressed: Boolean){
         stopPressed = isPressed
     }
-    
+
     fun isRecordingVideo(): Boolean{
         return mIsRecordingVideo
     }
-    
+
     fun setRecordClips(recordingClips: Boolean){
         recordClips = recordingClips
     }
-    
+
     fun isRecordingClips(): Boolean{
         return recordClips
     }
@@ -288,7 +285,7 @@ class CameraControl(val activity: FragmentActivity) {
             // Choose the sizes for camera preview and video recording
             val characteristics = manager.getCameraCharacteristics(cameraId)
             val map = characteristics
-                    .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
             mSensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
             if (map == null) {
                 throw RuntimeException("Cannot get available preview/video sizes")
@@ -369,31 +366,31 @@ class CameraControl(val activity: FragmentActivity) {
             closePreviewSession()
             val texture = mTextureView!!.surfaceTexture!!
             texture.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
-            mPreviewBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+            mRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             val previewSurface = Surface(texture)
-            mPreviewBuilder!!.addTarget(previewSurface)
+            mRequestBuilder!!.addTarget(previewSurface)
             mCameraDevice!!.createCaptureSession(listOf(previewSurface),
-                    object : CameraCaptureSession.StateCallback() {
-                        override fun onConfigured(session: CameraCaptureSession) {
-                            mPreviewSession = session
-                            //                            updatePreview();
-                            //  calling capture request without starting another thread.
-                            mPreviewBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
-                            try {
-                                mPreviewSession!!.setRepeatingRequest(mPreviewBuilder!!.build(), null, mBackgroundHandler)
-                            } catch (e: CameraAccessException) {
-                                e.printStackTrace()
-                                Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
-                                activity.finish()
-                            } catch (e1: IllegalStateException) {
-                                e1.printStackTrace()
-                            }
+                object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(session: CameraCaptureSession) {
+                        mPreviewSession = session
+                        //                            updatePreview();
+                        //  calling capture request without starting another thread.
+                        mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+                        try {
+                            mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                        } catch (e: CameraAccessException) {
+                            e.printStackTrace()
+                            Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
+                            activity.finish()
+                        } catch (e1: IllegalStateException) {
+                            e1.printStackTrace()
                         }
+                    }
 
-                        override fun onConfigureFailed(session: CameraCaptureSession) {
-                            Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
-                        }
-                    }, mBackgroundHandler)
+                    override fun onConfigureFailed(session: CameraCaptureSession) {
+                        Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
+                    }
+                }, mBackgroundHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
@@ -407,10 +404,10 @@ class CameraControl(val activity: FragmentActivity) {
             return
         }
         try {
-            setUpCaptureRequestBuilder(mPreviewBuilder)
+            setUpCaptureRequestBuilder(mRequestBuilder)
             val thread = HandlerThread("CameraPreview")
             thread.start()
-            mPreviewSession!!.setRepeatingRequest(mPreviewBuilder!!.build(), null, mBackgroundHandler)
+            mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e1: IllegalStateException) {
@@ -445,8 +442,8 @@ class CameraControl(val activity: FragmentActivity) {
             bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY())
             matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
             val scale = max(
-                    viewHeight.toFloat() / mPreviewSize!!.height,
-                    viewWidth.toFloat() / mPreviewSize!!.width)
+                viewHeight.toFloat() / mPreviewSize!!.height,
+                viewWidth.toFloat() / mPreviewSize!!.width)
             matrix.postScale(scale, scale, centerX, centerY)
             matrix.postRotate(90 * (rotation - 2).toFloat(), centerX, centerY)
         } else if (Surface.ROTATION_180 == rotation) {
@@ -532,7 +529,7 @@ class CameraControl(val activity: FragmentActivity) {
 
             // External sdcard file location
             val mediaStorageDir = File(activity.dataDir,
-                    VideoMode.VIDEO_DIRECTORY_NAME)
+                VideoMode.VIDEO_DIRECTORY_NAME)
             // Create storage directory if it does not exist
             if (!mediaStorageDir.exists()) {
                 if (!mediaStorageDir.mkdirs()) {
@@ -542,7 +539,7 @@ class CameraControl(val activity: FragmentActivity) {
                 }
             }
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss",
-                    Locale.getDefault()).format(Date())
+                Locale.getDefault()).format(Date())
             val mediaFile: File
             mediaFile = File(mediaStorageDir.path + File.separator
                     + "VID_" + timeStamp + ".mp4")
@@ -566,18 +563,18 @@ class CameraControl(val activity: FragmentActivity) {
 
             val texture = mTextureView!!.surfaceTexture!!
             texture.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
-            mPreviewBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+            mRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_VIDEO_SNAPSHOT)
             val surfaces: MutableList<Surface> = ArrayList()
 
             // Set up Surface for the camera preview
             val previewSurface = Surface(texture)
             surfaces.add(previewSurface)
-            mPreviewBuilder!!.addTarget(previewSurface)
+            mRequestBuilder!!.addTarget(previewSurface)
 
             // Set up Surface for the MediaRecorder
 //            val recorderSurface = mMediaRecorder!!.surface
             surfaces.add(persistentSurface)
-            mPreviewBuilder!!.addTarget(persistentSurface)
+            mRequestBuilder!!.addTarget(persistentSurface)
             val startRecTime = System.currentTimeMillis()
             // Start a capture session
             // Once the session starts, we can update the UI and start recording
@@ -585,9 +582,9 @@ class CameraControl(val activity: FragmentActivity) {
                 override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                     mPreviewSession = cameraCaptureSession
                     //                    updatePreview();
-                    mPreviewBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+                    mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
                     try {
-                        mPreviewSession!!.setRepeatingRequest(mPreviewBuilder!!.build(), null, mBackgroundHandler)
+                        mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
                     } catch (e: CameraAccessException) {
                         e.printStackTrace()
                         Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
@@ -638,8 +635,8 @@ class CameraControl(val activity: FragmentActivity) {
         val bigEnough = arrayListOf<Size>()
         // Collect the supported resolutions that are smaller than the preview Surface
         val notBigEnough = arrayListOf<Size>()
-        val w = aspectRatio!!.width
-        val h = aspectRatio.height
+        val w =  aspectRatio!!.width
+        val h =  aspectRatio.height
         for (option in choices) {
             /*if (option.height == option.width * h / w) {*/
             if(option.height == h || option.width == w) {
@@ -650,9 +647,6 @@ class CameraControl(val activity: FragmentActivity) {
                 }
             }
         }
-
-        // Pick the smallest of those big enough. If there is no one big enough, pick the
-        // largest of those not big enough.
 
         // Pick the smallest of those big enough. If there is no one big enough, pick the
         // largest of those not big enough.
@@ -689,7 +683,7 @@ class CameraControl(val activity: FragmentActivity) {
             if (CamcorderProfile.hasProfile(p)) {
                 val tmp = CamcorderProfile.get(p)
                 if (tmp.videoFrameWidth <= mPreviewSize!!.width && tmp.videoFrameHeight <= mPreviewSize!!.height ||
-                        tmp.videoFrameWidth <= mPreviewSize!!.height && tmp.videoFrameHeight <= mPreviewSize!!.width) candidateProfiles.add(tmp)
+                    tmp.videoFrameWidth <= mPreviewSize!!.height && tmp.videoFrameHeight <= mPreviewSize!!.width) candidateProfiles.add(tmp)
             }
         }
         val comparator = Comparator<CamcorderProfile?> { p1, p2 -> if (p1 != null && p2 != null) p2.videoFrameWidth * p2.videoFrameHeight - p1.videoFrameWidth * p1.videoFrameHeight else 0 }
@@ -715,7 +709,7 @@ class CameraControl(val activity: FragmentActivity) {
         // UI
         mIsRecordingVideo = false
         recordUIListener?.stopChronometerUI()
-        
+
         // Stop recording
         mMediaRecorder!!.stop()
 
@@ -724,10 +718,8 @@ class CameraControl(val activity: FragmentActivity) {
         if(clipQueueSize() > 3){    // trimming down clutter
             clipQueue!!.remove().delete()
         }
-
-        startPreview()
     }
-    
+
     private fun <T> cameraCharacteristics(cameraId: String, key: CameraCharacteristics.Key<T>): T {
         val manager = activity.getSystemService(CAMERA_SERVICE) as CameraManager
         val characteristics = manager.getCameraCharacteristics(cameraId)
@@ -778,7 +770,7 @@ class CameraControl(val activity: FragmentActivity) {
             val characteristics = manager.getCameraCharacteristics(mCameraId)
             val maxZoom = characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)!!
             val m = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
-                    ?: return true
+                ?: return true
             val currentFingerSpacing: Float
             //            setUpCaptureRequestBuilder(mPreviewBuilder);
             if (event.pointerCount == 2) {
@@ -811,8 +803,8 @@ class CameraControl(val activity: FragmentActivity) {
 
                     // zoom represents the zoomed visible area
                     zoom = Rect(croppedWidth / 2, croppedHeight / 2,
-                            m.width() - croppedWidth / 2, m.height() - croppedHeight / 2)
-                    mPreviewBuilder!!.set(CaptureRequest.SCALER_CROP_REGION, zoom)
+                        m.width() - croppedWidth / 2, m.height() - croppedHeight / 2)
+                    mRequestBuilder!!.set(CaptureRequest.SCALER_CROP_REGION, zoom)
                 }
                 finger_spacing = currentFingerSpacing
             } /*else {
@@ -821,7 +813,7 @@ class CameraControl(val activity: FragmentActivity) {
                     }
                 }*/
             try {
-                mPreviewSession!!.setRepeatingRequest(mPreviewBuilder!!.build(), null, mBackgroundHandler)
+                mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
                 Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
@@ -840,8 +832,8 @@ class CameraControl(val activity: FragmentActivity) {
         if (zoomRect != null) {
             try {
                 //you can try to add the synchronized object here
-                mPreviewBuilder!!.set(CaptureRequest.SCALER_CROP_REGION, zoomRect)
-                mPreviewSession!!.setRepeatingRequest(mPreviewBuilder!!.build(), null, mBackgroundHandler)
+                mRequestBuilder!!.set(CaptureRequest.SCALER_CROP_REGION, zoomRect)
+                mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating preview: ", e)
             }
@@ -872,7 +864,7 @@ class CameraControl(val activity: FragmentActivity) {
                 val croppedHeight = activeRect.height() - (activeRect.height().toFloat() * ratio).roundToInt()
                 //Finally, zoom represents the zoomed visible area
                 return Rect(croppedWidth / 2, croppedHeight / 2,
-                        activeRect.width() - croppedWidth / 2, activeRect.height() - croppedHeight / 2)
+                    activeRect.width() - croppedWidth / 2, activeRect.height() - croppedHeight / 2)
                 //                mPreviewBuilder.set(CaptureRequest.SCALER_CROP_REGION, zoom);
 //                return  zoom;
             } else if (zoomLevel == 0f) {
@@ -896,7 +888,7 @@ class CameraControl(val activity: FragmentActivity) {
             (-1).toFloat()
         }
     }
-    
+
     /**
      * Returns the calculated space between touch points
      *
