@@ -32,6 +32,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import com.google.android.exoplayer2.upstream.DefaultAllocator
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.SwipedRecording
@@ -56,6 +57,11 @@ import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import kotlinx.android.synthetic.main.fragment_gallery.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -331,19 +337,20 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         appRepository = instance
         mChronometer.onChronometerTickListener = OnChronometerTickListener {
-            //                if (!resume) {
-            val time = SystemClock.elapsedRealtime() - mChronometer.base
-            val h = (time / 3600000).toInt()
-            val m = (time - h * 3600000).toInt() / 60000
-            val s = (time - h * 3600000 - m * 60000).toInt() / 1000
-            val t = (if (h < 10) "0$h" else h.toString()) + ":" + (if (m < 10) "0$m" else m) + ":" + if (s < 10) "0$s" else s
-            mChronometer.text = t
-            val minutes = (SystemClock.elapsedRealtime() - mChronometer.base) / 1000 / 60
-            val seconds = (SystemClock.elapsedRealtime() - mChronometer.base) / 1000 % 60
-            val elapsedMillis = (SystemClock.elapsedRealtime() - mChronometer.base).toInt()
-            timerSecond = TimeUnit.MILLISECONDS.toSeconds(elapsedMillis.toLong()).toInt()
-            //                    elapsedTime = SystemClock.elapsedRealtime();
-            Log.d(TAG, "onChronometerTick: $minutes : $seconds")
+            CoroutineScope(Main).launch {
+                val time = SystemClock.elapsedRealtime() - mChronometer.base
+                val h = (time / 3600000).toInt()
+                val m = (time - h * 3600000).toInt() / 60000
+                val s = (time - h * 3600000 - m * 60000).toInt() / 1000
+                val t = (if (h < 10) "0$h" else h.toString()) + ":" + (if (m < 10) "0$m" else m) + ":" + if (s < 10) "0$s" else s
+                mChronometer.text = t
+                val minutes = (SystemClock.elapsedRealtime() - mChronometer.base) / 1000 / 60
+                val seconds = (SystemClock.elapsedRealtime() - mChronometer.base) / 1000 % 60
+                val elapsedMillis = (SystemClock.elapsedRealtime() - mChronometer.base).toInt()
+                timerSecond = TimeUnit.MILLISECONDS.toSeconds(elapsedMillis.toLong()).toInt()
+                //                    elapsedTime = SystemClock.elapsedRealtime();
+                Log.d(TAG, "onChronometerTick: $minutes : $seconds")
+            }
         }
         mMinZoom = cameraControl!!.getMinZoom()
         mMaxZoom = cameraControl!!.getMaxZoom() - 1
@@ -403,14 +410,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
                 // Once the record button is pressed we no longer need to capture clips since the
                 // the user has started actively recording.
-                recordClips = false //  todo can these be removed?
-                updateFlags(recordClips = recordClips, recordPressed = true, stopPressed = false)
+
                 userRecordDuration = 0
 //                startRecordingVideo()
                 with(cameraControl!!) {
                     if (isRecordingVideo() && isRecordingClips()) {
+                        updateFlags(recordClips = false, recordPressed = true, stopPressed = false)
                         try {
-                            restartRecording()
+                            CoroutineScope(Default).launch { restartRecording() }
                         } catch (e: IllegalStateException) {
                             //  attempt to reopen the camera
                             Log.e(TAG, "Forcing camera restart")
@@ -428,6 +435,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     }
                 }
 
+                updateFlags(recordClips = false, recordPressed = true, stopPressed = false)
                 swipedRecording = null
                 while (cameraControl!!.clipQueueSize() > 3) {
                     cameraControl?.removeClipQueueItem()?.delete()
@@ -438,12 +446,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 recStartLayout.visibility = View.INVISIBLE
                 (requireActivity() as AppMainActivity).showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
                 parentSnip = null   //  resetting the session parent Snip
-                cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
-                attemptClipConcat() //  merge what is in the buffer with the recording
-                // we can restart recoding clips if it is required at this point
-                recordClips = true
-                updateFlags(recordClips = recordClips, recordPressed = false, stopPressed = true)
-                cameraControl?.startRecordingVideo()
+                CoroutineScope(Default).launch {
+                    cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
+                    attemptClipConcat() //  merge what is in the buffer with the recording
+                    // we can restart recoding clips if it is required at this point
+                    recordClips = true
+                    updateFlags(recordClips = recordClips, recordPressed = false, stopPressed = true)
+//                cameraControl?.startRecordingVideo()
+                    cameraControl!!.restartRecording()
+                }
             }
             R.id.r_3_bookmark -> {
                 saveSnipTimeToLocal()
@@ -570,7 +581,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Processes the swipe that were made during user recording
      * */
     fun processPendingSwipes(newVideoPath: String = swipedRecording?.originalFilePath?:"", currentOperation: CurrentOperation = CurrentOperation.VIDEO_RECORDING) {
-
+        Log.d(TAG, "processPendingSwipes: started")
         (requireActivity() as AppMainActivity).swipeProcessed = true
 
         if (swipedRecording != null) {
@@ -752,8 +763,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 //      2.  remove item from queue and split the video
                 //  2.  else save what we have. restart the recording inform user.
                 if (cameraControl!!.clipQueueSize() > 0) {
-                    ensureRecordingRestart()
-                    trimOnSwipeDuringClipRecording()
+                    CoroutineScope(Default).launch {
+                        ensureRecordingRestart()
+                        trimOnSwipeDuringClipRecording()
+                    }
                 }
             }
         } else {    // swiped during video recording
@@ -796,35 +809,36 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * @return Boolean  to determine if we should exit the calling function.
      * */
     private fun concatOnSwipeDuringClipRecording(): Boolean {
-        /*
-        val clip1 = cameraControl?.removeClipQueueItem()!!
-        ensureRecordingRestart()
-        val clip2 = cameraControl?.removeClipQueueItem()!!
-        */
-        val clips = arrayListOf<String>()
-        if(cameraControl!!.clipQueueSize() >= 2){
-            val queueSize = cameraControl!!.clipQueueSize()
-            for (i in 0 until queueSize){
-                clips.add(cameraControl!!.removeClipQueueItem()!!.absolutePath)
-                if(i == queueSize - 2)
-                    ensureRecordingRestart()
+        Log.d(TAG, "concatOnSwipeDuringClipRecording: started")
+        CoroutineScope(Default).launch {
+            val clips = arrayListOf<String>()
+            if (cameraControl!!.clipQueueSize() >= 2) {
+                val queueSize = cameraControl!!.clipQueueSize()
+                for (i in 0 until queueSize) {
+                    clips.add(cameraControl!!.removeClipQueueItem()!!.absolutePath)
+                    if (i == queueSize - 2) {
+                        ensureRecordingRestart()
+                    }
+                }
             }
+
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val mergeFilePath = "${File(clips[0]).parent!!}/merged-$timeStamp.mp4"
+            swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+            (requireActivity() as AppMainActivity).showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+
+            val intentService = Intent(requireContext(), VideoService::class.java)
+            val task = arrayListOf(
+                VideoOpItem(
+                    operation = VideoOp.CONCAT,
+                    clips = clips,
+                    outputPath = mergeFilePath,
+                    comingFrom = CurrentOperation.CLIP_RECORDING
+                )
+            )
+            intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
+            VideoService.enqueueWork(requireContext(), intentService)
         }
-
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val mergeFilePath = "${File(clips[0]).parent!!}/merged-$timeStamp.mp4"
-        swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
-        (requireActivity() as AppMainActivity).showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
-
-        val intentService = Intent(requireContext(), VideoService::class.java)
-        val task = arrayListOf(VideoOpItem(
-                operation = VideoOp.CONCAT,
-                clips = clips,
-                outputPath = mergeFilePath,
-                comingFrom = CurrentOperation.CLIP_RECORDING))
-        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
-        VideoService.enqueueWork(requireContext(), intentService)
-
 //        bufferDetails.add(BufferDataDetails(mergeFilePath, clip2.absolutePath))
         return false
     }
@@ -836,6 +850,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * currently recording clip.
      **/
     private fun trimOnSwipeDuringClipRecording() {
+        Log.d(TAG, "trimOnSwipeDuringClipRecording: started")
         val clip = cameraControl?.removeClipQueueItem()!!
         val actualClipTime = (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
         val swipeClipDuration = swipeValue / 1000
@@ -883,27 +898,33 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    private fun ensureRecordingRestart() {
-        with(cameraControl!!) {
-            try {
-                restartRecording()
-            } catch (e: IllegalStateException) {
-                //  attempt to reopen the camera
-                Log.e(TAG, "Forcing camera restart")
-                closeCamera()
-                if (mTextureView.isAvailable) {
-                    openCamera(mTextureView.width, mTextureView.height)
-                    startRecordingVideo()
-                    currentOperation = CurrentOperation.CLIP_RECORDING
+    private suspend fun ensureRecordingRestart() {
+        val done = CoroutineScope(Default).async {
+            with(cameraControl!!) {
+                try {
+                    restartRecording()
+                } catch (e: IllegalStateException) {
+                    //  attempt to reopen the camera
+                    Log.e(TAG, "Forcing camera restart")
+                    closeCamera()
+                    if (mTextureView.isAvailable) {
+                        openCamera(mTextureView.width, mTextureView.height)
+                        startRecordingVideo()
+                        currentOperation = CurrentOperation.CLIP_RECORDING
+                    }
                 }
             }
+
+            return@async true
         }
+        done.await()
     }
 
     /**
      * Check if recorded files can be concatenated, else proceed to process left swipes
      */
     private fun attemptClipConcat() {
+        Log.d(TAG, "attemptClipConcat: started")
         if (cameraControl!!.clipQueueSize() >= 2) {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val clips = arrayListOf<String>()
@@ -911,8 +932,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             for(i in 0 until queueSize){
                 clips.add(cameraControl!!.removeClipQueueItem()!!.absolutePath)
             }
-            /*val clip1: File = cameraControl?.removeClipQueueItem()!!
-            val clip2: File = cameraControl?.removeClipQueueItem()!!*/
+            /*
+            val clip1: File = cameraControl?.removeClipQueueItem()!!
+            val clip2: File = cameraControl?.removeClipQueueItem()!!
+            */
             val mergeFilePath = "${File(clips[0]).parent!!}/merged-$timeStamp.mp4"
 
             /*if (clip1.length() == 0L || clip2.length() == 0L)    // the file is not formed and concat will not work
@@ -1241,16 +1264,20 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     override fun startChronometerUI() {
-        mChronometer.base = SystemClock.elapsedRealtime()
-        mChronometer.start()
-        mChronometer.visibility = View.VISIBLE
+        CoroutineScope(Main).launch {
+            mChronometer.base = SystemClock.elapsedRealtime()
+            mChronometer.start()
+            mChronometer.visibility = View.VISIBLE
+        }
     }
 
     override fun stopChronometerUI() {
-        userRecordDuration = timerSecond
-        mChronometer.stop()
-        mChronometer.visibility = View.INVISIBLE
-        mChronometer.text = ""
+        CoroutineScope(Main).launch {
+            userRecordDuration = timerSecond
+            mChronometer.stop()
+            mChronometer.visibility = View.INVISIBLE
+            mChronometer.text = ""
+        }
     }
 
     override fun settingsSaved() {
@@ -1258,6 +1285,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         swipeValue = (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong()
         cameraControl!!.setClipDuration(clipDuration)
         Toast.makeText(requireContext(), "settings updated", Toast.LENGTH_SHORT).show()
-        cameraControl!!.restartRecording()
+        CoroutineScope(Default).launch { ensureRecordingRestart() }
     }
 }

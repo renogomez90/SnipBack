@@ -25,9 +25,9 @@ import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IRecordUIListener
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.Main
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -111,7 +111,7 @@ class CameraControl(val activity: FragmentActivity) {
      * A reference to the current [android.hardware.camera2.CameraCaptureSession] for
      * preview.
      */
-    private var mPreviewSession: CameraCaptureSession? = null
+    private var mRecordSession: CameraCaptureSession? = null
 
     /**
      * A [Semaphore] to prevent the app from exiting before closing the camera.
@@ -150,6 +150,8 @@ class CameraControl(val activity: FragmentActivity) {
         }
     }
 
+    @Volatile var postedMsgOngoing = false
+
     /**
      * An additional thread for running tasks that shouldn't block the UI.
      */
@@ -174,15 +176,28 @@ class CameraControl(val activity: FragmentActivity) {
      * Stops and restarts the mediaRecorder,
      * assuming the mediaRecorder is initialized and already recording
      */
-    internal fun restartRecording() {
-        Log.d(TAG, "restartRecording: recording restart")
-        try {
-            mMediaRecorder?.stop()
-        } catch (e: RuntimeException) {
-            e.printStackTrace()
+    internal suspend fun restartRecording(maxRecordingReached:Boolean = false) {
+        if(!postedMsgOngoing) {
+            postedMsgOngoing = true
+
+            val done = CoroutineScope(Default).async {
+                Log.d(TAG, "restartRecording: recording restart")
+                try {
+                    mMediaRecorder?.stop()
+                    mIsRecordingVideo = false
+                } catch (e: RuntimeException) {
+                    e.printStackTrace()
+                }
+
+                setUpMediaRecorder()
+                mMediaRecorder?.start()
+                mIsRecordingVideo = true
+
+                return@async false
+            }
+
+            postedMsgOngoing = done.await()
         }
-        setUpMediaRecorder()
-        mMediaRecorder?.start()
     }
 
     /**
@@ -218,10 +233,6 @@ class CameraControl(val activity: FragmentActivity) {
     }
 
     fun setClipDuration(duration: Long){
-        clipDuration = duration
-    }
-
-    fun setSwipeDuration(duration: Long){
         clipDuration = duration
     }
 
@@ -372,12 +383,12 @@ class CameraControl(val activity: FragmentActivity) {
             mCameraDevice!!.createCaptureSession(listOf(previewSurface),
                 object : CameraCaptureSession.StateCallback() {
                     override fun onConfigured(session: CameraCaptureSession) {
-                        mPreviewSession = session
+                        mRecordSession = session
                         //                            updatePreview();
                         //  calling capture request without starting another thread.
                         mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
                         try {
-                            mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                            mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
                         } catch (e: CameraAccessException) {
                             e.printStackTrace()
                             Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
@@ -407,7 +418,7 @@ class CameraControl(val activity: FragmentActivity) {
             setUpCaptureRequestBuilder(mRequestBuilder)
             val thread = HandlerThread("CameraPreview")
             thread.start()
-            mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+            mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e1: IllegalStateException) {
@@ -469,11 +480,11 @@ class CameraControl(val activity: FragmentActivity) {
     @Throws(IOException::class)
     private fun setUpMediaRecorder() {
         //  ensuring the media recorder is recreated
-        try {
+        /*try {
             mMediaRecorder!!.reset()
         } catch (e: IllegalStateException) {
             e.printStackTrace()
-        }
+        }*/
         outputFilePath = outputMediaFile!!.absolutePath
 
         val rotation = activity.windowManager?.defaultDisplay?.rotation
@@ -496,22 +507,31 @@ class CameraControl(val activity: FragmentActivity) {
 
             setOnInfoListener { _, what, _ ->
                 if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED && recordClips) {
-                    try {
-                        restartRecording()
-                    } catch (e: IllegalStateException) {
-                        e.printStackTrace()
-                        //  attempt to reopen the camera
-                        closeCamera()
-                        if (mTextureView!!.isAvailable) {
-                            openCamera(mTextureView!!.width, mTextureView!!.height)
-                        } /*else {
-                            mTextureView!!.surfaceTextureListener = textureListener
-                        }*/
+                    CoroutineScope(Default).launch {
+                        try {
+                            if(!postedMsgOngoing) {
+                                restartRecording(true)
+                            }
+                        } catch (e: IllegalStateException) {
+                            e.printStackTrace()
+                            //  attempt to reopen the camera
+                            closeCamera()
+                            if (mTextureView!!.isAvailable) {
+                                withContext(Main) {
+                                    openCamera(mTextureView!!.width, mTextureView!!.height)
+                                }
+                            }
+                            /*else {
+                                mTextureView!!.surfaceTextureListener = textureListener
+                            }*/
+                        }
                     }
                 }
             }
             prepare()
         }
+
+        Log.d(TAG, "setUpMediaRecorder: thread ${Thread.currentThread().name}")
     }
 
     fun getVideoFilePath(context: Context): String {
@@ -540,8 +560,7 @@ class CameraControl(val activity: FragmentActivity) {
             }
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss",
                 Locale.getDefault()).format(Date())
-            val mediaFile: File
-            mediaFile = File(mediaStorageDir.path + File.separator
+            val mediaFile = File(mediaStorageDir.path + File.separator
                     + "VID_" + timeStamp + ".mp4")
 
             //  adds the created clips to queue
@@ -558,12 +577,12 @@ class CameraControl(val activity: FragmentActivity) {
             return
         }
         try {
-//            closePreviewSession();
             setUpMediaRecorder()
 
             val texture = mTextureView!!.surfaceTexture!!
             texture.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
-            mRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_VIDEO_SNAPSHOT)
+
+            mRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
             val surfaces: MutableList<Surface> = ArrayList()
 
             // Set up Surface for the camera preview
@@ -572,7 +591,6 @@ class CameraControl(val activity: FragmentActivity) {
             mRequestBuilder!!.addTarget(previewSurface)
 
             // Set up Surface for the MediaRecorder
-//            val recorderSurface = mMediaRecorder!!.surface
             surfaces.add(persistentSurface)
             mRequestBuilder!!.addTarget(persistentSurface)
             val startRecTime = System.currentTimeMillis()
@@ -580,11 +598,11 @@ class CameraControl(val activity: FragmentActivity) {
             // Once the session starts, we can update the UI and start recording
             mCameraDevice!!.createCaptureSession(surfaces, object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                    mPreviewSession = cameraCaptureSession
-                    //                    updatePreview();
+                    mRecordSession = cameraCaptureSession
+//                    updatePreview()
                     mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
                     try {
-                        mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                        mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
                     } catch (e: CameraAccessException) {
                         e.printStackTrace()
                         Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
@@ -597,8 +615,8 @@ class CameraControl(val activity: FragmentActivity) {
                     val vmFrag = activity.supportFragmentManager.findFragmentByTag(AppMainActivity.VIDEO_MODE_TAG)
                     if (vmFrag != null) {
                         if ((vmFrag as VideoMode).isVisible) {
-                            mMediaRecorder!!.start()
-                            Log.d(TAG, "setUpMediaRecorder start time = ${System.currentTimeMillis() - startRecTime}")
+                            mMediaRecorder!!.start()    //  already called from bg thread
+                            Log.d(TAG,"setUpMediaRecorder start time = ${System.currentTimeMillis() - startRecTime}")
                         }
                     }
                 }
@@ -693,9 +711,9 @@ class CameraControl(val activity: FragmentActivity) {
     }
 
     private fun closePreviewSession() {
-        if (mPreviewSession != null) {
-            mPreviewSession!!.close()
-            mPreviewSession = null
+        if (mRecordSession != null) {
+            mRecordSession!!.close()
+            mRecordSession = null
         }
     }
 
@@ -714,7 +732,6 @@ class CameraControl(val activity: FragmentActivity) {
         mMediaRecorder!!.stop()
 
         lastUserRecordedPath = outputFilePath
-
         if(clipQueueSize() > 3){    // trimming down clutter
             clipQueue!!.remove().delete()
         }
@@ -813,7 +830,7 @@ class CameraControl(val activity: FragmentActivity) {
                     }
                 }*/
             try {
-                mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
                 Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
@@ -833,7 +850,7 @@ class CameraControl(val activity: FragmentActivity) {
             try {
                 //you can try to add the synchronized object here
                 mRequestBuilder!!.set(CaptureRequest.SCALER_CROP_REGION, zoomRect)
-                mPreviewSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating preview: ", e)
             }
