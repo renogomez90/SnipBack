@@ -203,6 +203,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
                     taskList.add(trimTask)
                 }else if(operation == IVideoOpListener.VideoOp.TRIMMED.name) {
+                    if(saveAction == SaveActionType.SAVE){
+                        replaceRequired.replace(snip!!.videoFilePath, speedChangedPath)
+                    }
                     val speedChangeTask = VideoOpItem(
                             operation = IVideoOpListener.VideoOp.SPEED,
                             clips = arrayListOf(inputName),
@@ -1971,37 +1974,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     }
 
     /**
-     *  prepares the concatenated and trimmed video with any edits
-     *  concatenate buffer and video
-     *  trimmed video to spec
-     *  make edits
-     *  save to db
-     */
-    private fun createModifiedVideo() {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val videoPath = snip!!.videoFilePath
-        val concatOutputPath = "${File(videoPath).parent}/$timeStamp.mp4"
-
-        val concatenateTask = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.CONCAT,
-                clips = arrayListOf(bufferPath, snip!!.videoFilePath),
-                outputPath = concatOutputPath,
-                comingFrom = CurrentOperation.VIDEO_EDITING)
-
-        val taskList = arrayListOf<VideoOpItem>()
-
-        taskList.apply {
-            add(concatenateTask)
-        }
-        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)
-        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
-
-        val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
-        createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
-        VideoService.enqueueWork(requireContext(), createNewVideoIntent)
-    }
-
-    /**
      * save over existing file
      * */
     override fun save() {
@@ -2033,9 +2005,39 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             *  concatenate trimmed videos
             *  make edits on the concatenated video
             * */
-
             createModifiedVideo()
         }
+    }
+
+    /**
+     *  prepares the concatenated and trimmed video with any edits
+     *  concatenate buffer and video
+     *  trimmed video to spec
+     *  make edits
+     *  save to db
+     */
+    private fun createModifiedVideo() {
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val videoPath = snip!!.videoFilePath
+        val concatOutputPath = "${File(videoPath).parent}/$timeStamp.mp4"
+
+        val concatenateTask = VideoOpItem(
+            operation = IVideoOpListener.VideoOp.CONCAT,
+            clips = arrayListOf(bufferPath, snip!!.videoFilePath),
+            outputPath = concatOutputPath,
+            comingFrom = CurrentOperation.VIDEO_EDITING)
+
+        val taskList = arrayListOf<VideoOpItem>()
+
+        taskList.apply {
+            add(concatenateTask)
+        }
+        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)
+        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
+
+        val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
+        createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+        VideoService.enqueueWork(requireContext(), createNewVideoIntent)
     }
 
     /**
