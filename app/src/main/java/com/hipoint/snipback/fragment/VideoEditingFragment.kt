@@ -2025,6 +2025,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 val (clip, outputName) = createSpeedChangedVideo()
                 replaceRequired.replace(clip.absolutePath, "${clip.parent}/$outputName")
                 Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
+                hideProgress()
             }
         }else{
             /*todo:
@@ -2032,6 +2033,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             *  concatenate trimmed videos
             *  make edits on the concatenated video
             * */
+
+            createModifiedVideo()
         }
     }
 

@@ -2,7 +2,8 @@
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/item_recycler"
@@ -30,7 +31,8 @@
             android:background="@color/colorBlack"
             android:gravity="center"
             android:textColor="@color/colorWhite"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:visibility="invisible"/>
 
         <TextView
             android:id="@+id/tvDuration"
@@ -42,8 +44,10 @@
             android:background="@color/colorBlack"
             android:paddingStart="6dp"
             android:paddingEnd="6dp"
+            android:layout_marginEnd="6dp"
             android:textColor="@color/colorWhite"
-            android:textSize="13sp" />
+            android:textSize="13sp"
+            android:visibility="invisible"/>
 
     </RelativeLayout>
 
