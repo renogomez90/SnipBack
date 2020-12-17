@@ -562,15 +562,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             changeList.visibility     = View.GONE
             playCon2.visibility       = View.VISIBLE
 
-            startRangeUI()
-            resetPlaybackUI()
-            if(showBuffer){
-                undoExtendTrim()
-            }
-            if(tmpSpeedDetails != null){
-                uiRangeSegments?.removeAt(currentEditSegment)
-                tmpSpeedDetails = null
-            }
+            reject.performClick()
+
             if(trimSegment != null){
                 timebarHolder.removeView(trimSegment)
                 trimSegment = null
@@ -1337,9 +1330,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private fun setupCommonRangeUiElements(): Triple<Int, Int, Int> {
         val colour =
                 if (!speedDetailSet.isNullOrEmpty()) {
-                    if (speedDetailSet/*.sortedWith { s1, s2 ->
-                                (s1.timeDuration?.first!! - s2?.timeDuration!!.first).toInt()
-                            }*/.toList()[currentEditSegment].isFast)
+                    if (speedDetailSet.toList()[currentEditSegment].isFast)
                         resources.getColor(R.color.blueOverlay, context?.theme)
                     else
                         resources.getColor(R.color.greenOverlay, context?.theme)
@@ -1465,8 +1456,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             override fun onPlaybackStateChanged(state: Int) {
                 if (state == Player.STATE_READY) {
-                    maxDuration = 0L
                     val currentTimeline = player.currentTimeline
+                    maxDuration = 0L
                     for (i in 0 until currentTimeline.windowCount) {
                         val window = Timeline.Window()
                         currentTimeline.getWindow(i, window)

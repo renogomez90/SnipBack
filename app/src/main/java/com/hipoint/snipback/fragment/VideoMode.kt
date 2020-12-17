@@ -32,7 +32,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
-import com.google.android.exoplayer2.upstream.DefaultAllocator
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.SwipedRecording

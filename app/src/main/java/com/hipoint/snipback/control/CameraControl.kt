@@ -176,7 +176,7 @@ class CameraControl(val activity: FragmentActivity) {
      * Stops and restarts the mediaRecorder,
      * assuming the mediaRecorder is initialized and already recording
      */
-    internal suspend fun restartRecording(maxRecordingReached:Boolean = false) {
+    internal suspend fun restartRecording() {
         if(!postedMsgOngoing) {
             postedMsgOngoing = true
 
@@ -480,11 +480,7 @@ class CameraControl(val activity: FragmentActivity) {
     @Throws(IOException::class)
     private fun setUpMediaRecorder() {
         //  ensuring the media recorder is recreated
-        /*try {
-            mMediaRecorder!!.reset()
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        }*/
+
         outputFilePath = outputMediaFile!!.absolutePath
 
         val rotation = activity.windowManager?.defaultDisplay?.rotation
@@ -510,7 +506,7 @@ class CameraControl(val activity: FragmentActivity) {
                     CoroutineScope(Default).launch {
                         try {
                             if(!postedMsgOngoing) {
-                                restartRecording(true)
+                                restartRecording()
                             }
                         } catch (e: IllegalStateException) {
                             e.printStackTrace()
@@ -521,9 +517,6 @@ class CameraControl(val activity: FragmentActivity) {
                                     openCamera(mTextureView!!.width, mTextureView!!.height)
                                 }
                             }
-                            /*else {
-                                mTextureView!!.surfaceTextureListener = textureListener
-                            }*/
                         }
                     }
                 }
@@ -532,12 +525,6 @@ class CameraControl(val activity: FragmentActivity) {
         }
 
         Log.d(TAG, "setUpMediaRecorder: thread ${Thread.currentThread().name}")
-    }
-
-    fun getVideoFilePath(context: Context): String {
-        val dir = activity.getExternalFilesDir(null)
-        return ((if (dir == null) "" else dir.absolutePath + "/")
-                + System.currentTimeMillis() + ".mp4")
     }
 
     // External sdcard file location
@@ -594,12 +581,12 @@ class CameraControl(val activity: FragmentActivity) {
             surfaces.add(persistentSurface)
             mRequestBuilder!!.addTarget(persistentSurface)
             val startRecTime = System.currentTimeMillis()
+
             // Start a capture session
             // Once the session starts, we can update the UI and start recording
             mCameraDevice!!.createCaptureSession(surfaces, object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
                     mRecordSession = cameraCaptureSession
-//                    updatePreview()
                     mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
                     try {
                         mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
@@ -649,12 +636,11 @@ class CameraControl(val activity: FragmentActivity) {
      * @return The optimal `Size`, or an arbitrary one if none were big enough
      */
     private fun chooseOptimalSize(choices: Array<Size>, width: Int = 1080, height: Int = 1920, aspectRatio: Size?): Size {
-        // Collect the supported resolutions that are at least as big as the preview Surface
-        val bigEnough = arrayListOf<Size>()
-        // Collect the supported resolutions that are smaller than the preview Surface
-        val notBigEnough = arrayListOf<Size>()
+        val bigEnough = arrayListOf<Size>() // Collect the supported resolutions that are at least as big as the preview Surface
+        val notBigEnough = arrayListOf<Size>()  // Collect the supported resolutions that are smaller than the preview Surface
         val w =  aspectRatio!!.width
         val h =  aspectRatio.height
+
         for (option in choices) {
             /*if (option.height == option.width * h / w) {*/
             if(option.height == h || option.width == w) {
@@ -719,8 +705,6 @@ class CameraControl(val activity: FragmentActivity) {
 
     /**
      * Stops the mediaRecorder and resets it.
-     *
-     *
      * Adds snip details
      */
     fun stopRecordingVideo() {
