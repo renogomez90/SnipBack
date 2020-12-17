@@ -472,17 +472,18 @@ class FragmentPlayVideo2 : Fragment() {
 
     override fun onPause() {
         player.playWhenReady = false
-        super.onPause()
-    }
 
-    override fun onDestroy() {
-        subscriptions.dispose()
         if (this::player.isInitialized)
             player.apply {
                 stop(true)
                 setVideoSurface(null)
                 release()
             }
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        subscriptions.dispose()
         super.onDestroy()
     }
 

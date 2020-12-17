@@ -888,7 +888,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val mediaSource = ConcatenatingMediaSource(true, *clipsList.toTypedArray())
         player.setMediaSource(mediaSource)
 
-        adjustPreviousSpeedEdits(isStartInBuffer, isEndInBuffer)
+        if(editedEnd - editedStart != 0L)
+            adjustPreviousSpeedEdits(isStartInBuffer, isEndInBuffer)
         isEditOnGoing = false
         startingTimestamps = -1
         endingTimestamps = -1
