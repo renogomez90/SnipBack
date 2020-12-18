@@ -60,8 +60,7 @@ class FragmentPlayVideo2 : Fragment() {
     private val retries = 3
     private var tries = 0
 
-    private var currentPos = 0L
-    private var subscriptions = CompositeDisposable()
+    private var subscriptions: CompositeDisposable? = null
 
     private lateinit var mediaSource          : MediaSource
     private lateinit var player               : SimpleExoPlayer
@@ -80,7 +79,6 @@ class FragmentPlayVideo2 : Fragment() {
     private lateinit var buttonCamera         : RelativeLayout
     private lateinit var tvConvertToReal      : ImageButton
     private lateinit var swipeDetector        : SwipeDistanceView
-
     // new
     /*
     private val seekdistance = 0f
@@ -139,6 +137,13 @@ class FragmentPlayVideo2 : Fragment() {
         })
     }
 
+    override fun onResume() {
+        super.onResume()
+
+        initSetup()
+        bindListeners()
+        Log.d(TAG, "onResume: started")
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         rootView = inflater.inflate(R.layout.layout_play_video, container, false)
@@ -149,86 +154,7 @@ class FragmentPlayVideo2 : Fragment() {
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
 
         bindViews()
-        initSetup()
-        bindListeners()
-//        uri = Uri.parse(getArguments().getString("uri"));
 
-        /*
-        simpleExoPlayerView.setOnTouchListener(object : OnSwipeTouchListener(activity) {
-            override fun onSwipeTop() {
-//                Toast.makeText(requireActivity(), "top", Toast.LENGTH_SHORT).show();
-            }
-
-            override fun onSwipeRight(diffX: Float) {
-                if (player.currentPosition < player.duration) {
-                    player.seekTo(player.currentPosition + diffX.toLong())
-                    simpleExoPlayerView.showController()
-                } else if (player.currentPosition == player.duration) {
-                    player.seekTo(0)
-                    simpleExoPlayerView.showController()
-                } else {
-                    player.seekTo(0)
-                    simpleExoPlayerView.showController()
-                }
-            }
-
-            override fun onSwipeLeft(diffX: Float) {
-                if (player.currentPosition == 0L) {
-                } else {
-                    player.seekTo(player.currentPosition - diffX.toLong())
-                    simpleExoPlayerView.showController()
-                }
-
-                // changeSeek(diffX,diffY,distanceCovered,"X");
-            }
-
-            override fun onSwipeBottom() {
-                Toast.makeText(activity, "bottom", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onTouch(v: View, event: MotionEvent): Boolean {
-                simpleExoPlayerView.showController()
-                return super.onTouch(v, event)
-            }
-        })
-        */
-
-
-/*
-//        int w;
-//        int h;
-//
-//        MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
-//        mediaMetadataRetriever.setDataSource( uri);
-//        String height = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
-//        String width = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
-//        w = Integer.parseInt(width);
-//        h = Integer.parseInt(height);
-//
-//        if (w > h) {
-//            ( requireActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-//        } else {
-//            ( requireActivity()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-//        }
-
-//        OrientationEventListener mOrientationListener = new OrientationEventListener(
-//                requireActivity()) {
-//            @Override
-//            public void onOrientationChanged(int orientation) {
-//                if(!requireActivity().isFinishing()) {
-//                    if (orientation == 0 || orientation == 180) {
-//                        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
-//                    } else if (orientation == 90 || orientation == 270) {
-//                        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-//                    }
-//                }
-//            }
-//        };
-//
-//        if (mOrientationListener.canDetectOrientation()) {
-//            mOrientationListener.enable();
-//        }
-        */
         return rootView
     }
 
@@ -387,11 +313,13 @@ class FragmentPlayVideo2 : Fragment() {
         }
 
         val emitter = SeekPositionEmitter()
+        subscriptions = CompositeDisposable()
+
         player.seekWhenReady(emitter)
                 .subscribe({
                     Log.v(TAG, "seekTo=${it.first} isSeeking=${it.second}")
                 }, { Log.e(TAG, "${it.message}") })
-                .addTo(subscriptions)
+                .addTo(subscriptions!!)
 
         swipeDetector.setOnTouchListener { _, event ->
             gestureDetector.onTouchEvent(event)
@@ -407,7 +335,6 @@ class FragmentPlayVideo2 : Fragment() {
             val newSeekPosition = ((percentOfDuration + duration) % duration).roundToLong().absoluteValue
 
             emitter.seekFast(newSeekPosition)
-
         }
     }
 
@@ -456,6 +383,8 @@ class FragmentPlayVideo2 : Fragment() {
     companion object {
         var fragment: FragmentPlayVideo2? = null
 
+        private var currentPos = 0L
+
         @JvmStatic
         fun newInstance(snip: Snip?): FragmentPlayVideo2 {
             //  we need to create new fragments for each video
@@ -471,19 +400,23 @@ class FragmentPlayVideo2 : Fragment() {
     }
 
     override fun onPause() {
+        Log.d(TAG, "onPause: started")
         player.playWhenReady = false
+        currentPos = player.currentPosition
 
-        if (this::player.isInitialized)
+        if (this::player.isInitialized) {
             player.apply {
-                stop(true)
+                stop()
                 setVideoSurface(null)
                 release()
             }
+        }
+
+        subscriptions?.dispose()
         super.onPause()
     }
 
     override fun onDestroy() {
-        subscriptions.dispose()
         super.onDestroy()
     }
 

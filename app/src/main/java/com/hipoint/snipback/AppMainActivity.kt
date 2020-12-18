@@ -554,7 +554,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
                 return
 
             CoroutineScope(IO).launch {
-                Log.d(TAG, "videoTrimCompleted: entered coroutine")
                 val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                 addSnip(processedVideoPath, duration, duration)
             }
@@ -666,6 +665,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
         Log.d(TAG, "videoSpeedChangeCompleted: Video Saved at $processedVideoPath")
         Toast.makeText(this, "Video Saved at $processedVideoPath", Toast.LENGTH_SHORT).show()
         val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+
         if (doReplace) {
             CoroutineScope(IO).launch {
                 //  DB update is not required since we are just replacing the existing file with modified content
@@ -873,7 +873,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted, AppRepos
 
     override fun parent(parentSnipId: Int) {
         CoroutineScope(IO).launch {
-            Log.d(TAG, "parent snip set")
             parentSnip = appRepository.getSnipById(parentSnipId)
 
             while(parentSnip?.parent_snip_id != 0){ //  to find the top level parent
