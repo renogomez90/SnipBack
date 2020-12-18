@@ -648,7 +648,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 currentEditSegment -= 1
             }
 
-            if(editHistory.last() == EditAction.EXTEND_TRIM){
+            if(editAction == EditAction.EXTEND_TRIM){
                 undoExtendTrim()
             }
 
@@ -661,7 +661,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             startRangeUI()
             resetPlaybackUI()
 
-            with(progressTracker!!) {
+            progressTracker?.run {
                 setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
                 setChangeAccepted(true)
                 run()
