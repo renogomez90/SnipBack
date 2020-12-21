@@ -167,7 +167,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private var tmpSpeedDetails: SpeedDetails?                  = null
     private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
     private var trimSegment    : RangeSeekbarCustom?            = null
-    private var restrictList   : List<SpeedDetails>?            = null //  speed details to prevent users from selecting an existing edit
+    private var restrictList   : ArrayList<SpeedDetails>?       = null //  speed details to prevent users from selecting an existing edit
 
     private val replaceRequired: IReplaceRequired by lazy { requireActivity() as AppMainActivity }
     private val bufferOverlay  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
@@ -663,7 +663,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         save.setOnClickListener {
             showDialogSave()
-//            VideoUtils(this).changeSpeed(File(snip!!.videoFilePath), speedDetailSet.toMutableList() as ArrayList<SpeedDetails>, "${File(snip!!.videoFilePath).parent}/output.mp4")
         }
 
         /**
@@ -728,9 +727,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 setChangeAccepted(true)
                 run()
             }
-
-            restrictList = speedDetailSet.toList()
-            restrictList?.sortedWith(speedDetailsComparator)
+            updateRestrictedList()
             editAction = EditAction.NORMAL
         }
 
@@ -1059,11 +1056,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             startingTimestamps += bufferDuration
         }
 
+        Log.d(TAG, "acceptSpeedChanges: edit action = ${editAction.name}")
         speedDuration = Pair(startingTimestamps, endingTimestamps)
         speedDetailSet.add(SpeedDetails(
                 startWindowIndex = startWindow,
                 endWindowIndex   = endWindow,
-                isFast           = editAction== EditAction.FAST,
+                isFast           = editAction == EditAction.FAST,
                 multiplier       = getCurrentEditSpeed(),
                 timeDuration     = speedDuration))
 
@@ -1085,8 +1083,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         setupRangeMarker(startValue, endValue)
         fixRangeMarker(startValue, endValue)
 
-        restrictList = speedDetailSet.toList()
-        restrictList?.sortedWith(speedDetailsComparator)
+        updateRestrictedList()
 
         if (editListAdapter == null) {
             setupEditList()
@@ -1190,12 +1187,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             if(correctBy != 0L){
                 if(player.currentWindowIndex == 1 && currentPosition in (0 .. (it.timeDuration?.second!! - bufferDuration))){
+                    resetPlaybackUI()
                     Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
                     return
                 }
             }else {
                 if (currentPosition in (it.timeDuration?.first!! - correctBy)..(it.timeDuration?.second!! - correctBy) &&
                     (it.startWindowIndex == player.currentWindowIndex || it.endWindowIndex == player.currentWindowIndex)) {
+                    resetPlaybackUI()
                     Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
                     return
                 }
@@ -1230,6 +1229,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         player.playWhenReady = false
 
         enableEditOptions(true)
+        setupIcons()
     }
 
     /**
@@ -1734,8 +1734,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             /*((percentOfDuration + duration) % duration).roundToLong().absoluteValue*/
 
             if (restrictList.isNullOrEmpty() || restrictList?.size!! < speedDetailSet.size) {
-                restrictList = speedDetailSet.toList()
-                restrictList!!.sortedWith(speedDetailsComparator)
+                updateRestrictedList()
             }
 
             higher = if(showBuffer) maxDuration else nearestExistingHigherTS(player.currentPosition)
@@ -1839,6 +1838,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             player.seekTo(newSeekPosition)  //  window is chosen previously
         }
+    }
+
+    private fun updateRestrictedList() {
+        restrictList?.clear()
+        restrictList = arrayListOf()
+        restrictList!!.addAll(speedDetailSet.toList())
+        restrictList!!.sortedWith(speedDetailsComparator)
     }
 
     private fun isEditActionSpeedChange() = editAction == EditAction.FAST || editAction == EditAction.SLOW
@@ -2217,11 +2223,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         player.setPlaybackParameters(PlaybackParameters(speedDetails.multiplier.toFloat()))
         speedDetailSet.forEachIndexed { index, it ->
+            Log.d(TAG, "editPoint: index = $index, speed details = ${it.timeDuration!!.first}, ${it.timeDuration!!.second}")
             if(it.timeDuration!!.first == speedDetails.timeDuration!!.first && it.timeDuration!!.second == speedDetails.timeDuration!!.second){
                 currentEditSegment = index
             }
         }
-//        currentEditSegment = position
+
         if(tmpSpeedDetails!!.startWindowIndex == 1) {
             player.seekTo(tmpSpeedDetails!!.startWindowIndex, tmpSpeedDetails!!.timeDuration!!.first - bufferDuration)
         }else{
@@ -2232,6 +2239,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         endingTimestamps = speedDetails.timeDuration!!.second
         editAction = if(speedDetails.isFast) EditAction.FAST else EditAction.SLOW
         acceptRejectHolder.visibility = View.VISIBLE
+        Log.d(TAG, "editPoint: edit action = ${editAction.name} currentEditSegment = $currentEditSegment")
     }
 
 //  Animations
