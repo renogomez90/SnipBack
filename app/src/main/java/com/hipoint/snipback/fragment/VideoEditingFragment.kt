@@ -98,7 +98,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private lateinit var playCon2          : LinearLayout
     private lateinit var acceptRejectHolder: LinearLayout
     private lateinit var speedIndicator    : TextView
-    private lateinit var extentTextBtn     : TextView          //  extend or trim the video
+    private lateinit var extendTextBtn     : TextView          //  extend or trim the video
     private lateinit var cutTextBtn        : TextView
     private lateinit var highlightTextBtn  : TextView
     private lateinit var slowTextBtn       : TextView
@@ -381,7 +381,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             playCon2           = findViewById(R.id.play_con2)
             acceptRejectHolder = findViewById(R.id.accept_reject_holder)
             speedIndicator     = findViewById(R.id.speed_indicator)
-            extentTextBtn      = findViewById(R.id.extent_text)
+            extendTextBtn      = findViewById(R.id.extent_text)
             cutTextBtn         = findViewById(R.id.cut_text_btn)
             highlightTextBtn   = findViewById(R.id.highlight_text_btn)
             slowTextBtn        = findViewById(R.id.slow_text_btn)
@@ -417,7 +417,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         val extendDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_extend)
         extendDwg?.bounds = bound1
-        extentTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, extendDwg, null, null)
+        extendTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, extendDwg, null, null)
 
         val cutDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_cutout)
         cutDwg?.bounds = bound1
@@ -558,22 +558,28 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             acceptRejectHolder.visibility = View.VISIBLE
         }
 
-        extentTextBtn.setOnClickListener {
+        extendTextBtn.setOnClickListener {
+            // reject ongoing edit and extend
+            if(isEditOnGoing && (isEditActionSpeedChange()))
+                reject.performClick()
+
             player.playWhenReady = false
             progressTracker?.stopTracking()
 //            extent.setImageResource(R.drawable.ic_extent_red)
             val dwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_extent_red)
             dwg?.bounds = Rect(0, 0, 20, 20)
-            extentTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, dwg, null, null)
-            extentTextBtn.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
+            extendTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, dwg, null, null)
+            extendTextBtn.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
 
             resetPlaybackUI()
             playCon1.visibility           = View.VISIBLE
             playCon2.visibility           = View.GONE
             acceptRejectHolder.visibility = View.VISIBLE
 
-            blockEditOptions(true)
-            enableSpeedEdit(false)
+            enableEditOptions(false)
+//            enableSpeedEdit(false)
+
+            editAction = EditAction.EXTEND_TRIM
 
             val videoId = snip!!.snip_id
             CoroutineScope(IO).launch {
@@ -600,6 +606,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
             isEditOnGoing = false
             isEditExisting = false
+            editAction = EditAction.NORMAL
         }
 
         save.setOnClickListener {
@@ -614,7 +621,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
          * reset the UI for new edit
          */
         accept.setOnClickListener {
-            if (editAction == EditAction.FAST || editAction == EditAction.SLOW) {
+            if (isEditActionSpeedChange()) {
                 acceptSpeedChanges()
             } else if (editAction == EditAction.EXTEND_TRIM) {
                 removeBufferOverlays()
@@ -643,7 +650,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)
                 timebarHolder.removeView(ref)
                 tmpSpeedDetails = null
+            }
 
+            if(isEditActionSpeedChange()){
                 segmentCount -= 1
                 currentEditSegment -= 1
             }
@@ -669,6 +678,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             restrictList = speedDetailSet.toList()
             restrictList?.sortedWith(speedDetailsComparator)
+            editAction = EditAction.NORMAL
         }
 
         playBtn.setOnClickListener {
@@ -699,6 +709,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         seekBar.isClickable = false
 
         slowTextBtn.setOnClickListener {
+            if(isEditOnGoing && editAction == EditAction.EXTEND_TRIM) { //  reject the ongoing edit and do this one
+                reject.performClick()
+            }
+
             player.playWhenReady = false
             val currentPosition = player.currentPosition
             if(!isEditOnGoing){
@@ -713,6 +727,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         speedTextBtn.setOnClickListener {
+            if(isEditOnGoing && editAction == EditAction.EXTEND_TRIM) { //  reject the ongoing edit and do this one
+                reject.performClick()
+            }
+
             player.playWhenReady = false
             val currentPosition = player.currentPosition
             if(!isEditOnGoing){  //  we are editing afresh
@@ -731,7 +749,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
     }
 
-    private fun enableSpeedEdit(isEnable: Boolean) {
+    /*private fun enableSpeedEdit(isEnable: Boolean) {
         slowTextBtn.isEnabled    = isEnable
         slowTextBtn.isClickable  = isEnable
         speedTextBtn.isEnabled   = isEnable
@@ -744,7 +762,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             slowTextBtn.alpha  = 0.5F
             speedTextBtn.alpha = 0.5F
         }
-    }
+    }*/
 
     /**
      * resets the editor to play the original video
@@ -888,8 +906,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private fun removeBufferOverlays() {
         val dwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_extend)
         dwg?.bounds = Rect(0, 0, 20, 20)
-        extentTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, dwg, null, null)
-        extentTextBtn.setTextColor(resources.getColor(R.color.colorPrimaryGrey))
+        extendTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, dwg, null, null)
+        extendTextBtn.setTextColor(resources.getColor(R.color.colorPrimaryGrey))
 
         trimSegment?.let {
             timebarHolder.removeView(trimSegment)
@@ -1156,7 +1174,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         seekBar.showScrubber()
         player.playWhenReady = false
 
-        blockEditOptions(false)
+        enableEditOptions(true)
     }
 
     /**
@@ -1198,7 +1216,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         isEditOnGoing             = true
         player.playWhenReady      = false
 
-        blockEditOptions(true)
+        enableEditOptions(false)
         editSeekAction     = EditSeekControl.MOVE_START
         startingTimestamps = -1L
         endingTimestamps   = maxDuration
@@ -1209,23 +1227,22 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
     }
 
-    private fun blockEditOptions(shouldBlock: Boolean) {
-        val enable                 = !shouldBlock
-        extentTextBtn.isEnabled    = enable
+    private fun enableEditOptions(enable: Boolean) {
+//        extentTextBtn.isEnabled    = enable
         cutTextBtn.isEnabled       = enable
         highlightTextBtn.isEnabled = enable
 
-        extentTextBtn.isClickable    = enable
+//        extentTextBtn.isClickable    = enable
         cutTextBtn.isClickable       = enable
         highlightTextBtn.isClickable = enable
 
         if (enable) {
-            extentTextBtn.alpha    = 1.0F
+//            extentTextBtn.alpha    = 1.0F
             cutTextBtn.alpha       = 1.0F
             highlightTextBtn.alpha = 1.0F
-            enableSpeedEdit(enable)
+//            enableSpeedEdit(enable)
         } else {
-            extentTextBtn.alpha    = 0.5F
+//            extentTextBtn.alpha    = 0.5F
             cutTextBtn.alpha       = 0.5F
             highlightTextBtn.alpha = 0.5F
         }
@@ -1383,7 +1400,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * */
     private fun setupCommonRangeUiElements(): Triple<Int, Int, Int> {
         val colour =
-                if (!speedDetailSet.isNullOrEmpty()) {
+                if (!speedDetailSet.isNullOrEmpty() && currentEditSegment >= 0) {
                     if (speedDetailSet.toList()[currentEditSegment].isFast)
                         resources.getColor(R.color.blueOverlay, context?.theme)
                     else
@@ -1522,6 +1539,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         if(previousMaxDuration != maxDuration)
                             previousMaxDuration = maxDuration
                     }
+                }else if(state == Player.STATE_ENDED){
+                    player.playWhenReady = false
+                    paused = true
                 }
             }
         })
@@ -1533,7 +1553,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * shows the overlay for the buffer on the timeline
      */
     private fun showBufferOverlay() {
-        //todo: adjust or hide other changed ranges
         val colour = resources.getColor(R.color.blackOverlay, context?.theme)
         val (_, height, padding) = setupCommonRangeUiElements()
 
@@ -1655,7 +1674,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     isSeekbarShown = false
                 }
 
-                if (editAction == EditAction.FAST || editAction == EditAction.SLOW) {
+                if (isEditActionSpeedChange()) {
                     when (editSeekAction) {
                         EditSeekControl.MOVE_START -> {
                             if (newSeekPosition >= endingTimestamps && endingTimestamps != 0L && !showBuffer) {
@@ -1750,6 +1769,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             player.seekTo(newSeekPosition)  //  window is chosen previously
         }
     }
+
+    private fun isEditActionSpeedChange() = editAction == EditAction.FAST || editAction == EditAction.SLOW
 
     private fun getCorrectedTimebarStartPosition(): Long {
         return if(player.currentWindowIndex == 0){
@@ -1965,6 +1986,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             sorted.forEach { item -> Log.d(TAG, "queryResult: ${item.video_path_processed}") }
 
             if(sorted[0].video_path_processed == sorted[1].video_path_processed){       //  there is no buffer
+                editAction = EditAction.NORMAL
                 showContentUnavailableToast()
                 return@let
             }else {
@@ -1979,10 +2001,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     if(bufferDuration > 0L && videoDuration > 0L)
                         addToVideoPlayback(sorted[0].video_path_processed)
                     else {
+                        editAction = EditAction.NORMAL
                         showContentUnavailableToast()
                     }
 
                 }catch (e: IllegalArgumentException){
+                    editAction = EditAction.NORMAL
                     showContentUnavailableToast()
                     e.printStackTrace()
                 }
