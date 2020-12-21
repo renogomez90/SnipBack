@@ -39,6 +39,7 @@ import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
+import com.hipoint.snipback.Utils.EditTimeBar
 import com.hipoint.snipback.adapter.EditChangeListAdapter
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.application.AppClass
@@ -1042,12 +1043,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
         }
         //  durations are correct and changes can be accepted
-        speedDetailSet.remove(tmpSpeedDetails)
-
         if(progressTracker != null)
             progressTracker?.removeSpeedDetails(tmpSpeedDetails!!)
-
-        tmpSpeedDetails = null
 
         if(endingTimestamps < startingTimestamps)
             endingTimestamps += bufferDuration
@@ -1056,14 +1053,29 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             startingTimestamps += bufferDuration
         }
 
-        Log.d(TAG, "acceptSpeedChanges: edit action = ${editAction.name}")
-        speedDuration = Pair(startingTimestamps, endingTimestamps)
-        speedDetailSet.add(SpeedDetails(
+        if(isEditExisting){
+            with(speedDetailSet.elementAt(currentEditSegment)) {
+                startWindowIndex = startWindow
+                endWindowIndex   = endWindow
+                isFast           = editAction == EditAction.FAST
+                multiplier       = getCurrentEditSpeed()
+                timeDuration     = Pair(startingTimestamps, endingTimestamps)
+            }
+        }else{
+            speedDetailSet.remove(tmpSpeedDetails)
+            tmpSpeedDetails = null
+
+            Log.d(TAG, "acceptSpeedChanges: edit action = ${editAction.name}")
+            speedDuration = Pair(startingTimestamps, endingTimestamps)
+            val speedDetails = SpeedDetails(
                 startWindowIndex = startWindow,
                 endWindowIndex   = endWindow,
                 isFast           = editAction == EditAction.FAST,
                 multiplier       = getCurrentEditSpeed(),
-                timeDuration     = speedDuration))
+                timeDuration     = speedDuration)
+
+            speedDetailSet.add(speedDetails)
+        }
 
         if(progressTracker == null)
             progressTracker = ProgressTracker(player)
@@ -2222,12 +2234,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         tmpSpeedDetails = speedDetails
 
         player.setPlaybackParameters(PlaybackParameters(speedDetails.multiplier.toFloat()))
-        speedDetailSet.forEachIndexed { index, it ->
-            Log.d(TAG, "editPoint: index = $index, speed details = ${it.timeDuration!!.first}, ${it.timeDuration!!.second}")
-            if(it.timeDuration!!.first == speedDetails.timeDuration!!.first && it.timeDuration!!.second == speedDetails.timeDuration!!.second){
-                currentEditSegment = index
-            }
-        }
+        updateCurrentEditIndex(speedDetails)
 
         if(tmpSpeedDetails!!.startWindowIndex == 1) {
             player.seekTo(tmpSpeedDetails!!.startWindowIndex, tmpSpeedDetails!!.timeDuration!!.first - bufferDuration)
@@ -2239,7 +2246,18 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         endingTimestamps = speedDetails.timeDuration!!.second
         editAction = if(speedDetails.isFast) EditAction.FAST else EditAction.SLOW
         acceptRejectHolder.visibility = View.VISIBLE
-        Log.d(TAG, "editPoint: edit action = ${editAction.name} currentEditSegment = $currentEditSegment")
+    }
+
+    private fun updateCurrentEditIndex(speedDetails: SpeedDetails) {
+        speedDetailSet.forEachIndexed { index, it ->
+            Log.d(
+                TAG,
+                "editPoint: index = $index, speed details = ${it.timeDuration!!.first}, ${it.timeDuration!!.second}"
+            )
+            if (it.timeDuration!!.first == speedDetails.timeDuration!!.first && it.timeDuration!!.second == speedDetails.timeDuration!!.second) {
+                currentEditSegment = index
+            }
+        }
     }
 
 //  Animations
@@ -2361,7 +2379,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                 player.setPlaybackParameters(PlaybackParameters(1 / it.multiplier.toFloat()))
                             }
 
-                            handler?.postDelayed(this, 200 /* ms */)
+                            handler?.postDelayed(this, 100 /* ms */)
                             return
                         } else {
                             if (player.playbackParameters != PlaybackParameters(1F))
@@ -2378,7 +2396,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         colourOverlay.visibility = View.GONE
                     }
                 }
-                handler?.postDelayed(this, 200 /* ms */)
+                handler?.postDelayed(this, 100 /* ms */)
             }
         }
 
