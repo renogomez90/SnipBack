@@ -177,7 +177,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private var exitConfirmation: ExitEditConfirmationDialog? = null
     private var processingDialog: ProcessingDialog?           = null
 
-    private var thumbnailExtractionStarted:Boolean = false
+    private var thumbnailExtractionStarted: Boolean = false
+    private var generatePreviewTile       : Boolean = true
 
     private var timeStamp: String? = null
 
@@ -327,6 +328,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             previewTileList.adapter?.notifyDataSetChanged()
             previewTileList.scrollToPosition(timelinePreviewAdapter!!.itemCount)
             previewBarProgress.visibility = View.GONE
+            generatePreviewTile = false
         }
     }
 
@@ -408,7 +410,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     }
 
     /**
-     * Sets up UI icons
+     * Sets up UI icons to default state
      */
     private fun setupIcons() {
 
@@ -418,23 +420,74 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val extendDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_extend)
         extendDwg?.bounds = bound1
         extendTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, extendDwg, null, null)
+        extendTextBtn.setTextColor(resources.getColor(R.color.white, requireContext().theme))
 
         val cutDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_cutout)
         cutDwg?.bounds = bound1
         cutTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, cutDwg, null, null)
+        cutTextBtn.setTextColor(resources.getColor(R.color.white, requireContext().theme))
 
         val highlightDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_highlight)
         highlightDwg?.bounds = bound1
         highlightTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, highlightDwg, null, null)
+        highlightTextBtn.setTextColor(resources.getColor(R.color.white, requireContext().theme))
 
         val slowDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_slow)
         slowDwg?.bounds = bound1
         slowTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, slowDwg, null, null)
+        slowTextBtn.setTextColor(resources.getColor(R.color.white, requireContext().theme))
 
         val speedDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_speed)
         speedDwg?.bounds = bound1
         speedTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, speedDwg, null, null)
+        speedTextBtn.setTextColor(resources.getColor(R.color.white, requireContext().theme))
 
+    }
+
+    private fun setIconActive() {
+        setupIcons()
+
+        val density = resources.displayMetrics.density
+        val bound1 = Rect(0, 0, (20 * density).roundToInt(), (20 * density).roundToInt())
+
+        when (editAction) {
+            EditAction.FAST -> {
+                val speedDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_speed_red)
+                speedDwg?.bounds = bound1
+                speedTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, speedDwg, null, null)
+                speedTextBtn.setTextColor(
+                    resources.getColor(
+                        R.color.colorPrimaryDimRed,
+                        requireContext().theme
+                    )
+                )
+            }
+            EditAction.SLOW -> {
+                val slowDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_slow_red)
+                slowDwg?.bounds = bound1
+                slowTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, slowDwg, null, null)
+                slowTextBtn.setTextColor(
+                    resources.getColor(
+                        R.color.colorPrimaryDimRed,
+                        requireContext().theme
+                    )
+                )
+            }
+            EditAction.EXTEND_TRIM -> {
+                val dwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_extent_red)
+                dwg?.bounds = Rect(0, 0, 20, 20)
+                extendTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, dwg, null, null)
+                extendTextBtn.setTextColor(
+                    resources.getColor(
+                        R.color.colorPrimaryDimRed,
+                        requireContext().theme
+                    )
+                )
+            }
+            else -> {
+
+            }
+        }
     }
 
     /**
@@ -559,17 +612,16 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         extendTextBtn.setOnClickListener {
+            if(editAction == EditAction.EXTEND_TRIM && isEditOnGoing){
+                return@setOnClickListener
+            }
+
             // reject ongoing edit and extend
             if(isEditOnGoing && (isEditActionSpeedChange()))
                 reject.performClick()
 
             player.playWhenReady = false
             progressTracker?.stopTracking()
-//            extent.setImageResource(R.drawable.ic_extent_red)
-            val dwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_extent_red)
-            dwg?.bounds = Rect(0, 0, 20, 20)
-            extendTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, dwg, null, null)
-            extendTextBtn.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
 
             resetPlaybackUI()
             playCon1.visibility           = View.VISIBLE
@@ -580,7 +632,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 //            enableSpeedEdit(false)
 
             editAction = EditAction.EXTEND_TRIM
-
+            setIconActive()
             val videoId = snip!!.snip_id
             CoroutineScope(IO).launch {
                 appRepository.getHDSnipsBySnipID(this@VideoEditingFragment, videoId)
@@ -646,8 +698,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             progressTracker?.setSpeed(currentSpeed.toFloat())
 
             if (tmpSpeedDetails != null) {
+                speedDetailSet.remove(tmpSpeedDetails)
                 progressTracker?.removeSpeedDetails(tmpSpeedDetails!!)
-                val ref = uiRangeSegments?.removeAt(uiRangeSegments?.size!! - 1)
+                val ref = uiRangeSegments!!.removeAt(uiRangeSegments!!.size - 1)
                 timebarHolder.removeView(ref)
                 tmpSpeedDetails = null
             }
@@ -722,7 +775,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 handleExistingSpeedChange(currentPosition, false)
             }
             editAction = EditAction.SLOW
-
+            setIconActive()
             Log.d(TAG, "bindListeners: slow: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
@@ -739,7 +792,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 handleExistingSpeedChange(currentPosition, true)
             }
             editAction = EditAction.FAST
-
+            setIconActive()
             Log.d(TAG, "bindListeners: speed: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
@@ -774,6 +827,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         bufferDuration = 0L
         bufferPath = ""
         maxDuration = videoDuration
+        player.release()
         setupPlayer()
         showAdjustedSpeedChanges()
     }
@@ -1061,6 +1115,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 player.playWhenReady = false
                 player.release()
                 clearSelectedRanges()
+                player.release()
                 setupPlayer()
 
                 isEditOnGoing      = true
@@ -1447,7 +1502,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         previewBarProgress.visibility = View.VISIBLE
 
-        if(!thumbnailExtractionStarted) {
+        if(!thumbnailExtractionStarted && generatePreviewTile) {
             CoroutineScope(Default).launch {
                 getVideoPreviewFrames()
             }
@@ -1459,32 +1514,51 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
 
-        if(!showBuffer) {
+        if (!showBuffer) {
             if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
                 val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
-                val dataSourceFactory = DefaultDataSourceFactory(requireContext(),
-                        Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
+                val dataSourceFactory = DefaultDataSourceFactory(
+                    requireContext(),
+                    Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter
+                )
 
-                val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(snip!!.videoFilePath))
+                val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(Uri.parse(snip!!.videoFilePath))
 
-                val clippingMediaSource = ClippingMediaSource(mediaSource, TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()), TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong()))
+                val clippingMediaSource = ClippingMediaSource(
+                    mediaSource,
+                    TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()),
+                    TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong())
+                )
                 seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
                 player.addMediaSource(clippingMediaSource)
             } else {
                 player.setMediaItem(mediaItem)
             }
-        }else{
-            if(bufferPath.isNotEmpty()) {
-                val bufferSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext())).createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
-                val videoSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext())).createMediaSource(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
+        } else {
+            if (bufferPath.isNotEmpty()) {
+                val bufferSource =
+                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
+                        .createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
+                val videoSource =
+                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
+                        .createMediaSource(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
                 //  clippingMediaSource used as workaround for timeline scrubbing
-                val clip1 = ClippingMediaSource(bufferSource, 0, TimeUnit.MILLISECONDS.toMicros(bufferDuration))
-                val clip2 = ClippingMediaSource(videoSource, 0, TimeUnit.MILLISECONDS.toMicros(videoDuration))
+                val clip1 = ClippingMediaSource(
+                    bufferSource,
+                    0,
+                    TimeUnit.MILLISECONDS.toMicros(bufferDuration)
+                )
+                val clip2 = ClippingMediaSource(
+                    videoSource,
+                    0,
+                    TimeUnit.MILLISECONDS.toMicros(videoDuration)
+                )
                 val mediaSource = ConcatenatingMediaSource(true, clip1, clip2)
 
                 player.setMediaSource(mediaSource)
                 playerView.setShowMultiWindowTimeBar(true)
-                val jumpTo = if(editedStart < 0) bufferDuration else editedStart
+                val jumpTo = if (editedStart < 0) bufferDuration else editedStart
                 player.seekTo(0, jumpTo)
                 showBufferOverlay()
             }
@@ -1493,7 +1567,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         player.prepare()
         player.repeatMode = Player.REPEAT_MODE_OFF
         player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
-        Log.d(TAG, "setupPlayer: content duration = ${player.contentDuration}, duration = ${maxDuration}")
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -1711,8 +1784,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         else -> {
                         }
                     }
-                    Log.d(TAG, "initSwipeControls: \nlower = $lower\nhigher = $higher\nstartingTS = $startingTimestamps\nendingTS = $endingTimestamps" +
-                            "\nnew position = $newSeekPosition\nmin start = ${uiRangeSegments!![currentEditSegment].selectedMinValue}\nmax start = ${uiRangeSegments!![currentEditSegment].selectedMaxValue}")
                 }
             }
 
