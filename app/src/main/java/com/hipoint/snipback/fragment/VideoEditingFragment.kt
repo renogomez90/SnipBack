@@ -39,7 +39,6 @@ import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
-import com.hipoint.snipback.Utils.EditTimeBar
 import com.hipoint.snipback.adapter.EditChangeListAdapter
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.application.AppClass
@@ -1759,6 +1758,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
 
                 if (isEditActionSpeedChange()) {
+
+                    val change = checkOverlappingTS(newSeekPosition)
+                    Log.d(TAG, "initSwipeControls: change = $change")
+                    if(change != -1L){
+                        newSeekPosition = change
+                        player.seekTo(newSeekPosition)
+                        return@onScroll
+                    }
+
                     when (editSeekAction) {
                         EditSeekControl.MOVE_START -> {
                             if (newSeekPosition >= endingTimestamps && endingTimestamps != 0L && !showBuffer) {
@@ -1963,6 +1971,35 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             diff.sortDescending()
             current + diff[0]   //   + because the value is already negative
         }
+    }
+
+    private fun checkOverlappingTS(nextPosition: Long): Long {
+        if((startingTimestamps == -1L && endingTimestamps == maxDuration) || restrictList.isNullOrEmpty()){
+            return -1L
+        }
+
+        restrictList?.forEach {
+            if(startingTimestamps == endingTimestamps ||
+                it.timeDuration!!.first == it.timeDuration!!.second){
+                return -1L
+            }
+            if(editSeekAction == EditSeekControl.MOVE_END){
+                if(it.startWindowIndex == player.currentWindowIndex) {
+                    if (startingTimestamps <= it.timeDuration!!.first && nextPosition >= it.timeDuration!!.first && player.currentWindowIndex == 0) {
+                        return it.timeDuration!!.first
+                    }
+                    val tmp = (it.timeDuration!!.first - bufferDuration)
+                    if(startingTimestamps <= it.timeDuration!!.first && nextPosition >= tmp && player.currentWindowIndex == 1){
+                        return tmp
+                    }
+                }
+            }else if(editSeekAction == EditSeekControl.MOVE_START){
+                if(endingTimestamps >= it.timeDuration!!.second && nextPosition <= it.timeDuration!!.second){
+                    return it.timeDuration!!.second
+                }
+            }
+        }
+        return -1L
     }
 
     /**
