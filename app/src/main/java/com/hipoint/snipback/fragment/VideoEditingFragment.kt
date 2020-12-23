@@ -990,6 +990,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         timebarHolder.removeView(bufferOverlay)
     }
 
+    /**
+     * Accepts the extend/trim duration changes made and also ensure playback happens to reflect the same.
+     */
     private fun acceptTrimChanges() {
         val bufferSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext())).createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
         val videoSource = ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext())).createMediaSource(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
@@ -1317,6 +1320,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
     }
 
+    /**
+     * control if views are clickable or not and update UI accordingly
+     */
     private fun enableEditOptions(enable: Boolean) {
 //        extentTextBtn.isEnabled    = enable
         cutTextBtn.isEnabled       = enable
@@ -1949,6 +1955,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
     }
 
+    /**
+     * returns the closest existing selection above the current cursor position
+     */
     private fun nearestExistingHigherTS(current: Long): Long {
         if(restrictList.isNullOrEmpty()){
             return maxDuration
@@ -1974,6 +1983,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
     }
 
+    /**
+     * returns the closest existing selection below the current cursor position
+     */
     private fun nearestExistingLowerTS(current: Long): Long {
         if(restrictList.isNullOrEmpty()){
             return 0L
@@ -1999,6 +2011,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
     }
 
+    /**
+     * prevents overlapping edits by returning the limiting value or -1 is the cursor position is acceptable
+     */
     private fun checkOverlappingTS(nextPosition: Long): Long {
         if((startingTimestamps == -1L && endingTimestamps == maxDuration) || restrictList.isNullOrEmpty()){
             return -1L
@@ -2313,6 +2328,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         acceptRejectHolder.visibility = View.VISIBLE
     }
 
+    /**
+     * This method searches through the existing set of speed details and sets the currentEditSegment as index.
+     * this was created because there was an issue where the set order was changing.
+     */
     private fun updateCurrentEditIndex(speedDetails: SpeedDetails) {
         speedDetailSet.forEachIndexed { index, it ->
             Log.d(
@@ -2496,5 +2515,4 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             handler = null
         }
     }
-
 }
