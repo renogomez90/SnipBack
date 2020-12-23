@@ -514,13 +514,19 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         //  the user wishes to move the starting point only
                         endingTimestamps = player.currentPosition
                         acceptRejectHolder.visibility = View.VISIBLE
+                        if(startingTimestamps != -1L){
+                            player.seekTo(tmpSpeedDetails?.startWindowIndex ?: 0, startingTimestamps)
+                        }
                     }
                 }
                 EditAction.EXTEND_TRIM -> {
-                    if(startingTimestamps < bufferDuration)
+                    if (startingTimestamps < bufferDuration) {
+                        player.setSeekParameters(SeekParameters.EXACT)
                         player.seekTo(0, startingTimestamps)
-                    else
+                    } else {
+                        player.setSeekParameters(SeekParameters.EXACT)
                         player.seekTo(1, startingTimestamps - bufferDuration)
+                    }
                 }
                 else -> {}
             }
@@ -562,6 +568,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     var endValue = startValue
 
                     speedDuration = if (isEditExisting) {   //  if an exiting item is being modified
+                        player.setSeekParameters(SeekParameters.EXACT)
                         player.seekTo(endingTimestamps)
 
                         endValue =
@@ -579,33 +586,43 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     }
 
                     if (!isEditExisting) {
-                        tmpSpeedDetails = SpeedDetails(
-                            startWindowIndex = startWindow,
-                            endWindowIndex = endWindow,
-                            isFast = editAction == EditAction.FAST,
-                            multiplier = getCurrentEditSpeed(),
-                            timeDuration = speedDuration
-                        )
+                        if (tmpSpeedDetails == null) {
+                            tmpSpeedDetails = SpeedDetails(
+                                startWindowIndex = startWindow,
+                                endWindowIndex = endWindow,
+                                isFast = editAction == EditAction.FAST,
+                                multiplier = getCurrentEditSpeed(),
+                                timeDuration = speedDuration
+                            )
 
-                        speedDetailSet.add(tmpSpeedDetails!!)
+                            speedDetailSet.add(tmpSpeedDetails!!)
 
-                        setupRangeMarker(startValue, endValue)    //  initial value for marker
+                            setupRangeMarker(startValue, endValue)    //  initial value for marker
+                        } else {
+                            if (endingTimestamps != maxDuration) {
+                                player.setSeekParameters(SeekParameters.EXACT)
+                                player.seekTo(tmpSpeedDetails?.endWindowIndex ?: 0,endingTimestamps)
+                            }
+                        }
                     }
 
                     if (timebarHolder.indexOfChild(uiRangeSegments!![currentEditSegment]) < 0)  //  View doesn't exist and can be added
                         timebarHolder.addView(uiRangeSegments!![currentEditSegment])
                 }
 
-                EditAction.EXTEND_TRIM -> {
-                    startingTimestamps = getCorrectedTimebarStartPosition()
-                    if(endingTimestamps > bufferDuration)
-                        player.seekTo(1, endingTimestamps - bufferDuration)
-                    else
-                        player.seekTo(0, endingTimestamps)
-                }
+                    EditAction.EXTEND_TRIM -> {
+                        startingTimestamps = getCorrectedTimebarStartPosition()
+                        if (endingTimestamps > bufferDuration) {
+                            player.setSeekParameters(SeekParameters.EXACT)
+                            player.seekTo(1, endingTimestamps - bufferDuration)
+                        } else {
+                            player.setSeekParameters(SeekParameters.EXACT)
+                            player.seekTo(0, endingTimestamps)
+                        }
+                    }
 
-                else -> {}
-            }
+                    else -> {}
+                }
 //            }
             Log.d(TAG, "bindListeners: end: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
             acceptRejectHolder.visibility = View.VISIBLE
@@ -1761,8 +1778,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
                     val change = checkOverlappingTS(newSeekPosition)
                     Log.d(TAG, "initSwipeControls: change = $change")
-                    if(change != -1L){
+                    if(change != -1L && !isEditExisting){
                         newSeekPosition = change
+                        player.setSeekParameters(SeekParameters.EXACT)
                         player.seekTo(newSeekPosition)
                         return@onScroll
                     }
@@ -2274,8 +2292,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         updateCurrentEditIndex(speedDetails)
 
         if(tmpSpeedDetails!!.startWindowIndex == 1) {
+            player.setSeekParameters(SeekParameters.EXACT)
             player.seekTo(tmpSpeedDetails!!.startWindowIndex, tmpSpeedDetails!!.timeDuration!!.first - bufferDuration)
         }else{
+            player.setSeekParameters(SeekParameters.EXACT)
             player.seekTo(tmpSpeedDetails!!.startWindowIndex, tmpSpeedDetails!!.timeDuration!!.first)
         }
         start.performClick()
