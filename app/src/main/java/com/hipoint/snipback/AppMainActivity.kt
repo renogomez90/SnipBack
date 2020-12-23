@@ -257,10 +257,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         private var virtualToReal: Boolean =
             false  //  set this to true before trimming, so that additional operations may be applied on the new video eg. speed change
 
-        const val VIDEO_MODE_TAG = "videoMode"
+        const val VIDEO_MODE_TAG       = "videoMode"
         const val GALLERY_FRAGMENT_TAG = "gallery_frag"
-        const val PLAY_VIDEO_TAG = "play_frag"
-        const val EDIT_VIDEO_TAG = "edit_frag"
+        const val PLAY_VIDEO_TAG       = "play_frag"
+        const val PLAY_SNAPBACK_TAG    = "play_snapback_frag"
+        const val EDIT_VIDEO_TAG       = "edit_frag"
 
         fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
             if (context != null) {
@@ -563,11 +564,17 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         if (ignoreResultOf.isNotEmpty()) {
             if (ignoreResultOf[0] == IVideoOpListener.VideoOp.TRIMMED) {
                 ignoreResultOf.removeAt(0)
-
-                val trimCompleteReceiver = Intent(VideoEditingFragment.EXTEND_TRIM_ACTION)
-                trimCompleteReceiver.putExtra("operation", IVideoOpListener.VideoOp.TRIMMED.name)
-                trimCompleteReceiver.putExtra("fileName", processedVideoPath)
-                sendBroadcast(trimCompleteReceiver)
+                if(fromOperation == CurrentOperation.VIDEO_EDITING) {
+                    val trimCompleteReceiver = Intent(VideoEditingFragment.EXTEND_TRIM_ACTION)
+                    trimCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
+                    trimCompleteReceiver.putExtra("fileName", processedVideoPath)
+                    sendBroadcast(trimCompleteReceiver)
+                }else if(fromOperation == CurrentOperation.CLIP_RECORDING){
+                    val snapbackCompleteReceiver = Intent(VideoMode.SNAPBACK_ACTION)
+                    snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
+                    snapbackCompleteReceiver.putExtra("fileName", processedVideoPath)
+                    sendBroadcast(snapbackCompleteReceiver)
+                }
                 return
             }
         }
