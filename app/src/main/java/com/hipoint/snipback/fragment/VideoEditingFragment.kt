@@ -730,11 +730,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 undoExtendTrim()
             }
 
-            startingTimestamps = -1L
-            endingTimestamps = -1L
-            player.setPlaybackParameters(PlaybackParameters(1F))
-            isSpeedChanged = false
-            isEditOnGoing = false
+            if (isEditExisting) {
+                updateEditList()
+            }
 
             startRangeUI()
             resetPlaybackUI()
@@ -745,7 +743,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 run()
             }
             updateRestrictedList()
+
             editAction = EditAction.NORMAL
+            startingTimestamps = -1L
+            endingTimestamps = -1L
+            player.setPlaybackParameters(PlaybackParameters(1F))
+            isSpeedChanged = false
+            isEditOnGoing = false
+            isEditExisting = false
         }
 
         playBtn.setOnClickListener {
@@ -786,6 +791,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 handleNewSpeedChange(currentPosition)
             }else{
                 //  update the currently changing section to slow
+                isEditExisting = true
                 handleExistingSpeedChange(currentPosition, false)
             }
             editAction = EditAction.SLOW
@@ -803,6 +809,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             if(!isEditOnGoing){  //  we are editing afresh
                 handleNewSpeedChange(currentPosition)
             }else{
+                isEditExisting = true
                 handleExistingSpeedChange(currentPosition, true)
             }
             editAction = EditAction.FAST
@@ -1406,7 +1413,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             setMinValue(0F)
             setMaxValue(100F)
             setMinStartValue(startValue).apply()
-//            setGap(endValue - startValue)
             setMaxStartValue(endValue).apply()
 
             setOnTouchListener { _, _ -> true }
@@ -1749,13 +1755,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             val maxPercent = 0.75f
             val scaledPercent = percentX * maxPercent
-            val percentOfDuration = /*if (showBuffer) {
-                if (player.currentWindowIndex == 0)
-                    scaledPercent * -1 * bufferDuration + startScrollingSeekPosition
-                else
-                    scaledPercent * -1 * videoDuration + startScrollingSeekPosition
-            } else*/
-                scaledPercent * -1 * maxDuration + startScrollingSeekPosition
+            val percentOfDuration = scaledPercent * -1 * maxDuration + startScrollingSeekPosition
 
             // shift in position domain and ensure circularity
             var newSeekPosition = percentOfDuration.roundToLong()
@@ -1802,10 +1802,18 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                     }
                                 }
                             }
-                            if(player.currentWindowIndex == 1)
-                                uiRangeSegments!![currentEditSegment].setMinStartValue(((bufferDuration + newSeekPosition) * 100 / maxDuration).toFloat()).apply()
-                            else
-                                uiRangeSegments!![currentEditSegment].setMinStartValue((newSeekPosition * 100 / maxDuration).toFloat()).apply()
+
+                            if(uiRangeSegments!![currentEditSegment].maxSelection().toInt() == 100){
+                                uiRangeSegments!![currentEditSegment].setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat())
+                                    .apply()
+                            }
+                            if (player.currentWindowIndex == 1) {
+                                uiRangeSegments!![currentEditSegment].setMinStartValue(((bufferDuration + newSeekPosition) * 100 / maxDuration).toFloat())
+                                    .apply()
+                            } else {
+                                uiRangeSegments!![currentEditSegment].setMinStartValue((newSeekPosition * 100 / maxDuration).toFloat())
+                                    .apply()
+                            }
                         }
                         EditSeekControl.MOVE_END -> {
                             if (newSeekPosition < startingTimestamps && !showBuffer) {
