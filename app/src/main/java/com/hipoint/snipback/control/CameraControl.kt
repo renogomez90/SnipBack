@@ -223,6 +223,12 @@ class CameraControl(val activity: FragmentActivity) {
         }
     }
 
+    fun isBgThreadRunning():Boolean{
+        if(mBackgroundThread == null || mBackgroundHandler == null)
+            return false
+        return mBackgroundThread?.isAlive ?: false
+    }
+
     //  setters and getters
     fun setRecordUIListener(uiListener: IRecordUIListener){
         recordUIListener = uiListener

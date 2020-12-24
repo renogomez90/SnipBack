@@ -24,11 +24,8 @@ import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.CurrentOperation
-import com.hipoint.snipback.fragment.FragmentGalleryNew
-import com.hipoint.snipback.fragment.FragmentPlayVideo2
-import com.hipoint.snipback.fragment.VideoEditingFragment
+import com.hipoint.snipback.fragment.*
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.VIRTUAL_TO_REAL_ACTION
-import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IReplaceRequired
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
@@ -570,9 +567,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                     trimCompleteReceiver.putExtra("fileName", processedVideoPath)
                     sendBroadcast(trimCompleteReceiver)
                 }else if(fromOperation == CurrentOperation.CLIP_RECORDING){
-                    val snapbackCompleteReceiver = Intent(VideoMode.SNAPBACK_ACTION)
+                    val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
                     snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
-                    snapbackCompleteReceiver.putExtra("fileName", processedVideoPath)
+                    snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
                     sendBroadcast(snapbackCompleteReceiver)
                 }
                 return

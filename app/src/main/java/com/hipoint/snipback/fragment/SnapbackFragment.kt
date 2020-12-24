@@ -1,5 +1,9 @@
 package com.hipoint.snipback.fragment
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -14,6 +18,7 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
+import com.hipoint.snipback.dialog.SnapbackProcessingDialog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -21,8 +26,12 @@ import kotlinx.coroutines.launch
 
 class SnapbackFragment: Fragment() {
     private val TAG     = SnapbackFragment::class.java.simpleName
+    private val PROCESSING_SNAPBACK_DIALOG = "com.hipoint.snipback.SNAPBACK_VIDEO_PROCESSING"
+
     private val retries = 3
     private var tries   = 0
+
+    private var progressDialog: SnapbackProcessingDialog? = null
 
     private lateinit var videoPath : String
     private lateinit var playerView: PlayerView
@@ -31,12 +40,24 @@ class SnapbackFragment: Fragment() {
     private lateinit var backBtn   : RelativeLayout
     private lateinit var captureBtn: RelativeLayout
 
+    private val videoPathReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let{
+                videoPath = it.getStringExtra(EXTRA_VIDEO_PATH) ?: ""
+                hideProgressDialog()
+                setupPlayer()
+            }
+        }
+    }
+
     companion object{
+        val SNAPBACK_PATH_ACTION = "com.hipoint.snipback.SNAPBACK_VIDEO_PATH"
+        val EXTRA_VIDEO_PATH = "videoPath"
         var fragment: SnapbackFragment? = null
 
         fun newInstance(videoPath: String): SnapbackFragment {
             val bundle = Bundle()
-            bundle.putString("videoPath", videoPath)
+            bundle.putString(EXTRA_VIDEO_PATH, videoPath)
 
             if(fragment == null){
                 fragment = SnapbackFragment()
@@ -52,21 +73,23 @@ class SnapbackFragment: Fragment() {
         bindViews()
         bindListeners()
 
-        videoPath = requireArguments().getString("videoPath", "")
-
-        if(videoPath.isEmpty())
-            Toast.makeText(requireContext(), "Video Unavailable", Toast.LENGTH_SHORT).show()
+        videoPath = requireArguments().getString(EXTRA_VIDEO_PATH, "")
 
         return rootView
     }
 
     override fun onResume() {
         super.onResume()
-        setupPlayer()
+        requireActivity().registerReceiver(videoPathReceiver, IntentFilter(SNAPBACK_PATH_ACTION))
+        if(videoPath.isNotBlank())
+            setupPlayer()
+        else
+            showProgressDialog()
     }
 
     override fun onPause() {
         player.release()
+        requireActivity().unregisterReceiver(videoPathReceiver)
         super.onPause()
     }
 
@@ -83,7 +106,7 @@ class SnapbackFragment: Fragment() {
             prepare()
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
-            playWhenReady = true
+            playWhenReady = false
         }
 
         playerView.controllerShowTimeoutMs = 2000
@@ -107,7 +130,6 @@ class SnapbackFragment: Fragment() {
                 }
             }
         })
-
     }
 
     private fun bindListeners() {
@@ -122,8 +144,19 @@ class SnapbackFragment: Fragment() {
     }
 
     private fun bindViews() {
-        player     = rootView.findViewById(R.id.snapback_player_view)
+        playerView = rootView.findViewById(R.id.snapback_player_view)
         backBtn    = rootView.findViewById(R.id.back_arrow)
         captureBtn = rootView.findViewById(R.id.button_capture)
     }
+
+    private fun showProgressDialog(){
+        if (progressDialog == null){
+            progressDialog = SnapbackProcessingDialog()
+        }
+
+        progressDialog!!.isCancelable = false
+        progressDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_SNAPBACK_DIALOG)
+    }
+
+    private fun hideProgressDialog() = progressDialog?.dismiss()
 }
