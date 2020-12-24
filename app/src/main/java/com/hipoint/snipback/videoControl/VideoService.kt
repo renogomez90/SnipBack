@@ -7,6 +7,7 @@ import androidx.core.app.JobIntentService
 import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.VideoUtils
 import com.hipoint.snipback.enums.CurrentOperation
+import com.hipoint.snipback.enums.SwipeAction
 import com.hipoint.snipback.listener.IVideoOpListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
@@ -20,9 +21,10 @@ import java.util.*
  */
 class VideoService : JobIntentService(), IVideoOpListener {
     companion object {
-        val ACTION        = "com.hipoint.snipback.VideoOpAction"
-        val VIDEO_OP_ITEM = "VIDEO_OP_ITEM"
-        val LAUNCHED_FROM = "LAUNCHED_FROM"
+        val ACTION             = "com.hipoint.snipback.VideoOpAction"
+        val VIDEO_OP_ITEM      = "VIDEO_OP_ITEM"
+        val LAUNCHED_FROM_EXTRA      = "LAUNCHED_FROM"
+        val SWIPE_ACTION_EXTRA = "SWIPE_ACTION"
 
         val STATUS_NO_VALUE      = -1
         val STATUS_OP_SUCCESS    = 1
@@ -67,7 +69,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                 action = ACTION
                 putExtra("progress", STATUS_SHOW_PROGRESS)
                 putExtra("operation", work.operation.name)
-                putExtra(LAUNCHED_FROM, work.comingFrom.name)
+                putExtra(LAUNCHED_FROM_EXTRA, work.comingFrom.name)
             }
             sendBroadcast(broadcastIntent)
 
@@ -82,7 +84,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             CoroutineScope(IO).launch {
                                 val clipFiles = arrayListOf<File>()
                                 clips.forEach { clipFiles.add(File(it)) }
-                                VideoUtils(this@VideoService).concatenateMultiple(clipFiles, outputPath, comingFrom)
+                                VideoUtils(this@VideoService).concatenateMultiple(clipFiles, outputPath, comingFrom, swipeAction)
                                 return@launch
                             }
                         }
@@ -95,7 +97,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             CoroutineScope(IO).launch {
                                 val clip1 = clips[0]
                                 val clip2 = clips[1]
-                                VideoUtils(this@VideoService).mergeRecordedFiles(File(clip1), File(clip2), outputPath, comingFrom)
+                                VideoUtils(this@VideoService).mergeRecordedFiles(File(clip1), File(clip2), outputPath, comingFrom, swipeAction)
                                 return@launch
                             }
                         }
@@ -106,7 +108,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).trimToClip(File(clips[0]), outputPath, startTime, endTime, comingFrom)
+                                VideoUtils(this@VideoService).trimToClip(File(clips[0]), outputPath, startTime, endTime, comingFrom, swipeAction)
                                 return@launch
                             }
                         }
@@ -117,7 +119,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).splitVideo(File(clips[0]), splitTime, outputPath, comingFrom)
+                                VideoUtils(this@VideoService).splitVideo(File(clips[0]), splitTime, outputPath, comingFrom, swipeAction)
                                 return@launch
                             }
                         }
@@ -128,7 +130,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).changeSpeed(File(clips[0]), speedDetailsList, outputPath, comingFrom)
+                                VideoUtils(this@VideoService).changeSpeed(File(clips[0]), speedDetailsList, outputPath, comingFrom, swipeAction)
                                 return@launch
                             }
                         }
@@ -139,7 +141,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).getThumbnails(File(clips[0]), outputPath, comingFrom)
+                                VideoUtils(this@VideoService).getThumbnails(File(clips[0]), outputPath, comingFrom, swipeAction)
                                 return@launch
                             }
                         }
@@ -150,7 +152,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         }else{
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).addIDRFrame(File(clips[0]), outputPath, comingFrom)
+                                VideoUtils(this@VideoService).addIDRFrame(File(clips[0]), outputPath, comingFrom, swipeAction)
                             }
                         }
                     }
@@ -173,14 +175,19 @@ class VideoService : JobIntentService(), IVideoOpListener {
             putExtra("status", STATUS_OP_FAILED)
             putExtra("progress", STATUS_HIDE_PROGRESS)
             putExtra("operation", operation.name)
-            putExtra(LAUNCHED_FROM, calledFrom.name)
+            putExtra(LAUNCHED_FROM_EXTRA, calledFrom.name)
         }
         sendBroadcast(broadcastIntent)
 
         processQueue()
     }
 
-    override fun changed(operation: IVideoOpListener.VideoOp, calledFrom: CurrentOperation, processedVideoPath: String) {
+    override fun changed(
+        operation: IVideoOpListener.VideoOp,
+        calledFrom: CurrentOperation,
+        swipeAction: SwipeAction,
+        processedVideoPath: String
+    ) {
         Log.i(TAG, "${operation.name} completed: $processedVideoPath")
         isProcessing = false
         broadcastIntent.apply {
@@ -188,8 +195,9 @@ class VideoService : JobIntentService(), IVideoOpListener {
             putExtra("status", STATUS_OP_SUCCESS)
             putExtra("progress", STATUS_HIDE_PROGRESS)
             putExtra("operation", operation.name)
+            putExtra(SWIPE_ACTION_EXTRA, swipeAction.name)
             putExtra("processedVideoPath", processedVideoPath)
-            putExtra(LAUNCHED_FROM, calledFrom.name)
+            putExtra(LAUNCHED_FROM_EXTRA, calledFrom.name)
         }
         sendBroadcast(broadcastIntent)
 

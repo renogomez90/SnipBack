@@ -24,6 +24,7 @@ import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.CurrentOperation
+import com.hipoint.snipback.enums.SwipeAction
 import com.hipoint.snipback.fragment.*
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.VIRTUAL_TO_REAL_ACTION
 import com.hipoint.snipback.listener.IReplaceRequired
@@ -35,7 +36,8 @@ import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
-import com.hipoint.snipback.videoControl.VideoService.Companion.LAUNCHED_FROM
+import com.hipoint.snipback.videoControl.VideoService.Companion.LAUNCHED_FROM_EXTRA
+import com.hipoint.snipback.videoControl.VideoService.Companion.SWIPE_ACTION_EXTRA
 import com.hipoint.snipback.videoControl.VideoService.Companion.ignoreResultOf
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.*
@@ -557,7 +559,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      *
      * @param processedVideoPath String
      */
-    private fun videoTrimCompleted(processedVideoPath: String, fromOperation: CurrentOperation) {
+    private fun videoTrimCompleted(
+        processedVideoPath: String,
+        fromOperation: CurrentOperation,
+        swipeAction: SwipeAction
+    ) {
         if (ignoreResultOf.isNotEmpty()) {
             if (ignoreResultOf[0] == IVideoOpListener.VideoOp.TRIMMED) {
                 ignoreResultOf.removeAt(0)
@@ -566,7 +572,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                     trimCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
                     trimCompleteReceiver.putExtra("fileName", processedVideoPath)
                     sendBroadcast(trimCompleteReceiver)
-                }else if(fromOperation == CurrentOperation.CLIP_RECORDING){
+                }else if(fromOperation == CurrentOperation.CLIP_RECORDING && swipeAction == SwipeAction.SWIPE_RIGHT){
                     val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
                     snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
                     snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
@@ -602,7 +608,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      *
      * @param processedVideoPath String
      */
-    private fun videoSplitCompleted(processedVideoPath: String, comingFrom: CurrentOperation) {
+    private fun videoSplitCompleted(
+        processedVideoPath: String,
+        comingFrom: CurrentOperation,
+        swipeAction: SwipeAction
+    ) {
         if (ignoreResultOf.isNotEmpty()) {
             if (ignoreResultOf[0] == IVideoOpListener.VideoOp.SPLIT) {
                 ignoreResultOf.removeAt(0)
@@ -631,7 +641,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      *
      * @param processedVideoPath
      */
-    fun videoConcatCompleted(processedVideoPath: String, comingFrom: CurrentOperation) {
+    fun videoConcatCompleted(
+        processedVideoPath: String,
+        comingFrom: CurrentOperation,
+        swipeAction: SwipeAction
+    ) {
         if (ignoreResultOf.isNotEmpty()) {
             if (ignoreResultOf[0] == IVideoOpListener.VideoOp.CONCAT) {
                 ignoreResultOf.removeAt(0)
@@ -644,13 +658,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
 
         val totalDuration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-        if (comingFrom != CurrentOperation.VIDEO_RECORDING) {
+        /*if (comingFrom != CurrentOperation.VIDEO_RECORDING) {
             addSnip(
                 processedVideoPath,
                 totalDuration,
                 totalDuration
             )     //  merged file is saved to DB
-        }
+        }*/
         val swipeClipDuration = videoModeFragment.swipeValue / 1000
         val bufferDuration = videoModeFragment.clipDuration / 1000
 
@@ -663,16 +677,21 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 "${File(processedVideoPath).parent}/${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
             val taskList = arrayListOf<VideoOpItem>()
 
-            val bufferFile = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(processedVideoPath),
-                startTime = max((totalDuration - swipeClipDuration - bufferDuration).toInt(), 0),
-                endTime = (totalDuration - swipeClipDuration).toInt(),
-                outputPath = buffFile,
-                comingFrom = comingFrom
-            )
+            if(swipeAction == SwipeAction.SWIPE_LEFT) {
+                val bufferFile = VideoOpItem(
+                    operation = IVideoOpListener.VideoOp.TRIMMED,
+                    clips = arrayListOf(processedVideoPath),
+                    startTime = max((totalDuration - swipeClipDuration - bufferDuration).toInt(),
+                        0),
+                    endTime = (totalDuration - swipeClipDuration).toInt(),
+                    outputPath = buffFile,
+                    comingFrom = comingFrom,
+                    swipeAction = swipeAction
+                )
 
-            VideoService.bufferDetails.add(BufferDataDetails(buffFile, split2File))
+                VideoService.bufferDetails.add(BufferDataDetails(buffFile, split2File))
+                taskList.add(bufferFile)
+            }
 
             val videoFile = VideoOpItem(
                 operation = IVideoOpListener.VideoOp.TRIMMED,
@@ -680,10 +699,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 startTime = (totalDuration - swipeClipDuration).toInt(),
                 endTime = totalDuration,
                 outputPath = split2File,
-                comingFrom = comingFrom
+                comingFrom = comingFrom,
+                swipeAction = swipeAction
             )
 
-            taskList.add(bufferFile)
             taskList.add(videoFile)
 
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
@@ -701,7 +720,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      */
     private fun videoSpeedChangeCompleted(
         processedVideoPath: String,
-        comingFrom: CurrentOperation
+        comingFrom: CurrentOperation,
+        swipeAction: SwipeAction
     ) {
         if (ignoreResultOf.isNotEmpty()) {
             if (ignoreResultOf[0] == IVideoOpListener.VideoOp.SPEED) {
@@ -783,7 +803,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
     private fun videoPreviewFramesCompleted(
         processedVideoPath: String,
-        comingFrom: CurrentOperation
+        comingFrom: CurrentOperation,
+        swipeAction: SwipeAction
     ) {
         if (ignoreResultOf.isNotEmpty()) {
             if (ignoreResultOf[0] == IVideoOpListener.VideoOp.FRAMES) {
@@ -808,8 +829,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             val operation = intent.getStringExtra("operation")
             val showProgress = intent.getIntExtra("progress", -1)
             val processedVideoPath = intent.getStringExtra("processedVideoPath")
-            val currentOperationString = intent.getStringExtra(LAUNCHED_FROM)
+            val currentOperationString = intent.getStringExtra(LAUNCHED_FROM_EXTRA)
+            val swipeActionString = intent.getStringExtra(SWIPE_ACTION_EXTRA)
             val currentOperation = getCurrentOperation(currentOperationString)
+            val swipeAction = getCurrentSwipeAction(swipeActionString)
 
             if (isFragmentVisible(VIDEO_MODE_TAG))
                 if (showProgress == VideoService.STATUS_SHOW_PROGRESS) {
@@ -831,22 +854,22 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 VideoService.STATUS_OP_SUCCESS -> {
                     when (operation) {
                         IVideoOpListener.VideoOp.CONCAT.name -> {
-                            videoConcatCompleted(processedVideoPath, currentOperation)
+                            videoConcatCompleted(processedVideoPath, currentOperation, swipeAction)
                         }
                         IVideoOpListener.VideoOp.TRIMMED.name -> {
-                            videoTrimCompleted(processedVideoPath, currentOperation)
+                            videoTrimCompleted(processedVideoPath, currentOperation, swipeAction)
                         }
                         IVideoOpListener.VideoOp.SPLIT.name -> {
-                            videoSplitCompleted(processedVideoPath, currentOperation)
+                            videoSplitCompleted(processedVideoPath, currentOperation, swipeAction)
                         }
                         IVideoOpListener.VideoOp.SPEED.name -> {
-                            videoSpeedChangeCompleted(processedVideoPath, currentOperation)
+                            videoSpeedChangeCompleted(processedVideoPath, currentOperation, swipeAction)
                         }
                         IVideoOpListener.VideoOp.FRAMES.name -> {
-                            videoPreviewFramesCompleted(processedVideoPath, currentOperation)
+                            videoPreviewFramesCompleted(processedVideoPath, currentOperation, swipeAction)
                         }
                         IVideoOpListener.VideoOp.KEY_FRAMES.name -> {
-                            videoFramesAdded(processedVideoPath, currentOperation)
+                            videoFramesAdded(processedVideoPath, currentOperation, swipeAction)
                         }
                         else -> {
                         }
@@ -862,7 +885,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
     }
 
-    private fun videoFramesAdded(processedVideoPath: String, comingFrom: CurrentOperation) {
+    private fun videoFramesAdded(processedVideoPath: String, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
         if (ignoreResultOf.isNotEmpty()) {
             if (ignoreResultOf[0] == IVideoOpListener.VideoOp.KEY_FRAMES) {
                 ignoreResultOf.removeAt(0)
@@ -917,6 +940,19 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             else -> {
                 CurrentOperation.CLIP_RECORDING
             }
+        }
+    }
+
+    private fun getCurrentSwipeAction(swipeAction: String?): SwipeAction {
+        if (swipeAction == null)
+            return SwipeAction.NO_ACTION
+
+        return when (swipeAction) {
+            SwipeAction.SWIPE_RIGHT.name -> SwipeAction.SWIPE_RIGHT
+            SwipeAction.SWIPE_LEFT.name -> SwipeAction.SWIPE_LEFT
+            SwipeAction.SWIPE_DOWN.name -> SwipeAction.SWIPE_DOWN
+            SwipeAction.SWIPE_UP.name -> SwipeAction.SWIPE_UP
+            else -> SwipeAction.NO_ACTION
         }
     }
 

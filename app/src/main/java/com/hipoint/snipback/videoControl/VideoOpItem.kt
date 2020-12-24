@@ -3,6 +3,7 @@ package com.hipoint.snipback.videoControl
 import android.os.Parcel
 import android.os.Parcelable
 import com.hipoint.snipback.enums.CurrentOperation
+import com.hipoint.snipback.enums.SwipeAction
 import com.hipoint.snipback.listener.IVideoOpListener
 import kotlinx.android.parcel.Parcelize
 
@@ -14,55 +15,21 @@ data class VideoOpItem(val operation: IVideoOpListener.VideoOp,
                        var endTime: Int = -1,
                        var splitTime: Int = -1,
                        val speedDetailsList: ArrayList<SpeedDetails>? = arrayListOf(),
-                       val comingFrom: CurrentOperation) : Parcelable {
+                       val comingFrom: CurrentOperation,
+                       val swipeAction: SwipeAction = SwipeAction.NO_ACTION) : Parcelable {
 
-    /*constructor(parcel: Parcel) : this(
-            operation = parcel.readSerializable() as IVideoOpListener.VideoOp,
-            clip1 = parcel.readString()!!,
-            clip2 = parcel.readString()!!,
-            outputPath = parcel.readString()!!,
-            startTime = parcel.readInt(),
-            endTime = parcel.readInt(),
-            splitTime = parcel.readInt(),
-            speedDetailsList = parcel.readArrayList(SpeedDetails::class.java.classLoader) as ArrayList<SpeedDetails>) {
-    }
-
-    override fun describeContents(): Int {
-        return 0
-    }
-
-    override fun writeToParcel(dest: Parcel?, flags: Int) {
-        dest?.writeSerializable(operation)
-        dest?.writeString(clip1)
-        dest?.writeString(clip2)
-        dest?.writeString(outputPath)
-        dest?.writeInt(startTime)
-        dest?.writeInt(endTime)
-        dest?.writeInt(splitTime)
-        dest?.writeList(speedDetailsList as List<SpeedDetails>)
-    }
-
-    companion object CREATOR : Parcelable.Creator<VideoOpItem> {
-        override fun createFromParcel(parcel: Parcel): VideoOpItem {
-            return VideoOpItem(parcel)
-        }
-
-        override fun newArray(size: Int): Array<VideoOpItem?> {
-            return arrayOfNulls(size)
-        }
-    }
-*/
     override fun toString(): String {
         return """
-            VideoOpItem(
-            operation=$operation, 
-            clips='$clips', 
-            outputPath='$outputPath', 
-            startTime=$startTime, 
-            endTime=$endTime,
-            splitTime=$splitTime,
-            speedDetails=$speedDetailsList,
-            comingFrom=$comingFrom
+           | VideoOpItem(
+           | operation=$operation, 
+           | clips='$clips', 
+           | outputPath='$outputPath', 
+           | startTime=$startTime, 
+           | endTime=$endTime,
+           | splitTime=$splitTime,
+           | speedDetails=$speedDetailsList,
+           | comingFrom=$comingFrom,
+           | swipeAction=$swipeAction
             """.trimMargin()
     }
 }

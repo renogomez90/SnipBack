@@ -777,7 +777,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun handleRightSwipe(){
         //  button move animation
         triggerRightSwipeAnimation()
+
         if(currentOperation == CurrentOperation.CLIP_RECORDING) {
+
             if (cameraControl!!.clipQueueSize() > 1) {    //  more han 1 item is available in the queue
                 VideoService.ignoreResultOf.add(VideoOp.TRIMMED)
                 concatOnSwipeDuringClipRecording(SwipeAction.SWIPE_RIGHT)
@@ -786,7 +788,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 if (cameraControl!!.clipQueueSize() > 0) {
                     CoroutineScope(Default).launch {
                         VideoService.ignoreResultOf.add(VideoOp.TRIMMED)
-                        ensureRecordingRestart()
+//                        ensureRecordingRestart()
                         trimOnSwipeDuringClipRecording(SwipeAction.SWIPE_RIGHT)
                         launchSnapbackVideoCapture("")
                     }
@@ -842,7 +844,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 val queueSize = cameraControl!!.clipQueueSize()
                 for (i in 0 until queueSize) {
                     clips.add(cameraControl!!.removeClipQueueItem()!!.absolutePath)
-                    if (i == queueSize - 2) {
+                    if (i == queueSize - 2 && swipeAction == SwipeAction.SWIPE_LEFT) {
                         ensureRecordingRestart()
                     }
                 }
@@ -860,7 +862,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     operation = VideoOp.CONCAT,
                     clips = clips,
                     outputPath = mergeFilePath,
-                    comingFrom = CurrentOperation.CLIP_RECORDING
+                    comingFrom = CurrentOperation.CLIP_RECORDING,
+                    swipeAction = swipeAction
                 )
             )
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
@@ -883,7 +886,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         val swipeClipDuration = swipeValue / 1000
         if (actualClipTime > swipeClipDuration) {
             //  splitting may not work for this so we opt for trim
-            Log.d(TAG, "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
+            Log.d(TAG,
+                "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
             swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
             (requireActivity() as AppMainActivity).showInGallery.add("trimmed-${clip.nameWithoutExtension}")
 
@@ -892,26 +896,29 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val taskList = arrayListOf<VideoOpItem>()
-            val bufferTask = VideoOpItem(
-                operation = VideoOp.TRIMMED,
-                clips = arrayListOf(clip.absolutePath),
-                startTime = 0,
-                endTime = (actualClipTime - swipeClipDuration).toInt(),
-                outputPath = bufferFile,
-                comingFrom = CurrentOperation.CLIP_RECORDING)
 
-            bufferDetails.add(BufferDataDetails(bufferFile, videoFile))
+            if (swipeAction == SwipeAction.SWIPE_LEFT) {   //  since we don't need the buffer for right swipe
+                val bufferTask = VideoOpItem(
+                    operation = VideoOp.TRIMMED,
+                    clips = arrayListOf(clip.absolutePath),
+                    startTime = 0,
+                    endTime = (actualClipTime - swipeClipDuration).toInt(),
+                    outputPath = bufferFile,
+                    comingFrom = CurrentOperation.CLIP_RECORDING,
+                    swipeAction = swipeAction)
 
+                bufferDetails.add(BufferDataDetails(bufferFile, videoFile))
+                taskList.add(bufferTask)
+            }
             val videoTask = VideoOpItem(
                 operation = VideoOp.TRIMMED,
                 clips = arrayListOf(clip.absolutePath),
                 startTime = max((actualClipTime - swipeClipDuration).toInt(), 0),
                 endTime = actualClipTime,
                 outputPath = videoFile,
-                comingFrom = CurrentOperation.CLIP_RECORDING)
+                comingFrom = CurrentOperation.CLIP_RECORDING,
+                swipeAction = swipeAction)
 
-            if(swipeAction == SwipeAction.SWIPE_LEFT)   //  since we don't need the buffer for right swipe
-                taskList.add(bufferTask)
             taskList.add(videoTask)
 
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)

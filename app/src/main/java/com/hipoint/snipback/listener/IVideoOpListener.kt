@@ -1,6 +1,7 @@
 package com.hipoint.snipback.listener
 
 import com.hipoint.snipback.enums.CurrentOperation
+import com.hipoint.snipback.enums.SwipeAction
 import com.hipoint.snipback.listener.IVideoOpListener.VideoOp
 
 /**
@@ -20,5 +21,5 @@ interface IVideoOpListener {
     }
 
     fun failed(operation: VideoOp, calledFrom: CurrentOperation)
-    fun changed(operation: VideoOp, calledFrom: CurrentOperation, processedVideoPath: String)
+    fun changed(operation: VideoOp, calledFrom: CurrentOperation, swipeAction: SwipeAction, processedVideoPath: String)
 }
