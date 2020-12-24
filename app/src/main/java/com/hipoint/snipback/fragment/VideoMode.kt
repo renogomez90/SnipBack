@@ -783,14 +783,12 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             if (cameraControl!!.clipQueueSize() > 1) {    //  more han 1 item is available in the queue
                 VideoService.ignoreResultOf.add(VideoOp.TRIMMED)
                 concatOnSwipeDuringClipRecording(SwipeAction.SWIPE_RIGHT)
-                launchSnapbackVideoCapture("")
             } else { //  only 1 items is available
                 if (cameraControl!!.clipQueueSize() > 0) {
                     CoroutineScope(Default).launch {
                         VideoService.ignoreResultOf.add(VideoOp.TRIMMED)
-//                        ensureRecordingRestart()
+                        ensureRecordingRestart()
                         trimOnSwipeDuringClipRecording(SwipeAction.SWIPE_RIGHT)
-                        launchSnapbackVideoCapture("")
                     }
                 }
             }
@@ -870,6 +868,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             VideoService.enqueueWork(requireContext(), intentService)
         }
 
+        launchSnapbackVideoCapture("")
         return false
     }
 
@@ -923,14 +922,24 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
             VideoService.enqueueWork(requireContext(), intentService)
+
+            if(swipeAction == SwipeAction.SWIPE_RIGHT) {
+                launchSnapbackVideoCapture("")
+            }
         } else { //  save what we have
             swipedFileNames.add(clip.nameWithoutExtension)
             (requireActivity() as AppMainActivity).showInGallery.add(clip.nameWithoutExtension)
-            if(swipeAction == SwipeAction.SWIPE_LEFT)   //  we only need to save the snip in DB for left swipe
-                (requireActivity() as AppMainActivity).addSnip(clip.absolutePath, actualClipTime, actualClipTime)
+            if(swipeAction == SwipeAction.SWIPE_LEFT) {  //  we only need to save the snip in DB for left swipe
+                (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
+                    actualClipTime,
+                    actualClipTime)
 
-            //  saving the clip itself as buffer since no buffer exists
-            bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
+                //  saving the clip itself as buffer since no buffer exists
+                bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
+            }
+            if(swipeAction == SwipeAction.SWIPE_RIGHT) {
+                launchSnapbackVideoCapture(clip.absolutePath)
+            }
         }
     }
 

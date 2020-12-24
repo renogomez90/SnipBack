@@ -181,6 +181,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             is FragmentGalleryNew -> GALLERY_FRAGMENT_TAG
             is FragmentPlayVideo2 -> PLAY_VIDEO_TAG
             is VideoEditingFragment -> EDIT_VIDEO_TAG
+            is SnapbackFragment -> SNAPBACK_VIDEO_TAG
             else -> ""
         }
 
@@ -261,6 +262,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         const val PLAY_VIDEO_TAG       = "play_frag"
         const val PLAY_SNAPBACK_TAG    = "play_snapback_frag"
         const val EDIT_VIDEO_TAG       = "edit_frag"
+        const val SNAPBACK_VIDEO_TAG   = "snapback_frag"
 
         fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
             if (context != null) {
