@@ -1,33 +1,39 @@
 package com.hipoint.snipback.fragment
 
+import VideoHandle.EpEditor
+import VideoHandle.OnEditorListener
 import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.*
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.provider.MediaStore
 import android.util.Log
 import android.view.*
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.webkit.MimeTypeMap
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.util.MimeTypes
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
+import com.hipoint.snipback.dialog.KeepSnapbackVideoDialog
 import com.hipoint.snipback.dialog.SnapbackProcessingDialog
+import com.hipoint.snipback.listener.ISaveListener
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
@@ -36,32 +42,32 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
 import kotlin.math.roundToLong
 
-class SnapbackFragment: Fragment() {
-    private val TAG     = SnapbackFragment::class.java.simpleName
+
+class SnapbackFragment: Fragment(), ISaveListener {
+    private val TAG = SnapbackFragment::class.java.simpleName
 
     private val PROCESSING_SNAPBACK_DIALOG = "com.hipoint.snipback.SNAPBACK_VIDEO_PROCESSING"
+    private val SAVE_SNAPBACK_DIALOG       = "com.hipoint.snipback.SNAPBACK_SAVE_VIDEO"
     private val EXTERNAL_DIR_NAME          = "Snipback"
 
     private val retries = 3
     private var tries   = 0
 
-    private var progressDialog: SnapbackProcessingDialog? = null
-    private var subscriptions : CompositeDisposable?      = null
-    private var animBlink     : Animation?                = null
+    private var progressDialog : SnapbackProcessingDialog? = null
+    private var saveVideoDialog: KeepSnapbackVideoDialog?  = null
+    private var subscriptions  : CompositeDisposable?      = null
+    private var animBlink      : Animation?                = null
 
     private lateinit var playerView   : PlayerView
     private lateinit var rootView     : View
@@ -69,6 +75,7 @@ class SnapbackFragment: Fragment() {
     private lateinit var player       : SimpleExoPlayer
     private lateinit var backBtn      : RelativeLayout
     private lateinit var captureBtn   : RelativeLayout
+    private lateinit var galleryBtn   : RelativeLayout
     private lateinit var playerHolder : ConstraintLayout
     private lateinit var swipeDetector: SwipeDistanceView
 
@@ -83,13 +90,16 @@ class SnapbackFragment: Fragment() {
         }
     }
 
-    private val mediaStorageDir by lazy { File(Environment.getExternalStorageDirectory(), EXTERNAL_DIR_NAME) }
+    private val mediaStorageDir by lazy { File(Environment.getExternalStoragePublicDirectory(
+        Environment.DIRECTORY_PICTURES), EXTERNAL_DIR_NAME) }
 
     companion object{
         val SNAPBACK_PATH_ACTION = "com.hipoint.snipback.SNAPBACK_VIDEO_PATH"
         val EXTRA_VIDEO_PATH = "videoPath"
         
         var fragment: SnapbackFragment? = null
+
+        @JvmStatic
         var videoPath: String? = null
         
         fun newInstance(videoPath: String): SnapbackFragment {
@@ -116,7 +126,12 @@ class SnapbackFragment: Fragment() {
 
             override fun onSingleTapUp(e: MotionEvent?): Boolean = false
 
-            override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+            override fun onScroll(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
                 if (e1 != null && e2 != null) {
                     val speed = (distanceX / (e2.eventTime - e1.eventTime)).absoluteValue
                     if ((speed * 100) < 1.0F) {  // slow
@@ -135,12 +150,21 @@ class SnapbackFragment: Fragment() {
 
             override fun onLongPress(e: MotionEvent?) = Unit
 
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean =
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean =
                 false
         })
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         rootView = inflater.inflate(R.layout.fragment_snapback, container, false)
         bindViews()
         bindListeners()
@@ -150,7 +174,9 @@ class SnapbackFragment: Fragment() {
 
     override fun onResume() {
         super.onResume()
-        videoPath = arguments?.getString(EXTRA_VIDEO_PATH) ?: ""
+        if(videoPath.isNullOrEmpty())
+            videoPath = arguments?.getString(EXTRA_VIDEO_PATH) ?: ""
+
         if(videoPath.isNotNullOrEmpty())
             setupPlayer(videoPath!!)
         else
@@ -187,7 +213,7 @@ class SnapbackFragment: Fragment() {
         }
 
         playerView.controllerShowTimeoutMs = 2000
-        playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+        playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
 
         player.addListener(object : Player.EventListener {
             override fun onPlayerError(error: ExoPlaybackException) {
@@ -221,8 +247,18 @@ class SnapbackFragment: Fragment() {
         }
 
         backBtn.setOnClickListener {
-            //  todo: show exit and save confirmation
-            requireActivity().supportFragmentManager.popBackStack()
+            showSaveDialog()
+        }
+
+        galleryBtn.setOnClickListener {
+            //  launch gallery
+            val intent = Intent()
+            intent.action = Intent.ACTION_VIEW
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+            intent.type = "image/*"
+            intent.data = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+
+            startActivity(Intent.createChooser(intent, "Open folder"))
         }
     }
 
@@ -234,16 +270,7 @@ class SnapbackFragment: Fragment() {
             mediaStorageDir.mkdir()
         }
 
-        CoroutineScope(Default).launch {
-            val retriever = MediaMetadataRetriever()
-            retriever.setDataSource(videoPath)
-            var bitmap = retriever.getFrameAtTime(TimeUnit.MILLISECONDS.toMicros(player.currentPosition), MediaMetadataRetriever.OPTION_CLOSEST)
-
-            if(bitmap == null)
-                bitmap = retriever.getFrameAtTime(TimeUnit.MILLISECONDS.toMicros(player.currentPosition), MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-
-            saveImage(bitmap, requireContext())
-        }
+        CoroutineScope(Default).launch { saveFrame() }
 
         blinkAnimation()
     }
@@ -256,20 +283,26 @@ class SnapbackFragment: Fragment() {
                 }
 
                 override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
-                    Toast.makeText(requireContext(), "cannot capture without storage permission", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(),
+                        "cannot capture without storage permission",
+                        Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onPermissionRationaleShouldBeShown(
                     p0: PermissionRequest?,
                     p1: PermissionToken?,
-                ) { }
-            }).withErrorListener { Toast.makeText(requireActivity().applicationContext, "Error occurred! ", Toast.LENGTH_SHORT).show() }
+                ) {
+                }
+            }).withErrorListener { Toast.makeText(requireActivity().applicationContext,
+                "Error occurred! ",
+                Toast.LENGTH_SHORT).show() }
             .onSameThread()
             .check()
     }
 
     private fun hasStoragePermission(): Boolean =
-        ActivityCompat.checkSelfPermission(requireActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+        ActivityCompat.checkSelfPermission(requireActivity(),
+            Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
 
     private fun bindViews() {
@@ -278,6 +311,7 @@ class SnapbackFragment: Fragment() {
         playerView    = rootView.findViewById(R.id.snapback_player_view)
         backBtn       = rootView.findViewById(R.id.back_arrow)
         captureBtn    = rootView.findViewById(R.id.button_capture)
+        galleryBtn    = rootView.findViewById(R.id.button_gallery)
         swipeDetector = rootView.findViewById(R.id.swipe_detector)
 
         animBlink = AnimationUtils.loadAnimation(requireContext(), R.anim.blink)
@@ -323,58 +357,6 @@ class SnapbackFragment: Fragment() {
         }
     }
 
-    private fun saveImage(bitmap: Bitmap, context: Context) {
-        if (android.os.Build.VERSION.SDK_INT >= 29) {
-            val values = contentValues()
-            values.put(MediaStore.Images.Media.RELATIVE_PATH, EXTERNAL_DIR_NAME)
-            values.put(MediaStore.Images.Media.IS_PENDING, true)
-            // RELATIVE_PATH and IS_PENDING are introduced in API 29.
-
-            val uri: Uri? = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-            if (uri != null) {
-                saveImageToStream(bitmap, context.contentResolver.openOutputStream(uri))
-                values.put(MediaStore.Images.Media.IS_PENDING, false)
-                context.contentResolver.update(uri, values, null, null)
-            }
-        } else {
-
-            if(!mediaStorageDir.exists()){
-                mediaStorageDir.mkdir()
-            }
-
-            val fileName = System.currentTimeMillis().toString() + ".png"
-            val file = File(mediaStorageDir, fileName)
-            file.createNewFile()
-
-            saveImageToStream(bitmap, FileOutputStream(file))
-            if (file.absolutePath != null) {
-                val values = contentValues()
-                values.put(MediaStore.Images.Media.DATA, file.absolutePath)
-                // .DATA is deprecated in API 29
-                context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-            }
-        }
-    }
-
-    private fun contentValues() : ContentValues {
-        val values = ContentValues()
-        values.put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-        values.put(MediaStore.Images.Media.DATE_ADDED, System.currentTimeMillis() / 1000);
-        values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
-        return values
-    }
-
-    private fun saveImageToStream(bitmap: Bitmap, outputStream: OutputStream?) {
-        if (outputStream != null) {
-            try {
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                outputStream.close()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-    
     private fun showProgressDialog(){
         if (progressDialog == null){
             progressDialog = SnapbackProcessingDialog()
@@ -386,6 +368,16 @@ class SnapbackFragment: Fragment() {
 
     fun hideProgressDialog() = progressDialog?.dismiss()
 
+    fun showSaveDialog(){
+        if (saveVideoDialog == null) {
+            saveVideoDialog = KeepSnapbackVideoDialog(this@SnapbackFragment)
+        }
+
+        if(!saveVideoDialog!!.isAdded) {
+            saveVideoDialog!!.isCancelable = true
+            saveVideoDialog!!.show(requireActivity().supportFragmentManager, SAVE_SNAPBACK_DIALOG)
+        }
+    }
 
     /**
      * Flashes the UI to indicate that an action has occurred
@@ -404,4 +396,51 @@ class SnapbackFragment: Fragment() {
                 }
             })
     }
+
+    /**
+     * captures the frame and saves it to the output folder.
+     */
+    private fun saveFrame(){
+        val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
+        val cmd = "-ss ${player.currentPosition.toFloat()/1000} -i $videoPath -vframes 1 -f image2 ${mediaStorageDir.absolutePath}/${timeStamp}.jpg"
+        EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+            override fun onSuccess() {
+                Log.d(TAG, "onSuccess: image saved")
+                MediaScannerConnection.scanFile(
+                    requireContext(),
+                    arrayOf("${mediaStorageDir.absolutePath}/${timeStamp}.jpg"),
+                    arrayOf(MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")),
+                    null
+                )
+            }
+
+            override fun onFailure() {
+                Log.e(TAG, "onFailure: save failed")
+            }
+
+            override fun onProgress(progress: Float) {}
+        })
+    }
+
+    //  saves the video clip to DB and internal storage
+    override fun saveAs() {
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(videoPath)
+        val duration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(
+            MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
+
+        if(activity is AppMainActivity){
+            (activity as AppMainActivity).showInGallery.add(File(videoPath!!).nameWithoutExtension)
+            (activity as AppMainActivity).addSnip(videoPath!!, duration, duration)
+            activity?.supportFragmentManager?.popBackStack()
+        }
+    }
+
+    override fun save() {}
+
+    override fun exit() {
+        requireActivity().supportFragmentManager.popBackStack()
+    }
+
+    override fun cancel() {}
 }

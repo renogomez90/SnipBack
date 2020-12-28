@@ -231,8 +231,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         } else {
             val editFrag =
                 supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
+            val snapbackFragment =
+                supportFragmentManager.findFragmentByTag(SNAPBACK_VIDEO_TAG) as? SnapbackFragment
+
             if (editFrag != null && editFrag.isVisible) {
                 editFrag.confirmExitOnBackPressed()
+            } else if (snapbackFragment != null && snapbackFragment.isVisible) {
+                snapbackFragment.showSaveDialog()
             } else {
                 supportFragmentManager.popBackStack()
             }
@@ -428,31 +433,32 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     private fun saveSnipToDB(parentSnip: Snip?, filePath: String?) {
         val snipDurations = AppClass.getAppInstance().snipDurations
         if (snipDurations.size > 0) {
-            val event = AppClass.getAppInstance().getLastCreatedEvent()
-            for (endSecond in snipDurations) {
-                val startSecond = (endSecond - 5).coerceAtLeast(0)
-                val snip = Snip()
+            CoroutineScope(IO).launch {
+                val event = AppClass.getAppInstance().getLastCreatedEvent()
+                for (endSecond in snipDurations) {
+                    val startSecond = (endSecond - 5).coerceAtLeast(0)
+                    val snip = Snip()
 
-                snip.apply {
-                    start_time = startSecond.toDouble()
-                    end_time = endSecond.toDouble()
-                    is_virtual_version = 1
-                    has_virtual_versions = 0
-                    parent_snip_id = if (parentSnip != null) {
-                        if (File(filePath!!).nameWithoutExtension.contains(File(parentSnip.videoFilePath).nameWithoutExtension)) {
-                            parentSnip.snip_id
-                        } else 0
-                    } else 0
-                    snip_duration = endSecond - startSecond.toDouble()
-                    vid_creation_date = System.currentTimeMillis()
-                    event_id = event.event_id
-                }
-                CoroutineScope(IO).launch {
+                    snip.apply {
+                        start_time = startSecond.toDouble()
+                        end_time = endSecond.toDouble()
+                        is_virtual_version = 1
+                        has_virtual_versions = 0
+                        parent_snip_id = parentSnip?.snip_id ?: 0
+                        /*parent_snip_id = if (parentSnip != null) {
+                            if (File(filePath!!).nameWithoutExtension.contains(File(parentSnip.videoFilePath).nameWithoutExtension)) {
+                                parentSnip.snip_id
+                            } else 0
+                        } else 0*/
+                        snip_duration = endSecond - startSecond.toDouble()
+                        vid_creation_date = System.currentTimeMillis()
+                        event_id = event.event_id
+                    }
                     appRepository.insertSnip(this@AppMainActivity, snip)
+                    snip.videoFilePath = filePath
                 }
-                snip.videoFilePath = filePath
+                AppClass.getAppInstance().clearSnipDurations()
             }
-            AppClass.getAppInstance().clearSnipDurations()
         }
     }
 

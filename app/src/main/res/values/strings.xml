@@ -75,4 +75,7 @@
     <string name="dialog_btn_overwrite">OVERWRITE</string>
     <string name="dialog_btn_save_as">SAVE AS NEW VERSION</string>
     <string name="dialog_btn_cancel">CANCEL</string>
+    <string name="dialog_btn_keep_vid">KEEP VIDEO</string>
+    <string name="dialog_btn_discard_vid">DISCARD</string>
+
 </resources>

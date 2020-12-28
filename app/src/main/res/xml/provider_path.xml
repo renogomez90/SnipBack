@@ -5,4 +5,11 @@
         name="SnipBackVirtual"
         path="." />
 
+    <external-files-path
+        name="Snapback"
+        path="/" />
+
+    <external-path
+        name="external"
+        path="/" />
 </paths>

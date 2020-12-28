@@ -129,9 +129,17 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 if (abs(deltaX) > MIN_DISTANCE) {
                     // Left to Right swipe action
                     if (x2 > x1) {
-                        if (cameraControl!!.isRecordingVideo()) {
-//                            saveSnipTimeToLocal()
-                            handleRightSwipe()
+                        if (cameraControl!!.isRecordingVideo()) {   //  media recorder is capturing
+                            if (cameraControl!!.isRecordingClips()) {
+                                handleRightSwipe()
+                            }else {
+                                swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
+                                if (swipedRecording == null) {
+                                    swipedRecording = cameraControl?.getCurrentOutputPath()?.let { SwipedRecording(it) }
+                                }
+
+                                saveSnipTimeToLocal()
+                            }
                         }
                     }
                     //  Right to left swipe action
@@ -1194,9 +1202,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             // on screen tap blinking starts
             blinkAnimation()
 //        Log.d("seconds", String.valueOf(endSecond));
-        }else{
-            //todo: show the clip that we captured.
-            blinkAnimation()
         }
     }
 

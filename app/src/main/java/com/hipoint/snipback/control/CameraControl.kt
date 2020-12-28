@@ -10,6 +10,7 @@ import android.graphics.RectF
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.media.CamcorderProfile
+import android.media.ImageReader
 import android.media.MediaCodec
 import android.media.MediaRecorder
 import android.os.Handler
@@ -168,6 +169,11 @@ class CameraControl(val activity: FragmentActivity) {
     private var mMediaRecorder: MediaRecorder? = null
 
     /**
+     * ImageRecorder
+     */
+    private  var mImageReader: ImageReader? = null
+
+    /**
      * Whether the app is recording video now
      */
     private var mIsRecordingVideo = false
@@ -309,7 +315,10 @@ class CameraControl(val activity: FragmentActivity) {
             }
             mVideoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
             /*mPreviewSize = Size(width, height)  //  Fixes jumpy UI in devices*/
-            mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java), width, height, mVideoSize)
+            mPreviewSize = chooseOptimalSize(map.getOutputSizes(SurfaceTexture::class.java),
+                width,
+                height,
+                mVideoSize)
             val orientation = activity.resources.configuration.orientation
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mTextureView?.setAspectRatio(mPreviewSize!!.width, mPreviewSize!!.height)
@@ -347,7 +356,8 @@ class CameraControl(val activity: FragmentActivity) {
         var deviceId = listOf<String>()
         try {
             val cameraIdList = manager.cameraIdList
-            deviceId = cameraIdList.filter { lens == cameraCharacteristics(it, CameraCharacteristics.LENS_FACING) }
+            deviceId = cameraIdList.filter { lens == cameraCharacteristics(it,
+                CameraCharacteristics.LENS_FACING) }
         } catch (e: CameraAccessException) {
             Log.e(TAG, "getCameraId: ${e.message}")
             e.printStackTrace()
@@ -392,12 +402,16 @@ class CameraControl(val activity: FragmentActivity) {
                         mRecordSession = session
                         //                            updatePreview();
                         //  calling capture request without starting another thread.
-                        mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+                        mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE,
+                            CameraMetadata.CONTROL_MODE_AUTO)
                         try {
-                            mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                            mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(),
+                                null,
+                                mBackgroundHandler)
                         } catch (e: CameraAccessException) {
                             e.printStackTrace()
-                            Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT)
+                                .show()
                             activity.finish()
                         } catch (e1: IllegalStateException) {
                             e1.printStackTrace()
@@ -424,7 +438,9 @@ class CameraControl(val activity: FragmentActivity) {
             setUpCaptureRequestBuilder(mRequestBuilder)
             val thread = HandlerThread("CameraPreview")
             thread.start()
-            mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+            mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(),
+                null,
+                mBackgroundHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e1: IllegalStateException) {
@@ -452,7 +468,10 @@ class CameraControl(val activity: FragmentActivity) {
         val rotation = activity.windowManager?.defaultDisplay?.rotation
         val matrix = Matrix()
         val viewRect = RectF(0F, 0F, viewWidth.toFloat(), viewHeight.toFloat())
-        val bufferRect = RectF(0F, 0F, mPreviewSize!!.height.toFloat(), mPreviewSize!!.width.toFloat())
+        val bufferRect = RectF(0F,
+            0F,
+            mPreviewSize!!.height.toFloat(),
+            mPreviewSize!!.width.toFloat())
         val centerX = viewRect.centerX()
         val centerY = viewRect.centerY()
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
@@ -491,8 +510,10 @@ class CameraControl(val activity: FragmentActivity) {
 
         val rotation = activity.windowManager?.defaultDisplay?.rotation
         when (mSensorOrientation) {
-            SENSOR_ORIENTATION_DEFAULT_DEGREES -> mMediaRecorder!!.setOrientationHint(DEFAULT_ORIENTATIONS[rotation!!])
-            SENSOR_ORIENTATION_INVERSE_DEGREES -> mMediaRecorder!!.setOrientationHint(INVERSE_ORIENTATIONS[rotation!!])
+            SENSOR_ORIENTATION_DEFAULT_DEGREES -> mMediaRecorder!!.setOrientationHint(
+                DEFAULT_ORIENTATIONS[rotation!!])
+            SENSOR_ORIENTATION_INVERSE_DEGREES -> mMediaRecorder!!.setOrientationHint(
+                INVERSE_ORIENTATIONS[rotation!!])
         }
         mMediaRecorder!!.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
@@ -590,34 +611,42 @@ class CameraControl(val activity: FragmentActivity) {
 
             // Start a capture session
             // Once the session starts, we can update the UI and start recording
-            mCameraDevice!!.createCaptureSession(surfaces, object : CameraCaptureSession.StateCallback() {
-                override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                    mRecordSession = cameraCaptureSession
-                    mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
-                    try {
-                        mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
-                    } catch (e: CameraAccessException) {
-                        e.printStackTrace()
-                        Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
-                        activity.finish()
-                    } catch (e1: IllegalStateException) {
-                        e1.printStackTrace()
-                        return
-                    }
-                    mIsRecordingVideo = true
-                    val vmFrag = activity.supportFragmentManager.findFragmentByTag(AppMainActivity.VIDEO_MODE_TAG)
-                    if (vmFrag != null) {
-                        if ((vmFrag as VideoMode).isVisible) {
-                            mMediaRecorder!!.start()    //  already called from bg thread
-                            Log.d(TAG,"setUpMediaRecorder start time = ${System.currentTimeMillis() - startRecTime}")
+            mCameraDevice!!.createCaptureSession(surfaces,
+                object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                        mRecordSession = cameraCaptureSession
+                        mRequestBuilder!!.set(CaptureRequest.CONTROL_MODE,
+                            CameraMetadata.CONTROL_MODE_AUTO)
+                        try {
+                            mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(),
+                                null,
+                                mBackgroundHandler)
+                        } catch (e: CameraAccessException) {
+                            e.printStackTrace()
+                            Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT)
+                                .show()
+                            activity.finish()
+                        } catch (e1: IllegalStateException) {
+                            e1.printStackTrace()
+                            return
+                        }
+                        mIsRecordingVideo = true
+                        val vmFrag =
+                            activity.supportFragmentManager.findFragmentByTag(AppMainActivity.VIDEO_MODE_TAG)
+                        if (vmFrag != null) {
+                            if ((vmFrag as VideoMode).isVisible) {
+                                mMediaRecorder!!.start()    //  already called from bg thread
+                                Log.d(TAG,
+                                    "setUpMediaRecorder start time = ${System.currentTimeMillis() - startRecTime}")
+                            }
                         }
                     }
-                }
 
-                override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
-                    Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
-                }
-            }, mBackgroundHandler)
+                    override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
+                        Toast.makeText(activity, "Failed", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                mBackgroundHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         } catch (e: IOException) {
@@ -641,7 +670,12 @@ class CameraControl(val activity: FragmentActivity) {
      * @param aspectRatio The aspect ratio
      * @return The optimal `Size`, or an arbitrary one if none were big enough
      */
-    private fun chooseOptimalSize(choices: Array<Size>, width: Int = 1080, height: Int = 1920, aspectRatio: Size?): Size {
+    private fun chooseOptimalSize(
+        choices: Array<Size>,
+        width: Int = 1080,
+        height: Int = 1920,
+        aspectRatio: Size?
+    ): Size {
         val bigEnough = arrayListOf<Size>() // Collect the supported resolutions that are at least as big as the preview Surface
         val notBigEnough = arrayListOf<Size>()  // Collect the supported resolutions that are smaller than the preview Surface
         val w =  aspectRatio!!.width
@@ -693,12 +727,14 @@ class CameraControl(val activity: FragmentActivity) {
             if (CamcorderProfile.hasProfile(p)) {
                 val tmp = CamcorderProfile.get(p)
                 if (tmp.videoFrameWidth <= mPreviewSize!!.width && tmp.videoFrameHeight <= mPreviewSize!!.height ||
-                    tmp.videoFrameWidth <= mPreviewSize!!.height && tmp.videoFrameHeight <= mPreviewSize!!.width) candidateProfiles.add(tmp)
+                    tmp.videoFrameWidth <= mPreviewSize!!.height && tmp.videoFrameHeight <= mPreviewSize!!.width) candidateProfiles.add(
+                    tmp)
             }
         }
         val comparator = Comparator<CamcorderProfile?> { p1, p2 -> if (p1 != null && p2 != null) p2.videoFrameWidth * p2.videoFrameHeight - p1.videoFrameWidth * p1.videoFrameHeight else 0 }
         candidateProfiles.sortWith(comparator)
-        chosenCProfile = if (candidateProfiles.size != 0) candidateProfiles[0] else CamcorderProfile.get(CamcorderProfile.QUALITY_LOW)
+        chosenCProfile = if (candidateProfiles.size != 0) candidateProfiles[0] else CamcorderProfile.get(
+            CamcorderProfile.QUALITY_LOW)
         return chosenCProfile!!
     }
 
@@ -733,7 +769,8 @@ class CameraControl(val activity: FragmentActivity) {
         return when (key) {
             CameraCharacteristics.LENS_FACING,
             CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP,
-            CameraCharacteristics.SENSOR_ORIENTATION -> {
+            CameraCharacteristics.SENSOR_ORIENTATION,
+            -> {
                 characteristics.get(key)!!
             }
             else -> throw IllegalArgumentException("Key not recognized")
@@ -820,7 +857,9 @@ class CameraControl(val activity: FragmentActivity) {
                     }
                 }*/
             try {
-                mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(),
+                    null,
+                    mBackgroundHandler)
             } catch (e: CameraAccessException) {
                 e.printStackTrace()
                 Toast.makeText(activity, "Cannot connect to camera", Toast.LENGTH_SHORT).show()
@@ -840,7 +879,9 @@ class CameraControl(val activity: FragmentActivity) {
             try {
                 //you can try to add the synchronized object here
                 mRequestBuilder!!.set(CaptureRequest.SCALER_CROP_REGION, zoomRect)
-                mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                mRecordSession!!.setRepeatingRequest(mRequestBuilder!!.build(),
+                    null,
+                    mBackgroundHandler)
             } catch (e: Exception) {
                 Log.e(TAG, "Error updating preview: ", e)
             }

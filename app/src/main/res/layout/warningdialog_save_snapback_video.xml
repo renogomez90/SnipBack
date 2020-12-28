@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="20dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:gravity="center"
+    android:layout_gravity="center"
+    android:orientation="vertical"
+    android:layout_centerInParent="true"
+    android:background="@drawable/background_warningdialog">
+
+    <ImageView
+        android:id="@+id/saveIcon"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/dialog_save_icon"
+        android:scaleType="fitXY"
+        app:tint="@color/colorBlack"/>
+
+    <TextView
+        android:id="@+id/dialog_savebutton"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/barlow_bold"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/background_savebutton"
+        android:paddingTop="13dp"
+        android:paddingBottom="13dp"
+        android:paddingStart="30dp"
+        android:paddingEnd="30dp"
+        android:text="@string/dialog_btn_keep_vid"
+        android:textAllCaps="true"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:textColor="@color/colorDefaultBg" />
+
+    <TextView
+        android:id="@+id/dialog_cancel"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/barlow_bold"
+        android:layout_marginTop="20dp"
+        android:paddingTop="13dp"
+        android:paddingBottom="13dp"
+        android:paddingStart="33dp"
+        android:paddingEnd="33dp"
+        android:text="@string/dialog_btn_discard_vid"
+        android:textAllCaps="true"
+        android:textSize="12sp"
+        android:gravity="center"
+        android:textColor="@color/colorPrimary" />
+
+</LinearLayout>
