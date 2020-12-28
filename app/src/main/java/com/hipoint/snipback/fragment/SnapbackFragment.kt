@@ -192,10 +192,6 @@ class SnapbackFragment: Fragment(), ISaveListener {
         super.onPause()
     }
 
-    fun updatePath(newPath: String){
-        SnapbackFragment.videoPath = newPath
-    }
-
     /**
      * sets up the video player like it is new
      */

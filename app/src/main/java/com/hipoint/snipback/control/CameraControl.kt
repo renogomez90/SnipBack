@@ -4,15 +4,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Context.CAMERA_SERVICE
 import android.content.res.Configuration
-import android.graphics.Matrix
-import android.graphics.Rect
-import android.graphics.RectF
-import android.graphics.SurfaceTexture
+import android.graphics.*
 import android.hardware.camera2.*
-import android.media.CamcorderProfile
-import android.media.ImageReader
-import android.media.MediaCodec
-import android.media.MediaRecorder
+import android.hardware.camera2.CameraCaptureSession.CaptureCallback
+import android.media.*
+import android.media.ImageReader.OnImageAvailableListener
+import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
@@ -20,6 +17,7 @@ import android.util.Size
 import android.util.SparseIntArray
 import android.view.MotionEvent
 import android.view.Surface
+import android.webkit.MimeTypeMap
 import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.hipoint.snipback.AppMainActivity
@@ -30,7 +28,9 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Semaphore
@@ -40,9 +40,11 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
+
 class CameraControl(val activity: FragmentActivity) {
     companion object {
         private val TAG = CameraControl::class.java.simpleName
+        private val EXTERNAL_DIR_NAME = "Snipback"
 
         //Camera Orientation
         const val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
@@ -78,6 +80,7 @@ class CameraControl(val activity: FragmentActivity) {
     private var chosenCProfile      : CamcorderProfile? = null
     private var mSensorOrientation  : Int?              = null
     private var outputFilePath      : String?           = null
+    private var mImageFileName      : String?           = null
     private var lastUserRecordedPath: String?           = null
     private var clipQueue           : Queue<File>?      = null
 
@@ -97,6 +100,11 @@ class CameraControl(val activity: FragmentActivity) {
      * The [android.util.Size] of video recording.
      */
     private var mVideoSize: Size? = null
+
+    /**
+     * The [android.util.Size] of video recording.
+     */
+    private var mImageSize: Size? = null
 
     /**
      * A reference to the opened [android.hardware.camera2.CameraDevice].
@@ -150,6 +158,15 @@ class CameraControl(val activity: FragmentActivity) {
             activity.finish()
         }
     }
+
+    private val mOnImageAvailableListener by lazy {
+        OnImageAvailableListener { reader ->
+            mBackgroundHandler!!.post(ImageSaver(reader.acquireLatestImage()))
+        }
+    }
+
+    private val mediaStorageDir by lazy { File(Environment.getExternalStoragePublicDirectory(
+        Environment.DIRECTORY_PICTURES), EXTERNAL_DIR_NAME) }
 
     @Volatile var postedMsgOngoing = false
 
@@ -319,6 +336,11 @@ class CameraControl(val activity: FragmentActivity) {
                 width,
                 height,
                 mVideoSize)
+            mImageSize = chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG), width, height, mVideoSize)
+
+            mImageReader = ImageReader.newInstance(mImageSize!!.width, mImageSize!!.height, ImageFormat.JPEG, 1)
+            mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler)
+
             val orientation = activity.resources.configuration.orientation
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mTextureView?.setAspectRatio(mPreviewSize!!.width, mPreviewSize!!.height)
@@ -333,10 +355,6 @@ class CameraControl(val activity: FragmentActivity) {
             Toast.makeText(activity, "Cannot access the camera.", Toast.LENGTH_SHORT).show()
             activity.finish()
         } catch (e: NullPointerException) {
-            // Currently an NPE is thrown when the Camera2API is used but not supported on the
-            // device this code runs.
-            /*ErrorDialog.newInstance(getString(R.string.camera_error))
-                    .show(getChildFragmentManager(), FRAGMENT_DIALOG);*/
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock camera opening.")
         }
@@ -375,6 +393,8 @@ class CameraControl(val activity: FragmentActivity) {
             mCameraDevice = null
             mMediaRecorder?.release()
             mMediaRecorder = null
+            mImageReader?.close()
+            mImageReader = null
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock camera closing.")
         } finally {
@@ -607,6 +627,8 @@ class CameraControl(val activity: FragmentActivity) {
             // Set up Surface for the MediaRecorder
             surfaces.add(persistentSurface)
             mRequestBuilder!!.addTarget(persistentSurface)
+
+            surfaces.add(mImageReader!!.surface)
             val startRecTime = System.currentTimeMillis()
 
             // Start a capture session
@@ -659,6 +681,33 @@ class CameraControl(val activity: FragmentActivity) {
         }
     }
 
+    fun startStillCaptureRequest() {
+        try {
+            mRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_VIDEO_SNAPSHOT)
+
+            mRequestBuilder!!.addTarget(mImageReader!!.surface)
+            mRequestBuilder!!.set(CaptureRequest.JPEG_ORIENTATION, mSensorOrientation)
+            val stillCaptureCallback: CaptureCallback = object : CaptureCallback() {
+                override fun onCaptureStarted(
+                    session: CameraCaptureSession,
+                    request: CaptureRequest,
+                    timestamp: Long,
+                    frameNumber: Long,
+                ) {
+                    super.onCaptureStarted(session, request, timestamp, frameNumber)
+                }
+            }
+            if (mIsRecordingVideo) {
+                createImageFileName()
+                mRecordSession?.capture(mRequestBuilder!!.build(),
+                    stillCaptureCallback,
+                    mBackgroundHandler)
+            }
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
+        }
+    }
+
     /**
      * Given `choices` of `Size`s supported by a camera, chooses the smallest one whose
      * width and height are at least as large as the respective requested values, and whose aspect
@@ -674,7 +723,7 @@ class CameraControl(val activity: FragmentActivity) {
         choices: Array<Size>,
         width: Int = 1080,
         height: Int = 1920,
-        aspectRatio: Size?
+        aspectRatio: Size?,
     ): Size {
         val bigEnough = arrayListOf<Size>() // Collect the supported resolutions that are at least as big as the preview Surface
         val notBigEnough = arrayListOf<Size>()  // Collect the supported resolutions that are smaller than the preview Surface
@@ -775,6 +824,55 @@ class CameraControl(val activity: FragmentActivity) {
             }
             else -> throw IllegalArgumentException("Key not recognized")
         }
+    }
+
+    /**
+     * saves the captured images
+     */
+    private inner class ImageSaver(val image: Image): Runnable{
+
+        override fun run() {
+            val byteBuffer: ByteBuffer = image.planes[0].buffer
+            val bytes = ByteArray(byteBuffer.remaining())
+            byteBuffer.get(bytes)
+
+            var fileOutputStream: FileOutputStream? = null
+            try {
+                Log.d(TAG, "run: mImageFileName = $mImageFileName")
+                fileOutputStream = FileOutputStream(mImageFileName)
+                fileOutputStream.write(bytes)
+            } catch (e: IOException) {
+                e.printStackTrace()
+            } finally {
+                image.close()
+
+                MediaScannerConnection.scanFile(
+                    activity,
+                    arrayOf(mImageFileName),
+                    arrayOf(MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")),
+                    null
+                )
+
+                if (fileOutputStream != null) {
+                    try {
+                        fileOutputStream.close()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
+
+
+    @Throws(IOException::class)
+    private fun createImageFileName(): File? {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+        val prepend = "IMAGE_" + timestamp + "_"
+        val imageFile = File.createTempFile(prepend, ".jpg", mediaStorageDir)
+        mImageFileName = imageFile.absolutePath
+        Log.d(TAG, "createImageFileName: mImageFileName = $mImageFileName")
+        return imageFile
     }
 
     /**

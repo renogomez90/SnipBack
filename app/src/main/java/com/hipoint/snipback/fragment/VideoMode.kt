@@ -179,7 +179,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         var recordClips = true //  to check if short clips should be recorded
         val VIDEO_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,
-            Manifest.permission.RECORD_AUDIO)
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
         @JvmStatic
         fun newInstance(): VideoMode {
@@ -502,6 +504,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         }
                     })
 
+                cameraControl!!.startStillCaptureRequest()
 //                File filevideopath = new File(cameraControl?.getCurrentOutputPath());
 //
 //                try {
@@ -560,7 +563,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //                    Log.d(TAG, "IOException while closing the stream");
 //                    e.printStackTrace();
 //                }
-                getVideoThumbnailClick(File(cameraControl?.getCurrentOutputPath()!!))
+
+//                getVideoThumbnailClick(File(cameraControl?.getCurrentOutputPath()!!))
                 rlVideo.clearAnimation()
             }
             R.id.texture -> {
