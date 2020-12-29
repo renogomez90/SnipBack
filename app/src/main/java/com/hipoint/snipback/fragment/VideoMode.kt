@@ -137,7 +137,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                                 if (swipedRecording == null) {
                                     swipedRecording = cameraControl?.getCurrentOutputPath()?.let { SwipedRecording(it) }
                                 }
-
                                 saveSnipTimeToLocal()
                             }
                         }
@@ -446,6 +445,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
 
                 updateFlags(recordClips = false, recordPressed = true, stopPressed = false)
+                (requireActivity() as AppMainActivity).swipeProcessed = false
                 swipedRecording = null
                 while (cameraControl!!.clipQueueSize() > 3) {
                     cameraControl?.removeClipQueueItem()?.delete()

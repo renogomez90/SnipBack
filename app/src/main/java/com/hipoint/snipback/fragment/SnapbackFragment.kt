@@ -398,7 +398,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
      */
     private fun saveFrame(){
         val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
-        val cmd = "-ss ${player.currentPosition.toFloat()/1000} -i $videoPath -vframes 1 -f image2 ${mediaStorageDir.absolutePath}/${timeStamp}.jpg"
+        val cmd = "-ss ${player.currentPosition.toFloat()/1000} -i $videoPath -vframes 1 -f image2 ${mediaStorageDir.absolutePath}/IMAGE_${timeStamp}.jpg"
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
                 Log.d(TAG, "onSuccess: image saved")
@@ -439,4 +439,9 @@ class SnapbackFragment: Fragment(), ISaveListener {
     }
 
     override fun cancel() {}
+
+    override fun onDestroy() {
+        videoPath = ""
+        super.onDestroy()
+    }
 }

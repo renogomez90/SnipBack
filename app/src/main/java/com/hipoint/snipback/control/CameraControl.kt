@@ -6,7 +6,6 @@ import android.content.Context.CAMERA_SERVICE
 import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
-import android.hardware.camera2.CameraCaptureSession.CaptureCallback
 import android.media.*
 import android.media.ImageReader.OnImageAvailableListener
 import android.os.Environment
@@ -676,31 +675,32 @@ class CameraControl(val activity: FragmentActivity) {
         }
 
         //  we don't need to show the chronometer till the user presses the record button.
-        if (recordPressed) {
-            recordUIListener?.startChronometerUI()
-        }
+//        if (recordPressed) {
+//            recordUIListener?.startChronometerUI()
+//        }
     }
 
     fun startStillCaptureRequest() {
         try {
-            mRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_VIDEO_SNAPSHOT)
+            val mImageRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_VIDEO_SNAPSHOT)
 
-            mRequestBuilder!!.addTarget(mImageReader!!.surface)
-            mRequestBuilder!!.set(CaptureRequest.JPEG_ORIENTATION, mSensorOrientation)
-            val stillCaptureCallback: CaptureCallback = object : CaptureCallback() {
+            mImageRequestBuilder.addTarget(mImageReader!!.surface)
+            mImageRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, mSensorOrientation)
+            /*val stillCaptureCallback: CaptureCallback = object : CaptureCallback() {
                 override fun onCaptureStarted(
                     session: CameraCaptureSession,
                     request: CaptureRequest,
                     timestamp: Long,
                     frameNumber: Long,
                 ) {
+//                    createImageFileName()
                     super.onCaptureStarted(session, request, timestamp, frameNumber)
                 }
-            }
+            }*/
             if (mIsRecordingVideo) {
                 createImageFileName()
-                mRecordSession?.capture(mRequestBuilder!!.build(),
-                    stillCaptureCallback,
+                mRecordSession?.capture(mImageRequestBuilder.build(),
+                    null,
                     mBackgroundHandler)
             }
         } catch (e: CameraAccessException) {
@@ -867,9 +867,10 @@ class CameraControl(val activity: FragmentActivity) {
 
     @Throws(IOException::class)
     private fun createImageFileName(): File? {
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val prepend = "IMAGE_" + timestamp + "_"
-        val imageFile = File.createTempFile(prepend, ".jpg", mediaStorageDir)
+        val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
+        val fileName = "IMAGE_$timeStamp.jpg"
+        val imageFile = File(mediaStorageDir, fileName)
+        imageFile.createNewFile()
         mImageFileName = imageFile.absolutePath
         Log.d(TAG, "createImageFileName: mImageFileName = $mImageFileName")
         return imageFile
