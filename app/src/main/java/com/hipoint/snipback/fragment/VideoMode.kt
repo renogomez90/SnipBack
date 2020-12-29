@@ -171,10 +171,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         private const val THUMBS_DIRECTORY_NAME = "Thumbs"
         private const val REQUEST_VIDEO_PERMISSIONS = 1
 
-        //    private GestureFilter detector;
-        //clips
-//        private var recordPressed = false //  to know if the user has actively started recording
-//        private var stopPressed = false //  to know if the user has actively ended recording, todo: this can be removed once a better handing is in place
         var recordClips = true //  to check if short clips should be recorded
         val VIDEO_PERMISSIONS = arrayOf(
             Manifest.permission.CAMERA,
@@ -238,6 +234,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var capturePrevious  : ImageButton
     private lateinit var changeCamera     : ImageButton
     private lateinit var r2Shutter        : ImageButton
+    private lateinit var takePhoto        : ImageButton
+    private lateinit var snapbackBtn      : ImageButton
     private lateinit var tvTimer          : TextView
     private lateinit var mChronometer     : Chronometer
     private lateinit var blinkEffect      : View
@@ -311,6 +309,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         zoomIn            = rootView.findViewById(R.id.zoom_in_btn)
         r3Bookmark        = rootView.findViewById(R.id.r_3_bookmark)
         r2Shutter         = rootView.findViewById(R.id.r_2_shutter)
+        takePhoto         = rootView.findViewById(R.id.shutter_btn)
+        snapbackBtn       = rootView.findViewById(R.id.back_photo_btn)
         zoomFactor        = rootView.findViewById(R.id.zoom_factor)
     }
 
@@ -324,11 +324,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         zoomControlLayout.setOnClickListener(this)
         zoomIn.setOnClickListener(this)
         zoomOut.setOnClickListener(this)
-        rlVideo.setOnTouchListener(this)
         rlVideo.setOnClickListener(this)
         recordButton.setOnClickListener(this)
         capturePrevious.setOnClickListener(this)
         mTextureView.setOnClickListener(this)
+        takePhoto.setOnClickListener(this)
+        snapbackBtn.setOnClickListener(this)
+        rlVideo.setOnTouchListener(this)
         mTextureView.setOnTouchListener(this)
         gallery.setOnClickListener {
             Log.d(TAG, "bindListeners: gallery btn clicked")
@@ -491,6 +493,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     }
                 }
             }
+            R.id.shutter_btn,
             R.id.r_2_shutter -> {
                 rlVideo.startAnimation(animBlink)
                 blinkEffect.visibility = View.VISIBLE
@@ -571,7 +574,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 saveSnipTimeToLocal()
             }
             R.id.back_video_btn -> {
-
+                handleLeftSwipe()
+            }
+            R.id.back_photo_btn -> {
+                handleRightSwipe()
             }
         }
     }

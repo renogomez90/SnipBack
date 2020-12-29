@@ -989,13 +989,9 @@ class CameraControl(val activity: FragmentActivity) {
     }
 
 
-    internal fun getMinZoom(): Float {
-        return 0f
-    }
+    internal fun getMinZoom(): Float = 0f
 
-    internal fun getCurrentZoom(): Float {
-        return zoomLevel.toFloat()
-    }
+    internal fun getCurrentZoom(): Float = zoomLevel.toFloat()
 
     private fun getZoomRect(zoomLevel: Float): Rect? {
         return try {

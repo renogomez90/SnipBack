@@ -233,7 +233,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
 
-        val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -x264opts -keyint_min=1 -preset ultrafast -shortest -threads 4 -y $outputPath"
+        val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -preset ultrafast -shortest -threads 4 -y $outputPath"
 
         Log.d(TAG, "changeSpeed: cmd = $cmd")
 

@@ -252,10 +252,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 val realVideoPath = intent.getStringExtra("video_path")
                 when(saveAction){
                     SaveActionType.SAVE,
-                    SaveActionType.SAVE_AS -> {
+                    SaveActionType.SAVE_AS,
+                    -> {
                         val (clip, outputName) = createSpeedChangedVideo(realVideoPath!!)
                         (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
                         Toast.makeText(requireContext(), "Saving Edits", Toast.LENGTH_SHORT).show()
+                        Log.d(TAG, "onReceive: real video output = $outputName")
                     }
                     else ->{}
                 }
