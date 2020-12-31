@@ -570,15 +570,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //                getVideoThumbnailClick(File(cameraControl?.getCurrentOutputPath()!!))
                 rlVideo.clearAnimation()
             }
-            R.id.texture -> {
-                saveSnipTimeToLocal()
-            }
-            R.id.back_video_btn -> {
-                handleLeftSwipe()
-            }
-            R.id.back_photo_btn -> {
-                handleRightSwipe()
-            }
+            R.id.texture -> saveSnipTimeToLocal()
+            R.id.back_video_btn -> handleLeftSwipe()
+            R.id.back_photo_btn -> handleRightSwipe()
         }
     }
 
