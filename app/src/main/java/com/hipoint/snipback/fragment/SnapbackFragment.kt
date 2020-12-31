@@ -11,7 +11,8 @@ import android.media.MediaMetadataRetriever
 import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
+import android.provider.MediaStore
+import android.provider.MediaStore.Images
 import android.util.Log
 import android.view.*
 import android.view.animation.Animation
@@ -21,14 +22,12 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
-import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.util.MimeTypes
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.dialog.KeepSnapbackVideoDialog
@@ -60,6 +59,9 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private val PROCESSING_SNAPBACK_DIALOG = "com.hipoint.snipback.SNAPBACK_VIDEO_PROCESSING"
     private val SAVE_SNAPBACK_DIALOG       = "com.hipoint.snipback.SNAPBACK_SAVE_VIDEO"
     private val EXTERNAL_DIR_NAME          = "Snipback"
+    private val EXTERNAL_DIR_PATH: String by lazy{
+        "$mediaStorageDir/$EXTERNAL_DIR_NAME"
+    }
 
     private val retries = 3
     private var tries   = 0
@@ -90,8 +92,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         }
     }
 
-    private val mediaStorageDir by lazy { File(Environment.getExternalStoragePublicDirectory(
-        Environment.DIRECTORY_PICTURES), EXTERNAL_DIR_NAME) }
+    private val mediaStorageDir by lazy { requireContext().externalMediaDirs[0] }
 
     companion object{
         val SNAPBACK_PATH_ACTION = "com.hipoint.snipback.SNAPBACK_VIDEO_PATH"
@@ -130,7 +131,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
                 e1: MotionEvent?,
                 e2: MotionEvent?,
                 distanceX: Float,
-                distanceY: Float
+                distanceY: Float,
             ): Boolean {
                 if (e1 != null && e2 != null) {
                     val speed = (distanceX / (e2.eventTime - e1.eventTime)).absoluteValue
@@ -154,7 +155,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
                 e1: MotionEvent?,
                 e2: MotionEvent?,
                 velocityX: Float,
-                velocityY: Float
+                velocityY: Float,
             ): Boolean =
                 false
         })
@@ -163,7 +164,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         rootView = inflater.inflate(R.layout.fragment_snapback, container, false)
         bindViews()
@@ -262,8 +263,9 @@ class SnapbackFragment: Fragment(), ISaveListener {
      * captures and saves the current frome
      */
     private fun performCapture() {
-        if (!mediaStorageDir.exists()) {
-            mediaStorageDir.mkdir()
+        val storageFile = File(EXTERNAL_DIR_PATH)
+        if (!storageFile.exists()) {
+            storageFile.mkdir()
         }
 
         CoroutineScope(Default).launch { saveFrame() }
@@ -398,16 +400,24 @@ class SnapbackFragment: Fragment(), ISaveListener {
      */
     private fun saveFrame(){
         val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
-        val cmd = "-ss ${player.currentPosition.toFloat()/1000} -i $videoPath -vframes 1 -f image2 ${mediaStorageDir.absolutePath}/IMAGE_${timeStamp}.jpg"
+        val cmd = "-ss ${player.currentPosition.toFloat()/1000} -i $videoPath -vframes 1 -f image2 ${EXTERNAL_DIR_PATH}/IMAGE_${timeStamp}.jpg"
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
                 Log.d(TAG, "onSuccess: image saved")
                 MediaScannerConnection.scanFile(
                     requireContext(),
-                    arrayOf("${mediaStorageDir.absolutePath}/${timeStamp}.jpg"),
+                    arrayOf("${mediaStorageDir!!.path}/${timeStamp}.jpg"),
                     arrayOf(MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")),
                     null
                 )
+
+                val values = ContentValues()
+
+                values.put(Images.Media.DATE_TAKEN, System.currentTimeMillis())
+                values.put(Images.Media.MIME_TYPE, "image/jpeg")
+                values.put(MediaStore.MediaColumns.DATA, "${EXTERNAL_DIR_PATH}/IMAGE_${timeStamp}.jpg")
+
+                context!!.contentResolver.insert(Images.Media.EXTERNAL_CONTENT_URI, values)
             }
 
             override fun onFailure() {

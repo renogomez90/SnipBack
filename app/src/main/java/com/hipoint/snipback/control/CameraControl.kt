@@ -164,8 +164,7 @@ class CameraControl(val activity: FragmentActivity) {
         }
     }
 
-    private val mediaStorageDir by lazy { File(Environment.getExternalStoragePublicDirectory(
-        Environment.DIRECTORY_PICTURES), EXTERNAL_DIR_NAME) }
+    private val EXTERNAL_DIR_PATH: String by lazy{"${activity.externalMediaDirs[0]}/$EXTERNAL_DIR_NAME"}
 
     @Volatile var postedMsgOngoing = false
 
@@ -581,11 +580,10 @@ class CameraControl(val activity: FragmentActivity) {
             }
 
             // External sdcard file location
-            val mediaStorageDir = File(activity.dataDir,
-                VideoMode.VIDEO_DIRECTORY_NAME)
+
             // Create storage directory if it does not exist
-            if (!mediaStorageDir.exists()) {
-                if (!mediaStorageDir.mkdirs()) {
+            if (!File(EXTERNAL_DIR_PATH).exists()) {
+                if (!File(EXTERNAL_DIR_PATH).mkdirs()) {
                     Log.d(TAG, "Oops! Failed create "
                             + VideoMode.VIDEO_DIRECTORY_NAME + " directory")
                     return null
@@ -593,7 +591,7 @@ class CameraControl(val activity: FragmentActivity) {
             }
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss",
                 Locale.getDefault()).format(Date())
-            val mediaFile = File(mediaStorageDir.path + File.separator
+            val mediaFile = File(EXTERNAL_DIR_PATH + File.separator
                     + "VID_" + timeStamp + ".mp4")
 
             //  adds the created clips to queue
@@ -869,7 +867,7 @@ class CameraControl(val activity: FragmentActivity) {
     private fun createImageFileName(): File? {
         val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "IMAGE_$timeStamp.jpg"
-        val imageFile = File(mediaStorageDir, fileName)
+        val imageFile = File(EXTERNAL_DIR_PATH, fileName)
         imageFile.createNewFile()
         mImageFileName = imageFile.absolutePath
         Log.d(TAG, "createImageFileName: mImageFileName = $mImageFileName")
