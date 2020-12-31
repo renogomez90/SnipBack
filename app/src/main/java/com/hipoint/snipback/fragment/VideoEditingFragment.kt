@@ -2466,33 +2466,40 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         val adjust = player.currentTimeline.getWindow(0, Timeline.Window()).durationMs
                         player.currentPosition + adjust
                     }
-                    speedDetailList.forEach {
+                    var isPresent = false
+                    var tmp: SpeedDetails? = null
+                    speedDetailList.forEach{
                         if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second) {
-                            if (it.isFast) {
-                                val overlayColour = resources.getColor(R.color.blueOverlay, requireContext().theme)
-                                if (!colourOverlay.isShown) {
-                                    colourOverlay.visibility = View.VISIBLE
-                                }
-                                colourOverlay.setBackgroundColor(overlayColour)
-                                player.setPlaybackParameters(PlaybackParameters(it.multiplier.toFloat()))
-                            } else {
-                                val overlayColour = resources.getColor(R.color.greenOverlay, requireContext().theme)
-                                if (!colourOverlay.isShown) {
-                                    colourOverlay.visibility = View.VISIBLE
-                                }
-                                colourOverlay.setBackgroundColor(overlayColour)
-                                player.setPlaybackParameters(PlaybackParameters(1 / it.multiplier.toFloat()))
+                            isPresent = true
+                            tmp = it
+                            return@forEach
+                        }
+                    }
+                    if(isPresent){
+                        if (tmp!!.isFast) {
+                            val overlayColour = resources.getColor(R.color.blueOverlay, requireContext().theme)
+                            if (!colourOverlay.isShown) {
+                                colourOverlay.visibility = View.VISIBLE
                             }
-
-                            handler?.postDelayed(this, 100 /* ms */)
-                            return
+                            colourOverlay.setBackgroundColor(overlayColour)
+                            player.setPlaybackParameters(PlaybackParameters(tmp!!.multiplier.toFloat()))
                         } else {
-                            if (player.playbackParameters != PlaybackParameters(1F))
+                            val overlayColour = resources.getColor(R.color.greenOverlay, requireContext().theme)
+                            if (!colourOverlay.isShown) {
+                                colourOverlay.visibility = View.VISIBLE
+                            }
+                            colourOverlay.setBackgroundColor(overlayColour)
+                            player.setPlaybackParameters(PlaybackParameters(1 / tmp!!.multiplier.toFloat()))
+                        }
+
+                        handler?.postDelayed(this, 100 /* ms */)
+                        return
+                    } else {
+                        if (player.playbackParameters != PlaybackParameters(1F))
                                 player.setPlaybackParameters(PlaybackParameters(1F))
                             else {
                                 colourOverlay.visibility = View.GONE
                             }
-                        }
                     }
                 } else {
                     if (player.playbackParameters != PlaybackParameters(1F))
