@@ -39,7 +39,6 @@ import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
-import com.hipoint.snipback.Utils.EditTimeBar
 import com.hipoint.snipback.adapter.EditChangeListAdapter
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.application.AppClass
@@ -74,6 +73,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.function.Predicate
 import kotlin.Comparator
 import kotlin.collections.ArrayList
 import kotlin.math.absoluteValue
@@ -925,7 +925,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             editedStart - videoDuration
         }
 
-        val removeSet = setOf<SpeedDetails>()
+        val removeSet = arrayListOf<SpeedDetails>()
         var shouldRemove =false
 
         var counter = 0
@@ -934,7 +934,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 counter++
         }
 
-        val existingEditInBuffer = counter != speedDetailSet.size //  previous edits in buffer
+        val existingEditEntirelyInBuffer = counter != speedDetailSet.size //  previous edits in buffer
         val difference = maxDuration - previousMaxDuration
 
         speedDetailSet.forEach{
@@ -945,8 +945,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 it.endWindowIndex = 1
             }
 
-            var s = if(!existingEditInBuffer) it.timeDuration!!.first + moveBy else it.timeDuration!!.first + difference
-            var e = if(!existingEditInBuffer) it.timeDuration!!.second + moveBy else it.timeDuration!!.second + difference
+            var s = if(!existingEditEntirelyInBuffer) it.timeDuration!!.first + moveBy else it.timeDuration!!.first + difference
+            var e = if(!existingEditEntirelyInBuffer) it.timeDuration!!.second + moveBy else it.timeDuration!!.second + difference
 
             //  checking the starting points
             if(s < 0){  //  the starting portion is trimmed out
@@ -955,34 +955,34 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     shouldRemove = true
                 }
             }
-            it.timeDuration = Pair(s, e)
-            if(shouldRemove) {
-                removeSet.plus(it)
-                shouldRemove = false
-            }
-
             //  checking the ending points
-            if(e > editedEnd){
-                e = editedEnd
-                if(s > editedEnd){
+            if(e > (editedEnd - editedStart)){
+                e = editedEnd - editedStart
+                if(s > (editedEnd - editedStart)){
                     shouldRemove = true
                 }
             }
+
             it.timeDuration = Pair(s, e)
+
             if(shouldRemove) {
-                removeSet.plus(it)
+                removeSet.add(it)
                 shouldRemove = false
             }
-            Log.d(TAG, "adjustPreviousSpeedEdits: updated speed detail = $it")
         }
 
         removeSet.forEach{
-            speedDetailSet.remove(it)
+            val result = speedDetailSet.removeIf { speedSetItem ->
+                speedSetItem.timeDuration!!.first == it.timeDuration!!.first
+            }
+            Log.d(TAG, "adjustPreviousSpeedEdits: removed = $result")
         }
 
         previousMaxDuration = maxDuration
         maxDuration = editedEnd - editedStart
         bufferDuration = max(bufferDuration - editedStart, 0)
+
+        speedDetailSet.forEach{ Log.d(TAG, "adjustPreviousSpeedEdits: $it\n") }
     }
 
     /**
