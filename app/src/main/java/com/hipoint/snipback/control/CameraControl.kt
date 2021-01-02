@@ -580,10 +580,11 @@ class CameraControl(val activity: FragmentActivity) {
             }
 
             // External sdcard file location
-
+            val mediaStorageDir = File(activity.dataDir,
+                VideoMode.VIDEO_DIRECTORY_NAME)
             // Create storage directory if it does not exist
-            if (!File(EXTERNAL_DIR_PATH).exists()) {
-                if (!File(EXTERNAL_DIR_PATH).mkdirs()) {
+            if (!mediaStorageDir.exists()) {
+                if (!mediaStorageDir.mkdirs()) {
                     Log.d(TAG, "Oops! Failed create "
                             + VideoMode.VIDEO_DIRECTORY_NAME + " directory")
                     return null
@@ -591,7 +592,7 @@ class CameraControl(val activity: FragmentActivity) {
             }
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss",
                 Locale.getDefault()).format(Date())
-            val mediaFile = File(EXTERNAL_DIR_PATH + File.separator
+            val mediaFile = File(mediaStorageDir.path + File.separator
                     + "VID_" + timeStamp + ".mp4")
 
             //  adds the created clips to queue

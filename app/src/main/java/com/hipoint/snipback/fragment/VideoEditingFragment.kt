@@ -900,15 +900,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             uiRangeSegments?.add(tmp)
             timebarHolder.addView(tmp)
+        }
 
-            //  start tracking these changes
-            progressTracker = null
-            progressTracker = ProgressTracker(player)
-            with(progressTracker!!) {
-                setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
-                setChangeAccepted(true)
-                run()
-            }
+        //  start tracking these changes
+        progressTracker = null
+        progressTracker = ProgressTracker(player)
+        with(progressTracker!!) {
+            setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
+            setChangeAccepted(true)
+            run()
         }
     }
 
