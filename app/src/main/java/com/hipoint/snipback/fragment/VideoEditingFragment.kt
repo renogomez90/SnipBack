@@ -170,9 +170,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private var trimSegment    : RangeSeekbarCustom?            = null
     private var restrictList   : ArrayList<SpeedDetails>?       = null //  speed details to prevent users from selecting an existing edit
 
-    private val replaceRequired: IReplaceRequired by lazy { requireActivity() as AppMainActivity }
-    private val bufferOverlay  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
-
     //  dialogs
     private var saveDialog      : SaveEditDialog?             = null
     private var exitConfirmation: ExitEditConfirmationDialog? = null
@@ -182,6 +179,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private var generatePreviewTile       : Boolean = true
 
     private var timeStamp: String? = null
+
+    private val replaceRequired: IReplaceRequired by lazy { requireActivity() as AppMainActivity }
+    private val bufferOverlay  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
     private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {

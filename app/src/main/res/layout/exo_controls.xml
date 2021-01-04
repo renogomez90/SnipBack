@@ -28,6 +28,45 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/quickEdit_button"
+        android:layout_width="41dp"
+        android:layout_height="41dp"
+        android:background="@drawable/background_play_pouse"
+        android:gravity="center_vertical"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/play_backbutton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/quick_edit_icon"
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:contentDescription="@string/no_desc"
+            android:src="@drawable/ic_quick_edit"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/quick_edit_time"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/quick_edit_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/quick_edit_icon"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <RelativeLayout
         android:id="@+id/play_backbutton"
         android:layout_width="41dp"
@@ -63,15 +102,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-
-        <!--<Switch
-            android:id="@+id/play_pause"
-            android:layout_width="15dp"
-            android:layout_height="28dp"
-            android:background="@null"
-            android:button="@drawable/switch_play_pause"
-            android:thumb="@null"
-            app:track="@null" />-->
 
         <ImageButton
             android:id="@id/exo_play"
@@ -135,9 +165,9 @@
         android:layout_marginBottom="12dp"
         android:background="@drawable/background_black_round"
         android:gravity="center"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toTopOf="@id/exo_progress"
-        app:layout_constraintEnd_toStartOf="@id/button_camera">
+        app:layout_constraintEnd_toStartOf="@id/button_camera"
+        app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
             android:layout_width="20dp"
@@ -167,63 +197,198 @@
     </RelativeLayout>
 
     <LinearLayout
+        android:id="@+id/progress_duration_holder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="6dp"
+        android:background="@drawable/background_video_timer"
+        app:layout_constraintBottom_toTopOf="@id/exo_progress"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@id/exo_position"
+            android:layout_width="50dp"
+            android:layout_height="32dp"
+            android:fontFamily="@font/barlow_semibold"
+            android:gravity="center"
+            android:text="00:00/00:08"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="15sp" />
+
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_marginEnd="32dp"
-            android:layout_marginBottom="6dp"
-            android:background="@drawable/background_video_timer"
-            app:layout_constraintBottom_toTopOf="@id/exo_progress"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:text="/"
+            android:textColor="@color/colorPrimaryWhite" />
 
         <TextView
-                android:id="@+id/exo_position"
-                android:layout_width="50dp"
-                android:layout_height="32dp"
-                android:fontFamily="@font/barlow_semibold"
-                android:gravity="center"
-                android:text="00:00/00:08"
-                android:textColor="@color/colorPrimaryWhite"
-                android:textSize="15sp" />
-
-        <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="/"
-                android:textColor="@color/colorPrimaryWhite" />
-
-        <TextView
-                android:id="@+id/exo_duration"
-                android:layout_width="50dp"
-                android:layout_height="32dp"
-                android:fontFamily="@font/barlow_semibold"
-                android:gravity="center"
-                android:text="00:00/00:08"
-                android:textColor="@color/colorPrimaryWhite"
-                android:textSize="15sp" />
+            android:id="@id/exo_duration"
+            android:layout_width="50dp"
+            android:layout_height="32dp"
+            android:fontFamily="@font/barlow_semibold"
+            android:gravity="center"
+            android:text="00:00/00:08"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="15sp" />
     </LinearLayout>
-
-    <!--<TextView
-        android:id="@id/exo_duration"
-        android:layout_width="103dp"
-        android:layout_height="32dp"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginEnd="32dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/background_video_timer"
-        android:fontFamily="@font/barlow_semibold"
-        android:gravity="center"
-        android:text="00:00/00:08"
-        android:textColor="@color/colorPrimaryWhite"
-        android:textSize="15sp"
-        android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@id/exo_progress"
-        app:layout_constraintEnd_toEndOf="parent" />-->
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <LinearLayout
+        android:id="@+id/extend_trim_holder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:id="@+id/play_con1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/bottom_menu"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingTop="@dimen/app_margin"
+            android:paddingBottom="@dimen/app_margin"
+            android:visibility="visible"
+            android:weightSum="10"
+            app:layout_constraintBottom_toTopOf="@+id/layout_images"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/back1"
+                android:layout_width="0dp"
+                android:layout_height="35dp"
+                android:layout_weight="2.5"
+                android:contentDescription="@string/no_desc"
+                android:src="@drawable/ic_back1" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:gravity="center"
+                android:weightSum="10">
+
+                <TextView
+                    android:id="@+id/start"
+                    android:layout_width="62dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/start_curve"
+                    android:fontFamily="@font/barlow_semibold"
+                    android:gravity="center"
+                    android:paddingStart="10dp"
+                    android:text="BEGIN"
+                    android:textColor="@color/colorPrimaryWhite"
+                    android:textSize="10sp"
+                    app:drawableStartCompat="@drawable/ic_next_start" />
+
+                <TextView
+                    android:id="@+id/end"
+                    android:layout_width="62dp"
+                    android:layout_height="32dp"
+                    android:background="@drawable/end_curve"
+                    android:fontFamily="@font/barlow_semibold"
+                    android:gravity="end|center"
+                    android:paddingEnd="20dp"
+                    android:text="END  "
+                    android:textColor="@color/colorPrimaryWhite"
+                    android:textSize="10sp"
+                    app:drawableEndCompat="@drawable/ic_next" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/accept_reject_holder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/reject"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:contentDescription="@string/no_desc"
+                    android:src="@drawable/ic_delete" />
+
+                <ImageView
+                    android:id="@+id/accept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="35dp"
+                    android:layout_marginStart="9dp"
+                    android:contentDescription="@string/no_desc"
+                    android:src="@drawable/ic_tick_done" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/layout_images"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/bottom_menu"
+            android:gravity="center"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/previewFrameList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="@dimen/app_margin"
+                android:layout_marginEnd="@dimen/app_margin"
+                android:background="@drawable/background_screentwo_editer_image"
+                android:clickable="false"
+                android:clipChildren="true"
+                android:clipToPadding="true"
+                android:nestedScrollingEnabled="false"
+                android:overScrollMode="never"
+                android:padding="4dp"
+                android:paddingStart="@dimen/app_margin"
+                android:paddingEnd="@dimen/app_margin"
+                android:scrollbars="none" />
+
+            <FrameLayout
+                android:id="@+id/timebar_holder"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                android:layout_marginStart="@dimen/app_margin"
+                android:layout_marginEnd="@dimen/app_margin">
+
+                <!--<com.google.android.exoplayer2.ui.DefaultTimeBar
+                    android:id="@id/exo_progress"
+                    android:layout_width="match_parent"
+                    android:layout_height="35dp"
+                    android:elevation="8dp"
+                    android:paddingBottom="3dp"
+                    app:bar_height="40dp"
+                    app:buffered_color="@android:color/transparent"
+                    app:played_color="@android:color/transparent"
+                    app:scrubber_drawable="@drawable/ic_thumb"
+                    app:scrubber_enabled_size="35dp"
+                    app:unplayed_color="@android:color/transparent" />-->
+
+                <ProgressBar
+                    android:id="@+id/previewBarProgress"
+                    style="@style/Widget.MaterialComponents.CircularProgressIndicator"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_gravity="center"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/white" />
+            </FrameLayout>
+        </FrameLayout>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
