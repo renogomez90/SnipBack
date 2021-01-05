@@ -540,7 +540,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 else -> {}
             }
 
-            if (isSeekbarShown) {
+            if (isSeekbarShown && !isEditExisting) {
                 seekBar.hideScrubber()
                 isSeekbarShown = false
             }
@@ -649,7 +649,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             Log.d(TAG, "bindListeners: end: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
             acceptRejectHolder.visibility = View.VISIBLE
 
-            if (isSeekbarShown) {
+            if (isSeekbarShown && !isEditExisting) {
                 seekBar.hideScrubber()
                 isSeekbarShown = false
             }
@@ -2367,6 +2367,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         endingTimestamps = speedDetails.timeDuration!!.second
         editAction = if(speedDetails.isFast) EditAction.FAST else EditAction.SLOW
         acceptRejectHolder.visibility = View.VISIBLE
+
+        if (!isSeekbarShown) {  //  otherwise we won't have a clue as to where it is
+            seekBar.showScrubber()
+            isSeekbarShown = true
+        }
     }
 
     /**
