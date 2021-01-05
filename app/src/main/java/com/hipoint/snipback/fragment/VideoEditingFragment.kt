@@ -155,6 +155,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
     private var maxDuration         = 0L
     private var previousMaxDuration = 0L
+    private var previousMoveBy      = 0L
     private var currentSpeed        = 3
     private var startingTimestamps  = -1L
     private var endingTimestamps    = -1L
@@ -945,11 +946,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * @param isEndInBuffer Boolean
      */
     private fun adjustPreviousSpeedEdits(isStartInBuffer: Boolean, isEndInBuffer: Boolean) {
-        val moveBy = if(isStartInBuffer){
+        var moveBy: Long = if(isStartInBuffer){   // amount to move the edits by
             bufferDuration - editedStart
         }else{
-            editedStart - videoDuration
+            -editedStart
         }
+
+        if(previousMoveBy != 0L)
+            moveBy -= previousMoveBy
 
         val removeSet = arrayListOf<SpeedDetails>()
         var shouldRemove =false
@@ -971,8 +975,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 it.endWindowIndex = 1
             }
 
-            var s = if(!existingEditEntirelyInBuffer) it.timeDuration!!.first + moveBy else it.timeDuration!!.first + difference
-            var e = if(!existingEditEntirelyInBuffer) it.timeDuration!!.second + moveBy else it.timeDuration!!.second + difference
+            var s = if(!existingEditEntirelyInBuffer) (it.timeDuration!!.first + moveBy) else (it.timeDuration!!.first + difference + moveBy)
+            var e = if(!existingEditEntirelyInBuffer) (it.timeDuration!!.second + moveBy) else (it.timeDuration!!.second + difference + moveBy)
 
             //  checking the starting points
             if(s < 0){  //  the starting portion is trimmed out
@@ -1009,6 +1013,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         bufferDuration = max(bufferDuration - editedStart, 0)
 
         speedDetailSet.forEach{ Log.d(TAG, "adjustPreviousSpeedEdits: $it\n") }
+
+        previousMoveBy = moveBy //  to remember the changes we made
     }
 
     /**
@@ -1895,7 +1901,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
 
             if (editAction == EditAction.EXTEND_TRIM) {
-                Log.d(TAG, "initSwipeControls: newSeekPosition = $newSeekPosition")
                 // newSeekPosition resets on each player window.
                 when (editSeekAction) {
                     EditSeekControl.MOVE_START -> {
