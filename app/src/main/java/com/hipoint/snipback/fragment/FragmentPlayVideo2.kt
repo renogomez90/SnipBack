@@ -60,6 +60,7 @@ import com.hipoint.snipback.videoControl.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_main2.*
+import kotlinx.android.synthetic.main.exo_controls.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -78,9 +79,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private val retries = 3
     private var tries   = 0
 
-    private var editedStart    = -1L
-    private var editedEnd      = -1L
-    private var seekAction = EditSeekControl.MOVE_NORMAL
+    private var editedStart = -1L
+    private var editedEnd   = -1L
+    private var seekAction  = EditSeekControl.MOVE_NORMAL
 
     private var subscriptions: CompositeDisposable? = null
 
@@ -96,6 +97,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private lateinit var editBtn               : ImageButton
     private lateinit var start                 : TextView
     private lateinit var end                   : TextView
+    private lateinit var editBackBtn           : ImageView
     private lateinit var acceptBtn             : ImageView
     private lateinit var rejectBtn             : ImageView
     private lateinit var acceptRejectHolder    : LinearLayout
@@ -323,6 +325,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         timebarHolder          = rootView.findViewById(R.id.timebar_holder)
         playBtn                = rootView.findViewById(R.id.exo_play)
         pauseBtn               = rootView.findViewById(R.id.exo_pause)
+        editBackBtn            = rootView.findViewById(R.id.back1)
         acceptBtn              = rootView.findViewById(R.id.accept)
         rejectBtn              = rootView.findViewById(R.id.reject)
         end                    = rootView.findViewById(R.id.end)
@@ -383,9 +386,12 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         start.setOnClickListener {
             // saves the current end point if available
-            if(editedStart > 0){
+            if(editedEnd != maxDuration){
                 endWindow = player.currentWindowIndex
-                editedEnd = player.currentPosition
+                editedEnd = if(endWindow == 0)
+                    player.currentPosition
+                else
+                    player.currentPosition + bufferDuration
             }
 
             // update button UI and flags
@@ -402,7 +408,10 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         end.setOnClickListener {
             // saves the current start point
             startWindow = player.currentWindowIndex
-            editedStart = player.currentPosition
+            editedStart = if(startWindow == 0)
+                player.currentPosition
+            else
+                player.currentPosition + bufferDuration
 
             // update button UI and flags
             endRangeUI()
@@ -413,15 +422,21 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 player.seekTo(1, videoDuration)
             else
                 player.seekTo(endWindow, editedEnd)
-
         }
+
+        acceptBtn.setOnClickListener {
+            //  todo: save the edit and create the required videos
+        }
+
+        rejectBtn.setOnClickListener { restoreOriginalMedia() }
+
+        editBackBtn.setOnClickListener { restoreOriginalMedia() }
 
         rootView.isFocusableInTouchMode = true
         rootView.requestFocus()
         rootView.setOnKeyListener(View.OnKeyListener { _, keyCode, _ ->
             if (keyCode == KeyEvent.KEYCODE_BACK) {
                 if (isInEditMode) {
-                    hideEditUI()
                     restoreOriginalMedia()
                     return@OnKeyListener true
                 } else {
@@ -439,11 +454,21 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * start quick edit
      */
     private fun launchQuickEdit() {
+        player.playWhenReady = false
+        paused = true
+
         showEditUI()
         showBufferVideo()
 
         val startValue = (bufferDuration * 100 / (bufferDuration + videoDuration)).toFloat()
         val endValue = 100F
+
+        startWindow = 0
+        endWindow   = 1
+        editedStart = bufferDuration
+        editedEnd   = bufferDuration + videoDuration
+        maxDuration = bufferDuration + videoDuration
+
         extendRangeMarker(startValue, endValue)
         start.performClick()
     }
@@ -526,8 +551,10 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * restores the original video to be played
      */
     private fun restoreOriginalMedia(){
+        hideEditUI()
         player.release()
         initSetup()
+        initSwipeControls() //  because the player instance has changed
     }
 
     private fun popToVideoMode() {
@@ -576,33 +603,47 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             val percentOfDuration = scaledPercent * -1 * maxDuration + startScrollingSeekPosition
             // shift in position domain and ensure circularity
             /*val newSeekPosition = ((percentOfDuration + duration) % duration).roundToLong().absoluteValue*/
-            val newSeekPosition = percentOfDuration.roundToLong()
+            var newSeekPosition = percentOfDuration.roundToLong()
 
             if(isInEditMode) {
                 if (newSeekPosition >= player.contentDuration && player.currentWindowIndex == 0) {
                     if (player.hasNext()) {
                         player.next()
                         startScrollingSeekPosition = 0
+                        player.seekTo(startScrollingSeekPosition)
                     }
                 }
                 if (newSeekPosition <= 0L && player.currentWindowIndex == 1) {
                     if (player.hasPrevious()) {
                         player.previous()
                         startScrollingSeekPosition = bufferDuration
+                        player.seekTo(startScrollingSeekPosition)
                     }
                 }
 
                 when (seekAction) {
                     EditSeekControl.MOVE_START -> {
-                        trimSegment.setMinStartValue((getCorrectedTimebarStartPosition() * 100 / maxDuration).toFloat()).apply()
+                        if(getCorrectedTimebarStartPosition() > editedEnd){
+                            newSeekPosition =
+                                (if(player.currentWindowIndex == 1) editedEnd - bufferDuration else editedEnd)
+                        }else {
+                            editedStart = getCorrectedTimebarStartPosition()
+                        }
+                        trimSegment.setMinStartValue((editedStart * 100 / maxDuration).toFloat()).apply()
+                        trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
                     }
                     EditSeekControl.MOVE_END -> {
-                        trimSegment.setMaxStartValue((getCorrectedTimebarEndPosition() * 100 / maxDuration).toFloat()).apply()
+                        if(getCorrectedTimebarEndPosition() < editedStart){
+                            newSeekPosition =
+                                (if(player.currentWindowIndex == 1) editedStart - bufferDuration else editedStart)
+                        }else{
+                            editedEnd = getCorrectedTimebarEndPosition()
+                        }
+                        trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
                     }
                     else -> {}
                 }
             }
-
             emitter.seekFast(newSeekPosition)
         }
     }
@@ -687,10 +728,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         subscriptions?.dispose()
         super.onPause()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     /**
@@ -851,6 +888,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
             setOnTouchListener { _, _ -> true }
         }
+
+        if(trimSegment.parent != null)
+            timebarHolder.removeView(trimSegment)
 
         timebarHolder.addView(trimSegment)
     }
