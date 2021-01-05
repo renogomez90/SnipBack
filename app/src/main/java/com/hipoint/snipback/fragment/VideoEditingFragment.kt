@@ -540,6 +540,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 else -> {}
             }
 
+            if (isSeekbarShown) {
+                seekBar.hideScrubber()
+                isSeekbarShown = false
+            }
+
             Log.d(TAG, "bindListeners: start: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
@@ -643,6 +648,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 //            }
             Log.d(TAG, "bindListeners: end: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
             acceptRejectHolder.visibility = View.VISIBLE
+
+            if (isSeekbarShown) {
+                seekBar.hideScrubber()
+                isSeekbarShown = false
+            }
         }
 
         extendTextBtn.setOnClickListener {
@@ -717,6 +727,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 startRangeUI()
                 resetPlaybackUI()
             }
+            if (!isSeekbarShown) {
+                seekBar.showScrubber()
+                isSeekbarShown = true
+            }
         }
 
         /**
@@ -768,6 +782,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             isSpeedChanged = false
             isEditOnGoing = false
             isEditExisting = false
+
+            if (!isSeekbarShown) {
+                seekBar.showScrubber()
+                isSeekbarShown = true
+            }
         }
 
         playBtn.setOnClickListener {
@@ -1185,6 +1204,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 val startValue     = (startingTimestamps * 100 / (bufferDuration + videoDuration)).toFloat()
                 val endValue       = (endingTimestamps * 100 / (bufferDuration + videoDuration)).toFloat()
                 extendRangeMarker(startValue, endValue)
+
+                if (isSeekbarShown) {
+                    seekBar.hideScrubber()
+                    isSeekbarShown = false
+                }
             }
         }
     }
@@ -1798,11 +1822,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             lower = if(showBuffer) 0 else nearestExistingLowerTS(player.currentPosition)
 
             if (isEditOnGoing && editAction != EditAction.NORMAL) {
-                if (isSeekbarShown) {
-                    seekBar.hideScrubber()
-                    isSeekbarShown = false
-                }
-
                 if (isEditActionSpeedChange()) {
 
                     val change = checkOverlappingTS(newSeekPosition)
@@ -1822,13 +1841,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                 // prevent the user from seeking beyond the fixed start point
                                 if (newSeekPosition <= lower) {
                                     newSeekPosition = lower
-                                    seekBar.hideScrubber()
-                                    isSeekbarShown = false
-                                } else {
-                                    if (!isSeekbarShown) {
-                                        seekBar.showScrubber()
-                                        isSeekbarShown = true
-                                    }
                                 }
                             }
 
@@ -1861,11 +1873,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         }
                     }
                 }
-            }
-
-            if (!isSeekbarShown && !isEditOnGoing) {
-                seekBar.showScrubber()
-                isSeekbarShown = true
             }
 
             if(showBuffer) {
