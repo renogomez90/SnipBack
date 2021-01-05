@@ -1200,9 +1200,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 trimSegment        = RangeSeekbarCustom(requireContext())
                 startingTimestamps = if(editedStart < 0) bufferDuration else editedStart
                 endingTimestamps   = if(editedEnd < 0) bufferDuration + videoDuration else editedEnd
+                maxDuration        = bufferDuration + videoDuration
 
-                val startValue     = (startingTimestamps * 100 / (bufferDuration + videoDuration)).toFloat()
-                val endValue       = (endingTimestamps * 100 / (bufferDuration + videoDuration)).toFloat()
+                val startValue     = (startingTimestamps * 100 / maxDuration).toFloat()
+                val endValue       = (endingTimestamps * 100 / maxDuration).toFloat()
                 extendRangeMarker(startValue, endValue)
 
                 if (isSeekbarShown) {
@@ -1525,6 +1526,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             setRightThumbBitmap(rightThumbImageDrawable)
             setBarHighlightColor(colour)
             setMinValue(0F)
+            setGap(0.1F)
             setMaxValue(100F)
             setMinStartValue(startValue).apply()
             setMaxStartValue(endValue).apply()
@@ -1880,37 +1882,42 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     if (player.hasNext()) {
                         player.next()
                         startScrollingSeekPosition = 0
+                        player.seekTo(startScrollingSeekPosition)
                     }
                 }
                 if (newSeekPosition <= 0L && player.currentWindowIndex == 1) {
                     if (player.hasPrevious()) {
                         player.previous()
                         startScrollingSeekPosition = bufferDuration
+                        player.seekTo(startScrollingSeekPosition)
                     }
                 }
             }
 
             if (editAction == EditAction.EXTEND_TRIM) {
+                Log.d(TAG, "initSwipeControls: newSeekPosition = $newSeekPosition")
+                // newSeekPosition resets on each player window.
                 when (editSeekAction) {
                     EditSeekControl.MOVE_START -> {
-                        if (getCorrectedTimebarStartPosition() > endingTimestamps) {
-                            newSeekPosition = endingTimestamps
-                        } else {
-                            trimSegment!!.setMinStartValue((getCorrectedTimebarStartPosition() * 100 / maxDuration).toFloat()).apply()
+                        if(getCorrectedTimebarStartPosition() > endingTimestamps){
+                            newSeekPosition =
+                                (if(player.currentWindowIndex == 1) endingTimestamps - bufferDuration else endingTimestamps)
+                        }else {
                             startingTimestamps = getCorrectedTimebarStartPosition()
                         }
+                        trimSegment!!.setMinStartValue((startingTimestamps * 100 / maxDuration).toFloat()).apply()
+                        trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat()).apply()
                     }
                     EditSeekControl.MOVE_END -> {
                         if(getCorrectedTimebarEndPosition() < startingTimestamps){
-                            newSeekPosition = startingTimestamps
-                        }else {
-                            trimSegment!!.setMaxStartValue((getCorrectedTimebarEndPosition() * 100 / maxDuration).toFloat()).apply()
+                            newSeekPosition =
+                                (if(player.currentWindowIndex == 1) startingTimestamps - bufferDuration else startingTimestamps)
+                        }else{
                             endingTimestamps = getCorrectedTimebarEndPosition()
                         }
+                        trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat()).apply()
                     }
-                    else -> {
-
-                    }
+                    else -> { }
                 }
             }
 
@@ -1937,9 +1944,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         return if(player.currentWindowIndex == 0){
             player.currentPosition
         }else{  //  exoplayer can be messed up
-            if(player.currentPosition + bufferDuration > maxDuration)
+            /*if(player.currentPosition + bufferDuration > maxDuration)
                 player.currentPosition
-            else
+            else*/
                 player.currentPosition + bufferDuration
         }
     }
