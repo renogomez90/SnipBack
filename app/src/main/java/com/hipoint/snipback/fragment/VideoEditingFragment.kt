@@ -1411,12 +1411,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     else if(it.startWindowIndex == 1) bufferDuration else 0L
 
                 if(correctBy != 0L){
-                    if(player.currentWindowIndex == 1 && (currentPosition - bufferDuration) in (bufferDuration .. (it.timeDuration?.second!! - bufferDuration))) {
+                    if(currentEditSegment != speedDetailSet.size - 1 && player.currentWindowIndex == 1 && (currentPosition - bufferDuration) in (bufferDuration .. (it.timeDuration?.second!! - bufferDuration))) {
                         Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
                         return true
                     }
                 }else {
-                    if (currentPosition in it.timeDuration?.first!! until it.timeDuration?.second!! &&
+                    if (currentEditSegment != speedDetailSet.size - 1 && currentPosition in it.timeDuration?.first!! until it.timeDuration?.second!! &&
                         (it.startWindowIndex == player.currentWindowIndex || it.endWindowIndex == player.currentWindowIndex)) {
                         Toast.makeText(requireContext(), "segment is already taken", Toast.LENGTH_SHORT).show()
                         return true
