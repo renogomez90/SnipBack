@@ -8,7 +8,6 @@ import android.graphics.*
 import android.hardware.camera2.*
 import android.media.*
 import android.media.ImageReader.OnImageAvailableListener
-import android.os.Environment
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
@@ -334,10 +333,17 @@ class CameraControl(val activity: FragmentActivity) {
                 width,
                 height,
                 mVideoSize)
-            mImageSize = chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG), width, height, mVideoSize)
+            mImageSize = chooseOptimalSize(map.getOutputSizes(ImageFormat.JPEG),
+                width,
+                height,
+                mVideoSize)
 
-            mImageReader = ImageReader.newInstance(mImageSize!!.width, mImageSize!!.height, ImageFormat.JPEG, 1)
-            mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener, mBackgroundHandler)
+            mImageReader = ImageReader.newInstance(mImageSize!!.width,
+                mImageSize!!.height,
+                ImageFormat.JPEG,
+                1)
+            mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener,
+                mBackgroundHandler)
 
             val orientation = activity.resources.configuration.orientation
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -364,6 +370,11 @@ class CameraControl(val activity: FragmentActivity) {
     internal fun closeToSwitchCamera() {
         isBackFacingRequired = !isBackFacingRequired
         chosenCProfile = null
+        try {
+            mMediaRecorder?.stop()
+        }catch (e: java.lang.RuntimeException){
+            e.printStackTrace()
+        }
         closeCamera()
     }
 
@@ -527,12 +538,7 @@ class CameraControl(val activity: FragmentActivity) {
         outputFilePath = outputMediaFile!!.absolutePath
 
         val rotation = activity.windowManager?.defaultDisplay?.rotation
-        when (mSensorOrientation) {
-            SENSOR_ORIENTATION_DEFAULT_DEGREES -> mMediaRecorder!!.setOrientationHint(
-                DEFAULT_ORIENTATIONS[rotation!!])
-            SENSOR_ORIENTATION_INVERSE_DEGREES -> mMediaRecorder!!.setOrientationHint(
-                INVERSE_ORIENTATIONS[rotation!!])
-        }
+
         mMediaRecorder!!.apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -566,6 +572,15 @@ class CameraControl(val activity: FragmentActivity) {
                     }
                 }
             }
+
+            when (mSensorOrientation) {
+                SENSOR_ORIENTATION_DEFAULT_DEGREES ->
+                    mMediaRecorder!!.setOrientationHint(DEFAULT_ORIENTATIONS[rotation!!])
+
+                SENSOR_ORIENTATION_INVERSE_DEGREES ->
+                    mMediaRecorder!!.setOrientationHint(INVERSE_ORIENTATIONS[rotation!!])
+            }
+
             prepare()
         }
 
@@ -754,6 +769,17 @@ class CameraControl(val activity: FragmentActivity) {
                 choices[0]
             }
         }
+    }
+
+    private fun sensorToDeviceRotation(
+        cameraCharacteristics: CameraCharacteristics,
+        deviceOrientation: Int,
+    ): Int {
+        var deviceOrientation = deviceOrientation
+        val sensorOrienatation =
+            cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
+        deviceOrientation = DEFAULT_ORIENTATIONS.get(deviceOrientation)
+        return (sensorOrienatation + deviceOrientation + 360) % 360
     }
 
     /**

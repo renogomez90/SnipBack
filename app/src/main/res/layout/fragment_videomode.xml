@@ -20,6 +20,11 @@
         app:layout_constraintBottom_toBottomOf="parent"/>
 
     <View
+        android:id="@+id/swipeDetection"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <View
         android:id="@+id/overlay"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

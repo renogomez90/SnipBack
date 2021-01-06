@@ -121,37 +121,41 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      */
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View, event: MotionEvent): Boolean {
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> x1 = event.x
-            MotionEvent.ACTION_UP -> {
-                x2 = event.x
-                val deltaX = x2 - x1
-                if (abs(deltaX) > MIN_DISTANCE) {
-                    // Left to Right swipe action
-                    if (x2 > x1) {
-                        if (cameraControl!!.isRecordingVideo()) {   //  media recorder is capturing
-                            if (cameraControl!!.isRecordingClips()) {
-                                handleRightSwipe()
-                            }else {
-                                swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
-                                if (swipedRecording == null) {
-                                    swipedRecording = cameraControl?.getCurrentOutputPath()?.let { SwipedRecording(it) }
+        if(v.id == R.id.swipeDetection) {
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> x1 = event.x
+                MotionEvent.ACTION_UP -> {
+                    x2 = event.x
+                    val deltaX = x2 - x1
+                    if (abs(deltaX) > MIN_DISTANCE) {
+                        // Left to Right swipe action
+                        if (x2 > x1) {
+                            if (cameraControl!!.isRecordingVideo()) {   //  media recorder is capturing
+                                if (cameraControl!!.isRecordingClips()) {
+                                    handleRightSwipe()
+                                } else {
+                                    swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
+                                    if (swipedRecording == null) {
+                                        swipedRecording = cameraControl?.getCurrentOutputPath()
+                                            ?.let { SwipedRecording(it) }
+                                    }
+                                    saveSnipTimeToLocal()
                                 }
-                                saveSnipTimeToLocal()
                             }
                         }
-                    }
-                    //  Right to left swipe action
-                    if (x2 < x1) {
-                        if (cameraControl!!.isRecordingVideo()) {
-                            handleLeftSwipe()
+                        //  Right to left swipe action
+                        if (x2 < x1) {
+                            if (cameraControl!!.isRecordingVideo()) {
+                                handleLeftSwipe()
+                            }
                         }
                     }
                 }
             }
+        }else {
+            if (cameraControl!!.handleZoomEvent(event)) return false
         }
 
-        if (cameraControl!!.handleZoomEvent(event)) return false
         return true
     }
 
@@ -226,6 +230,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     //Views
     private lateinit var rootView         : View
+    private lateinit var swipeDetection   : View
     private lateinit var gallery          : ImageButton
     private lateinit var settings         : ImageButton
     private lateinit var recordButton     : ImageButton
@@ -312,6 +317,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         takePhoto         = rootView.findViewById(R.id.shutter_btn)
         snapbackBtn       = rootView.findViewById(R.id.back_photo_btn)
         zoomFactor        = rootView.findViewById(R.id.zoom_factor)
+        swipeDetection    = rootView.findViewById(R.id.swipeDetection)
     }
 
     /**
@@ -332,6 +338,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         snapbackBtn.setOnClickListener(this)
         rlVideo.setOnTouchListener(this)
         mTextureView.setOnTouchListener(this)
+        swipeDetection.setOnTouchListener(this)
         gallery.setOnClickListener {
             Log.d(TAG, "bindListeners: gallery btn clicked")
             (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance(), true)
@@ -339,6 +346,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         settings.setOnClickListener { showDialogSettingsMain() }
         changeCamera.setOnClickListener {
             cameraControl!!.closeToSwitchCamera()
+
             if (mTextureView.isAvailable) {
                 cameraControl?.openCamera(mTextureView.width, mTextureView.height)
             } else {
@@ -879,8 +887,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             VideoService.enqueueWork(requireContext(), intentService)
         }
-
-        launchSnapbackVideoCapture("")
+        if(swipeAction == SwipeAction.SWIPE_RIGHT)
+            launchSnapbackVideoCapture("")
         return false
     }
 
