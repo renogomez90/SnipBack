@@ -459,12 +459,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 val speedDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_speed_red)
                 speedDwg?.bounds = bound1
                 speedTextBtn.setCompoundDrawablesWithIntrinsicBounds(null, speedDwg, null, null)
-                speedTextBtn.setTextColor(
-                    resources.getColor(
-                        R.color.colorPrimaryDimRed,
-                        requireContext().theme
-                    )
-                )
+                speedTextBtn.setTextColor(resources.getColor(R.color.colorPrimaryDimRed,requireContext().theme))
             }
             EditAction.SLOW -> {
                 val slowDwg = ContextCompat.getDrawable(requireContext(), R.drawable.ic_slow_red)
@@ -657,6 +652,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         extendTextBtn.setOnClickListener {
+            pauseVideo()
             if(editAction == EditAction.EXTEND_TRIM && isEditOnGoing){
                 return@setOnClickListener
             }
@@ -665,7 +661,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             if(isEditOnGoing && (isEditActionSpeedChange()))
                 reject.performClick()
 
-            player.playWhenReady = false
             progressTracker?.stopTracking()
 
             resetPlaybackUI()
@@ -793,21 +788,19 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         playBtn.setOnClickListener {
             if (player.currentPosition >= maxDuration)
                 player.seekTo(0,0)
-            player.playWhenReady = true
-            paused = false
+            playVideo()
             Log.d(TAG, "Start Playback")
         }
 
         pauseBtn.setOnClickListener {
             if (player.isPlaying) {
-                player.playWhenReady = false
-                paused = true
+                pauseVideo()
                 Log.d(TAG, "Stop Playback")
             }
         }
 
         toStartBtn.setOnClickListener {
-            player.playWhenReady = false
+            pauseVideo()
             player.seekTo(0,0)
         }
 
@@ -818,12 +811,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         seekBar.isClickable = false
 
         slowTextBtn.setOnClickListener {
+            pauseVideo()
             if(isEditOnGoing && editAction == EditAction.EXTEND_TRIM) { //  reject the ongoing edit and do this one
                 reject.performClick()
             }
 
-            player.playWhenReady = false
             val currentPosition = player.currentPosition
+            editAction = EditAction.SLOW
+            setIconActive()
             if(!isEditOnGoing){
                 handleNewSpeedChange(currentPosition)
             }else{
@@ -831,26 +826,24 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 //                isEditExisting = true
                 handleExistingSpeedChange(currentPosition, false)
             }
-            editAction = EditAction.SLOW
-            setIconActive()
             Log.d(TAG, "bindListeners: slow: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
         speedTextBtn.setOnClickListener {
+            pauseVideo()
             if(isEditOnGoing && editAction == EditAction.EXTEND_TRIM) { //  reject the ongoing edit and do this one
                 reject.performClick()
             }
 
-            player.playWhenReady = false
             val currentPosition = player.currentPosition
+            editAction = EditAction.FAST
+            setIconActive()
             if(!isEditOnGoing){  //  we are editing afresh
                 handleNewSpeedChange(currentPosition)
             }else{
 //                isEditExisting = true
                 handleExistingSpeedChange(currentPosition, true)
             }
-            editAction = EditAction.FAST
-            setIconActive()
             Log.d(TAG, "bindListeners: speed: startingTS = $startingTimestamps, endingTS = $endingTimestamps")
         }
 
@@ -1193,7 +1186,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             withContext(Main) {
                 bufferPath = it
                 showBuffer = true
-                player.playWhenReady = false
+                pauseVideo()
                 player.release()
                 clearSelectedRanges()
                 player.release()
@@ -1269,14 +1262,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * @param currentPosition Long
      */
     private fun handleNewSpeedChange(currentPosition: Long) {
-        speedDetailSet.forEach {
+        /*speedDetailSet.forEach {
             val correctBy =
                 if (it.startWindowIndex != it.endWindowIndex)   //  correction is required if the previous ranges span across two clips
                     bufferDuration
                 else if(it.startWindowIndex == 1) bufferDuration else 0L
 
             if(correctBy != 0L){
-                if(player.currentWindowIndex == 1 && currentPosition in (0 .. (it.timeDuration?.second!! - bufferDuration))){
+                if(player.currentWindowIndex == 1 && currentPosition in (0 .. (it.timeDuration?.second!! - bufferDuration))){   //   deal with the video
                     resetPlaybackUI()
                     Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
                     return
@@ -1284,6 +1277,33 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }else {
                 if (currentPosition in (it.timeDuration?.first!! - correctBy)..(it.timeDuration?.second!! - correctBy) &&
                     (it.startWindowIndex == player.currentWindowIndex || it.endWindowIndex == player.currentWindowIndex)) {
+                    resetPlaybackUI()
+                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+        }*/
+
+        speedDetailSet.forEach{
+            if(it.startWindowIndex == player.currentWindowIndex && it.endWindowIndex == player.currentWindowIndex){ //  there is no point in checking if neither is in the range we are looking at
+                if((currentPosition in it.timeDuration!!.first .. it.timeDuration!!.second) && player.currentWindowIndex == 0){ //  checking in buffer
+                    resetPlaybackUI()
+                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                    return
+                }
+                if((currentPosition in (it.timeDuration!!.first - bufferDuration) .. (it.timeDuration!!.second - bufferDuration)) && player.currentWindowIndex == 1){   //  checking in video
+                    resetPlaybackUI()
+                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
+//            check overlap
+            if(it.startWindowIndex == 0 && it.endWindowIndex == 1 && player.currentWindowIndex == 0){
+                if(currentPosition in it.timeDuration!!.first .. bufferDuration) {  //  current position in buffer side
+                    resetPlaybackUI()
+                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                    return
+                }else if (currentPosition in 0 .. (it.timeDuration!!.second - bufferDuration)){
                     resetPlaybackUI()
                     Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
                     return
@@ -1316,7 +1336,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         player.seekTo(0,0)
         seekBar.showScrubber()
-        player.playWhenReady = false
+        pauseVideo()
 
         enableEditOptions(true)
         setupIcons()
@@ -1671,7 +1691,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             showController()
         }
 
-        player.playWhenReady = false
+        pauseVideo()
 
         seekBar
 
@@ -1708,8 +1728,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             previousMaxDuration = maxDuration
                     }
                 }else if(state == Player.STATE_ENDED){
-                    player.playWhenReady = false
-                    paused = true
+                    pauseVideo()
                 }
             }
         })
@@ -2186,6 +2205,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
     }
 
+    private fun pauseVideo(){
+        player.playWhenReady = false
+        paused = true
+    }
+
+    private fun playVideo(){
+        player.playWhenReady = true
+        paused = false
+    }
 
 //  implementations
 
