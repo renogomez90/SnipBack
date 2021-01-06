@@ -1189,7 +1189,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 pauseVideo()
                 player.release()
                 clearSelectedRanges()
-                player.release()
                 setupPlayer()
 
                 isEditOnGoing      = true
