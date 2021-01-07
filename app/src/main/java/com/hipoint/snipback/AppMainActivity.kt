@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.os.Build
 import android.os.Bundle
@@ -522,8 +523,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             } catch (ex: Exception) {
                 Log.i(TAG, "MediaMetadataRetriever got exception:$ex")
             }
+
             streamThumbnail.close()
-            //            snip.setThumbnailPath(fullThumbPath.getAbsolutePath());
+//            snip.setThumbnailPath(fullThumbPath.getAbsolutePath());
             //update Snip
 //            SimpleDateFormat sdf = new SimpleDateFormat("yyyy.MM.dd");
 //            String currentDateandTime = sdf.format(new Date());

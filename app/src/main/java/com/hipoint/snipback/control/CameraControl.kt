@@ -44,6 +44,11 @@ class CameraControl(val activity: FragmentActivity) {
         private val TAG = CameraControl::class.java.simpleName
         private val EXTERNAL_DIR_NAME = "Snipback"
 
+        /**
+         * A reference to check the required lens facing.
+         */
+        private var isBackFacingRequired: Boolean = true
+
         //Camera Orientation
         const val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
         const val SENSOR_ORIENTATION_INVERSE_DEGREES = 270
@@ -108,11 +113,6 @@ class CameraControl(val activity: FragmentActivity) {
      * A reference to the opened [android.hardware.camera2.CameraDevice].
      */
     private var mCameraDevice: CameraDevice? = null
-
-    /**
-     * A reference to check the required lens facing.
-     */
-    private var isBackFacingRequired: Boolean = true
 
     /**
      * A reference to the current [android.hardware.camera2.CameraCaptureSession] for
@@ -369,12 +369,7 @@ class CameraControl(val activity: FragmentActivity) {
      */
     internal fun closeToSwitchCamera() {
         isBackFacingRequired = !isBackFacingRequired
-        chosenCProfile = null
-        try {
-            mMediaRecorder?.stop()
-        }catch (e: java.lang.RuntimeException){
-            e.printStackTrace()
-        }
+//        chosenCProfile = null
         closeCamera()
     }
 
@@ -397,13 +392,14 @@ class CameraControl(val activity: FragmentActivity) {
     internal fun closeCamera() {
         try {
             mCameraOpenCloseLock.acquire()
-            closePreviewSession()
+
+            closeRecordSession()
             mCameraDevice?.close()
             mCameraDevice = null
-            mMediaRecorder?.release()
-            mMediaRecorder = null
+
             mImageReader?.close()
             mImageReader = null
+
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock camera closing.")
         } finally {
@@ -419,7 +415,7 @@ class CameraControl(val activity: FragmentActivity) {
             return
         }
         try {
-            closePreviewSession()
+            closeRecordSession()
             val texture = mTextureView!!.surfaceTexture!!
             texture.setDefaultBufferSize(mPreviewSize!!.width, mPreviewSize!!.height)
             mRequestBuilder = mCameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
@@ -536,7 +532,6 @@ class CameraControl(val activity: FragmentActivity) {
         //  ensuring the media recorder is recreated
 
         outputFilePath = outputMediaFile!!.absolutePath
-
         val rotation = activity.windowManager?.defaultDisplay?.rotation
 
         mMediaRecorder!!.apply {
@@ -574,11 +569,17 @@ class CameraControl(val activity: FragmentActivity) {
             }
 
             when (mSensorOrientation) {
-                SENSOR_ORIENTATION_DEFAULT_DEGREES ->
+                SENSOR_ORIENTATION_DEFAULT_DEGREES -> {
+                    Log.d(TAG,
+                        "setUpMediaRecorder: setting orientation ${DEFAULT_ORIENTATIONS[rotation!!]}")
                     mMediaRecorder!!.setOrientationHint(DEFAULT_ORIENTATIONS[rotation!!])
+                }
 
-                SENSOR_ORIENTATION_INVERSE_DEGREES ->
+                SENSOR_ORIENTATION_INVERSE_DEGREES -> {
+                    Log.d(TAG,
+                        "setUpMediaRecorder: setting orientation ${INVERSE_ORIENTATIONS[rotation!!]}")
                     mMediaRecorder!!.setOrientationHint(INVERSE_ORIENTATIONS[rotation!!])
+                }
             }
 
             prepare()
@@ -700,17 +701,6 @@ class CameraControl(val activity: FragmentActivity) {
 
             mImageRequestBuilder.addTarget(mImageReader!!.surface)
             mImageRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, mSensorOrientation)
-            /*val stillCaptureCallback: CaptureCallback = object : CaptureCallback() {
-                override fun onCaptureStarted(
-                    session: CameraCaptureSession,
-                    request: CaptureRequest,
-                    timestamp: Long,
-                    frameNumber: Long,
-                ) {
-//                    createImageFileName()
-                    super.onCaptureStarted(session, request, timestamp, frameNumber)
-                }
-            }*/
             if (mIsRecordingVideo) {
                 createImageFileName()
                 mRecordSession?.capture(mImageRequestBuilder.build(),
@@ -771,17 +761,6 @@ class CameraControl(val activity: FragmentActivity) {
         }
     }
 
-    private fun sensorToDeviceRotation(
-        cameraCharacteristics: CameraCharacteristics,
-        deviceOrientation: Int,
-    ): Int {
-        var deviceOrientation = deviceOrientation
-        val sensorOrienatation =
-            cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)!!
-        deviceOrientation = DEFAULT_ORIENTATIONS.get(deviceOrientation)
-        return (sensorOrienatation + deviceOrientation + 360) % 360
-    }
-
     /**
      * Gets the best Camcorder profile based on the preview dimensions.
      *
@@ -812,11 +791,12 @@ class CameraControl(val activity: FragmentActivity) {
         return chosenCProfile!!
     }
 
-    private fun closePreviewSession() {
-        if (mRecordSession != null) {
-            mRecordSession!!.close()
-            mRecordSession = null
-        }
+    private fun closeRecordSession() {
+        mMediaRecorder?.release()
+        mMediaRecorder = null
+
+        mRecordSession?.close()
+        mRecordSession = null
     }
 
     /**
@@ -829,7 +809,7 @@ class CameraControl(val activity: FragmentActivity) {
         recordUIListener?.stopChronometerUI()
 
         // Stop recording
-        mMediaRecorder!!.stop()
+        mMediaRecorder?.stop()
 
         lastUserRecordedPath = outputFilePath
         if(clipQueueSize() > 3){    // trimming down clutter
@@ -894,6 +874,10 @@ class CameraControl(val activity: FragmentActivity) {
     private fun createImageFileName(): File? {
         val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "IMAGE_$timeStamp.jpg"
+        val folder = File(EXTERNAL_DIR_PATH)
+
+        if(!folder.exists()) folder.mkdirs()
+
         val imageFile = File(EXTERNAL_DIR_PATH, fileName)
         imageFile.createNewFile()
         mImageFileName = imageFile.absolutePath

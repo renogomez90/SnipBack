@@ -145,7 +145,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var maxDuration                = 0L
 
     private val trimSegment  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
-    private val bufferOverlay  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
+    private val bufferOverlay: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive

@@ -11,6 +11,7 @@ import android.content.*
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.*
+import android.media.MediaCodec
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.*
@@ -215,11 +216,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             cameraControl!!.configureTransform(width, height)
         }
 
-        override fun onSurfaceTextureDestroyed(surfaceTexture: SurfaceTexture): Boolean {
-            return true
-        }
+        override fun onSurfaceTextureDestroyed(surfaceTexture: SurfaceTexture): Boolean = true
 
-        override fun onSurfaceTextureUpdated(surfaceTexture: SurfaceTexture) {}
+        override fun onSurfaceTextureUpdated(surfaceTexture: SurfaceTexture) { }
     }
 
     private var timerSecond                 : Int              = 0
@@ -344,9 +343,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance(), true)
         }
         settings.setOnClickListener { showDialogSettingsMain() }
+
         changeCamera.setOnClickListener {
             cameraControl!!.closeToSwitchCamera()
+            cameraControl!!.stopBackgroundThread()
+            cameraControl = null
 
+            updateFlags(recordClips = true, recordPressed = false, stopPressed = false) //  so the camera will continue recording clips with the new camera
+            setupCameraControl()
+            cameraControl!!.startBackgroundThread()
             if (mTextureView.isAvailable) {
                 cameraControl?.openCamera(mTextureView.width, mTextureView.height)
             } else {
