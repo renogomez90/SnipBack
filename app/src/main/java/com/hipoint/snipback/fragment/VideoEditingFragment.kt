@@ -142,10 +142,16 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     var isSeekbarShown = true
 
     //  extend/trim
-    private var showBuffer     = false
-    private var bufferPath     = ""
-    private var bufferDuration = 0L
-    private var videoDuration  = 0L
+    private var showBuffer             = false
+    private var bufferPath             = ""
+    private var bufferDuration         = 0L
+    private var videoDuration          = 0L
+
+    //  handling existing edits
+    private var originalBufferDuration = 0L
+    private var originalVideoDuration  = 0L
+    private var pLeftChange            = 0L
+    private var pRightChange           = 0L
 
     private var editHistory = arrayListOf<EditAction>() //  list of edit actions that were performed
 
@@ -155,7 +161,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
     private var maxDuration         = 0L
     private var previousMaxDuration = 0L
-    private var previousMoveBy      = 0L
+    private var previousEditStart   = -1L
     private var currentSpeed        = 3
     private var startingTimestamps  = -1L
     private var endingTimestamps    = -1L
@@ -940,13 +946,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      */
     private fun adjustPreviousSpeedEdits(isStartInBuffer: Boolean, isEndInBuffer: Boolean) {
         var moveBy: Long = if(isStartInBuffer){   // amount to move the edits by
-            bufferDuration - editedStart
+            originalBufferDuration - editedStart
         }else{
             -editedStart
         }
 
-        if(previousMoveBy != 0L)
-            moveBy -= previousMoveBy
+        if(previousEditStart != -1L)
+            moveBy -= previousEditStart
 
         val removeSet = arrayListOf<SpeedDetails>()
         var shouldRemove =false
@@ -961,7 +967,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val difference = maxDuration - previousMaxDuration
 
         speedDetailSet.forEach{
-            Log.d(TAG, "adjustPreviousSpeedEdits: original speed detail = $it")
+//            Log.d(TAG, "adjustPreviousSpeedEdits: original speed detail = $it")
 
             if(it.startWindowIndex == 0 && it.endWindowIndex == 0){
                 it.startWindowIndex = 1
@@ -1005,9 +1011,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         maxDuration = editedEnd - editedStart
         bufferDuration = max(bufferDuration - editedStart, 0)
 
-        speedDetailSet.forEach{ Log.d(TAG, "adjustPreviousSpeedEdits: $it\n") }
+//        speedDetailSet.forEach{ Log.d(TAG, "adjustPreviousSpeedEdits: $it\n") }
 
-        previousMoveBy = moveBy //  to remember the changes we made
+        previousEditStart = editedStart //  to remember the changes we made
     }
 
     /**
@@ -2223,6 +2229,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     retriever.setDataSource(snip!!.videoFilePath)
                     videoDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     retriever.release()
+
+                    originalBufferDuration = bufferDuration
+                    originalVideoDuration  = videoDuration
 
                     if(bufferDuration > 0L && videoDuration > 0L)
                         addToVideoPlayback(sorted[0].video_path_processed)
