@@ -133,7 +133,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var processingDialog: ProcessingDialog? = null
 
     // timestamp for tmp file names
-    private var timeStamp: String? = null
+    private var timeStamp    : String? = null
+    private var previewThumbs: File? = null
 
     private var paused                     = false
     private var thumbnailExtractionStarted = false
@@ -239,8 +240,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
-                val previewThumbs = File(intent.getStringExtra("preview_path")!!)
-                showThumbnailsIfAvailable(previewThumbs)
+                previewThumbs = File(intent.getStringExtra("preview_path")!!)
+                showThumbnailsIfAvailable(previewThumbs!!)
             }
         }
     }
@@ -574,6 +575,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             player.seekTo(0, jumpTo)
 
             maxDuration = bufferDuration + videoDuration
+            if (previewThumbs != null) {
+                showThumbnailsIfAvailable(previewThumbs!!)
+            }
             showBufferOverlay()
         }
     }

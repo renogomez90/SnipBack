@@ -191,6 +191,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private val bufferOverlay  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
     private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        var trimmedItemCount = 0
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let{
                 val retriever = MediaMetadataRetriever()
@@ -2338,6 +2339,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
         VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)
         VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
+        if(saveAction == SaveActionType.SAVE)
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
 
         val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
         createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)

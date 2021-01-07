@@ -671,7 +671,11 @@ class CameraControl(val activity: FragmentActivity) {
                             activity.supportFragmentManager.findFragmentByTag(AppMainActivity.VIDEO_MODE_TAG)
                         if (vmFrag != null) {
                             if ((vmFrag as VideoMode).isVisible) {
-                                mMediaRecorder!!.start()    //  already called from bg thread
+                                try {
+                                    mMediaRecorder!!.start()    //  already called from bg thread
+                                } catch (e: IllegalStateException) {
+                                    CoroutineScope(Default).launch { restartRecording() }
+                                }
                                 Log.d(TAG,
                                     "setUpMediaRecorder start time = ${System.currentTimeMillis() - startRecTime}")
                             }
