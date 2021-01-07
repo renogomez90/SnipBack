@@ -1261,27 +1261,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * @param currentPosition Long
      */
     private fun handleNewSpeedChange(currentPosition: Long) {
-        /*speedDetailSet.forEach {
-            val correctBy =
-                if (it.startWindowIndex != it.endWindowIndex)   //  correction is required if the previous ranges span across two clips
-                    bufferDuration
-                else if(it.startWindowIndex == 1) bufferDuration else 0L
-
-            if(correctBy != 0L){
-                if(player.currentWindowIndex == 1 && currentPosition in (0 .. (it.timeDuration?.second!! - bufferDuration))){   //   deal with the video
-                    resetPlaybackUI()
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return
-                }
-            }else {
-                if (currentPosition in (it.timeDuration?.first!! - correctBy)..(it.timeDuration?.second!! - correctBy) &&
-                    (it.startWindowIndex == player.currentWindowIndex || it.endWindowIndex == player.currentWindowIndex)) {
-                    resetPlaybackUI()
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return
-                }
-            }
-        }*/
 
         speedDetailSet.forEach{
             if(it.startWindowIndex == player.currentWindowIndex && it.endWindowIndex == player.currentWindowIndex){ //  there is no point in checking if neither is in the range we are looking at

@@ -906,7 +906,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun trimOnSwipeDuringClipRecording(swipeAction: SwipeAction) {
         Log.d(TAG, "trimOnSwipeDuringClipRecording: started")
         val clip = cameraControl?.removeClipQueueItem()!!
-        val actualClipTime = (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
+        val actualClipTime = try {
+            (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
+        } catch (e: NullPointerException) {
+            e.printStackTrace()
+            -1
+        }
+        if (actualClipTime == -1){
+            return
+        }
+
         val swipeClipDuration = swipeValue / 1000
         if (actualClipTime > swipeClipDuration) {
             //  splitting may not work for this so we opt for trim

@@ -809,7 +809,11 @@ class CameraControl(val activity: FragmentActivity) {
         recordUIListener?.stopChronometerUI()
 
         // Stop recording
-        mMediaRecorder?.stop()
+        try {
+            mMediaRecorder?.stop()
+        } catch (e: RuntimeException) {
+            e.printStackTrace()
+        }
 
         lastUserRecordedPath = outputFilePath
         if(clipQueueSize() > 3){    // trimming down clutter
