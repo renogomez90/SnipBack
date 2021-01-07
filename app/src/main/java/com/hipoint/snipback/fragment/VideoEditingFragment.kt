@@ -190,52 +190,104 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private val replaceRequired: IReplaceRequired by lazy { requireActivity() as AppMainActivity }
     private val bufferOverlay  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
+    /**
+     * The first time this is triggered is after the CONCAT is completed.
+     * the received inputFile is then enqueued for trimming as buffer and required video.
+     *
+     * This happens in 2 stages: TRIMMED may be entered twice
+     * step 1
+     * if the buffer is unavailable or the video is being saved with saveAction == SaveActionType.SAVE_AS
+     * we can proceed to just trim the original video.
+     * else we trim the buffered file.
+     *
+     * step 2
+     * replace is set up if it is required
+     * required video is enqueued for trimming
+     *
+     * Once this is completed the speed changes are triggered
+     */
     private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         var trimmedItemCount = 0
+        var concatOutput: String =""
+
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let{
                 val retriever = MediaMetadataRetriever()
                 val operation = it.getStringExtra("operation")
                 val inputName = it.getStringExtra("fileName")
-
-                retriever.setDataSource(inputName)
-
                 val trimmedOutputPath = "${File(inputName!!).parent}/trimmed-$timeStamp.mp4"
                 val speedChangedPath = "${File(inputName).parent}/VID_$timeStamp.mp4"
 
+                retriever.setDataSource(inputName)
+
                 val taskList = arrayListOf<VideoOpItem>()
 
-                if(operation == IVideoOpListener.VideoOp.CONCAT.name){
+                if(operation == IVideoOpListener.VideoOp.CONCAT.name){  //  concat is completed, trim is triggered
                     val concatDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     Log.d(TAG, "onReceive: CONCAT duration = $concatDuration")
-                    val trimTask = VideoOpItem(
-                        operation = IVideoOpListener.VideoOp.TRIMMED,
-                        clips = arrayListOf(inputName),
-                        startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
-                        endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
-                        outputPath = trimmedOutputPath,
-                        comingFrom = CurrentOperation.VIDEO_EDITING)
+                    concatOutput = inputName
 
-                    taskList.add(trimTask)
-                }else if(operation == IVideoOpListener.VideoOp.TRIMMED.name) {
-                    if(saveAction == SaveActionType.SAVE){
+                    if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty()) {    //  buffer
+                        val bufferTask = VideoOpItem(
+                            operation = IVideoOpListener.VideoOp.TRIMMED,
+                            clips = arrayListOf(inputName),
+                            startTime = 0,
+                            endTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                            outputPath = bufferPath,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
+
+                        taskList.add(bufferTask)
+                    } else {    //  video without affecting buffer
+                        val trimTask = VideoOpItem(
+                            operation = IVideoOpListener.VideoOp.TRIMMED,
+                            clips = arrayListOf(inputName),
+                            startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                            endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
+                            outputPath = trimmedOutputPath,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
+
+                        taskList.add(trimTask)
+                    }
+                }else if(operation == IVideoOpListener.VideoOp.TRIMMED.name) {  //  trim is completed
+                    Log.d(TAG, "onReceive: TRIM DONE")
+                    trimmedItemCount++
+
+                    if(saveAction == SaveActionType.SAVE) {
                         if(speedDetailSet.isNotEmpty())
                             replaceRequired.replace(snip!!.videoFilePath, speedChangedPath)
                         else
                             replaceRequired.replace(snip!!.videoFilePath, trimmedOutputPath)
                     }
 
-                    val trimmedDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
-                    Log.d(TAG, "onReceive: TRIMMED duration = $trimmedDuration")
+                    if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty() && trimmedItemCount == 1){
+                        val trimTask = VideoOpItem(
+                            operation = IVideoOpListener.VideoOp.TRIMMED,
+                            clips = arrayListOf(concatOutput),
+                            startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                            endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
+                            outputPath = trimmedOutputPath,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
 
-                    val speedChangeTask = VideoOpItem(
-                        operation = IVideoOpListener.VideoOp.SPEED,
-                        clips = arrayListOf(inputName),
-                        outputPath = speedChangedPath,
-                        speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
-                        comingFrom = CurrentOperation.VIDEO_EDITING)
+                        taskList.add(trimTask)
+                    }
 
-                    taskList.add(speedChangeTask)
+                    if(trimmedItemCount == 2 || saveAction == SaveActionType.SAVE_AS) {
+                        trimmedItemCount = 0
+
+                        val trimmedDuration =
+                            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                                .toLong()
+                        Log.d(TAG, "onReceive: TRIMMED duration = $trimmedDuration")
+
+                        val speedChangeTask = VideoOpItem(
+                            operation = IVideoOpListener.VideoOp.SPEED,
+                            clips = arrayListOf(inputName),
+                            outputPath = speedChangedPath,
+                            speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
+
+                        taskList.add(speedChangeTask)
+                    }
                 }
 
                 val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
@@ -2339,7 +2391,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
         VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)
         VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
-        if(saveAction == SaveActionType.SAVE)
+        if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty())
             VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
 
         val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)

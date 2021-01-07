@@ -261,6 +261,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             previewTileList.adapter?.notifyDataSetChanged()
             previewTileList.scrollToPosition(timelinePreviewAdapter!!.itemCount)
             previewBarProgress.visibility = View.GONE
+        } else {
+            getVideoPreviewFrames()
         }
     }
     override fun onResume() {
