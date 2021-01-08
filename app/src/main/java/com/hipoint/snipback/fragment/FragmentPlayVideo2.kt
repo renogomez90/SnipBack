@@ -265,6 +265,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             getVideoPreviewFrames()
         }
     }
+
     override fun onResume() {
         super.onResume()
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(VideoEditingFragment.PREVIEW_ACTION))
@@ -531,7 +532,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * start quick edit
      */
     private fun launchQuickEdit() {
-        player.playWhenReady = false
+        val quickEditFragment = QuickEditFragment.newInstance(bufferPath, snip!!.videoFilePath)
+        (activity as AppMainActivity?)!!.loadFragment(quickEditFragment, true)
+        /*player.playWhenReady = false
         paused = true
 
         showEditUI()
@@ -547,7 +550,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         maxDuration = bufferDuration + videoDuration
 
         extendRangeMarker(startValue, endValue)
-        start.performClick()
+        start.performClick()*/
     }
 
     private fun showBufferVideo() {
