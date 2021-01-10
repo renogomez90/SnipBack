@@ -31,4 +31,7 @@ public interface Hd_snipsDao {
 
     @Query("SELECT * FROM Hd_snips WHERE snip_id LIKE :snipId")
     List<Hd_snips> getBySnipId(int snipId);
+
+    @Query("SELECT * FROM Hd_snips WHERE hd_snip_id LIKE :hd_snip_id ")
+    Hd_snips getById(int hd_snip_id);
 }

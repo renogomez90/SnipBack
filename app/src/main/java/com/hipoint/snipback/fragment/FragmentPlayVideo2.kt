@@ -110,6 +110,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var event: Event? = null
     // new added
     private var snip: Snip? = null
+    private var bufferHDSnip: Hd_snips? = null
 
     private var paused                     = false
     private var thumbnailExtractionStarted = false
@@ -356,7 +357,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * start quick edit
      */
     private fun launchQuickEdit() {
-        val quickEditFragment = QuickEditFragment.newInstance(bufferPath, snip!!.videoFilePath)
+        val quickEditFragment = QuickEditFragment.newInstance(bufferHDSnip?.hd_snip_id?: 0, bufferPath, snip!!.videoFilePath)
         (activity as AppMainActivity?)!!.loadFragment(quickEditFragment, true)
     }
 
@@ -561,6 +562,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                         }
                         bufferAvailable = true
                         bufferPath = sorted[0].video_path_processed
+                        bufferHDSnip = sorted[0]
 //                        addToVideoPlayback(sorted[0].video_path_processed)
                     } else {
                         bufferAvailable = false

@@ -39,6 +39,7 @@ import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.EditSeekControl
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
+import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.videoControl.VideoOpItem
@@ -47,6 +48,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
@@ -67,8 +69,9 @@ class QuickEditFragment: Fragment() {
     private var timeStamp    : String? = null
     private var previewThumbs: File? = null
     // file paths
-    private var bufferPath: String? = null
-    private var videoPath : String? = null
+    private var bufferHdSnipId: Int     = 0
+    private var bufferPath    : String? = null
+    private var videoPath     : String? = null
     //  adapters
     private var timelinePreviewAdapter: TimelinePreviewAdapter? = null
     // fast seeking
@@ -108,6 +111,7 @@ class QuickEditFragment: Fragment() {
 
     private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         var trimmedItemCount = 0
+        var fullExtension = false
 
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let{
@@ -121,41 +125,69 @@ class QuickEditFragment: Fragment() {
                 if(operation == IVideoOpListener.VideoOp.CONCAT.name){
                     val concatDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     Log.d(TAG, "onReceive: CONCAT duration = $concatDuration")
-                    val bufferTask = VideoOpItem(
-                        operation = IVideoOpListener.VideoOp.TRIMMED,
-                        clips = arrayListOf(inputName),
-                        startTime = 0,
-                        endTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
-                        outputPath = bufferPath!!,
-                        comingFrom = CurrentOperation.VIDEO_EDITING)
 
-                    val videoTask = VideoOpItem(
-                        operation = IVideoOpListener.VideoOp.TRIMMED,
-                        clips = arrayListOf(inputName),
-                        startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
-                        endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
-                        outputPath = videoPath!!,
-                        comingFrom = CurrentOperation.VIDEO_EDITING)
+                    fullExtension = (editedStart == 0L)
 
-                    taskList.add(bufferTask)
-                    taskList.add(videoTask)
+                    if(fullExtension){  //  the buffer is used up and can be removed from the DB
+                        CoroutineScope(Default).launch {
+                            appRepository.getHDSnipById(object : AppRepository.HDSnipResult {
+                                override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
+                                    hdSnips?.let {
+                                        appRepository.deleteHDSnip(hdSnips[0])
+                                    }
+                                }
+                            }, bufferHdSnipId)
+                        }
 
-                    val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
-                    createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
-                    VideoService.enqueueWork(requireContext(), createNewVideoIntent)
+                        //  Only video needs to be trimmed
+                        val videoTask = VideoOpItem(
+                            operation = IVideoOpListener.VideoOp.TRIMMED,
+                            clips = arrayListOf(inputName),
+                            startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                            endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
+                            outputPath = videoPath!!,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
+                        taskList.add(videoTask)
+
+                    } else {
+                        val bufferTask = VideoOpItem(
+                            operation = IVideoOpListener.VideoOp.TRIMMED,
+                            clips = arrayListOf(inputName),
+                            startTime = 0,
+                            endTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                            outputPath = bufferPath!!,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
+
+                        taskList.add(bufferTask)
+                    }
                 }else {
                     if (operation == IVideoOpListener.VideoOp.TRIMMED.name) {
                         trimmedItemCount++
                         Log.d(TAG, "onReceive: trimmed count = $trimmedItemCount")
-                        if (trimmedItemCount == 2) {
+
+                        if(trimmedItemCount == 1 && !fullExtension) {
+                            val videoTask = VideoOpItem(
+                                operation = IVideoOpListener.VideoOp.TRIMMED,
+                                clips = arrayListOf(inputName),
+                                startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                                endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
+                                outputPath = videoPath!!,
+                                comingFrom = CurrentOperation.VIDEO_EDITING)
+                            taskList.add(videoTask)
+                        }
+
+                        if (trimmedItemCount == 2 || fullExtension) {
                             Log.d(TAG, "onReceive: both files received")
                             trimmedItemCount = 0
                             hideProgress()
                             requireActivity().supportFragmentManager.popBackStack()
                         }
-                        return@let
                     }
                 }
+
+                val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
+                createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+                VideoService.enqueueWork(requireContext(), createNewVideoIntent)
             }
         }
     }
@@ -240,13 +272,14 @@ class QuickEditFragment: Fragment() {
         var fragment: QuickEditFragment? = null
 
         @JvmStatic
-        fun newInstance(bufferPath: String, videoPath: String): QuickEditFragment {
+        fun newInstance(bufferId: Int, bufferPath: String, videoPath: String): QuickEditFragment {
             //  we need to create new fragments for each video
             // otherwise the smooth scrolling is having issues for some reason
             if(fragment == null)
                 fragment = QuickEditFragment()
 
             val bundle = Bundle()
+            bundle.putInt("bufferId", bufferId)
             bundle.putString("bufferPath", bufferPath)
             bundle.putString("videoPath", videoPath)
             fragment!!.arguments = bundle
@@ -286,11 +319,12 @@ class QuickEditFragment: Fragment() {
         savedInstanceState: Bundle?,
     ): View? {
 
-        rootView      = inflater.inflate(R.layout.fragment_quickedit, container, false)
-        appRepository = AppRepository(requireActivity().applicationContext)
-        appViewModel  = ViewModelProvider(this).get(AppViewModel::class.java)
-        bufferPath    = requireArguments().getString("bufferPath")
-        videoPath     = requireArguments().getString("videoPath")
+        rootView       = inflater.inflate(R.layout.fragment_quickedit         , container, false)
+        appRepository  = AppRepository(requireActivity().applicationContext)
+        appViewModel   = ViewModelProvider(this).get(AppViewModel::class.java)
+        bufferHdSnipId = requireArguments().getInt("bufferId")
+        bufferPath     = requireArguments().getString("bufferPath")
+        videoPath      = requireArguments().getString("videoPath")
 
         bindViews()
         bindListeners()

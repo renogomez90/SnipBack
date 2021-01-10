@@ -113,6 +113,13 @@ class AppRepository(context: Context?) {
         listener.queryResult(result.await())
     }
 
+    suspend fun getHDSnipById(listener: HDSnipResult, hdSnipId: Int){
+        val result = CoroutineScope(IO).async{
+            hd_snipsDao.getById(hdSnipId)
+        }
+        listener.queryResult(mutableListOf(result.await()))
+    }
+
     //HDSNIP Table Actions END//
     //SNIP table Actions START//
     val snipsData: LiveData<List<Snip>>
