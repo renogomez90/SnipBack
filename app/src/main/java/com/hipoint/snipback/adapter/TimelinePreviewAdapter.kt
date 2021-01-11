@@ -35,7 +35,7 @@ class TimelinePreviewAdapter(val context: Context, val photoList: ArrayList<Bitm
             val currentWidth = holder.previewTile.width
             val displaymetrics = DisplayMetrics()
             (context as Activity).windowManager.defaultDisplay.getMetrics(displaymetrics)
-            val devicewidth = displaymetrics.widthPixels / 10
+            val devicewidth = displaymetrics.widthPixels / photoList.size
             holder.previewTile.layoutParams.width = devicewidth
         }
         Glide.with(context).load(photoList[position]).into(holder.previewTile)

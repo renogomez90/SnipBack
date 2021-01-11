@@ -108,6 +108,7 @@ class QuickEditFragment: Fragment() {
     private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         var trimmedItemCount = 0
         var fullExtension = false
+        var concatedFile = ""
 
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let{
@@ -122,9 +123,10 @@ class QuickEditFragment: Fragment() {
                     val concatDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     Log.d(TAG, "onReceive: CONCAT duration = $concatDuration")
 
+                    concatedFile = inputName!!
                     fullExtension = (editedStart == 0L)
 
-                    if(fullExtension){  //  the buffer is used up and can be removed from the DB
+                    if(fullExtension) {  //  the buffer is used up and can be removed from the DB
                         CoroutineScope(Default).launch {
                             appRepository.getHDSnipById(object : AppRepository.HDSnipResult {
                                 override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
@@ -144,7 +146,7 @@ class QuickEditFragment: Fragment() {
                         //  Only video needs to be trimmed
                         val videoTask = VideoOpItem(
                             operation = IVideoOpListener.VideoOp.TRIMMED,
-                            clips = arrayListOf(inputName),
+                            clips = arrayListOf(concatedFile),
                             startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
                             endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
                             outputPath = videoPath!!,
@@ -154,7 +156,7 @@ class QuickEditFragment: Fragment() {
                     } else {
                         val bufferTask = VideoOpItem(
                             operation = IVideoOpListener.VideoOp.TRIMMED,
-                            clips = arrayListOf(inputName),
+                            clips = arrayListOf(concatedFile),
                             startTime = 0,
                             endTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
                             outputPath = bufferPath!!,
@@ -179,7 +181,7 @@ class QuickEditFragment: Fragment() {
 
                             val videoTask = VideoOpItem(
                                 operation = IVideoOpListener.VideoOp.TRIMMED,
-                                clips = arrayListOf(inputName),
+                                clips = arrayListOf(concatedFile),
                                 startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
                                 endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
                                 outputPath = videoPath!!,

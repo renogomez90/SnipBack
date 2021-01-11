@@ -160,19 +160,21 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private var editedStart    = -1L
     private var editedEnd      = -1L
 
-    private var maxDuration         = 0L
-    private var previousMaxDuration = 0L
-    private var previousEditStart   = -1L
-    private var previousEditEnd     = -1L
-    private var currentSpeed        = 3
-    private var startingTimestamps  = -1L
-    private var endingTimestamps    = -1L
-    private var segmentCount        = 0
-    private var speedDuration       = Pair<Long, Long>(0, 0)
-    private var speedDetailSet      = mutableSetOf<SpeedDetails>()
-    private var editAction          = EditAction.NORMAL
-    private var editSeekAction      = EditSeekControl.MOVE_NORMAL
-    private var currentEditSegment  = -1
+    private var maxDuration           = 0L
+    private var previousMaxDuration   = 0L
+    private var previousEditStart     = -1L
+    private var previousEditEnd       = -1L
+    private var previousStartInBuffer = true
+    private var previousEndInBuffer   = false
+    private var currentSpeed          = 3
+    private var startingTimestamps    = -1L
+    private var endingTimestamps      = -1L
+    private var segmentCount          = 0
+    private var speedDuration         = Pair<Long, Long>(0, 0)
+    private var speedDetailSet        = mutableSetOf<SpeedDetails>()
+    private var editAction            = EditAction.NORMAL
+    private var editSeekAction        = EditSeekControl.MOVE_NORMAL
+    private var currentEditSegment    = -1
 
     private var tmpSpeedDetails: SpeedDetails?                  = null
     private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
@@ -752,6 +754,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 reject.performClick()
 
             progressTracker?.stopTracking()
+            progressTracker = null
 
             resetPlaybackUI()
             playCon1.visibility           = View.VISIBLE
@@ -1032,7 +1035,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         if(editedStart == previousEditStart && editedEnd == previousEditEnd)
             return
 
-        var moveBy: Long = if(isStartInBuffer){   // amount to move the edits by
+        /*var moveBy: Long = if(isStartInBuffer){   // amount to move the edits by
             if(previousEditStart != -1L) {
                 (originalBufferDuration - editedStart) - (originalBufferDuration - previousEditStart)
             }
@@ -1041,12 +1044,35 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
         }else{
             if(previousEditStart != -1L) {
-                -editedStart
+                - editedStart
             }
             else {
-                previousEditStart + editedStart
+                editedStart + previousEditStart
+            }
+        }*/
+
+        val moveBy = if(isStartInBuffer){   //  starting is in buffer
+            if(previousEditStart != -1L){   //  previous edit exists
+                if(previousStartInBuffer) {   //  previous start in buffer
+                    (originalBufferDuration - editedStart) - (originalBufferDuration - previousEditStart)
+                }else { //  previous start not in buffer
+                    previousEditStart + (originalBufferDuration - editedStart)
+                }
+            }else { //  no previous edits
+                originalBufferDuration - editedStart
+            }
+        } else {    //  current start is not in buffer. i.e. in the actual video
+            if(previousEditStart != -1L){   //  previous edit exists
+                if(previousStartInBuffer){  //  previous start is in buffer and current is in video
+                    - (originalBufferDuration - previousEditStart + editedStart)
+                }else { //  previous is also in the video segment
+                    - (editedStart - previousEditStart)
+                }
+            }else { //  no previous edits
+                - editedStart
             }
         }
+
         Log.d(TAG, "adjustPreviousSpeedEdits: initial moveBy = $moveBy")
 
 //        if(previousEditStart != -1L)
@@ -1115,9 +1141,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 //        speedDetailSet.forEach{ Log.d(TAG, "adjustPreviousSpeedEdits: $it\n") }
 
         //  to remember the changes we made
-        previousMaxDuration = maxDuration
-        previousEditStart   = editedStart
-        previousEditEnd     = editedEnd
+        previousMaxDuration   = maxDuration
+        previousEditStart     = editedStart
+        previousEditEnd       = editedEnd
+        previousStartInBuffer = isStartInBuffer
+        previousEndInBuffer   = isEndInBuffer
     }
 
     /**
@@ -1169,9 +1197,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 videoDuration = endingTimestamps - originalBufferDuration
             }
         } else {
-            clip2 = ClippingMediaSource(videoSource, TimeUnit.MILLISECONDS.toMicros(startingTimestamps - originalBufferDuration), TimeUnit.MILLISECONDS.toMicros(endingTimestamps - originalBufferDuration))
             editedStart = startingTimestamps - originalBufferDuration
             editedEnd = endingTimestamps - originalBufferDuration
+            clip2 = ClippingMediaSource(videoSource, TimeUnit.MILLISECONDS.toMicros(editedStart), TimeUnit.MILLISECONDS.toMicros(editedEnd))
             bufferDuration = 0
             videoDuration = editedEnd - editedStart
         }
@@ -1186,7 +1214,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val mediaSource = ConcatenatingMediaSource(true, *clipsList.toTypedArray())
         player.setMediaSource(mediaSource)
 
-        maxDuration = editedEnd - editedStart
+        maxDuration = bufferDuration + videoDuration
 
         if(editedEnd - editedStart != 0L) {
             adjustPreviousSpeedEdits(isStartInBuffer, isEndInBuffer)
@@ -1329,16 +1357,17 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 endingTimestamps = if(editedEnd < 0) {
                     bufferDuration + videoDuration
                 }else {
-                    if(isEndInBuffer) {
+                    previousEditEnd
+                    /*if(isEndInBuffer) {
                         previousEditEnd
                     }else{
                         originalBufferDuration + previousEditEnd
-                    }
+                    }*/
                 }
-                maxDuration        = bufferDuration + videoDuration
 
-                val startValue     = (startingTimestamps * 100 / maxDuration).toFloat()
-                val endValue       = (endingTimestamps * 100 / maxDuration).toFloat()
+                maxDuration    = bufferDuration + videoDuration
+                val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
+                val endValue   = (endingTimestamps * 100 / maxDuration).toFloat()
                 extendRangeMarker(startValue, endValue)
 
                 if (isSeekbarShown) {
@@ -1400,6 +1429,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private fun handleNewSpeedChange(currentPosition: Long) {
 
         speedDetailSet.forEach{
+            if(player.mediaItemCount == 1){
+                if(currentPosition in it.timeDuration!!.first .. it.timeDuration!!.second){
+                    resetPlaybackUI()
+                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                    return
+                }
+            }
             if(it.startWindowIndex == player.currentWindowIndex && it.endWindowIndex == player.currentWindowIndex){ //  there is no point in checking if neither is in the range we are looking at
                 if((currentPosition in it.timeDuration!!.first .. it.timeDuration!!.second) && player.currentWindowIndex == 0){ //  checking in buffer
                     resetPlaybackUI()
@@ -1413,8 +1449,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
             }
 //            check overlap
-            if(it.startWindowIndex == 0 && it.endWindowIndex == 1 && player.currentWindowIndex == 0){
-                if(currentPosition in it.timeDuration!!.first .. bufferDuration) {  //  current position in buffer side
+            if(it.startWindowIndex == 0 && it.endWindowIndex == 1 /*&& player.currentWindowIndex == 0*/){
+                if(currentPosition in it.timeDuration!!.first .. bufferDuration && player.currentWindowIndex == 0) {  //  current position in buffer side
                     resetPlaybackUI()
                     Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
                     return
@@ -1497,6 +1533,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         player.playWhenReady      = false
 
         enableEditOptions(false)
+
         editSeekAction     = EditSeekControl.MOVE_START
         startingTimestamps = -1L
         endingTimestamps   = maxDuration
@@ -1552,6 +1589,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         bufferDuration
                     else if(it.startWindowIndex == 1) bufferDuration else 0L
 
+                if(player.mediaItemCount == 1){
+                    if(currentPosition in it.timeDuration!!.first .. it.timeDuration!!.second){
+                        resetPlaybackUI()
+                        Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
+                        return true
+                    }
+                }
                 if(correctBy != 0L){
                     if(currentEditSegment != speedDetailSet.size - 1 && player.currentWindowIndex == 1 && (currentPosition - bufferDuration) in (bufferDuration .. (it.timeDuration?.second!! - bufferDuration))) {
                         Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()

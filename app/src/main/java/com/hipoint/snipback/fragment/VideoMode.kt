@@ -100,15 +100,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var x1 = 0f
     private var x2 = 0f
     private val swipeAnimationListener = object : Animator.AnimatorListener {
-        override fun onAnimationStart(animation: Animator?) {}
+        override fun onAnimationStart(animation: Animator?) = Unit
 
         override fun onAnimationEnd(animation: Animator?) {
             blinkAnimation()
         }
 
-        override fun onAnimationCancel(animation: Animator?) {}
+        override fun onAnimationCancel(animation: Animator?) = Unit
 
-        override fun onAnimationRepeat(animation: Animator?) {}
+        override fun onAnimationRepeat(animation: Animator?) = Unit
     }
 
     /**
