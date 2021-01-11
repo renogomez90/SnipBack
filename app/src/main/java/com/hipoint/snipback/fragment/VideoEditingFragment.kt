@@ -60,16 +60,14 @@ import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
+import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -142,10 +140,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     var isSeekbarShown = true
 
     //  extend/trim
-    private var showBuffer      = false
     private var bufferPath      = ""
+    private var bufferHdSnipId  = 0
     private var bufferDuration  = 0L
     private var videoDuration   = 0L
+    private var showBuffer      = false
     private var isStartInBuffer = true
     private var isEndInBuffer   = false
 
@@ -212,6 +211,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         var trimmedItemCount = 0
         var concatOutput: String =""
+        var fullExtension = false
 
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let{
@@ -229,8 +229,26 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     val concatDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     Log.d(TAG, "onReceive: CONCAT duration = $concatDuration")
                     concatOutput = inputName
+                    fullExtension = (editedStart == 0L)
 
-                    if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty()) {    //  buffer
+                    if(fullExtension){
+                        CoroutineScope(Default).launch {
+                            appRepository.getHDSnipById(object : AppRepository.HDSnipResult {
+                                override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
+                                    hdSnips?.let {
+                                        appRepository.deleteHDSnip(hdSnips[0])
+                                    }
+                                }
+                            }, bufferHdSnipId)
+
+                            //  update video in DB
+                            snip!!.total_video_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toInt()
+                            snip!!.snip_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toDouble()
+                            appRepository.updateSnip(snip!!)
+                        }
+                    }
+
+                    if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty() && !fullExtension) {    //  buffer
                         val bufferTask = VideoOpItem(
                             operation = IVideoOpListener.VideoOp.TRIMMED,
                             clips = arrayListOf(inputName),
@@ -263,6 +281,16 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     }
 
                     if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty() && trimmedItemCount == 1){
+                        CoroutineScope(Default).launch{
+                            //  update video in DB
+                            snip!!.total_video_duration =
+                                (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(
+                                    editedStart)).toInt()
+                            snip!!.snip_duration =
+                                (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(
+                                    editedStart)).toDouble()
+                            appRepository.updateSnip(snip!!)
+                        }
                         val trimTask = VideoOpItem(
                             operation = IVideoOpListener.VideoOp.TRIMMED,
                             clips = arrayListOf(concatOutput),
@@ -2344,9 +2372,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     originalBufferDuration = bufferDuration
                     originalVideoDuration  = videoDuration
 
-                    if(bufferDuration > 0L && videoDuration > 0L)
+                    if(bufferDuration > 0L && videoDuration > 0L) {
+                        bufferHdSnipId = sorted[0].hd_snip_id
                         addToVideoPlayback(sorted[0].video_path_processed)
-                    else {
+                    }else {
                         editAction = EditAction.NORMAL
                         showContentUnavailableToast()
                     }
