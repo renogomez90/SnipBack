@@ -6,7 +6,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
-import android.media.MediaMetadataEditor
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
@@ -15,7 +14,6 @@ import android.view.*
 import android.widget.*
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -27,9 +25,7 @@ import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
@@ -38,7 +34,6 @@ import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.EditSeekControl
 import com.hipoint.snipback.listener.IVideoOpListener
-import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
@@ -70,6 +65,7 @@ class QuickEditFragment: Fragment() {
     private var previewThumbs: File? = null
     // file paths
     private var bufferHdSnipId: Int     = 0
+    private var videoSnipId: Int     = 0
     private var bufferPath    : String? = null
     private var videoPath     : String? = null
     //  adapters
@@ -137,6 +133,12 @@ class QuickEditFragment: Fragment() {
                                     }
                                 }
                             }, bufferHdSnipId)
+
+                            //  update video in DB
+                            val videoSnip = appRepository.getSnipById(videoSnipId)
+                            videoSnip.total_video_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toInt()
+                            videoSnip.snip_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toDouble()
+                            appRepository.updateSnip(videoSnip)
                         }
 
                         //  Only video needs to be trimmed
@@ -166,6 +168,15 @@ class QuickEditFragment: Fragment() {
                         Log.d(TAG, "onReceive: trimmed count = $trimmedItemCount")
 
                         if(trimmedItemCount == 1 && !fullExtension) {
+
+                            CoroutineScope(Default).launch {
+                                //  update video in DB
+                                val videoSnip = appRepository.getSnipById(videoSnipId)
+                                videoSnip.total_video_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toInt()
+                                videoSnip.snip_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toDouble()
+                                appRepository.updateSnip(videoSnip)
+                            }
+
                             val videoTask = VideoOpItem(
                                 operation = IVideoOpListener.VideoOp.TRIMMED,
                                 clips = arrayListOf(inputName),
@@ -272,7 +283,7 @@ class QuickEditFragment: Fragment() {
         var fragment: QuickEditFragment? = null
 
         @JvmStatic
-        fun newInstance(bufferId: Int, bufferPath: String, videoPath: String): QuickEditFragment {
+        fun newInstance(bufferId: Int, videoSnipId: Int, bufferPath: String, videoPath: String): QuickEditFragment {
             //  we need to create new fragments for each video
             // otherwise the smooth scrolling is having issues for some reason
             if(fragment == null)
@@ -280,6 +291,7 @@ class QuickEditFragment: Fragment() {
 
             val bundle = Bundle()
             bundle.putInt("bufferId", bufferId)
+            bundle.putInt("videoSnipId", videoSnipId)
             bundle.putString("bufferPath", bufferPath)
             bundle.putString("videoPath", videoPath)
             fragment!!.arguments = bundle
@@ -323,6 +335,7 @@ class QuickEditFragment: Fragment() {
         appRepository  = AppRepository(requireActivity().applicationContext)
         appViewModel   = ViewModelProvider(this).get(AppViewModel::class.java)
         bufferHdSnipId = requireArguments().getInt("bufferId")
+        videoSnipId  = requireArguments().getInt("videoSnipId")
         bufferPath     = requireArguments().getString("bufferPath")
         videoPath      = requireArguments().getString("videoPath")
 

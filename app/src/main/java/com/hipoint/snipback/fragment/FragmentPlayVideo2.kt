@@ -357,7 +357,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * start quick edit
      */
     private fun launchQuickEdit() {
-        val quickEditFragment = QuickEditFragment.newInstance(bufferHDSnip?.hd_snip_id?: 0, bufferPath, snip!!.videoFilePath)
+        val quickEditFragment = QuickEditFragment.newInstance(bufferHDSnip?.hd_snip_id?: 0, snip!!.snip_id, bufferPath, snip!!.videoFilePath)
         (activity as AppMainActivity?)!!.loadFragment(quickEditFragment, true)
     }
 
