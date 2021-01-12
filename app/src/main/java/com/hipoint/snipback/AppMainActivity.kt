@@ -181,6 +181,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             is FragmentGalleryNew -> GALLERY_FRAGMENT_TAG
             is FragmentPlayVideo2 -> PLAY_VIDEO_TAG
             is VideoEditingFragment -> EDIT_VIDEO_TAG
+            is QuickEditFragment -> QUICK_EDIT_TAG
             is SnapbackFragment -> SNAPBACK_VIDEO_TAG
             else -> ""
         }
@@ -267,6 +268,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         const val PLAY_VIDEO_TAG       = "play_frag"
         const val PLAY_SNAPBACK_TAG    = "play_snapback_frag"
         const val EDIT_VIDEO_TAG       = "edit_frag"
+        const val QUICK_EDIT_TAG       = "quick_edit_frag"
         const val SNAPBACK_VIDEO_TAG   = "snapback_frag"
 
         fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
@@ -809,7 +811,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
     }
 
-
+    private fun dismissQuickEditProcessingDialog(){
+        val fm = supportFragmentManager
+        (fm.findFragmentByTag(QUICK_EDIT_TAG) as? QuickEditFragment)?.hideProgress()
+        Toast.makeText(this, "Edit Failed", Toast.LENGTH_SHORT).show()
+    }
 
     private fun videoPreviewFramesCompleted(
         processedVideoPath: String,
@@ -888,6 +894,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 VideoService.STATUS_OP_FAILED -> {
                     Log.e(TAG, "onReceive: $operation failed")
                     dismissEditFragmentProcessingDialog(null)
+                    dismissQuickEditProcessingDialog()
                 }
                 else -> {
                 }

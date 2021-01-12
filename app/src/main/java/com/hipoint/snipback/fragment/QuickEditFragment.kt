@@ -652,7 +652,7 @@ class QuickEditFragment: Fragment() {
         processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
     }
 
-    private fun hideProgress(){
+    fun hideProgress(){
         processingDialog?.dismiss()
     }
 
