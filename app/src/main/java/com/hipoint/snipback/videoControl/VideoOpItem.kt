@@ -1,6 +1,5 @@
 package com.hipoint.snipback.videoControl
 
-import android.os.Parcel
 import android.os.Parcelable
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
@@ -11,8 +10,8 @@ import kotlinx.android.parcel.Parcelize
 data class VideoOpItem(val operation: IVideoOpListener.VideoOp,
                        var clips: List<String>,
                        var outputPath: String,
-                       var startTime: Int = -1,
-                       var endTime: Int = -1,
+                       var startTime: Float = -1F,
+                       var endTime: Float = -1F,
                        var splitTime: Int = -1,
                        val speedDetailsList: ArrayList<SpeedDetails>? = arrayListOf(),
                        val comingFrom: CurrentOperation,

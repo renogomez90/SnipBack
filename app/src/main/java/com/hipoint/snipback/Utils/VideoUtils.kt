@@ -116,7 +116,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip clip to be trimmed
      * @param parentFolder Path to save output
      */
-    suspend fun trimToClip(clip: File, outputPath: String, startSecond: Int, endSecond: Int, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
+    suspend fun trimToClip(clip: File, outputPath: String, startSecond: Float, endSecond: Float, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
         var start = startSecond
         var end = endSecond
         val retriever = MediaMetadataRetriever()
@@ -127,12 +127,15 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val sec = TimeUnit.MILLISECONDS.toSeconds(duration)
 
         if (sec <= start)    // fixes the times to match that of the video
-            start = 0
+            start = 0F
         if (sec < end)
-            end = sec.toInt()
+            end = sec.toFloat()
 
 //        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -preset ultrafast -y $outputPath"   // with re-encoding
-        val cmd = "-hide_banner -loglevel panic -ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -copyts -threads 4 -y $outputPath"   // without re-encoding
+        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING)
+            "-hide_banner -loglevel panic -ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
+        else
+            "-hide_banner -loglevel panic -ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -threads 4 -y $outputPath"   // without re-encoding
 
         Log.d(TAG, "trimToClip: cmd= $cmd")
         try {

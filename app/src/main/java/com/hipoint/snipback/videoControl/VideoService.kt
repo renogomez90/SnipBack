@@ -103,7 +103,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                         }
                     }
                     IVideoOpListener.VideoOp.TRIMMED -> {
-                        if (startTime == -1 || endTime == -1) {
+                        if (startTime == -1F || endTime == -1F) {
                             failed(IVideoOpListener.VideoOp.TRIMMED, comingFrom)
                             return@with
                         } else {

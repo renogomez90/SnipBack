@@ -11,7 +11,6 @@ import android.content.*
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.*
-import android.media.MediaCodec
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.*
@@ -627,8 +626,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 val oBufferFile = VideoOpItem(
                     operation = VideoOp.TRIMMED,
                     clips = arrayListOf(newVideoPath),
-                    startTime = 0,
-                    endTime = max((totalDuration - originalVideoDuration), 0),
+                    startTime = 0F,
+                    endTime = max((totalDuration - originalVideoDuration), 0).toFloat(),
                     outputPath = originalBuffer,
                     comingFrom = currentOperation)
 
@@ -638,8 +637,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 val oVideoFile = VideoOpItem(
                     operation = VideoOp.TRIMMED,
                     clips = arrayListOf(newVideoPath),
-                    startTime = max((totalDuration - originalVideoDuration), 0),
-                    endTime = totalDuration,
+                    startTime = max((totalDuration - originalVideoDuration), 0).toFloat(),
+                    endTime = totalDuration.toFloat(),
                     outputPath = originalVideo,
                     comingFrom = currentOperation)
 
@@ -666,8 +665,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         val bufferFile = VideoOpItem(
                             operation = VideoOp.TRIMMED,
                             clips = arrayListOf(newVideoPath),
-                            startTime = max((videoTs - (swipeValue / 1000) - (clipDuration/1000)).toInt(), 0),
-                            endTime = max((videoTs - (swipeValue / 1000)).toInt(), 0),
+                            startTime = max((videoTs - (swipeValue / 1000) - (clipDuration/1000)).toInt(), 0).toFloat(),
+                            endTime = max((videoTs - (swipeValue / 1000)).toInt(), 0).toFloat(),
                             outputPath = buffFileName,
                             comingFrom = currentOperation)
 
@@ -677,8 +676,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         val videoFile = VideoOpItem(
                             operation = VideoOp.TRIMMED,
                             clips = arrayListOf(newVideoPath),
-                            startTime = max((videoTs - (swipeValue / 1000)).toInt(), 0),
-                            endTime = videoTs.toInt(),
+                            startTime = max((videoTs - (swipeValue / 1000)).toInt(), 0).toFloat(),
+                            endTime = videoTs.toFloat(),
                             outputPath = outputFileName,
                             comingFrom = currentOperation)
 
@@ -690,8 +689,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         val bufferFile = VideoOpItem(
                             operation = VideoOp.TRIMMED,
                             clips = arrayListOf(swipedRecording?.originalFilePath!!),
-                            startTime = max((timeStamp - (swipeValue / 1000) - (clipDuration/1000)).toInt(), 0),
-                            endTime = max((timeStamp - (swipeValue / 1000)).toInt(), 0),
+                            startTime = max((timeStamp - (swipeValue / 1000) - (clipDuration/1000)).toInt(), 0).toFloat(),
+                            endTime = max((timeStamp - (swipeValue / 1000)).toInt(), 0).toFloat(),
                             outputPath = buffFileName,
                             comingFrom = currentOperation)
 
@@ -701,8 +700,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         val videoFile = VideoOpItem(
                             operation = VideoOp.TRIMMED,
                             clips = arrayListOf(swipedRecording?.originalFilePath!!),
-                            startTime = max((timeStamp - (swipeValue / 1000)).toInt(), 0),
-                            endTime = timeStamp,
+                            startTime = max((timeStamp - (swipeValue / 1000)).toInt(), 0).toFloat(),
+                            endTime = timeStamp.toFloat(),
                             outputPath = outputFileName,
                             comingFrom = currentOperation)
 
@@ -730,8 +729,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val bufferFile = VideoOpItem(
                 operation = VideoOp.TRIMMED,
                 clips = arrayListOf(newVideoPath),
-                startTime = Integer.max((totalDuration - videoDuration - (clipDuration/1000)).toInt(), 0),
-                endTime = (totalDuration - videoDuration).toInt(),
+                startTime = max((totalDuration - videoDuration - (clipDuration/1000)).toInt(), 0).toFloat(),
+                endTime = (totalDuration - videoDuration).toFloat(),
                 outputPath = bufferFilePath,
                 comingFrom = CurrentOperation.VIDEO_RECORDING)
 
@@ -740,8 +739,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val videoFile = VideoOpItem(
                 operation = VideoOp.TRIMMED,
                 clips = arrayListOf(newVideoPath),
-                startTime = (totalDuration - videoDuration).toInt(),
-                endTime = totalDuration.toInt(),
+                startTime = (totalDuration - videoDuration).toFloat(),
+                endTime = totalDuration.toFloat(),
                 outputPath = videoFilePath,
                 comingFrom = CurrentOperation.VIDEO_RECORDING)
 
@@ -934,8 +933,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 val bufferTask = VideoOpItem(
                     operation = VideoOp.TRIMMED,
                     clips = arrayListOf(clip.absolutePath),
-                    startTime = 0,
-                    endTime = (actualClipTime - swipeClipDuration).toInt(),
+                    startTime = 0F,
+                    endTime = (actualClipTime - swipeClipDuration).toFloat(),
                     outputPath = bufferFile,
                     comingFrom = CurrentOperation.CLIP_RECORDING,
                     swipeAction = swipeAction)
@@ -946,8 +945,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val videoTask = VideoOpItem(
                 operation = VideoOp.TRIMMED,
                 clips = arrayListOf(clip.absolutePath),
-                startTime = max((actualClipTime - swipeClipDuration).toInt(), 0),
-                endTime = actualClipTime,
+                startTime = max((actualClipTime - swipeClipDuration).toInt(), 0).toFloat(),
+                endTime = actualClipTime.toFloat(),
                 outputPath = videoFile,
                 comingFrom = CurrentOperation.CLIP_RECORDING,
                 swipeAction = swipeAction)

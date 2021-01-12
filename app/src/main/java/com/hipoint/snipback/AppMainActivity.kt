@@ -8,7 +8,6 @@ import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import android.media.MediaMetadataRetriever
 import android.os.Build
 import android.os.Bundle
@@ -691,9 +690,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 val bufferFile = VideoOpItem(
                     operation = IVideoOpListener.VideoOp.TRIMMED,
                     clips = arrayListOf(processedVideoPath),
-                    startTime = max((totalDuration - swipeClipDuration - bufferDuration).toInt(),
-                        0),
-                    endTime = (totalDuration - swipeClipDuration).toInt(),
+                    startTime = max((totalDuration - swipeClipDuration - bufferDuration).toInt(),0).toFloat(),
+                    endTime = (totalDuration - swipeClipDuration).toFloat(),
                     outputPath = buffFile,
                     comingFrom = comingFrom,
                     swipeAction = swipeAction
@@ -706,8 +704,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             val videoFile = VideoOpItem(
                 operation = IVideoOpListener.VideoOp.TRIMMED,
                 clips = arrayListOf(processedVideoPath),
-                startTime = (totalDuration - swipeClipDuration).toInt(),
-                endTime = totalDuration,
+                startTime = (totalDuration - swipeClipDuration).toFloat(),
+                endTime = totalDuration.toFloat(),
                 outputPath = split2File,
                 comingFrom = comingFrom,
                 swipeAction = swipeAction
@@ -810,6 +808,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             }
         }
     }
+
+
 
     private fun videoPreviewFramesCompleted(
         processedVideoPath: String,

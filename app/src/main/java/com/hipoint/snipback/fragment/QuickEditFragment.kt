@@ -29,6 +29,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
+import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.enums.CurrentOperation
@@ -127,7 +128,7 @@ class QuickEditFragment: Fragment() {
                     fullExtension = (editedStart == 0L)
 
                     if(fullExtension) {  //  the buffer is used up and can be removed from the DB
-                        CoroutineScope(Default).launch {
+                        /*CoroutineScope(Default).launch {
                             appRepository.getHDSnipById(object : AppRepository.HDSnipResult {
                                 override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
                                     hdSnips?.let {
@@ -138,8 +139,8 @@ class QuickEditFragment: Fragment() {
 
                             //  update video in DB
                             val videoSnip = appRepository.getSnipById(videoSnipId)
-                            videoSnip.total_video_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toInt()
-                            videoSnip.snip_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toDouble()
+                            videoSnip.total_video_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
+                            videoSnip.snip_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toDouble()
                             appRepository.updateSnip(videoSnip)
                         }
 
@@ -147,49 +148,50 @@ class QuickEditFragment: Fragment() {
                         val videoTask = VideoOpItem(
                             operation = IVideoOpListener.VideoOp.TRIMMED,
                             clips = arrayListOf(concatedFile),
-                            startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
-                            endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
+                            startTime = /*editedStart.milliToFloatSecond()*/ 0.100F,
+                            endTime = editedEnd.milliToFloatSecond(),
                             outputPath = videoPath!!,
                             comingFrom = CurrentOperation.VIDEO_EDITING)
                         taskList.add(videoTask)
-
-                    } else {
-                        val bufferTask = VideoOpItem(
+                        */
+                        editedStart = 100    // 100 ,milli seconds into the video
+                    }
+                    val bufferTask = VideoOpItem(
                             operation = IVideoOpListener.VideoOp.TRIMMED,
                             clips = arrayListOf(concatedFile),
-                            startTime = 0,
-                            endTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
+                            startTime = 0F,
+                            endTime = editedStart.milliToFloatSecond(),
                             outputPath = bufferPath!!,
                             comingFrom = CurrentOperation.VIDEO_EDITING)
 
                         taskList.add(bufferTask)
-                    }
+
                 }else {
                     if (operation == IVideoOpListener.VideoOp.TRIMMED.name) {
                         trimmedItemCount++
                         Log.d(TAG, "onReceive: trimmed count = $trimmedItemCount")
 
-                        if(trimmedItemCount == 1 && !fullExtension) {
+                        if(trimmedItemCount == 1) {
 
                             CoroutineScope(Default).launch {
                                 //  update video in DB
                                 val videoSnip = appRepository.getSnipById(videoSnipId)
-                                videoSnip.total_video_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toInt()
-                                videoSnip.snip_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toDouble()
+                                videoSnip.total_video_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
+                                videoSnip.snip_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toDouble()
                                 appRepository.updateSnip(videoSnip)
                             }
 
                             val videoTask = VideoOpItem(
                                 operation = IVideoOpListener.VideoOp.TRIMMED,
                                 clips = arrayListOf(concatedFile),
-                                startTime = TimeUnit.MILLISECONDS.toSeconds(editedStart).toInt(),
-                                endTime = TimeUnit.MILLISECONDS.toSeconds(editedEnd).toInt(),
+                                startTime = editedStart.milliToFloatSecond(),
+                                endTime = editedEnd.milliToFloatSecond(),
                                 outputPath = videoPath!!,
                                 comingFrom = CurrentOperation.VIDEO_EDITING)
                             taskList.add(videoTask)
                         }
 
-                        if (trimmedItemCount == 2 || fullExtension) {
+                        if (trimmedItemCount == 2) {
                             Log.d(TAG, "onReceive: both files received")
                             trimmedItemCount = 0
                             hideProgress()
