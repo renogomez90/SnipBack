@@ -60,6 +60,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:visibility="visible"
+        android:background="@color/bottom_menu"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -147,14 +148,13 @@
         </LinearLayout>
 
         <FrameLayout
-            android:id="@+id/timebar_holder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/bottom_menu"
             android:gravity="center"
-            android:paddingBottom="@dimen/app_margin"
-            android:paddingStart="@dimen/app_margin"
-            android:paddingEnd="@dimen/app_margin"
+            android:layout_marginStart="@dimen/app_margin"
+            android:layout_marginEnd="@dimen/app_margin"
+            android:padding="4dp"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -177,10 +177,10 @@
                 android:scrollbars="none" />
 
             <FrameLayout
+                android:id="@+id/timebar_holder"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/app_margin"
-                android:layout_marginEnd="@dimen/app_margin">
+                android:layout_margin="4dp">
 
                 <com.google.android.exoplayer2.ui.DefaultTimeBar
                     android:id="@id/exo_progress"
