@@ -1438,40 +1438,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
         }
 
-        /*speedDetailSet.forEach{
-            if(player.mediaItemCount == 1){
-                if(currentPosition in it.timeDuration!!.first .. it.timeDuration!!.second){
-                    resetPlaybackUI()
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return
-                }
-            }
-            if(it.startWindowIndex == player.currentWindowIndex && it.endWindowIndex == player.currentWindowIndex){ //  there is no point in checking if neither is in the range we are looking at
-                if((currentPosition in it.timeDuration!!.first .. it.timeDuration!!.second) && player.currentWindowIndex == 0){ //  checking in buffer
-                    resetPlaybackUI()
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return
-                }
-                if((currentPosition in (it.timeDuration!!.first - bufferDuration) .. (it.timeDuration!!.second - bufferDuration)) && player.currentWindowIndex == 1){   //  checking in video
-                    resetPlaybackUI()
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return
-                }
-            }
-//            check overlap
-            if(it.startWindowIndex == 0 && it.endWindowIndex == 1 *//*&& player.currentWindowIndex == 0*//*){
-                if(currentPosition in it.timeDuration!!.first .. bufferDuration && player.currentWindowIndex == 0) {  //  current position in buffer side
-                    resetPlaybackUI()
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return
-                }else if (currentPosition in 0 .. (it.timeDuration!!.second - bufferDuration)){
-                    resetPlaybackUI()
-                    Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                    return
-                }
-            }
-        }*/
-
         setupForEdit()
         segmentCount += 1   //  a new segment is active
         currentEditSegment += 1
@@ -1595,36 +1561,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val position = if(player.currentWindowIndex == 0) currentPosition
             else bufferDuration + currentPosition
         if (speedDetailSet.size > 0) {
-            speedDetailSet.forEach {
-                if(position in it.timeDuration!!.first .. it.timeDuration!!.second){
+            speedDetailSet.forEachIndexed { index, it ->
+                if(position in it.timeDuration!!.first .. it.timeDuration!!.second && index != currentEditSegment){
 //                    resetPlaybackUI()
                     Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
                     return true
                 }
-            /*val correctBy =
-                    if (it.startWindowIndex != it.endWindowIndex)   //  correction is required if the previous ranges span across two clips
-                        bufferDuration
-                    else if(it.startWindowIndex == 1) bufferDuration else 0L
-
-                if(player.mediaItemCount == 1){
-                    if(currentPosition in it.timeDuration!!.first .. it.timeDuration!!.second){
-                        resetPlaybackUI()
-                        Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                }
-                if(correctBy != 0L){
-                    if(currentEditSegment != speedDetailSet.size - 1 && player.currentWindowIndex == 1 && (currentPosition - bufferDuration) in (bufferDuration .. (it.timeDuration?.second!! - bufferDuration))) {
-                        Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                }else {
-                    if (currentEditSegment != speedDetailSet.size - 1 && currentPosition in it.timeDuration?.first!! until it.timeDuration?.second!! &&
-                        (it.startWindowIndex == player.currentWindowIndex || it.endWindowIndex == player.currentWindowIndex)) {
-                        Toast.makeText(requireContext(), "segment is already taken", Toast.LENGTH_SHORT).show()
-                        return true
-                    }
-                }*/
             }
         }
         return false
@@ -2135,20 +2077,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         return if(player.currentWindowIndex == 0){
             player.currentPosition
         }else{  //  exoplayer can be messed up
-            /*if(player.currentPosition + bufferDuration > maxDuration)
-                player.currentPosition
-            else*/
-                player.currentPosition + bufferDuration
-        }
-    }
-
-    /*private fun getCorrectedTimebarEndPosition(): Long {
-        return if(player.currentWindowIndex == 0){
-            player.currentPosition
-        }else{  //  exoplayer can be messed up
             player.currentPosition + bufferDuration
         }
-    }*/
+    }
 
     /**
      * Populates preview frames in the seekBar area from the video

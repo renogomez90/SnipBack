@@ -15,6 +15,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
+            app:time_bar_min_update_interval="20"
             app:controller_layout_id="@layout/exo_controls"
             app:use_controller="true" />
     </FrameLayout>
