@@ -182,7 +182,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="4dp">
 
-                <com.google.android.exoplayer2.ui.DefaultTimeBar
+                <com.hipoint.snipback.Utils.SnipbackTimeBar
                     android:id="@id/exo_progress"
                     android:layout_width="match_parent"
                     android:layout_height="35dp"

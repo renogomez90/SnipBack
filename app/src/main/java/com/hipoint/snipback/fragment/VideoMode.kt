@@ -519,7 +519,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         }
                     })
 
-                cameraControl!!.startStillCaptureRequest()
+                cameraControl?.startStillCaptureRequest()
 //                File filevideopath = new File(cameraControl?.getCurrentOutputPath());
 //
 //                try {
@@ -803,6 +803,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         triggerRightSwipeAnimation()
 
         if(currentOperation == CurrentOperation.CLIP_RECORDING) {
+            videoProcessing(true)
+            takePhoto.isEnabled = false
+            takePhoto.alpha = 0.5F
+            r2Shutter.isEnabled = false
+            r2Shutter.alpha = 0.5F
 
             if (cameraControl!!.clipQueueSize() > 1) {    //  more han 1 item is available in the queue
                 VideoService.ignoreResultOf.add(VideoOp.TRIMMED)
@@ -891,8 +896,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             VideoService.enqueueWork(requireContext(), intentService)
         }
-        if(swipeAction == SwipeAction.SWIPE_RIGHT)
-            launchSnapbackVideoCapture("")
+        if(swipeAction == SwipeAction.SWIPE_RIGHT) {
+            CoroutineScope(Main).launch{
+                videoProcessing(false)
+                takePhoto.isEnabled = true
+                takePhoto.alpha = 1F
+                r2Shutter.isEnabled = true
+                r2Shutter.alpha = 1F
+                launchSnapbackVideoCapture("")
+            }
+        }
         return false
     }
 
@@ -957,7 +970,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             VideoService.enqueueWork(requireContext(), intentService)
 
             if(swipeAction == SwipeAction.SWIPE_RIGHT) {
-                launchSnapbackVideoCapture("")
+                CoroutineScope(Main).launch{
+                    videoProcessing(false)
+                    takePhoto.isEnabled = true
+                    takePhoto.alpha = 1F
+                    r2Shutter.isEnabled = true
+                    r2Shutter.alpha = 1F
+                    launchSnapbackVideoCapture("")
+                }
             }
         } else { //  save what we have
             swipedFileNames.add(clip.nameWithoutExtension)
@@ -971,7 +991,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
             }
             if(swipeAction == SwipeAction.SWIPE_RIGHT) {
-                launchSnapbackVideoCapture(clip.absolutePath)
+                CoroutineScope(Main).launch{
+                    videoProcessing(false)
+                    takePhoto.isEnabled = true
+                    takePhoto.alpha = 1F
+                    r2Shutter.isEnabled = true
+                    r2Shutter.alpha = 1F
+                    launchSnapbackVideoCapture(clip.absolutePath)
+                }
             }
         }
     }

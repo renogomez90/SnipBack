@@ -56,9 +56,4 @@ class RangeSeekbarCustom @JvmOverloads constructor(context: Context, val attrs: 
     fun minSelection(): Float {
         return getMinStartValue(context.obtainStyledAttributes(attrs, R.styleable.CrystalRangeSeekbar))
     }
-
-    private fun Int.dpToPx(): Int {
-        val displayMetrics = context.resources.displayMetrics
-        return (this * (displayMetrics.xdpi / DisplayMetrics.DENSITY_DEFAULT)).roundToInt()
-    }
 }

@@ -39,6 +39,7 @@ import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
+import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.EditChangeListAdapter
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
@@ -109,7 +110,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private lateinit var playCon           : ConstraintLayout
     private lateinit var previewTileList   : RecyclerView
     private lateinit var changeList        : RecyclerView
-    private lateinit var seekBar           : DefaultTimeBar
+    private lateinit var seekBar           : SnipbackTimeBar
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var colourOverlay     : LinearLayout
     private lateinit var previewBarProgress: ProgressBar
