@@ -476,7 +476,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     // we can restart recoding clips if it is required at this point
                     recordClips = true
                     updateFlags(recordClips = recordClips, recordPressed = false, stopPressed = true)
-//                cameraControl?.startRecordingVideo()
                     cameraControl!!.restartRecording()
                 }
             }

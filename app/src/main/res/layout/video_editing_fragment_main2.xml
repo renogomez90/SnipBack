@@ -11,6 +11,7 @@
         android:id="@+id/player_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        app:time_bar_min_update_interval="20"
         app:controller_layout_id="@layout/exo_edit_controller"
         app:resize_mode="fit"
         app:use_controller="true"

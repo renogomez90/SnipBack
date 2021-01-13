@@ -27,6 +27,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
+import com.google.android.exoplayer2.extractor.mp4.Mp4Extractor
 import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -1826,7 +1828,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 retriever.setDataSource(snip!!.videoFilePath)
                 val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                 maxDuration = duration
-
                 player.setMediaItem(mediaItem)
             }
         } else {
@@ -1859,9 +1860,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
         }
 
-        player.prepare()
-        player.repeatMode = Player.REPEAT_MODE_OFF
-        player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+        player.apply {
+            prepare()
+            repeatMode = Player.REPEAT_MODE_OFF
+            setSeekParameters(SeekParameters.CLOSEST_SYNC)
+        }
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -1896,20 +1899,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
 
             override fun onPlaybackStateChanged(state: Int) {
-                /*if (state == Player.STATE_READY) {
-                    val currentTimeline = player.currentTimeline
-                    maxDuration = 0L
-                    for (i in 0 until currentTimeline.windowCount) {
-                        val window = Timeline.Window()
-                        currentTimeline.getWindow(i, window)
-                        maxDuration += window.durationMs
-                    }
-                    if (showBuffer) {
-                        seekBar.setDuration(maxDuration)
-                        if(previousMaxDuration != maxDuration)
-                            previousMaxDuration = maxDuration
-                    }
-                }else */if(state == Player.STATE_ENDED){
+                if(state == Player.STATE_ENDED){
                     pauseVideo()
                 }
             }
@@ -1955,13 +1945,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         if(exitConfirmation == null){
             exitConfirmation = ExitEditConfirmationDialog(this@VideoEditingFragment)
         }
-        exitConfirmation!!.show(requireActivity().supportFragmentManager, EXIT_CONFIRM_DIALOG)
 
-        /*val dialog = Dialog(requireActivity())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setCancelable(true)
-        dialog.setContentView(R.layout.warningdialog_savevideodiscardchanges)
-        dialog.show()*/
+        exitConfirmation!!.show(requireActivity().supportFragmentManager, EXIT_CONFIRM_DIALOG)
     }
 
     private fun showDialogSave() {
@@ -2745,7 +2730,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             player.setPlaybackParameters(PlaybackParameters(1 / tmp!!.multiplier.toFloat()))
                         }
 
-                        handler?.postDelayed(this, 100 /* ms */)
+                        handler?.postDelayed(this, 20 /* ms */)
                         return
                     } else {
                         if (player.playbackParameters != PlaybackParameters(1F))
@@ -2761,7 +2746,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         colourOverlay.visibility = View.GONE
                     }
                 }
-                handler?.postDelayed(this, 100 /* ms */)
+                handler?.postDelayed(this, 20 /* ms */)
             }
         }
 
