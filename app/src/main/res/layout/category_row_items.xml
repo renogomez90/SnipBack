@@ -1,39 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rel_layout_image"
     android:layout_width="100dp"
     android:layout_height="100dp"
-    android:gravity="center"
-    android:id="@+id/rel_layout_image"
     android:layout_margin="2dp"
-    xmlns:tools="http://schemas.android.com/tools">
+    android:gravity="center">
 
     <ImageView
-        android:contentDescription="@string/no_desc"
+        android:id="@+id/image"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:id="@+id/image"
-        android:scaleType="fitXY" />
+        android:contentDescription="@string/no_desc"
+        android:scaleType="fitXY"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tvVersionLabel"
         android:layout_width="100dp"
         android:layout_height="20dp"
-        android:textSize="12sp"
+        android:background="@color/colorBlack"
         android:gravity="center"
         android:textColor="@color/colorWhite"
-        android:background="@color/colorBlack" />
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tvDuration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:alpha="0.6"
+        android:background="@color/colorBlack"
         android:paddingStart="6dp"
         android:paddingEnd="6dp"
         android:textColor="@color/colorWhite"
-        android:background="@color/colorBlack"
-        android:alpha="0.6"
         android:textSize="13sp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

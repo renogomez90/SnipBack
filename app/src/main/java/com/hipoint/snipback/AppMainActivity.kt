@@ -902,18 +902,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
     }
 
-    private fun videoFramesAdded(processedVideoPath: String, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
-        if (ignoreResultOf.isNotEmpty()) {
-            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.KEY_FRAMES) {
-                ignoreResultOf.removeAt(0)
-                return
-            }
-        }
-
-        val intent = Intent("frames_added")
-        sendBroadcast(intent)
-    }
-
     /**
      *  Takes in a list of media files and returns a list of durations
      *
@@ -939,6 +927,18 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
         retriever.release()
         return durationList
+    }
+
+    private fun videoFramesAdded(processedVideoPath: String, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
+        if (ignoreResultOf.isNotEmpty()) {
+            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.KEY_FRAMES) {
+                ignoreResultOf.removeAt(0)
+                return
+            }
+        }
+
+        val intent = Intent("frames_added")
+        sendBroadcast(intent)
     }
 
     private fun isFragmentVisible(fragmentTag: String): Boolean {
