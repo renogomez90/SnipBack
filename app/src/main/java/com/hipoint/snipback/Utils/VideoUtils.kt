@@ -131,11 +131,12 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (sec < end)
             end = sec.toFloat()
 
-//        val cmd = "-hide_banner -loglevel panic -i ${clip.absolutePath} -ss $start -to $end -preset ultrafast -y $outputPath"   // with re-encoding
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING)
-            "-hide_banner -loglevel panic -ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
+            "-ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
         else
-            "-hide_banner -loglevel panic -ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -threads 4 -y $outputPath"   // without re-encoding
+            "-ss $start -i ${clip.absolutePath} -t ${end - start} -x264opts -keyint_min=1 -c copy -y $outputPath"   // without re-encoding
+
+        /*"-ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -threads 4 -y $outputPath"   // without re-encoding*/
 
         Log.d(TAG, "trimToClip: cmd= $cmd")
         try {
