@@ -22,7 +22,6 @@ import com.bumptech.glide.Glide;
 import com.hipoint.snipback.ActivityPlayVideo;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
-import com.hipoint.snipback.Swipper;
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.FragmentPlayVideo;
@@ -61,11 +60,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                 ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(100,100);
                 if(context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
                     int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
+                    params.setMargins(5, 0, 5, 0);
                     params.width = (totalWidth - 4)/4;
                     params.height = (totalWidth - 4)/4;
                     holder.relativeLayoutImage.setLayoutParams(params);
                 }else {
                     int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
+                    params.setMargins(5, 0, 5, 0);
                     params.width = (totalWidth - 4)/8;
                     params.height = (totalWidth - 4)/8;
                     holder.relativeLayoutImage.setLayoutParams(params);
@@ -137,7 +138,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     private void enlargedPortraitView(CategoryItemViewHolder holder) {
         if (viewChangeValue != null) {
             if (viewChangeValue.equals("ENLARGED")) {
-                ConstraintLayout.LayoutParams relativeParams = new ConstraintLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
+                RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
                 relativeParams.setMargins(15, 15, 15, 15);
                 holder.relativeLayoutImage.setLayoutParams(relativeParams);
                 holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
@@ -148,10 +149,10 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     private void enlargedLandscapeMode(CategoryItemViewHolder holder) {
         if (viewChangeValue != null) {
             if (viewChangeValue.equals("ENLARGED")) {
-                ConstraintLayout.LayoutParams relativeParams = new ConstraintLayout.LayoutParams(950, 550);
+                RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(950, 550);
                 relativeParams.setMargins(15, 15, 15, 40);
-//                relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
-//                relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+                relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+                relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
                 holder.relativeLayoutImage.setLayoutParams(relativeParams);
                 holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(950, 550)));
             }
