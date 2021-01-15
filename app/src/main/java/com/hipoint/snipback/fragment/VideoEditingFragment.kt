@@ -1746,16 +1746,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         playerView.player = player
 
         if (!showBuffer) {
-            if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
-                val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
-                val dataSourceFactory = DefaultDataSourceFactory(
+            val defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
+            val dataSourceFactory = DefaultDataSourceFactory(
                     requireContext(),
                     Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter
-                )
+            )
 
-                val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+            val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
                     .createMediaSource(Uri.parse(snip!!.videoFilePath))
-
+            if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
                 val clippingMediaSource = ClippingMediaSource(
                     mediaSource,
                     TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()),
@@ -1763,14 +1762,21 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 )
                 seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
                 maxDuration = TimeUnit.SECONDS.toMillis(snip!!.snip_duration.toLong())
-
                 player.addMediaSource(clippingMediaSource)
             } else {
                 val retriever = MediaMetadataRetriever()
                 retriever.setDataSource(snip!!.videoFilePath)
                 val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                 maxDuration = duration
-                player.setMediaItem(mediaItem)
+                val clippingMediaSource = ClippingMediaSource(
+                        mediaSource,
+                       0,
+                        TimeUnit.SECONDS.toMicros(snip!!.total_video_duration.toLong())
+                )
+                seekBar.setDuration(snip!!.total_video_duration.toLong() * 1000)
+                maxDuration = TimeUnit.SECONDS.toMillis(snip!!.total_video_duration.toLong())
+                player.addMediaSource(clippingMediaSource)
+//                player.setMediaItem(mediaItem)
             }
         } else {
             if (bufferPath.isNotEmpty()) {
