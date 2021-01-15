@@ -48,6 +48,7 @@ import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_main2.*
 import kotlinx.android.synthetic.main.exo_controls.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
@@ -141,9 +142,21 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     override fun onResume() {
         super.onResume()
 
-        initSetup()
-        bindListeners()
+        CoroutineScope(Main).launch {
+            checkSnipUpdates()
+            initSetup()
+            bindListeners()
+        }
+
         Log.d(TAG, "onResume: started")
+    }
+
+    private suspend fun checkSnipUpdates() {
+        val result = CoroutineScope(Default).async {
+            appRepository.getSnipById(snip!!.snip_id)
+        }
+
+        snip = result.await()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

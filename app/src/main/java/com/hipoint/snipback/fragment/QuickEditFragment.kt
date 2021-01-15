@@ -127,33 +127,7 @@ class QuickEditFragment: Fragment() {
                     concatedFile = inputName!!
                     fullExtension = (editedStart == 0L)
 
-                    if(fullExtension) {  //  the buffer is used up and can be removed from the DB
-                        /*CoroutineScope(Default).launch {
-                            appRepository.getHDSnipById(object : AppRepository.HDSnipResult {
-                                override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
-                                    hdSnips?.let {
-                                        appRepository.deleteHDSnip(hdSnips[0])
-                                    }
-                                }
-                            }, bufferHdSnipId)
-
-                            //  update video in DB
-                            val videoSnip = appRepository.getSnipById(videoSnipId)
-                            videoSnip.total_video_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
-                            videoSnip.snip_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toDouble()
-                            appRepository.updateSnip(videoSnip)
-                        }
-
-                        //  Only video needs to be trimmed
-                        val videoTask = VideoOpItem(
-                            operation = IVideoOpListener.VideoOp.TRIMMED,
-                            clips = arrayListOf(concatedFile),
-                            startTime = /*editedStart.milliToFloatSecond()*/ 0.100F,
-                            endTime = editedEnd.milliToFloatSecond(),
-                            outputPath = videoPath!!,
-                            comingFrom = CurrentOperation.VIDEO_EDITING)
-                        taskList.add(videoTask)
-                        */
+                    if(fullExtension) {
                         editedStart = 100    // 100 ,milli seconds into the video
                     }
                     val bufferTask = VideoOpItem(
