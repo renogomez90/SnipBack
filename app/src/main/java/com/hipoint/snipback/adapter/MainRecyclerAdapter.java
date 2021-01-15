@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.Swipper;
 import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.fragment.FragmentGalleryNew;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Snip;
 
@@ -115,10 +116,17 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 
     private int getSpanCount() {
         int orientation = context.getResources().getConfiguration().orientation;
-        if(orientation == Configuration.ORIENTATION_PORTRAIT)
-            return 4;
-        else
-            return 8;
+        if(orientation == Configuration.ORIENTATION_PORTRAIT) {
+            if(viewChangeValue == null || viewChangeValue.equals(FragmentGalleryNew.ViewType.NORMAL.name()))
+                return 4;
+            else
+                return 1;
+        }else {
+            if(viewChangeValue == null || viewChangeValue.equals(FragmentGalleryNew.ViewType.NORMAL.name()))
+                return 8;
+            else
+                return 2;
+        }
     }
 
     public static String getDate(long time) {

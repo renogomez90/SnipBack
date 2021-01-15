@@ -231,21 +231,26 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * set up playback video source
      */
     private fun setVideoSource() {
+        defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
+        dataSourceFactory = DefaultDataSourceFactory(requireContext(),
+            Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
+
+        mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
+            .createMediaSource(Uri.parse(snip!!.videoFilePath))
+
         if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
-            defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
-            dataSourceFactory = DefaultDataSourceFactory(requireContext(),
-                Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
-
-            mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(Uri.parse(snip!!.videoFilePath))
-
             val clippingMediaSource = ClippingMediaSource(mediaSource,
                 TimeUnit.SECONDS.toMicros(snip!!.start_time.toLong()),
                 TimeUnit.SECONDS.toMicros(snip!!.end_time.toLong()))
             seekBar.setDuration(snip!!.snip_duration.toLong() * 1000)
             player.setMediaSource(clippingMediaSource)
         } else {
-            player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
+            val clippingMediaSource = ClippingMediaSource(mediaSource,
+                0,
+                TimeUnit.SECONDS.toMicros(snip!!.total_video_duration.toLong()))
+            seekBar.setDuration(snip!!.total_video_duration.toLong() * 1000)
+            player.setMediaSource(clippingMediaSource)
+//            player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
         }
 
         player.prepare()

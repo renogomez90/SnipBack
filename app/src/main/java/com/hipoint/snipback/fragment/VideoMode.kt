@@ -829,7 +829,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun triggerLeftActionAnimation() {
         if (cameraControl!!.isRecordingClips()) {
             val t1Animation = ObjectAnimator.ofFloat(recordButton, "translationX", 0f, -80f, 0f)
-            t1Animation.duration = 1500
+            t1Animation.duration = 1000
             t1Animation.addListener(swipeAnimationListener)
             t1Animation.start()
         }
@@ -841,7 +841,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun triggerRightSwipeAnimation() {
         if (cameraControl!!.isRecordingClips()) {
             val t1Animation = ObjectAnimator.ofFloat(recordButton, "translationX", 0f, 80f, 0f)
-            t1Animation.duration = 1500
+            t1Animation.duration = 1000
             t1Animation.addListener(swipeAnimationListener)
             t1Animation.start()
         }

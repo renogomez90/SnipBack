@@ -57,18 +57,18 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
             Snip snip = snipArrayList.get(position);
             try {
                 int duration;
-                ConstraintLayout.LayoutParams params = new ConstraintLayout.LayoutParams(100,100);
+                RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100,100);
                 if(context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
                     int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
-                    params.setMargins(5, 0, 5, 0);
-                    params.width = (totalWidth - 4)/4;
-                    params.height = (totalWidth - 4)/4;
+                    params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
+                    params.width = (totalWidth - (int) dpToPx(context,4)) / 4;
+                    params.height = (totalWidth - (int) dpToPx(context,4)) / 4;
                     holder.relativeLayoutImage.setLayoutParams(params);
                 }else {
                     int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
-                    params.setMargins(5, 0, 5, 0);
-                    params.width = (totalWidth - 4)/8;
-                    params.height = (totalWidth - 4)/8;
+                    params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
+                    params.width = totalWidth / 8;
+                    params.height = totalWidth / 8;
                     holder.relativeLayoutImage.setLayoutParams(params);
                 }
 
@@ -168,7 +168,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
         ImageView itemImage;
         TextView tvVersionLabel;
         TextView tvDuration;
-        ConstraintLayout relativeLayoutImage;
+        RelativeLayout relativeLayoutImage;
 
         public CategoryItemViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -183,4 +183,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
         void onItemClick(Snip snipvideopath);
     }
 
+    public float dpToPx(Context context, float dp) {
+        return dp * context.getResources().getDisplayMetrics().density;
+    }
 }

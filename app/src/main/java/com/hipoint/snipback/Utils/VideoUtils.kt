@@ -53,12 +53,12 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         EpEditor.merge(epVideos, options, object : OnEditorListener {
             override fun onSuccess() {
                 Log.d(TAG, "Merge Success")
-                opListener.changed(IVideoOpListener.VideoOp.MERGED, comingFrom, swipeAction, outputPath)
+                opListener.changed(IVideoOpListener.VideoOp.CONCAT, comingFrom, swipeAction, outputPath)
             }
 
             override fun onFailure() {
                 Log.d(TAG, "Merge Failed")
-                opListener.failed(IVideoOpListener.VideoOp.MERGED, comingFrom)
+                opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
             }
 
             override fun onProgress(progress: Float) {}
@@ -84,31 +84,50 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 totalDuration += retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
             }
         }
+        val rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION).toInt()
         retriever.release()
 
+        val filter = when (rotation){
+            90 -> "transpose=1"
+            180 -> "transpose=1,transpose=1"
+            270 -> "transpose=1,transpose=1,transpose=1"
+            else -> {""}
+        }
+
         val tmpFile = createFileList(fileList)
-        val cmd = "-hide_banner -loglevel panic -f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -c copy -threads 4 -y -b:v 1M $outputPath"
+        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING){
+            if(filter.isNotBlank())
+                "-f concat -safe 0 -i $tmpFile -vf $filter -preset ultrafast -tune film -crf 22 -threads 4 -y -b:v 2M $outputPath"
+            else
+                "-f concat -safe 0 -i $tmpFile -preset ultrafast -tune film -crf 22 -threads 4 -y -b:v 2M $outputPath"
+        } else {
+            "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -c copy -threads 4 -y -b:v 2M $outputPath"
+        }
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
         try {
-            EpEditor.execCmd(cmd, TimeUnit.MILLISECONDS.toMicros(totalDuration), object : OnEditorListener {
-                override fun onSuccess() {
-                    File(tmpFile).delete()
-                    Log.d(TAG, "Concat Success")
-                    opListener.changed(IVideoOpListener.VideoOp.CONCAT, comingFrom, swipeAction, outputPath)
-                }
+            EpEditor.execCmd(cmd,
+                TimeUnit.MILLISECONDS.toMicros(totalDuration),
+                object : OnEditorListener {
+                    override fun onSuccess() {
+                        File(tmpFile).delete()
+                        Log.d(TAG, "Concat Success")
+                        opListener.changed(IVideoOpListener.VideoOp.CONCAT,
+                            comingFrom,
+                            swipeAction,
+                            outputPath)
+                    }
 
-                override fun onFailure() {
-                    Log.d(TAG, "Concat Failed")
-                    opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
-                }
+                    override fun onFailure() {
+                        Log.d(TAG, "Concat Failed")
+                        opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
+                    }
 
-                override fun onProgress(progress: Float) {}
-            })
+                    override fun onProgress(progress: Float) {}
+                })
         } catch (e: Exception) {
             e.printStackTrace()
         }
-
     }
 
     /**
@@ -124,21 +143,23 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong() // in miliseconds
         retriever.release()
 
-        val sec = TimeUnit.MILLISECONDS.toSeconds(duration)
+//        val sec = TimeUnit.MILLISECONDS.toSeconds(duration)
+        val sec = duration.toFloat() / 1000
 
         if (sec <= start)    // fixes the times to match that of the video
             start = 0F
         if (sec < end)
-            end = sec.toFloat()
+            end = sec
 
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING)
-            "-ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
+            "-ss $start -i ${clip.absolutePath} -to ${end - start} -avoid_negative_ts make_zero -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
         else
-            "-ss $start -i ${clip.absolutePath} -t ${end - start} -x264opts -keyint_min=1 -c copy -y $outputPath"   // without re-encoding
+            "-ss $start -i ${clip.absolutePath} -to ${end - start} -x264opts -keyint_min=1 -c copy -y $outputPath"   // without re-encoding
 
         /*"-ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -threads 4 -y $outputPath"   // without re-encoding*/
 
         Log.d(TAG, "trimToClip: cmd= $cmd")
+        Log.d(TAG, "trimToClip: trim clips => ${end - start} = $end, $start")
         try {
             EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), object : OnEditorListener {
                 override fun onSuccess() {
@@ -149,7 +170,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                     opListener.failed(IVideoOpListener.VideoOp.TRIMMED, comingFrom)
                 }
 
-                override fun onProgress(progress: Float) {}
+                override fun onProgress(progress: Float) = Unit
             })
         } catch (e: Exception) {
             e.printStackTrace()
