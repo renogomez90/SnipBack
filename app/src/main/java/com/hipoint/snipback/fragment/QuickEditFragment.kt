@@ -36,6 +36,7 @@ import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.EditSeekControl
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Hd_snips
+import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.videoControl.VideoOpItem
@@ -110,6 +111,7 @@ class QuickEditFragment: Fragment() {
         var trimmedItemCount = 0
         var fullExtension = false
         var concatedFile = ""
+        var videoSnip: Snip? = null
 
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let{
@@ -149,10 +151,10 @@ class QuickEditFragment: Fragment() {
 
                             CoroutineScope(Default).launch {
                                 //  update video in DB
-                                val videoSnip = appRepository.getSnipById(videoSnipId)
-                                videoSnip.total_video_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
-                                videoSnip.snip_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toDouble()
-                                appRepository.updateSnip(videoSnip)
+                                videoSnip = appRepository.getSnipById(videoSnipId)
+                                videoSnip!!.total_video_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
+                                videoSnip!!.snip_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toDouble()
+                                appRepository.updateSnip(videoSnip!!)
                             }
 
                             val videoTask = VideoOpItem(
@@ -169,7 +171,9 @@ class QuickEditFragment: Fragment() {
                             Log.d(TAG, "onReceive: both files received")
                             trimmedItemCount = 0
                             hideProgress()
-                            requireActivity().supportFragmentManager.popBackStack()
+                            videoSnip?.let{ snip -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
+                                (requireActivity() as AppMainActivity).loadFragment(FragmentPlayVideo2.newInstance(snip), true)
+                            }
                         }
                     }
                 }

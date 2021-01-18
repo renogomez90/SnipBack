@@ -97,9 +97,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val tmpFile = createFileList(fileList)
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING){
             if(filter.isNotBlank())
-                "-f concat -safe 0 -i $tmpFile -vf $filter -preset ultrafast -tune film -crf 22 -threads 4 -y -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -tune film -crf 22 -threads 4 -y -b:v 2M $outputPath"
             else
-                "-f concat -safe 0 -i $tmpFile -preset ultrafast -tune film -crf 22 -threads 4 -y -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -tune film -crf 22 -threads 4 -y -b:v 2M $outputPath"
         } else {
             "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -c copy -threads 4 -y -b:v 2M $outputPath"
         }
@@ -152,7 +152,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             end = sec
 
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING)
-            "-ss $start -i ${clip.absolutePath} -to ${end - start} -avoid_negative_ts make_zero -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
+            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
         else
             "-ss $start -i ${clip.absolutePath} -to ${end - start} -x264opts -keyint_min=1 -c copy -y $outputPath"   // without re-encoding
 
@@ -248,20 +248,17 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         retriever.setDataSource(clip.absolutePath)
         val totalDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
 
-        if (speedDetailsList.isEmpty()) {
+        val cmd = if (speedDetailsList.isEmpty()) {
 //            "[0:v]trim=0:$totalDuration,setpts=PTS-STARTPTS[v1];[0:a]atrim=0:$totalDuration,asetpts=PTS-STARTPTS[a1];[v1][a1]concat=n=1:v=1:a=1[outv][outa]"
-            opListener.changed(IVideoOpListener.VideoOp.SPEED, comingFrom, swipeAction, clip.absolutePath)
-            return
+//            opListener.changed(IVideoOpListener.VideoOp.SPEED, comingFrom, swipeAction, clip.absolutePath)
+            "-i ${clip.absolutePath} -c copy -y $outputPath"
+        }else {
+            val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
+            Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
+            "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -threads 4 -y $outputPath"
         }
 
-        val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
-
-        Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
-
-        val cmd = "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -preset ultrafast -shortest -threads 4 -y $outputPath"
-
         Log.d(TAG, "changeSpeed: cmd = $cmd")
-
         EpEditor.execCmd(cmd, TimeUnit.MILLISECONDS.toMicros(totalDuration), object : OnEditorListener {
             override fun onSuccess() {
                 Log.d(TAG, "changeSpeed: success output = $outputPath")
@@ -272,9 +269,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 opListener.failed(IVideoOpListener.VideoOp.SPEED, comingFrom)
             }
 
-            override fun onProgress(progress: Float) {
-
-            }
+            override fun onProgress(progress: Float) = Unit
         })
     }
 

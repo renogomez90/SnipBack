@@ -173,7 +173,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     }
 
     //    public void loadFragment(Fragment fragment,boolean addtoBackStack) {
-    fun loadFragment(fragment: Fragment?, addToBackStack: Boolean) {
+    fun loadFragment(fragment: Fragment, addToBackStack: Boolean) {
         val ft = supportFragmentManager.beginTransaction()
 
         val tag = when (fragment) {
@@ -199,7 +199,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
 
         if (!isAlreadyPresent) {
-            ft.replace(R.id.mainFragment, fragment!!, tag)
+            ft.replace(R.id.mainFragment, fragment, tag)
 
             if (addToBackStack) {
                 ft.addToBackStack(tag)
@@ -389,6 +389,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             //  restart the video playback fragment with the modified video, if we have just arrived here from saving the edit
             val editFrag =
                 supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
+
             if (editFrag != null &&
                 editFrag.isVisible &&
                 VideoEditingFragment.saveAction != VideoEditingFragment.SaveActionType.CANCEL
@@ -757,8 +758,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                     File(processedVideoPath).renameTo(File(parentSnip?.videoFilePath!!))
 
                     fileToReplace = null
-                    replacedWith = null
-
+                    replacedWith  = null
+                    doReplace     = false
                     dismissEditFragmentProcessingDialog(parentSnip?.videoFilePath!!)
                 }
             }

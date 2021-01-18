@@ -142,21 +142,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     override fun onResume() {
         super.onResume()
 
-        CoroutineScope(Main).launch {
-            checkSnipUpdates()
-            initSetup()
-            bindListeners()
-        }
-
+        initSetup()
+        bindListeners()
         Log.d(TAG, "onResume: started")
-    }
-
-    private suspend fun checkSnipUpdates() {
-        val result = CoroutineScope(Default).async {
-            appRepository.getSnipById(snip!!.snip_id)
-        }
-
-        snip = result.await()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
