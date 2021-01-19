@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,8 +58,9 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
             Snip snip = snipArrayList.get(position);
             try {
                 int duration;
+                int orientation = context.getResources().getConfiguration().orientation;
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100,100);
-                if(context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+                if(orientation == Configuration.ORIENTATION_PORTRAIT){
                     int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
                     params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
                     params.width = (totalWidth - (int) dpToPx(context,4)) / 4;
@@ -66,9 +68,9 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     holder.relativeLayoutImage.setLayoutParams(params);
                 }else {
                     int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
-                    params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
                     params.width = totalWidth / 8;
                     params.height = totalWidth / 8;
+                    params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
                     holder.relativeLayoutImage.setLayoutParams(params);
                 }
 
@@ -103,13 +105,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     circularProgressDrawable.setStrokeWidth(5F);
                     circularProgressDrawable.setCenterRadius(30F);
                     circularProgressDrawable.start();
-
                     Glide.with(context).load(myBitmap).placeholder(circularProgressDrawable).into(holder.itemImage);
-
-                    if (viewChangeValue != null && orientationVal == null) {
+                    Log.d("orientationValue", String.valueOf(orientation));
+                    Log.d("viewChangeValue", String.valueOf(viewChangeValue));
+                    if (viewChangeValue != null && orientation == Configuration.ORIENTATION_PORTRAIT) {
                         enlargedPortraitView(holder);
 
-                    } else if (viewChangeValue != null && orientationVal == 2) {
+                    } else if (viewChangeValue != null && orientation == Configuration.ORIENTATION_LANDSCAPE) {
                         enlargedLandscapeMode(holder);
                     } else {
                         enlargedPortraitView(holder);
@@ -139,7 +141,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
         if (viewChangeValue != null) {
             if (viewChangeValue.equals("ENLARGED")) {
                 RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
-                relativeParams.setMargins(15, 15, 15, 15);
+                relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
                 holder.relativeLayoutImage.setLayoutParams(relativeParams);
                 holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
             }
@@ -149,12 +151,16 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     private void enlargedLandscapeMode(CategoryItemViewHolder holder) {
         if (viewChangeValue != null) {
             if (viewChangeValue.equals("ENLARGED")) {
-                RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(950, 550);
-                relativeParams.setMargins(15, 15, 15, 40);
+                RelativeLayout.LayoutParams relativeParams =
+                        new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT , RelativeLayout.LayoutParams.MATCH_PARENT);
+                int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
+                relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
+                relativeParams.width = (totalWidth - (int) dpToPx(context,70)) / 2;
+                relativeParams.height = (totalWidth - (int) dpToPx(context,70)) / 2;
                 relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
                 relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
                 holder.relativeLayoutImage.setLayoutParams(relativeParams);
-                holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(950, 550)));
+
             }
         }
     }

@@ -11,6 +11,7 @@
         android:layout_height="34dp"
         android:layout_marginStart="20dp"
         android:layout_marginTop="32dp"
+        android:layout_marginBottom="15dp"
         android:background="@drawable/photo_button_background"
         android:fontFamily="@font/barlow_bold"
         android:gravity="center"
@@ -20,11 +21,11 @@
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/pullToRefresh"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
         android:layout_marginBottom="5dp"
         android:layout_marginTop="5dp"
-        android:layout_above="@id/llfooter"
+        android:layout_toLeftOf="@+id/llfooter"
         android:layout_below="@id/photolabel">
 
         <androidx.recyclerview.widget.RecyclerView
@@ -60,6 +61,7 @@
 
     <RelativeLayout
         android:id="@+id/import_con"
+        android:layout_marginStart="20dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/photolabel"
@@ -68,18 +70,18 @@
         <ImageView
             android:contentDescription="@string/no_desc"
             android:id="@+id/player_view_image"
-            android:layout_width="145dp"
-            android:layout_height="145dp"
-            android:layout_marginStart="44dp"
+            android:layout_width="185dp"
+            android:layout_height="185dp"
+            android:layout_marginStart="34dp"
             android:layout_marginTop="24dp"
             android:scaleType="fitXY"
             android:visibility="visible" />
 
         <RelativeLayout
             android:id="@+id/click"
-            android:layout_width="145dp"
-            android:layout_height="145dp"
-            android:layout_marginStart="44dp"
+            android:layout_width="185dp"
+            android:layout_height="185dp"
+            android:layout_marginStart="34dp"
             android:layout_marginTop="24dp"
             android:background="@android:color/transparent"
             android:focusable="true"
@@ -87,32 +89,32 @@
             android:visibility="visible" />
     </RelativeLayout>
 
+
     <LinearLayout
         android:id="@+id/llfooter"
-        android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:layout_alignParentBottom="true"
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:orientation="vertical"
         android:background="@color/bottom_menu"
         android:baselineAligned="false"
         android:gravity="center">
 
         <RelativeLayout
             android:id="@+id/layout_camera"
-            android:layout_width="0dp"
+            android:layout_width="60dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginStart="20dp"
             android:layout_weight="0.2"
-            android:layout_marginBottom="3dp"
             android:gravity="center">
 
             <ImageButton
-            android:contentDescription="@string/no_desc"
                 android:id="@+id/camera"
                 android:layout_width="match_parent"
-                android:padding="7dp"
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
+                android:contentDescription="@string/no_desc"
+                android:padding="7dp"
                 android:src="@drawable/ic_camera" />
 
             <TextView
@@ -129,15 +131,14 @@
 
         <RelativeLayout
             android:id="@+id/layout_link"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="0.2"
-            android:layout_marginBottom="5dp"
             android:gravity="center">
 
             <ImageButton
-            android:contentDescription="@string/no_desc"
+                android:contentDescription="@string/no_desc"
                 android:id="@+id/link"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -159,15 +160,14 @@
 
         <RelativeLayout
             android:id="@+id/layout_filter"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             android:layout_weight="0.2"
-            android:layout_marginBottom="4dp"
             android:gravity="center">
 
             <ImageButton
-            android:contentDescription="@string/no_desc"
+                android:contentDescription="@string/no_desc"
                 android:id="@+id/filter"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -189,16 +189,15 @@
 
         <RelativeLayout
             android:id="@+id/layout_view"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginBottom="5dp"
             android:layout_weight="0.2"
             android:gravity="center"
             android:clickable="false">
 
             <ImageButton
-            android:contentDescription="@string/no_desc"
+                android:contentDescription="@string/no_desc"
                 android:id="@+id/_button_view"
                 android:layout_width="match_parent"
                 android:padding="10dp"
@@ -220,16 +219,14 @@
 
         <RelativeLayout
             android:id="@+id/layout_menu"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginEnd="20dp"
             android:layout_weight="0.2"
-            android:layout_marginBottom="5dp"
             android:gravity="center">
 
             <ImageButton
-            android:contentDescription="@string/no_desc"
+                android:contentDescription="@string/no_desc"
                 android:id="@+id/dropdown_menu"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

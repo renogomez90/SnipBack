@@ -62,7 +62,8 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         String viewChange = viewChangeValue;
         Integer orientation = orientationValue;
 
-        eventId = parentSnips.get(position).getEvent().getEvent_id();
+
+            eventId = parentSnips.get(position).getEvent().getEvent_id();
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
         setCatItemRecycler(holder.itemRecycler, allParentSnip, viewChange, orientation);
 
@@ -123,7 +124,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
                 return 1;
         }else {
             if(viewChangeValue == null || viewChangeValue.equals(FragmentGalleryNew.ViewType.NORMAL.name()))
-                return 8;
+                return 7;
             else
                 return 2;
         }
