@@ -209,9 +209,11 @@ class CameraControl(val activity: FragmentActivity) {
                     e.printStackTrace()
                 }
 
-                setUpMediaRecorder()
-                mMediaRecorder?.start()
-                mIsRecordingVideo = true
+                if(!AppMainActivity.isPausing) {    //   don't restart if the app is going to background
+                    setUpMediaRecorder()
+                    mMediaRecorder?.start()
+                    mIsRecordingVideo = true
+                }
 
                 return@async false
             }
@@ -535,7 +537,17 @@ class CameraControl(val activity: FragmentActivity) {
         val rotation = activity.windowManager?.defaultDisplay?.rotation
 
         mMediaRecorder!!.apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
+            try {
+                setAudioSource(MediaRecorder.AudioSource.MIC)
+            } catch (e: IllegalStateException) {
+                //  apart from the obvious, this seems to happen when the app is moving to background
+                //  if that is the case then we can stop the activity
+                Toast.makeText(activity, "Unable to record audio", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+                if (AppMainActivity.isPausing){
+                    activity.finish()
+                }
+            }
             setVideoSource(MediaRecorder.VideoSource.SURFACE)
             if (recordClips) {    //  so that the actual recording is not affected by clip duration.
                 setMaxDuration(clipDuration.toInt())

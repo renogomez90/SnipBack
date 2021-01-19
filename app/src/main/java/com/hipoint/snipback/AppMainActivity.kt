@@ -92,6 +92,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      */
     override fun onResume() {
         super.onResume()
+        isPausing = false
         registerReceiver(videoOperationReceiver, IntentFilter(VideoService.ACTION))
     }
 
@@ -131,6 +132,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      * Unregister broadcast receiver
      */
     override fun onPause() {
+        isPausing = true
         unregisterReceiver(videoOperationReceiver)
         super.onPause()
     }
@@ -259,6 +261,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     }
 
     companion object {
+        var isPausing = true
         private var parentChanged: Boolean = false
         private var virtualToReal: Boolean =
             false  //  set this to true before trimming, so that additional operations may be applied on the new video eg. speed change

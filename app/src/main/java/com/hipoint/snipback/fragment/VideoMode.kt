@@ -1011,7 +1011,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     //  attempt to reopen the camera
                     Log.e(TAG, "Forcing camera restart")
                     closeCamera()
-                    if (mTextureView.isAvailable) {
+                    if (mTextureView.isAvailable && !AppMainActivity.isPausing) {   //  if the app is going to be paused don't restart
                         if(!isBgThreadRunning()){
                             cameraControl?.startBackgroundThread()
                         }
