@@ -1,6 +1,7 @@
 package com.hipoint.snipback.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,14 +21,12 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     private ItemListener mListener;
     List<Snip> snipArrayList;
     private String viewChangeValue;
-    private Integer orientationVal;
 
 
-    public ParentSnipRecyclerAdapter(Context context, List<Snip> allParentSnips, String viewChange, Integer orientation) {
+    public ParentSnipRecyclerAdapter(Context context, List<Snip> allParentSnips, String viewChange) {
         this.context = context;
         this.snipArrayList = allParentSnips;
         this.viewChangeValue = viewChange;
-        this.orientationVal = orientation;
     }
 
     @NonNull
@@ -43,9 +42,8 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
 
             int parentId = snipArrayList.get(position).getSnip_id();
             String viewChange = viewChangeValue;
-            Integer orientation = orientationVal;
             List<Snip> childSnip = AppClass.getAppInstance().getChildSnipsByParentSnipId(snipArrayList.get(position).getEvent_id(), parentId);
-            setCatItemRecycler(holder.itemRecycler, childSnip, viewChange, orientation);
+            setCatItemRecycler(holder.itemRecycler, childSnip, viewChange);
 
         }
 
@@ -53,8 +51,8 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     }
 
 
-    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange, Integer orientation) {
-        CategoryItemRecyclerAdapter itemRecyclerAdapter = new CategoryItemRecyclerAdapter(context, allEventSnips, viewChange, orientation);
+    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange) {
+        CategoryItemRecyclerAdapter itemRecyclerAdapter = new CategoryItemRecyclerAdapter(context, allEventSnips, viewChange);
         recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.HORIZONTAL, false));
         recyclerView.setAdapter(itemRecyclerAdapter);
     }

@@ -3,6 +3,7 @@ package com.hipoint.snipback.adapter;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.text.format.DateFormat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,12 +32,11 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private Integer orientationValue;
     private int eventId = -1;
 
-    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange, Integer orientation) {
+    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange) {
         this.context = context;
         this.allSnips = allEventSnip;
         this.parentSnips = allParentSnip;
         this.viewChangeValue = viewChange;
-        this.orientationValue = orientation;
 
     }
 
@@ -60,12 +60,9 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         holder.categoryTitle.setVisibility(View.VISIBLE);
         holder.categoryTitle.setText(parentSnips.get(position).getEvent().getEvent_title());
         String viewChange = viewChangeValue;
-        Integer orientation = orientationValue;
-
-
-            eventId = parentSnips.get(position).getEvent().getEvent_id();
+        eventId = parentSnips.get(position).getEvent().getEvent_id();
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
-        setCatItemRecycler(holder.itemRecycler, allParentSnip, viewChange, orientation);
+        setCatItemRecycler(holder.itemRecycler, allParentSnip, viewChange);
 
     }
 
@@ -86,9 +83,9 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     }
 
 
-    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange, Integer orientation) {
+    private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange) {
         int spanCount = getSpanCount();
-        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange, orientation);
+        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange);
         itemRecyclerAdapter.notifyDataSetChanged();
 //        recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
         GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount, RecyclerView.VERTICAL, false);

@@ -98,6 +98,22 @@ public class FragmentGalleryNew extends Fragment {
         NORMAL, ENLARGED;
     }
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putString("viewChangeValue", viewChange);
+        outState.putBoolean("buttonClickedValue",viewButtonClicked);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if(savedInstanceState!=null){
+            viewChange = savedInstanceState.getString("viewChangeValue");
+            viewButtonClicked = savedInstanceState.getBoolean("buttonClickedValue");
+            updateViewButtonUI(viewButtonClicked);
+        }
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Nullable
@@ -105,9 +121,8 @@ public class FragmentGalleryNew extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery_new, container, false);
 
-
         requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
-
+        setRetainInstance(true);
         import_con = rootView.findViewById(R.id.import_con);
         player_view_image = rootView.findViewById(R.id.player_view_image);
         photolabel = rootView.findViewById(R.id.photolabel);
@@ -123,7 +138,6 @@ public class FragmentGalleryNew extends Fragment {
         pullToRefresh = rootView.findViewById(R.id.pullToRefresh);
         viewButtonLayout = rootView.findViewById(R.id.layout_view);
         click.setVisibility(View.GONE);
-
 
         if (AppClass.getAppInstance().isInsertionInProgress()) {
             rlLoader.setVisibility(View.VISIBLE);
@@ -227,18 +241,12 @@ public class FragmentGalleryNew extends Fragment {
             public void onClick(View v) {
                 if (!viewButtonClicked) {
                     viewButtonClicked = true;
-                    view_button.setImageResource(R.drawable.ic_view);
                     viewChange = String.valueOf(ViewType.ENLARGED);
-                    view_label.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
-
                 } else {
                     viewButtonClicked = false;
                     viewChange = String.valueOf(ViewType.NORMAL);
-                    view_button.setImageResource(R.drawable.ic_view_unselected);
-                    view_label.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
-
                 }
-                galleryEnlargedView(viewChange);
+                galleryEnlargedView(viewChange,viewButtonClicked);
             }
         });
 
@@ -250,32 +258,29 @@ public class FragmentGalleryNew extends Fragment {
         return rootView;
     }
 
-    private void galleryEnlargedView(String viewChange) {
+    private void updateViewButtonUI(Boolean viewButtonClicked){
+        if (viewButtonClicked){
+            view_button.setImageResource(R.drawable.ic_view);
+            view_label.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
+        } else {
+            view_button.setImageResource(R.drawable.ic_view_unselected);
+            view_label.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
+        }
+    }
 
+    private void galleryEnlargedView(String viewChange,Boolean viewButtonClicked) {
+        updateViewButtonUI(viewButtonClicked);//update view when button clicked
         List<EventData> allSnips = AppClass.getAppInstance().getAllSnip();
         List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
-        mainRecyclerAdapter = new MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange, orientation);
+        mainRecyclerAdapter = new MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange);
         mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
         mainRecyclerAdapter.notifyDataSetChanged();
 
     }
 
-
-    private void setOrientation(int orientation) {
-        List<EventData> allSnips = AppClass.getAppInstance().getAllSnip();
-        List<EventData> allParentSnip = AppClass.getAppInstance().getAllParentSnip();
-        mainRecyclerAdapter = new MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange, orientation);
-        mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-    }
-
-
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-
-        orientation = requireActivity().getResources().getConfiguration().orientation;
-        setOrientation(orientation);
-
 
     }
 
@@ -347,7 +352,7 @@ public class FragmentGalleryNew extends Fragment {
 //                                if (mainRecyclerAdapter == null) {
                                 RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(requireActivity());
                                 mainCategoryRecycler.setLayoutManager(layoutManager);
-                                mainRecyclerAdapter = new MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, null, null);
+                                mainRecyclerAdapter = new MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange);
                                 mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
 //                                }
                                 mainRecyclerAdapter.notifyDataSetChanged();
@@ -444,7 +449,7 @@ public class FragmentGalleryNew extends Fragment {
             if (mainRecyclerAdapter == null) {
                 RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(requireActivity());
                 mainCategoryRecycler.setLayoutManager(layoutManager);
-                mainRecyclerAdapter = new MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, null, null);
+                mainRecyclerAdapter = new MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, null);
                 mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
             } else {
                 mainRecyclerAdapter.notifyDataSetChanged();

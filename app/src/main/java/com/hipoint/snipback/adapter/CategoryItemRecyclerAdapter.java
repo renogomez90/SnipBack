@@ -37,13 +37,11 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     private ItemListener mListener;
     List<Snip> snipArrayList;
     private String viewChangeValue;
-    private Integer orientationVal;
 
-    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips, String viewChange, Integer orientation) {
+    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips, String viewChange) {
         this.context = context;
         this.snipArrayList = allSnips;
         this.viewChangeValue = viewChange;
-        this.orientationVal = orientation;
     }
 
     @NonNull
@@ -59,6 +57,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
             try {
                 int duration;
                 int orientation = context.getResources().getConfiguration().orientation;
+                Log.d("cateogryitemchange", String.valueOf(viewChangeValue));
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100,100);
                 if(orientation == Configuration.ORIENTATION_PORTRAIT){
                     int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
@@ -106,8 +105,6 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     circularProgressDrawable.setCenterRadius(30F);
                     circularProgressDrawable.start();
                     Glide.with(context).load(myBitmap).placeholder(circularProgressDrawable).into(holder.itemImage);
-                    Log.d("orientationValue", String.valueOf(orientation));
-                    Log.d("viewChangeValue", String.valueOf(viewChangeValue));
                     if (viewChangeValue != null && orientation == Configuration.ORIENTATION_PORTRAIT) {
                         enlargedPortraitView(holder);
 
@@ -141,7 +138,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
         if (viewChangeValue != null) {
             if (viewChangeValue.equals("ENLARGED")) {
                 RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
-                relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
+                relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,10));
                 holder.relativeLayoutImage.setLayoutParams(relativeParams);
                 holder.itemImage.setLayoutParams((new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750)));
             }
@@ -154,7 +151,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                 RelativeLayout.LayoutParams relativeParams =
                         new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT , RelativeLayout.LayoutParams.MATCH_PARENT);
                 int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
-                relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
+                relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,10));
                 relativeParams.width = (totalWidth - (int) dpToPx(context,70)) / 2;
                 relativeParams.height = (totalWidth - (int) dpToPx(context,70)) / 2;
                 relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
