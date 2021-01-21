@@ -30,6 +30,7 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
+import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.application.AppClass.showInGallery
 import com.hipoint.snipback.dialog.KeepSnapbackVideoDialog
 import com.hipoint.snipback.dialog.SnapbackProcessingDialog
@@ -80,6 +81,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private lateinit var captureBtn   : RelativeLayout
     private lateinit var galleryBtn   : RelativeLayout
     private lateinit var playerHolder : ConstraintLayout
+    private lateinit var seekBar      : SnipbackTimeBar
     private lateinit var swipeDetector: SwipeDistanceView
 
     private val videoPathReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -311,6 +313,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         backBtn       = rootView.findViewById(R.id.back_arrow)
         captureBtn    = rootView.findViewById(R.id.button_capture)
         galleryBtn    = rootView.findViewById(R.id.button_gallery)
+        seekBar       = rootView.findViewById(R.id.exo_progress)
         swipeDetector = rootView.findViewById(R.id.swipe_detector)
 
         animBlink = AnimationUtils.loadAnimation(requireContext(), R.anim.blink)
@@ -352,7 +355,8 @@ class SnapbackFragment: Fragment(), ISaveListener {
             val percentOfDuration = scaledPercent * -1 * duration + startScrollingSeekPosition
             val newSeekPosition = percentOfDuration.roundToLong()
 
-            emitter.seekFast(newSeekPosition)
+            player.seekTo(newSeekPosition)
+//            emitter.seekFast(newSeekPosition)
         }
     }
 

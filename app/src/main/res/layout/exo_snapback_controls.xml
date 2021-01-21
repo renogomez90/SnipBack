@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:background="#44AA0000" />
 
-    <com.google.android.exoplayer2.ui.DefaultTimeBar
+    <com.hipoint.snipback.Utils.SnipbackTimeBar
         android:id="@id/exo_progress"
         style="@style/Base.Widget.AppCompat.SeekBar"
         android:layout_width="match_parent"
