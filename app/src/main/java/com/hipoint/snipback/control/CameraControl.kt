@@ -211,8 +211,12 @@ class CameraControl(val activity: FragmentActivity) {
 
                 if(!AppMainActivity.isPausing) {    //   don't restart if the app is going to background
                     setUpMediaRecorder()
-                    mMediaRecorder?.start()
-                    mIsRecordingVideo = true
+                    try {
+                        mMediaRecorder?.start()
+                        mIsRecordingVideo = true
+                    } catch (e : IllegalStateException){
+                        Log.e(TAG, "restartRecording: app may have gone to the background")
+                    }
                 }
 
                 return@async false

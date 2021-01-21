@@ -27,13 +27,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
-import com.google.android.exoplayer2.extractor.mp4.Mp4Extractor
 import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
-import com.google.android.exoplayer2.ui.DefaultTimeBar
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
@@ -71,12 +68,10 @@ import kotlinx.coroutines.Dispatchers.Main
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
-import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.Comparator
-import kotlin.collections.ArrayList
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -235,20 +230,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
                     if(fullExtension){
                         editedStart = 100L
-                        /*CoroutineScope(Default).launch {
-                            appRepository.getHDSnipById(object : AppRepository.HDSnipResult {
-                                override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
-                                    hdSnips?.let {
-                                        appRepository.deleteHDSnip(hdSnips[0])
-                                    }
-                                }
-                            }, bufferHdSnipId)
-
-                            //  update video in DB
-                            snip!!.total_video_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toInt()
-                            snip!!.snip_duration = (TimeUnit.MILLISECONDS.toSeconds(editedEnd) - TimeUnit.MILLISECONDS.toSeconds(editedStart)).toDouble()
-                            appRepository.updateSnip(snip!!)
-                        }*/
                     }
 
                     if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty()) {    //  buffer
@@ -348,11 +329,44 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     SaveActionType.SAVE_AS,
                     -> {
                         val (clip, outputName) = createSpeedChangedVideo(realVideoPath!!)
-                        (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
+                         AppClass.showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
                         Toast.makeText(requireContext(), "Saving Edits", Toast.LENGTH_SHORT).show()
                         Log.d(TAG, "onReceive: real video output = $outputName")
                     }
                     else ->{}
+                }
+            }
+        }
+    }
+
+    /**
+     * Dismisses the progress dialog in edit fragment if available,
+     * starts the FragmentPlayVideo2 with the edited video for playback
+     *
+     * @param processedVideoPath String - path of edited video to be played
+     */
+    private val progressDismissReceiver: BroadcastReceiver = object : BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let{
+                val processedVideoPath = intent.getStringExtra("processedVideoPath")
+
+                hideProgress()
+
+                if (processedVideoPath != null) {
+                    CoroutineScope(IO).launch {
+                        var snip: Snip? = null
+                        var tries = 0
+                        while (snip == null && tries < 5) {
+                            delay(50)
+                            snip = appRepository.getSnipByVideoPath(processedVideoPath)
+                            tries++
+                        }
+                        withContext(Main) {
+                            if (snip != null) {
+                                (requireActivity() as AppMainActivity).loadFragment(FragmentPlayVideo2.newInstance(snip), true)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -444,12 +458,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
         requireActivity().registerReceiver(toRealCompletionReceiver, IntentFilter(VIRTUAL_TO_REAL_ACTION))
         requireActivity().registerReceiver(extendTrimReceiver, IntentFilter(EXTEND_TRIM_ACTION))
+        requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(DISMISS_ACTION))
     }
 
     override fun onPause() {
         requireActivity().unregisterReceiver(previewTileReceiver)
         requireActivity().unregisterReceiver(toRealCompletionReceiver)
         requireActivity().unregisterReceiver(extendTrimReceiver)
+        requireActivity().unregisterReceiver(progressDismissReceiver)
         super.onPause()
     }
 
@@ -2103,6 +2119,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         const val PREVIEW_ACTION = "com.hipoint.snipback.previewTile"
         const val VIRTUAL_TO_REAL_ACTION = "com.hipoint.snipback.virtualToReal"
         const val EXTEND_TRIM_ACTION = "com.hipoint.snipback.extendTrim"
+        const val DISMISS_ACTION = "com.hipoint.snipback.dismiss"
+
         private var tries = 0
 
         var saveAction: SaveActionType = SaveActionType.CANCEL
@@ -2391,7 +2409,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 makeVirtualReal(snip!!.start_time.toInt(), snip!!.end_time.toInt())
             } else {
                 val (clip, outputName) = createSpeedChangedVideo()
-                (requireActivity() as AppMainActivity).showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
+                 AppClass.showInGallery.add(File("${clip.parent}/$outputName").nameWithoutExtension)
                 Toast.makeText(requireContext(), "Saving Edited Video", Toast.LENGTH_SHORT).show()
             }
         }else{

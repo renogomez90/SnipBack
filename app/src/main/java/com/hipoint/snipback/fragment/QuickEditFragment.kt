@@ -43,11 +43,8 @@ import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
@@ -184,7 +181,13 @@ class QuickEditFragment: Fragment() {
             }
         }
     }
-    
+
+    private val progressDismissReceiver: BroadcastReceiver = object : BroadcastReceiver(){
+        override fun onReceive(context: Context?, intent: Intent?) {
+            hideProgress()
+        }
+    }
+
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
      */
@@ -285,12 +288,14 @@ class QuickEditFragment: Fragment() {
         super.onResume()
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(VideoEditingFragment.PREVIEW_ACTION))
         requireActivity().registerReceiver(extendTrimReceiver, IntentFilter(VideoEditingFragment.EXTEND_TRIM_ACTION))
+        requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(VideoEditingFragment.DISMISS_ACTION))
         setupPlayer()
     }
 
     override fun onPause() {
         requireActivity().unregisterReceiver(previewTileReceiver)
         requireActivity().unregisterReceiver(extendTrimReceiver)
+        requireActivity().unregisterReceiver(progressDismissReceiver)
 
         if (this::player.isInitialized) {
             player.apply {

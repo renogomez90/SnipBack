@@ -29,12 +29,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.SwipedRecording
 import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.application.AppClass
+import com.hipoint.snipback.application.AppClass.swipeProcessed
 import com.hipoint.snipback.control.CameraControl
 import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.CurrentOperation
@@ -80,7 +82,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
     private val swipedFileNames      : ArrayList<String> = arrayListOf()                   //  names of files generated from swiping left
     private var parentSnip           : Snip?             = null
-    private var swipedRecording      : SwipedRecording?  = null
     private var currentOperation     : CurrentOperation  = CurrentOperation.CLIP_RECORDING
 
     //dialogs
@@ -165,15 +166,25 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     companion object {
         const val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
-        const val SNAPBACK_ACTION = "com.hipoint.snipback.SNAPBACK_ACTION"
-        const val MIN_DISTANCE = 150
+        const val SNAPBACK_ACTION      = "com.hipoint.snipback.SNAPBACK_ACTION"
+        const val PENDING_SWIPE_ACTION = "com.hipoint.snipback.PROCESS_SWIPE_ACTION"
+        const val UI_UPDATE_ACTION     = "com.hipoint.snipback.UPDATE_UI"
+            const val MIN_DISTANCE     = 150
 
-        private var videoMode: VideoMode? = null
+        private var videoMode      : VideoMode?       = null
+        internal var swipedRecording: SwipedRecording? = null
 
         private const val TAG = "Camera2VideoFragment"
         private const val FRAGMENT_DIALOG = "dialog"
         private const val THUMBS_DIRECTORY_NAME = "Thumbs"
+
         private const val REQUEST_VIDEO_PERMISSIONS = 1
+        fun getSwipedRecording(): SwipedRecording{
+            if(swipedRecording == null)
+                swipedRecording = SwipedRecording("")
+
+            return swipedRecording!!
+        }
 
         var recordClips = true //  to check if short clips should be recorded
         val VIDEO_PERMISSIONS = arrayOf(
@@ -251,6 +262,33 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var zoomIn           : ImageButton
 
     private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(SettingsDialog.SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
+    private val uiUpdateReceiver: BroadcastReceiver by lazy {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let {
+                    val showProgress = intent.getIntExtra("progress", -1)
+                    if (showProgress == VideoService.STATUS_SHOW_PROGRESS) {
+                        videoProcessing(true)
+                    } else {
+                        videoProcessing(false)
+                    }
+                }
+            }
+        }
+    }
+
+    //  get trigger for processing pending swipe and start processing
+    private val processSwipeReceiver: BroadcastReceiver by lazy {
+        object: BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let{
+                    val processedVideoPath = it.getStringExtra("processedVideoPath")!!
+                    val comingFrom = it.getSerializableExtra("comingFrom") as CurrentOperation
+                    processPendingSwipes(processedVideoPath, comingFrom)
+                }
+            }
+        }
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -412,6 +450,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }else{
             requestVideoPermissions()
         }
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(uiUpdateReceiver, IntentFilter(UI_UPDATE_ACTION))
+        LocalBroadcastManager.getInstance(requireContext()).registerReceiver(processSwipeReceiver, IntentFilter(PENDING_SWIPE_ACTION))
+        videoProcessing(false)
     }
 
     /**
@@ -422,6 +463,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         cameraControl?.stopBackgroundThread()
         cameraControl = null
 
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(uiUpdateReceiver)
+        LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(processSwipeReceiver)
         super.onPause()
     }
 
@@ -459,7 +502,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
 
                 updateFlags(recordClips = false, recordPressed = true, stopPressed = false)
-                (requireActivity() as AppMainActivity).swipeProcessed = false
+                swipeProcessed = false
                 swipedRecording = null
                 while (cameraControl!!.clipQueueSize() > 3) {
                     cameraControl?.removeClipQueueItem()?.delete()
@@ -468,7 +511,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.rec_stop -> {  // sets up UI and stops user triggered recording
                 bottomContainer.visibility = View.VISIBLE
                 recStartLayout.visibility = View.INVISIBLE
-                (requireActivity() as AppMainActivity).showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
+                AppClass.showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
                 parentSnip = null   //  resetting the session parent Snip
                 CoroutineScope(Default).launch {
                     cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
@@ -605,32 +648,36 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * */
     fun processPendingSwipes(newVideoPath: String = swipedRecording?.originalFilePath?:"", currentOperation: CurrentOperation = CurrentOperation.VIDEO_RECORDING) {
         Log.d(TAG, "processPendingSwipes: started")
-        (requireActivity() as AppMainActivity).swipeProcessed = true
+        swipeProcessed = true
 
-        if (swipedRecording != null) {
+        if (swipedRecording != null) {  // we have swiped during the user recording
             if (swipedRecording?.originalFilePath.equals(cameraControl?.getLastUserRecordedPath())) {
+                val parentPath = File(swipedRecording?.originalFilePath!!).parent
+
                 val intentService = Intent(requireContext(), VideoService::class.java)
                 val task = arrayListOf<VideoOpItem>()
 
-                //todo: get the original video and buffer here
                 val retriever = MediaMetadataRetriever()
-                val originalBuffer = "${File(swipedRecording?.originalFilePath!!).parent}/buff-${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
-                val originalVideo = "${File(swipedRecording?.originalFilePath!!).parent}/${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
+                val originalBuffer = "$parentPath/buff-${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
+                val originalVideo = "$parentPath/${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
 
                 retriever.setDataSource(newVideoPath)
 
                 val totalDuration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
                 val originalVideoDuration = userRecordDuration
 
-                val oBufferFile = VideoOpItem(
-                    operation = VideoOp.TRIMMED,
-                    clips = arrayListOf(newVideoPath),
-                    startTime = 0F,
-                    endTime = max((totalDuration - originalVideoDuration), 0).toFloat(),
-                    outputPath = originalBuffer,
-                    comingFrom = currentOperation)
+                val endTime = max((totalDuration - originalVideoDuration), 0).toFloat()
+                    //  trim out original video and buffer from combined video file
+                    val oBufferFile = VideoOpItem(
+                        operation = VideoOp.TRIMMED,
+                        clips = arrayListOf(newVideoPath),
+                        startTime = 0F,
+                        endTime = max((totalDuration - originalVideoDuration), 0).toFloat(),
+                        outputPath = originalBuffer,
+                        comingFrom = currentOperation)
 
-                bufferDetails.add(BufferDataDetails(originalBuffer, originalVideo))
+                    bufferDetails.add(BufferDataDetails(originalBuffer, originalVideo))
+                    task.add(oBufferFile)
 
                 //  creating the video file
                 val oVideoFile = VideoOpItem(
@@ -641,18 +688,17 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     outputPath = originalVideo,
                     comingFrom = currentOperation)
 
-                task.add(oBufferFile)
                 task.add(oVideoFile)
-
+                //  create buffer and video for each swipe
                 swipedRecording?.timestamps?.forEachIndexed { index, timeStamp ->
 
-                    val buffFileName = "${File(swipedRecording?.originalFilePath!!).parent}/buff-${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}-$index.mp4"
-                    val outputFileName = "${File(swipedRecording?.originalFilePath!!).parent}/${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}-$index.mp4"
+                    val buffFileName = "$parentPath/buff-${File(originalVideo).nameWithoutExtension}-$index.mp4"
+                    val outputFileName = "$parentPath/${File(originalVideo).nameWithoutExtension}-$index.mp4"
 
-                    (requireActivity() as AppMainActivity).showInGallery.add(File(outputFileName).nameWithoutExtension)
+                    AppClass.showInGallery.add(File(outputFileName).nameWithoutExtension)
                     Log.d(TAG, "processPendingSwipes: \n Output = $outputFileName, \n start = ${(timeStamp - (swipeValue / 1000)).toInt()} \n end = $timeStamp")
 
-                    //  if the merged video is passed in, then trim from the merged video
+                    //  if the merged video is passed in, then trim from the merged video to create the parts that were swiped
                     if(newVideoPath.isNotEmpty() && newVideoPath != swipedRecording!!.originalFilePath){
                         retriever.setDataSource(swipedRecording!!.originalFilePath)
                         val originalDuration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong())
@@ -669,7 +715,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             outputPath = buffFileName,
                             comingFrom = currentOperation)
 
-                        bufferDetails.add(BufferDataDetails(buffFileName, outputFileName))
+                            bufferDetails.add(BufferDataDetails(buffFileName, outputFileName))
+                            task.add(bufferFile)
 
                         //  creating the video file
                         val videoFile = VideoOpItem(
@@ -680,10 +727,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             outputPath = outputFileName,
                             comingFrom = currentOperation)
 
-                        task.add(bufferFile)
                         task.add(videoFile)
                     }else {
-
                         //  creating the buffer file
                         val bufferFile = VideoOpItem(
                             operation = VideoOp.TRIMMED,
@@ -693,7 +738,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             outputPath = buffFileName,
                             comingFrom = currentOperation)
 
-                        bufferDetails.add(BufferDataDetails(buffFileName, outputFileName))
+                            bufferDetails.add(BufferDataDetails(buffFileName, outputFileName))
+                            task.add(bufferFile)
 
                         //  creating the video file
                         val videoFile = VideoOpItem(
@@ -704,7 +750,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             outputPath = outputFileName,
                             comingFrom = currentOperation)
 
-                        task.add(bufferFile)
                         task.add(videoFile)
                     }
                 }
@@ -749,7 +794,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
             VideoService.enqueueWork(requireContext(), intentService)
 
-            (requireActivity() as AppMainActivity).showInGallery.add(File(videoFilePath).nameWithoutExtension)
+            AppClass.showInGallery.add(File(videoFilePath).nameWithoutExtension)
         }
     }
 
@@ -791,7 +836,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
 //        Toast.makeText(requireActivity(), "Capturing Previous", Toast.LENGTH_SHORT).show()
 
-        (requireActivity() as AppMainActivity).swipeProcessed = false
+        swipeProcessed = false
     }
 
     /**
@@ -880,7 +925,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val mergeFilePath = "${File(clips[0]).parent!!}/merged-$timeStamp.mp4"
             swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
-            (requireActivity() as AppMainActivity).showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+            AppClass.showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val task = arrayListOf(
@@ -933,7 +978,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             Log.d(TAG,
                 "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
             swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
-            (requireActivity() as AppMainActivity).showInGallery.add("trimmed-${clip.nameWithoutExtension}")
+            AppClass.showInGallery.add("trimmed-${clip.nameWithoutExtension}")
 
             val bufferFile = "${clip.parent}/buff-${clip.name}"
             val videoFile = "${clip.parent}/trimmed-${clip.name}"
@@ -980,7 +1025,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
         } else { //  save what we have
             swipedFileNames.add(clip.nameWithoutExtension)
-            (requireActivity() as AppMainActivity).showInGallery.add(clip.nameWithoutExtension)
+            AppClass.showInGallery.add(clip.nameWithoutExtension)
             if(swipeAction == SwipeAction.SWIPE_LEFT) {  //  we only need to save the snip in DB for left swipe
                 (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
                     actualClipTime,
@@ -1048,7 +1093,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             /*if (clip1.length() == 0L || clip2.length() == 0L)    // the file is not formed and concat will not work
                 return*/
 
-            /*(requireActivity() as AppMainActivity).showInGallery.add(clip2.nameWithoutExtension)*/   //  only the actual recording is shown, but wasn't this already save?
+            /*showInGallery.add(clip2.nameWithoutExtension)*/   //  only the actual recording is shown, but wasn't this already save?
 
 //            bufferDetails.add(BufferDataDetails(clip1.absolutePath, mergeFilePath))   //  todo: we cannot add to as buffer here before trimming
 
@@ -1222,6 +1267,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         companion object {
             private const val ARG_MESSAGE = "message"
+
             fun newInstance(message: String?): ErrorDialog {
                 val dialog = ErrorDialog()
                 val args = Bundle()
@@ -1244,7 +1290,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 .create()
         }
     }
-
 
     private fun saveSnipTimeToLocal() {
         if (timerSecond != 0) { //  user recording is in progress
@@ -1325,13 +1370,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             Log.d(TAG, "IOException while closing the stream")
             e.printStackTrace()
         }
-    }
-
-    fun getSwipedRecording(): SwipedRecording{
-        if(swipedRecording == null)
-            swipedRecording = SwipedRecording("")
-
-        return swipedRecording!!
     }
 
     fun videoProcessing(isProcessing: Boolean) {

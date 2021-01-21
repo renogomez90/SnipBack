@@ -4,11 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.JobIntentService
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.VideoUtils
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
+import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IVideoOpListener
+import com.hipoint.snipback.receiver.VideoOperationReceiver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -21,10 +24,10 @@ import java.util.*
  */
 class VideoService : JobIntentService(), IVideoOpListener {
     companion object {
-        val ACTION             = "com.hipoint.snipback.VideoOpAction"
-        val VIDEO_OP_ITEM      = "VIDEO_OP_ITEM"
-        val LAUNCHED_FROM_EXTRA      = "LAUNCHED_FROM"
-        val SWIPE_ACTION_EXTRA = "SWIPE_ACTION"
+        val ACTION              = "com.hipoint.snipback.VideoOpAction"
+        val VIDEO_OP_ITEM       = "VIDEO_OP_ITEM"
+        val LAUNCHED_FROM_EXTRA = "LAUNCHED_FROM"
+        val SWIPE_ACTION_EXTRA  = "SWIPE_ACTION"
 
         val STATUS_NO_VALUE      = -1
         val STATUS_OP_SUCCESS    = 1
@@ -46,7 +49,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
     private val TAG = VideoService::class.java.simpleName
     private val channelId = "Snipback_notification"
     private val vUtil = VideoUtils(this@VideoService)
-    private val broadcastIntent = Intent()
+    private val broadcastIntent by lazy{ Intent(this@VideoService, VideoOperationReceiver::class.java) }
 
     override fun onHandleWork(intent: Intent) {
 
@@ -65,16 +68,15 @@ class VideoService : JobIntentService(), IVideoOpListener {
         if (workQueue.isNotEmpty()) {
             val work = workQueue.remove()
 
-            broadcastIntent.apply {
-                action = ACTION
+            val updateUiIntent = Intent(VideoMode.UI_UPDATE_ACTION)
+            updateUiIntent.apply {
                 putExtra("progress", STATUS_SHOW_PROGRESS)
                 putExtra("operation", work.operation.name)
                 putExtra(LAUNCHED_FROM_EXTRA, work.comingFrom.name)
             }
-            sendBroadcast(broadcastIntent)
-
+            LocalBroadcastManager.getInstance(this@VideoService).sendBroadcast(updateUiIntent)
+            Log.d(TAG, "AVA processQueue: processing operation: ${work.operation} on ${work.clips} to get ${work.outputPath}")
             with(work) {
-                Log.d(TAG, "processQueue: operation = $operation")
                 when (operation) {
                     IVideoOpListener.VideoOp.CONCAT -> {
                         if (clips.isEmpty() || clips.size < 2) {
@@ -103,7 +105,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                         }
                     }
                     IVideoOpListener.VideoOp.TRIMMED -> {
-                        if (startTime == -1F || endTime == -1F) {
+                        if (startTime == -1F || endTime == -1F || clips[0] == outputPath || startTime == endTime) {
                             failed(IVideoOpListener.VideoOp.TRIMMED, comingFrom)
                             return@with
                         } else {
@@ -166,18 +168,21 @@ class VideoService : JobIntentService(), IVideoOpListener {
     }
 
     override fun failed(operation: IVideoOpListener.VideoOp, calledFrom: CurrentOperation) {
-        Log.e(TAG, "failed: ${operation.name}")
+        Log.e(TAG, "AVA failed: ${operation.name}")
         isProcessing = false
         //  only process the next item after the previous one is completed
 
         broadcastIntent.apply {
             action = ACTION
             putExtra("status", STATUS_OP_FAILED)
-            putExtra("progress", STATUS_HIDE_PROGRESS)
             putExtra("operation", operation.name)
             putExtra(LAUNCHED_FROM_EXTRA, calledFrom.name)
         }
         sendBroadcast(broadcastIntent)
+
+        val updateUiIntent = Intent(VideoMode.UI_UPDATE_ACTION)
+        updateUiIntent.putExtra("progress", STATUS_HIDE_PROGRESS)
+        LocalBroadcastManager.getInstance(this@VideoService).sendBroadcast(updateUiIntent)
 
         processQueue()
     }
@@ -188,18 +193,25 @@ class VideoService : JobIntentService(), IVideoOpListener {
         swipeAction: SwipeAction,
         processedVideoPath: String
     ) {
-        Log.i(TAG, "${operation.name} completed: $processedVideoPath")
+        Log.i(TAG, "AVA ${operation.name} completed: $processedVideoPath")
         isProcessing = false
         broadcastIntent.apply {
             action = ACTION
             putExtra("status", STATUS_OP_SUCCESS)
-            putExtra("progress", STATUS_HIDE_PROGRESS)
             putExtra("operation", operation.name)
             putExtra(SWIPE_ACTION_EXTRA, swipeAction.name)
             putExtra("processedVideoPath", processedVideoPath)
             putExtra(LAUNCHED_FROM_EXTRA, calledFrom.name)
         }
         sendBroadcast(broadcastIntent)
+
+        val updateUiIntent = Intent(VideoMode.UI_UPDATE_ACTION)
+        updateUiIntent.apply {
+            putExtra("progress", STATUS_HIDE_PROGRESS)
+            putExtra("operation", operation.name)
+            putExtra(LAUNCHED_FROM_EXTRA, calledFrom.name)
+        }
+        LocalBroadcastManager.getInstance(this@VideoService).sendBroadcast(updateUiIntent)
 
         //  only process the next item after the previous one is completed
         processQueue()

@@ -30,6 +30,7 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
+import com.hipoint.snipback.application.AppClass.showInGallery
 import com.hipoint.snipback.dialog.KeepSnapbackVideoDialog
 import com.hipoint.snipback.dialog.SnapbackProcessingDialog
 import com.hipoint.snipback.listener.ISaveListener
@@ -436,7 +437,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
             MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
 
         if(activity is AppMainActivity){
-            (activity as AppMainActivity).showInGallery.add(File(videoPath!!).nameWithoutExtension)
+            showInGallery.add(File(videoPath!!).nameWithoutExtension)
             (activity as AppMainActivity).addSnip(videoPath!!, duration, duration)
             activity?.supportFragmentManager?.popBackStack()
         }

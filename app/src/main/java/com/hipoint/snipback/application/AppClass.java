@@ -3,6 +3,7 @@ package com.hipoint.snipback.application;
 import android.app.Application;
 import android.util.Log;
 
+import com.hipoint.snipback.receiver.VideoOperationReceiver;
 import com.hipoint.snipback.room.db.RoomDB;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.EventData;
@@ -14,7 +15,7 @@ import java.util.List;
 public class AppClass extends Application {
 
     public RoomDB database;
-    private List<Integer> snipDurations = new ArrayList<>();
+   private List<Integer> snipDurations = new ArrayList<>();
     private static AppClass appInstance;
     private List<EventData> allEventSnips = new ArrayList<>();
     private List<EventData> eventParentSnips = new ArrayList<>();
@@ -23,6 +24,10 @@ public class AppClass extends Application {
     private long lastHDSnipId;
     private boolean isInsertionInProgress = false;
     private String thumbFilePathRoot;
+    private VideoOperationReceiver videoCompletion;
+
+    public static boolean swipeProcessed = false;
+    public static ArrayList<String> showInGallery = new ArrayList<>();    //  names of files that need to be displayed in the gallery
 
     public Event getLastCreatedEvent() {
         return lastCreatedEvent;

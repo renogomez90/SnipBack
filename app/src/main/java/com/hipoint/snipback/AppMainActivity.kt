@@ -1,10 +1,8 @@
 package com.hipoint.snipback
 
 import android.Manifest
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -13,20 +11,18 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import com.exozet.android.core.extensions.isNotNullOrEmpty
-import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.CommonUtils
+import com.hipoint.snipback.Utils.isPathInList
 import com.hipoint.snipback.application.AppClass
+import com.hipoint.snipback.application.AppClass.showInGallery
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
 import com.hipoint.snipback.fragment.*
-import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.VIRTUAL_TO_REAL_ACTION
 import com.hipoint.snipback.listener.IReplaceRequired
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
@@ -34,10 +30,7 @@ import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
-import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.videoControl.VideoService
-import com.hipoint.snipback.videoControl.VideoService.Companion.LAUNCHED_FROM_EXTRA
-import com.hipoint.snipback.videoControl.VideoService.Companion.SWIPE_ACTION_EXTRA
 import com.hipoint.snipback.videoControl.VideoService.Companion.ignoreResultOf
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.*
@@ -47,7 +40,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
-import java.lang.Integer.max
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -66,26 +58,16 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     //    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
     private val TAG = AppMainActivity::class.java.simpleName
 
-    private val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
+    private val VIDEO_DIRECTORY_NAME  = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
 
     private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
     private var onTouchListeners: MutableList<MyOnTouchListener>? = null
-    private var appViewModel: AppViewModel? = null
-    private var parentSnip: Snip? = null
-    private var addedToSnip: ArrayList<String> = arrayListOf()
-
-    var swipeProcessed: Boolean = false
-    var showInGallery: ArrayList<String> =
-        arrayListOf() //  names of files that need to be displayed in the gallery
+    private var appViewModel    : AppViewModel?                   = null
+    private var addedToSnip     : ArrayList<String>               = arrayListOf()
 
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
-
-    //  edit file replacement
-    private var fileToReplace: String? = null
-    private var replacedWith: String? = null
-    private var doReplace: Boolean = false
 
     /**
      * Registers a listener for receiving service broadcast for video operation status
@@ -93,7 +75,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     override fun onResume() {
         super.onResume()
         isPausing = false
-        registerReceiver(videoOperationReceiver, IntentFilter(VideoService.ACTION))
+//        registerReceiver(videoOperationReceiver, IntentFilter(VideoService.ACTION))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -133,7 +115,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      */
     override fun onPause() {
         isPausing = true
-        unregisterReceiver(videoOperationReceiver)
+//        unregisterReceiver(videoOperationReceiver)
         super.onPause()
     }
 
@@ -262,9 +244,14 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
     companion object {
         var isPausing = true
-        private var parentChanged: Boolean = false
-        private var virtualToReal: Boolean =
-            false  //  set this to true before trimming, so that additional operations may be applied on the new video eg. speed change
+
+        //  edit file replacement
+        internal var fileToReplace: String? = null
+        internal var replacedWith : String? = null
+        internal var parentSnip   : Snip?   = null
+        internal var doReplace    : Boolean = false
+        internal var parentChanged: Boolean = false
+        internal var virtualToReal: Boolean = false //  set this to true before trimming, so that additional operations may be applied on the new video eg. speed change
 
         const val VIDEO_MODE_TAG       = "videoMode"
         const val GALLERY_FRAGMENT_TAG = "gallery_frag"
@@ -374,12 +361,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             hdSnips.video_path_processed = snip.videoFilePath
             hdSnips.snip_id = snip.snip_id
             if (!File(snip.videoFilePath).name.contains("-") && !parentChanged ||
-                videoModeFragment.getSwipedRecording().originalFilePath!!.contains(snip.videoFilePath)
+                VideoMode.getSwipedRecording().originalFilePath!!.contains(snip.videoFilePath)
             ) { //  files names with - are edited from original todo: This is a mess
                 parentSnip = snip
             }
 
-            if (isInList(showInGallery, snip.videoFilePath)) {
+            if (showInGallery.isPathInList(snip.videoFilePath)) {
                 appRepository.insertHd_snips(hdSnips)
                 saveSnipToDB(parentSnip, hdSnips.video_path_processed)
                 getVideoThumbnail(snip, File(hdSnips.video_path_processed))
@@ -560,21 +547,21 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      * @param filePath String?
      * @return Boolean
      */
-    private fun isInList(listOfPaths: ArrayList<String>, filePath: String?): Boolean {
+/*    private fun isInList(listOfPaths: ArrayList<String>, filePath: String?): Boolean {
         var isInList = false
         listOfPaths.forEach {
             if (File(it).nameWithoutExtension == File(filePath!!).nameWithoutExtension)
                 isInList = true
         }
         return isInList
-    }
+    }*/
 
     /**
      * Video was successfully trimmed and is available at processedVideoPath
      *
      * @param processedVideoPath String
      */
-    private fun videoTrimCompleted(
+    /*private fun videoTrimCompleted(
         processedVideoPath: String,
         fromOperation: CurrentOperation,
         swipeAction: SwipeAction
@@ -615,7 +602,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 videoModeFragment.processPendingSwipes()
             }
         }
-    }
+    }*/
 
     /**
      * Video was successfully split and is available at processedVideoPath
@@ -623,7 +610,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      *
      * @param processedVideoPath String
      */
-    private fun videoSplitCompleted(
+    /*private fun videoSplitCompleted(
         processedVideoPath: String,
         comingFrom: CurrentOperation,
         swipeAction: SwipeAction
@@ -648,7 +635,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         if (!swipeProcessed) {
             videoModeFragment.processPendingSwipes(currentOperation = comingFrom)
         }
-    }
+    }*/
 
     /**
      * Video concatenation was successfully done and is available at processedVideoPath
@@ -656,7 +643,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      *
      * @param processedVideoPath
      */
-    fun videoConcatCompleted(
+    /*fun videoConcatCompleted(
         processedVideoPath: String,
         comingFrom: CurrentOperation,
         swipeAction: SwipeAction
@@ -673,13 +660,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
 
         val totalDuration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-        /*if (comingFrom != CurrentOperation.VIDEO_RECORDING) {
+        *//*if (comingFrom != CurrentOperation.VIDEO_RECORDING) {
             addSnip(
                 processedVideoPath,
                 totalDuration,
                 totalDuration
             )     //  merged file is saved to DB
-        }*/
+        }*//*
         val swipeClipDuration = videoModeFragment.swipeValue / 1000
         val bufferDuration = videoModeFragment.clipDuration / 1000
 
@@ -724,7 +711,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         } else if (!swipeProcessed && comingFrom == CurrentOperation.VIDEO_RECORDING) {
             videoModeFragment.processPendingSwipes(processedVideoPath, comingFrom)
         }
-    }
+    }*/
 
     /**
      * Video speed change was successfully done and is available at processedVideoPath
@@ -732,7 +719,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
      *
      * @param processedVideoPath
      */
-    private fun videoSpeedChangeCompleted(
+    /*private fun videoSpeedChangeCompleted(
         processedVideoPath: String,
         comingFrom: CurrentOperation,
         swipeAction: SwipeAction
@@ -770,7 +757,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             //  IReplaceRequired.parent must be called before this point for proper functioning
             addSnip(processedVideoPath, duration, duration)
         }
-    }
+    }*/
 
     /**
      * Dismisses the progress dialog in edit fragment if available,
@@ -815,7 +802,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
     }
 
-    private fun dismissQuickEditProcessingDialog(){
+    /*private fun dismissQuickEditProcessingDialog(){
         val fm = supportFragmentManager
         (fm.findFragmentByTag(QUICK_EDIT_TAG) as? QuickEditFragment)?.hideProgress()
         Toast.makeText(this, "Edit Failed", Toast.LENGTH_SHORT).show()
@@ -837,12 +824,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         previewIntent.putExtra("preview_path", processedVideoPath)
         previewIntent.action = VideoEditingFragment.PREVIEW_ACTION
         sendBroadcast(previewIntent)
-    }
+    }*/
 
     /**
      * Receives events from VideoService
      * */
-    private val videoOperationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+    /*private val videoOperationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
 
@@ -904,7 +891,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 }
             }
         }
-    }
+    }*/
 
     /**
      *  Takes in a list of media files and returns a list of durations
@@ -933,6 +920,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         return durationList
     }
 
+/*
     private fun videoFramesAdded(processedVideoPath: String, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
         if (ignoreResultOf.isNotEmpty()) {
             if (ignoreResultOf[0] == IVideoOpListener.VideoOp.KEY_FRAMES) {
@@ -944,12 +932,14 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         val intent = Intent("frames_added")
         sendBroadcast(intent)
     }
+*/
 
     private fun isFragmentVisible(fragmentTag: String): Boolean {
         val frag = supportFragmentManager.findFragmentByTag(fragmentTag)
         return frag?.isVisible ?: false
     }
 
+/*
     private fun getCurrentOperation(fromOperation: String?): CurrentOperation {
         if (fromOperation == null)
             return CurrentOperation.CLIP_RECORDING
@@ -976,6 +966,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             else -> SwipeAction.NO_ACTION
         }
     }
+*/
 
     override fun replace(oldFilePath: String, newFilePath: String) {
         fileToReplace = oldFilePath
