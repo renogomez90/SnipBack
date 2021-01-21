@@ -113,7 +113,13 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
             override fun onShowPress(e: MotionEvent?) = Unit
 
-            override fun onSingleTapUp(e: MotionEvent?): Boolean = false
+            override fun onSingleTapUp(e: MotionEvent?): Boolean {
+                if (playerView.isControllerVisible)
+                    playerView.hideController()
+                else
+                    playerView.showController()
+                return false
+            }
 
             override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
                 if (e1 != null && e2 != null) {
@@ -184,7 +190,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
-            controllerShowTimeoutMs = 2000
+            controllerShowTimeoutMs = 3000
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
         }
 
