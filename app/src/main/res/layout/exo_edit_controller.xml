@@ -203,7 +203,7 @@
             <ImageButton
                 android:id="@+id/toStartBtn"
                 android:layout_width="0dp"
-                android:layout_height="35dp"
+                android:layout_height="30dp"
                 android:layout_weight="2.5"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/no_desc"
@@ -219,7 +219,7 @@
                 <ImageButton
                     android:id="@id/exo_play"
                     android:layout_width="match_parent"
-                    android:layout_height="35dp"
+                    android:layout_height="30dp"
                     android:layout_gravity="center"
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/no_desc"
@@ -229,7 +229,7 @@
                 <ImageButton
                     android:id="@id/exo_pause"
                     android:layout_width="match_parent"
-                    android:layout_height="35dp"
+                    android:layout_height="30dp"
                     android:layout_gravity="center"
                     android:background="@android:color/transparent"
                     android:contentDescription="@string/no_desc"
