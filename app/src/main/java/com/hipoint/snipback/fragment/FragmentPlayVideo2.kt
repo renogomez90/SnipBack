@@ -186,7 +186,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
-            playWhenReady = true
+            playWhenReady = false
         }
 
         playerView.apply {
@@ -390,7 +390,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             if (it)
                 startScrollingSeekPosition = player.currentPosition
 
-            player.playWhenReady = !paused
         }
 
         val emitter = SeekPositionEmitter()
