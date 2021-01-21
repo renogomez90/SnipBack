@@ -184,7 +184,29 @@ class QuickEditFragment: Fragment() {
 
     private val progressDismissReceiver: BroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
-            hideProgress()
+            intent?.let {
+                val processedVideoPath = intent.getStringExtra("processedVideoPath")
+                hideProgress()
+
+                if (processedVideoPath != null) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        var snip: Snip? = null
+                        var tries = 0
+                        while (snip == null && tries < 5) {
+                            delay(50)
+                            snip = appRepository.getSnipByVideoPath(processedVideoPath)
+                            tries++
+                        }
+                        withContext(Dispatchers.Main) {
+                            if (snip != null) {
+                                (requireActivity() as AppMainActivity).loadFragment(
+                                    FragmentPlayVideo2.newInstance(snip),
+                                    true)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
