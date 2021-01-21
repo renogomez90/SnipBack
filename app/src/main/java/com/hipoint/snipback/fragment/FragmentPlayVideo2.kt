@@ -57,6 +57,7 @@ import java.io.File
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
@@ -554,7 +555,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                         withContext(Main) {
                             quickEditBtn.visibility = View.VISIBLE
                             quickEditTimeTxt.text =
-                                "-${TimeUnit.MILLISECONDS.toSeconds(bufferDuration)} s"
+                                "-${(bufferDuration.toFloat()/1000).roundToInt()} s"
                         }
                         bufferAvailable = true
                         bufferPath = sorted[0].video_path_processed

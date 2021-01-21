@@ -61,10 +61,10 @@ class QuickEditFragment: Fragment() {
     private var seekAction = EditSeekControl.MOVE_NORMAL
 
     private var timeStamp    : String? = null
-    private var previewThumbs: File? = null
+    private var previewThumbs: File?   = null
     // file paths
     private var bufferHdSnipId: Int     = 0
-    private var videoSnipId: Int     = 0
+    private var videoSnipId   : Int     = 0
     private var bufferPath    : String? = null
     private var videoPath     : String? = null
     //  adapters
@@ -404,10 +404,11 @@ class QuickEditFragment: Fragment() {
             0,
             TimeUnit.MILLISECONDS.toMicros(bufferDuration)
         )
+        val clippedVideoDuration = videoDuration/1000
         val clip2 = ClippingMediaSource(
             videoSource,
             0,
-            TimeUnit.MILLISECONDS.toMicros(videoDuration)
+            TimeUnit.SECONDS.toMicros(clippedVideoDuration)
         )
         val mediaSource = ConcatenatingMediaSource(true, clip1, clip2)
 
