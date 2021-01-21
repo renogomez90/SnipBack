@@ -1831,7 +1831,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         playerView.apply {
-            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
             controllerAutoShow = false
             controllerShowTimeoutMs = -1
             controllerHideOnTouch = false
