@@ -37,6 +37,7 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     private ItemListener mListener;
     List<Snip> snipArrayList;
     private String viewChangeValue;
+    private int orientation,totalWidth;
 
     public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips, String viewChange) {
         this.context = context;
@@ -52,21 +53,20 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
 
     @Override
     public void onBindViewHolder(@NonNull CategoryItemViewHolder holder, int position) {
+        orientation = context.getResources().getConfiguration().orientation;
+        totalWidth = context.getResources().getDisplayMetrics().widthPixels;
         if (snipArrayList != null) {
             Snip snip = snipArrayList.get(position);
             try {
                 int duration;
-                int orientation = context.getResources().getConfiguration().orientation;
                 Log.d("cateogryitemchange", String.valueOf(viewChangeValue));
                 RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(100,100);
                 if(orientation == Configuration.ORIENTATION_PORTRAIT){
-                    int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
                     params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
                     params.width = (totalWidth - (int) dpToPx(context,4)) / 4;
                     params.height = (totalWidth - (int) dpToPx(context,4)) / 4;
                     holder.relativeLayoutImage.setLayoutParams(params);
                 }else {
-                    int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
                     params.width = totalWidth / 8;
                     params.height = totalWidth / 8;
                     params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
@@ -150,7 +150,6 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
             if (viewChangeValue.equals("ENLARGED")) {
                 RelativeLayout.LayoutParams relativeParams =
                         new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT , RelativeLayout.LayoutParams.MATCH_PARENT);
-                int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
                 relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,10));
                 relativeParams.width = (totalWidth - (int) dpToPx(context,70)) / 2;
                 relativeParams.height = (totalWidth - (int) dpToPx(context,70)) / 2;

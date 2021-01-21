@@ -111,7 +111,7 @@ public class FragmentGalleryNew extends Fragment {
         if(savedInstanceState!=null){
             viewChange = savedInstanceState.getString("viewChangeValue");
             viewButtonClicked = savedInstanceState.getBoolean("buttonClickedValue");
-            updateViewButtonUI(viewButtonClicked);
+            updateViewButtonUI(viewButtonClicked); // update viewButton on orientation change
         }
     }
 
@@ -152,8 +152,8 @@ public class FragmentGalleryNew extends Fragment {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent();
-                intent.setAction(android.content.Intent.ACTION_GET_CONTENT);
-                intent.setType("video/*");
+                intent.setAction(Intent.ACTION_VIEW);
+                intent.setType("image/*");
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(intent);
             }
@@ -236,7 +236,7 @@ public class FragmentGalleryNew extends Fragment {
             }
         });
 
-        view_button.setOnClickListener(new View.OnClickListener() {
+        view_button.setOnClickListener(new View.OnClickListener() { //enlarge Views on click
             @Override
             public void onClick(View v) {
                 if (!viewButtonClicked) {
@@ -258,7 +258,7 @@ public class FragmentGalleryNew extends Fragment {
         return rootView;
     }
 
-    private void updateViewButtonUI(Boolean viewButtonClicked){
+    private void updateViewButtonUI(Boolean viewButtonClicked){ // view button wasn't changing on rotation
         if (viewButtonClicked){
             view_button.setImageResource(R.drawable.ic_view);
             view_label.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
