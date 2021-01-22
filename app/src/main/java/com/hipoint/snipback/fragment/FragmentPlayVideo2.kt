@@ -347,6 +347,16 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             }
         })
 
+        seekBar.setOnTouchListener { v, event ->
+            if(event.action == MotionEvent.ACTION_MOVE){
+                val totalX = seekBar.width
+                val seekPercent = (event.x*100)/totalX
+                val newSeekPosition = player.duration * seekPercent / 100
+                player.seekTo(newSeekPosition.toLong())
+            }
+            return@setOnTouchListener false
+        }
+
         initSwipeControls()
     }
 

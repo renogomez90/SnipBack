@@ -5,12 +5,15 @@ import VideoHandle.OnEditorListener
 import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.annotation.SuppressLint
 import android.content.*
 import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaScannerConnection
+import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.provider.MediaStore
 import android.provider.MediaStore.Images
 import android.util.Log
@@ -21,11 +24,13 @@ import android.webkit.MimeTypeMap
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import com.hipoint.snipback.AppMainActivity
@@ -43,11 +48,14 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
+import kotlinx.android.synthetic.main.activity_main2.*
+import kotlinx.android.synthetic.main.warningdialog_savevideo.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
+import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -233,9 +241,20 @@ class SnapbackFragment: Fragment(), ISaveListener {
                 }
             }
         })
+
+        player.addAnalyticsListener(object : AnalyticsListener {
+            override fun onSeekStarted(eventTime: AnalyticsListener.EventTime) {
+//                start tracking
+            }
+
+            override fun onSeekProcessed(eventTime: AnalyticsListener.EventTime) {
+//                stop tracking
+            }
+        })
         initSwipeControls()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun bindListeners() {
         captureBtn.setOnClickListener {
             if(hasStoragePermission()) {
@@ -258,6 +277,16 @@ class SnapbackFragment: Fragment(), ISaveListener {
             intent.data = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
 
             startActivity(Intent.createChooser(intent, "Open folder"))
+        }
+
+        seekBar.setOnTouchListener { v, event ->
+            if(event.action == MotionEvent.ACTION_MOVE){
+                val totalX = seekBar.width
+                val seekPercent = (event.x*100)/totalX
+                val newSeekPosition = player.duration * seekPercent / 100
+                player.seekTo(newSeekPosition.toLong())
+            }
+            return@setOnTouchListener false
         }
     }
 
@@ -459,4 +488,5 @@ class SnapbackFragment: Fragment(), ISaveListener {
         videoPath = ""
         super.onDestroy()
     }
+
 }
