@@ -74,9 +74,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/bottom_cont"
-        android:visibility="visible"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
+        android:visibility="gone"
         android:layout_marginBottom="50dp"
         app:layout_constraintBottom_toTopOf="@id/bottom_cont"
         app:layout_constraintBottom_toBottomOf="parent">
@@ -85,6 +83,8 @@
             android:id="@+id/zoom_controller"
             android:layout_width="350dp"
             android:layout_height="30dp"
+            android:layout_marginStart="35dp"
+            android:layout_marginEnd="35dp"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:visibility="visible"
@@ -94,11 +94,10 @@
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/rec_start_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="60dp"
         android:layout_marginBottom="30dp"
         android:gravity="center"
         android:visibility="invisible"
@@ -106,8 +105,10 @@
 
         <ImageButton
             android:id="@+id/rec_stop"
-            android:layout_width="wrap_content"
-            android:layout_height="43dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:scaleType="fitXY"
+            android:layout_marginEnd="5dp"
             android:background="@drawable/round_transparent_new"
             android:contentDescription="@string/no_desc"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -118,8 +119,9 @@
 
         <ImageButton
             android:id="@+id/r_2_shutter"
-            android:layout_width="wrap_content"
+            android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_marginTop="8dp"
             android:layout_marginStart="12dp"
             android:background="@drawable/round_transparent"
             android:contentDescription="@string/no_desc"
@@ -128,11 +130,11 @@
             app:srcCompat="@drawable/ic_shutter"
             tools:ignore="VectorDrawableCompat" />
 
-
         <ImageButton
             android:id="@+id/r_3_bookmark"
-            android:layout_width="wrap_content"
+            android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_marginTop="8dp"
             android:layout_marginEnd="12dp"
             android:background="@drawable/round_transparent"
             android:contentDescription="@string/no_desc"
@@ -142,6 +144,7 @@
             tools:ignore="VectorDrawableCompat" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/bottom_cont"
@@ -159,8 +162,8 @@
         <ImageButton
             android:contentDescription="@string/no_desc"
             android:id="@+id/gallery_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="@drawable/round_transparent"
             app:srcCompat="@drawable/ic_gallery"
             tools:ignore="VectorDrawableCompat"
@@ -172,8 +175,8 @@
         <ImageButton
             android:contentDescription="@string/no_desc"
             android:id="@+id/switch_cam_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_toEndOf="@id/gallery_btn"
             android:background="@drawable/round_transparent"
             app:srcCompat="@drawable/ic_check"
@@ -185,8 +188,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/con"
-            android:layout_width="140dp"
-            android:layout_height="40dp"
+            android:layout_width="165dp"
+            android:layout_height="60dp"
             android:layout_toEndOf="@id/switch_cam_btn"
             android:gravity="center"
             app:layout_constraintBottom_toBottomOf="@id/bottom_cont"
@@ -196,9 +199,10 @@
 
             <ImageButton
                 android:id="@+id/back_video_btn"
-                android:layout_width="60dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="12dp"
+                android:layout_width="70dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="11dp"
+                android:layout_marginEnd="30dp"
                 android:background="@drawable/curve"
                 android:contentDescription="@string/no_desc"
                 app:layout_constraintStart_toStartOf="parent"
@@ -206,12 +210,12 @@
                 app:srcCompat="@drawable/ic_back_video"
                 tools:ignore="VectorDrawableCompat" />
 
-
             <ImageButton
                 android:id="@+id/back_photo_btn"
-                android:layout_width="60dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="12dp"
+                android:layout_width="70dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="11dp"
                 android:background="@drawable/curve2"
                 android:contentDescription="@string/no_desc"
                 app:layout_constraintStart_toEndOf="@id/back_video_btn"
@@ -221,9 +225,10 @@
 
             <ImageButton
                 android:id="@+id/rec"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="45dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginStart="50dp"
+                android:layout_marginTop="2dp"
                 android:background="@drawable/ic_rec"
                 android:contentDescription="@string/no_desc"
                 app:layout_constraintStart_toStartOf="parent"
@@ -233,8 +238,8 @@
         <ImageButton
             android:contentDescription="@string/no_desc"
             android:id="@+id/shutter_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_toEndOf="@id/con"
             android:background="@drawable/round_transparent"
             app:srcCompat="@drawable/ic_camera_diaphram"
@@ -247,8 +252,8 @@
         <ImageButton
             android:contentDescription="@string/no_desc"
             android:id="@+id/menu_btn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_toEndOf="@id/shutter_btn"
             android:background="@drawable/round_transparent"
             app:srcCompat="@drawable/ic_menu"
