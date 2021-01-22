@@ -75,44 +75,22 @@
         android:layout_height="wrap_content"
         android:layout_above="@id/bottom_cont"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@id/bottom_cont">
-
-        <ImageButton
-            android:id="@+id/zoom_out_btn"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:background="@drawable/ic_remove_black_24dp"
-            android:contentDescription="@string/no_desc"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:layout_marginBottom="50dp"
+        app:layout_constraintBottom_toTopOf="@id/bottom_cont"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <SeekBar
             android:id="@+id/zoom_controller"
-            android:layout_width="339dp"
-            android:layout_height="wrap_content"
+            android:layout_width="350dp"
+            android:layout_height="30dp"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/zoom_in_btn"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintStart_toEndOf="@id/zoom_out_btn"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageButton
-            android:id="@+id/zoom_in_btn"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:background="@drawable/ic_add_black_24dp"
-            android:contentDescription="@string/no_desc"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

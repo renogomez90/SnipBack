@@ -258,8 +258,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var bottomContainer  : ConstraintLayout
     private lateinit var zoomControlLayout: ConstraintLayout
     private lateinit var seekBar          : SeekBar
-    private lateinit var zoomOut          : ImageButton
-    private lateinit var zoomIn           : ImageButton
 
     private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(SettingsDialog.SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
     private val uiUpdateReceiver: BroadcastReceiver by lazy {
@@ -346,8 +344,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         recordStopButton  = rootView.findViewById(R.id.rec_stop)
         zoomControlLayout = rootView.findViewById(R.id.zoom_control_layout)
         seekBar           = rootView.findViewById(R.id.zoom_controller)
-        zoomOut           = rootView.findViewById(R.id.zoom_out_btn)
-        zoomIn            = rootView.findViewById(R.id.zoom_in_btn)
         r3Bookmark        = rootView.findViewById(R.id.r_3_bookmark)
         r2Shutter         = rootView.findViewById(R.id.r_2_shutter)
         takePhoto         = rootView.findViewById(R.id.shutter_btn)
@@ -364,8 +360,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         recordStopButton.setOnClickListener(this)
         r2Shutter.setOnClickListener(this)
         zoomControlLayout.setOnClickListener(this)
-        zoomIn.setOnClickListener(this)
-        zoomOut.setOnClickListener(this)
         rlVideo.setOnClickListener(this)
         recordButton.setOnClickListener(this)
         capturePrevious.setOnClickListener(this)
@@ -524,28 +518,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
             R.id.r_3_bookmark -> {
                 saveSnipTimeToLocal()
-            }
-            R.id.zoom_out_btn -> {
-                if (cameraControl!!.getZoomLevel() <= mMaxZoom + 1) {
-                    if (mProgress > mMinZoom) {
-                        mProgress--
-                        cameraControl?.setCurrentZoom((mMinZoom + mProgress * zoomStep).roundToInt().toFloat())
-                        seekBar.progress = cameraControl!!.getCurrentZoom().toInt()
-                    } else {
-                        mProgress = 0f
-                    }
-                }
-            }
-            R.id.zoom_in_btn -> {
-                if (cameraControl!!.getCurrentZoom() <= mMaxZoom) {
-                    if (mProgress < mMaxZoom) {
-                        mProgress++
-                        cameraControl?.setCurrentZoom((mMinZoom + mProgress * zoomStep).roundToInt().toFloat())
-                        seekBar.progress = cameraControl!!.getCurrentZoom().toInt()
-                    } else {
-                        mProgress = 3f
-                    }
-                }
             }
             R.id.shutter_btn,
             R.id.r_2_shutter -> {
