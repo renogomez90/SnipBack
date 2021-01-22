@@ -1,28 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rl_video"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/transparent_black_100"
     android:fillAfter="true"
-    android:fillEnabled="true"
-    android:background="@color/transparent_black_100">
+    android:fillEnabled="true">
 
     <com.hipoint.snipback.Utils.AutoFitTextureView
         android:id="@+id/texture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <View
         android:id="@+id/swipeDetection"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent" />
 
     <View
         android:id="@+id/overlay"
@@ -31,10 +30,10 @@
         android:alpha="0.9"
         android:background="@color/colorBlack"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Chronometer
         android:id="@+id/chronometer"
@@ -52,48 +51,36 @@
         android:textColor="#fff"
         android:textSize="14sp"
         android:visibility="invisible"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
+        android:id="@+id/zoom_factor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
         android:text="1x"
-        android:id="@+id/zoom_factor"
         android:textColor="@color/colorWhite"
         android:visibility="gone"
-        android:layout_centerInParent="true"
-        android:layout_above="@id/zoom_control_layout"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/zoom_controller"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/zoom_control_layout"/>
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/zoom_control_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/bottom_cont"
+    <SeekBar
+        android:id="@+id/zoom_controller"
+        android:layout_width="350dp"
+        android:layout_height="30dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="35dp"
+        android:layout_marginEnd="35dp"
+        android:layout_marginBottom="125dp"
         android:visibility="visible"
-        android:layout_marginBottom="50dp"
-        app:layout_constraintBottom_toTopOf="@id/bottom_cont"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
 
-        <SeekBar
-            android:id="@+id/zoom_controller"
-            android:layout_width="350dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="35dp"
-            android:layout_marginEnd="35dp"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="true"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/rec_start_container"
         android:layout_width="match_parent"
@@ -107,10 +94,10 @@
             android:id="@+id/rec_stop"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:scaleType="fitXY"
             android:layout_marginEnd="5dp"
             android:background="@drawable/round_transparent_new"
             android:contentDescription="@string/no_desc"
+            android:scaleType="fitXY"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent"
@@ -121,8 +108,8 @@
             android:id="@+id/r_2_shutter"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginTop="8dp"
             android:layout_marginStart="12dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/round_transparent"
             android:contentDescription="@string/no_desc"
             app:layout_constraintStart_toEndOf="@id/rec_stop"
@@ -150,41 +137,41 @@
         android:id="@+id/bottom_cont"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="30dp"
         android:gravity="center"
+        android:orientation="horizontal"
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
         <ImageButton
-            android:contentDescription="@string/no_desc"
             android:id="@+id/gallery_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@drawable/round_transparent"
-            app:srcCompat="@drawable/ic_gallery"
-            tools:ignore="VectorDrawableCompat"
-            app:layout_constraintStart_toStartOf="parent"
+            android:contentDescription="@string/no_desc"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_cont"
             app:layout_constraintEnd_toStartOf="@id/switch_cam_btn"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
-            app:layout_constraintBottom_toBottomOf="@id/bottom_cont"/>
+            app:srcCompat="@drawable/ic_gallery"
+            tools:ignore="VectorDrawableCompat" />
 
         <ImageButton
-            android:contentDescription="@string/no_desc"
             android:id="@+id/switch_cam_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_toEndOf="@id/gallery_btn"
             android:background="@drawable/round_transparent"
-            app:srcCompat="@drawable/ic_check"
-            tools:ignore="VectorDrawableCompat"
-            app:layout_constraintStart_toEndOf="@id/gallery_btn"
+            android:contentDescription="@string/no_desc"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_cont"
             app:layout_constraintEnd_toStartOf="@id/con"
+            app:layout_constraintStart_toEndOf="@id/gallery_btn"
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
-            app:layout_constraintBottom_toBottomOf="@id/bottom_cont"/>
+            app:srcCompat="@drawable/ic_check"
+            tools:ignore="VectorDrawableCompat" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/con"
@@ -236,32 +223,32 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <ImageButton
-            android:contentDescription="@string/no_desc"
             android:id="@+id/shutter_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_toEndOf="@id/con"
             android:background="@drawable/round_transparent"
-            app:srcCompat="@drawable/ic_camera_diaphram"
-            tools:ignore="VectorDrawableCompat"
-            app:layout_constraintStart_toEndOf="@id/con"
+            android:contentDescription="@string/no_desc"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_cont"
             app:layout_constraintEnd_toStartOf="@id/menu_btn"
+            app:layout_constraintStart_toEndOf="@id/con"
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
-            app:layout_constraintBottom_toBottomOf="@id/bottom_cont"/>
+            app:srcCompat="@drawable/ic_camera_diaphram"
+            tools:ignore="VectorDrawableCompat" />
 
         <ImageButton
-            android:contentDescription="@string/no_desc"
             android:id="@+id/menu_btn"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_toEndOf="@id/shutter_btn"
             android:background="@drawable/round_transparent"
-            app:srcCompat="@drawable/ic_menu"
-            tools:ignore="VectorDrawableCompat"
-            app:layout_constraintStart_toEndOf="@id/shutter_btn"
+            android:contentDescription="@string/no_desc"
+            app:layout_constraintBottom_toBottomOf="@id/bottom_cont"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/shutter_btn"
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
-            app:layout_constraintBottom_toBottomOf="@id/bottom_cont"/>
+            app:srcCompat="@drawable/ic_menu"
+            tools:ignore="VectorDrawableCompat" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>

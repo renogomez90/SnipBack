@@ -256,7 +256,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var rlVideo          : ConstraintLayout
     private lateinit var recStartLayout   : ConstraintLayout
     private lateinit var bottomContainer  : ConstraintLayout
-    private lateinit var zoomControlLayout: ConstraintLayout
     private lateinit var seekBar          : SeekBar
 
     private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(SettingsDialog.SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
@@ -342,7 +341,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         recStartLayout    = rootView.findViewById(R.id.rec_start_container)
         bottomContainer   = rootView.findViewById(R.id.bottom_cont)
         recordStopButton  = rootView.findViewById(R.id.rec_stop)
-        zoomControlLayout = rootView.findViewById(R.id.zoom_control_layout)
         seekBar           = rootView.findViewById(R.id.zoom_controller)
         r3Bookmark        = rootView.findViewById(R.id.r_3_bookmark)
         r2Shutter         = rootView.findViewById(R.id.r_2_shutter)
@@ -359,7 +357,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         r3Bookmark.setOnClickListener(this)
         recordStopButton.setOnClickListener(this)
         r2Shutter.setOnClickListener(this)
-        zoomControlLayout.setOnClickListener(this)
         rlVideo.setOnClickListener(this)
         recordButton.setOnClickListener(this)
         capturePrevious.setOnClickListener(this)
