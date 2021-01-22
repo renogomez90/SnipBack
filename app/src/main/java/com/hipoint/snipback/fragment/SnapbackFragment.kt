@@ -100,12 +100,12 @@ class SnapbackFragment: Fragment(), ISaveListener {
     companion object{
         val SNAPBACK_PATH_ACTION = "com.hipoint.snipback.SNAPBACK_VIDEO_PATH"
         val EXTRA_VIDEO_PATH = "videoPath"
-        
+
         var fragment: SnapbackFragment? = null
 
         @JvmStatic
         var videoPath: String? = null
-        
+
         fun newInstance(videoPath: String): SnapbackFragment {
             val bundle = Bundle()
             bundle.putString(EXTRA_VIDEO_PATH, videoPath)
@@ -233,7 +233,6 @@ class SnapbackFragment: Fragment(), ISaveListener {
                 }
             }
         })
-
         initSwipeControls()
     }
 
@@ -263,7 +262,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
     }
 
     /**
-     * captures and saves the current frome
+     * captures and saves the current frame
      */
     private fun performCapture() {
         val storageFile = File(EXTERNAL_DIR_PATH)
@@ -450,6 +449,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
     override fun save() {}
 
     override fun exit() {
+        File(videoPath).delete()    //  since we can discard this file
         requireActivity().supportFragmentManager.popBackStack()
     }
 

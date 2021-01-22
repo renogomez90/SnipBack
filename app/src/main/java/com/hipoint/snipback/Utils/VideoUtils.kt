@@ -151,10 +151,10 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (sec < end)
             end = sec
 
-        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING)
+        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT)
             "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
         else
-            "-ss $start -i ${clip.absolutePath} -to ${end - start} -x264opts -x264-params keyint=2:min-keyint=1 -keyint_min=1 -c copy -y $outputPath"   // without re-encoding
+            "-ss $start -i ${clip.absolutePath} -to ${end - start} -c copy -y $outputPath"   // without re-encoding
 
         /*"-ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -threads 4 -y $outputPath"   // without re-encoding*/
 
