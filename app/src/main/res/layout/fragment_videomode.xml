@@ -74,7 +74,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@id/bottom_cont"
-        android:visibility="gone"
+        android:visibility="visible"
         android:layout_marginBottom="50dp"
         app:layout_constraintBottom_toTopOf="@id/bottom_cont"
         app:layout_constraintBottom_toBottomOf="parent">
