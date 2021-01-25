@@ -1473,13 +1473,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val position = if(player.currentWindowIndex == 0) currentPosition
         else bufferDuration + currentPosition
 
+        /*
+        //  check if existing segment and stop if existing
         speedDetailSet.forEach{
             if(position in it.timeDuration!!.first .. it.timeDuration!!.second){
                 resetPlaybackUI()
                 Toast.makeText(requireContext(), "Cannot choose existing segment", Toast.LENGTH_SHORT).show()
                 return
             }
-        }
+        }*/
 
         setupForEdit()
         segmentCount += 1   //  a new segment is active
