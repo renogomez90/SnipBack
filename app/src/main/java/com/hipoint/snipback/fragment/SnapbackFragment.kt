@@ -10,10 +10,9 @@ import android.content.*
 import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaScannerConnection
-import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
+import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.provider.MediaStore.Images
 import android.util.Log
@@ -24,8 +23,8 @@ import android.webkit.MimeTypeMap
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.app.ActivityCompat
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
@@ -55,7 +54,6 @@ import kotlinx.coroutines.Dispatchers.Default
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
-import java.lang.Runnable
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -69,9 +67,6 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private val PROCESSING_SNAPBACK_DIALOG = "com.hipoint.snipback.SNAPBACK_VIDEO_PROCESSING"
     private val SAVE_SNAPBACK_DIALOG       = "com.hipoint.snipback.SNAPBACK_SAVE_VIDEO"
     private val EXTERNAL_DIR_NAME          = "Snipback"
-    private val EXTERNAL_DIR_PATH: String by lazy{
-        "$mediaStorageDir/$EXTERNAL_DIR_NAME"
-    }
 
     private val retries = 3
     private var tries   = 0
@@ -104,6 +99,9 @@ class SnapbackFragment: Fragment(), ISaveListener {
     }
 
     private val mediaStorageDir by lazy { requireContext().externalMediaDirs[0] }
+    private val EXTERNAL_DIR_PATH: String by lazy{
+        "$mediaStorageDir/$EXTERNAL_DIR_NAME"
+    }
 
     companion object{
         val SNAPBACK_PATH_ACTION = "com.hipoint.snipback.SNAPBACK_VIDEO_PATH"
@@ -270,13 +268,34 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
         galleryBtn.setOnClickListener {
             //  launch gallery
-            val intent = Intent()
-            intent.action = Intent.ACTION_VIEW
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
-            intent.type = "image/*"
-            intent.data = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+//            val intent = Intent()
+//            intent.action = Intent.ACTION_VIEW
+//            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+//            intent.type = "image/*"
+//            intent.data = android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+//            startActivity(Intent.createChooser(intent, "Open folder"))
 
-            startActivity(Intent.createChooser(intent, "Open folder"))
+            val photoLaunchIntent = Intent(Intent.ACTION_VIEW)
+            val mediaDirPath = requireContext().externalMediaDirs[0].absolutePath + "/Snipback/"
+            val fileUri = FileProvider.getUriForFile(requireContext().applicationContext,
+                requireContext().packageName + ".fileprovider",
+                File(mediaDirPath))
+            photoLaunchIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+
+            photoLaunchIntent.setDataAndType(fileUri,
+                DocumentsContract.Document.MIME_TYPE_DIR) //   this is correct way to do this BUT Samsung and Huawei doesn't support it
+
+
+            if (photoLaunchIntent.resolveActivityInfo(requireContext().packageManager, 0) == null) {
+                photoLaunchIntent.setDataAndType(fileUri,
+                    "resource/folder") //  this will work with some file managers
+                if (photoLaunchIntent.resolveActivityInfo(requireContext().packageManager,
+                        0) == null
+                ) {
+                    photoLaunchIntent.setDataAndType(fileUri, "*/*") //  just open with anything
+                }
+            }
+            startActivity(Intent.createChooser(photoLaunchIntent, "Choose"))
         }
 
         seekBar.setOnTouchListener { v, event ->
@@ -448,7 +467,8 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
                 values.put(Images.Media.DATE_TAKEN, System.currentTimeMillis())
                 values.put(Images.Media.MIME_TYPE, "image/jpeg")
-                values.put(MediaStore.MediaColumns.DATA, "${EXTERNAL_DIR_PATH}/IMAGE_${timeStamp}.jpg")
+                values.put(MediaStore.MediaColumns.DATA,
+                    "${EXTERNAL_DIR_PATH}/IMAGE_${timeStamp}.jpg")
 
                 context!!.contentResolver.insert(Images.Media.EXTERNAL_CONTENT_URI, values)
             }

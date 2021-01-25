@@ -340,11 +340,11 @@ class QuickEditFragment: Fragment() {
         savedInstanceState: Bundle?,
     ): View? {
 
-        rootView       = inflater.inflate(R.layout.fragment_quickedit         , container, false)
+        rootView       = inflater.inflate(R.layout.fragment_quickedit, container, false)
         appRepository  = AppRepository(requireActivity().applicationContext)
         appViewModel   = ViewModelProvider(this).get(AppViewModel::class.java)
         bufferHdSnipId = requireArguments().getInt("bufferId")
-        videoSnipId  = requireArguments().getInt("videoSnipId")
+        videoSnipId    = requireArguments().getInt("videoSnipId")
         bufferPath     = requireArguments().getString("bufferPath")
         videoPath      = requireArguments().getString("videoPath")
 

@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -151,11 +153,27 @@ public class FragmentGalleryNew extends Fragment {
         photolabel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent();
+                /*Intent intent = new Intent();
                 intent.setAction(Intent.ACTION_VIEW);
                 intent.setType("image/*");
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
+                startActivity(intent);*/
+
+                Intent photoLaunchIntent = new Intent(Intent.ACTION_VIEW);
+                String mediaDirPath = requireContext().getExternalMediaDirs()[0].getAbsolutePath() + "/Snipback/";
+//                Uri fileUri = Uri.fromFile(new File(mediaDirPath));
+                Uri fileUri = FileProvider.getUriForFile(requireContext().getApplicationContext(), requireContext().getPackageName()+".fileprovider", new File(mediaDirPath));
+                photoLaunchIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+                photoLaunchIntent.setDataAndType(fileUri, DocumentsContract.Document.MIME_TYPE_DIR);    //   this is correct way to do this BUT Samsung and Huawei doesn't support it
+
+                if (photoLaunchIntent.resolveActivityInfo(requireContext().getPackageManager(), 0) == null) {
+                    photoLaunchIntent.setDataAndType(fileUri, "resource/folder");   //  this will work with some file managers
+                    if (photoLaunchIntent.resolveActivityInfo(requireContext().getPackageManager(), 0) == null) {
+                        photoLaunchIntent.setDataAndType(fileUri, "*/*");   //  just open with anything
+                    }
+                }
+                startActivity(Intent.createChooser(photoLaunchIntent, "Choose"));
             }
         });
 
