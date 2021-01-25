@@ -392,19 +392,27 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 return false
             }
 
-            override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+            override fun onScroll(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
                 if (e1 != null && e2 != null) {
                     val speed = (distanceX / (e2.eventTime - e1.eventTime)).absoluteValue
-                    if ((speed * 100) < 1.0F) {  // slow
-                        if (player.seekParameters != SeekParameters.EXACT) {
-                            player.setSeekParameters(SeekParameters.EXACT)
-                        }
-                    } else { //  fast
-                        if (player.seekParameters != SeekParameters.CLOSEST_SYNC) {
-                            player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                    if (editAction == EditAction.EXTEND_TRIM)
+                        player.setSeekParameters(SeekParameters.EXACT)
+                    else {
+                        if ((speed * 100) < 1.0F) {  // slow
+                            if (player.seekParameters != SeekParameters.EXACT) {
+                                player.setSeekParameters(SeekParameters.EXACT)
+                            }
+                        } else { //  fast
+                            if (player.seekParameters != SeekParameters.CLOSEST_SYNC) {
+                                player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                            }
                         }
                     }
-
                 }
                 return false
             }
@@ -412,7 +420,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             override fun onLongPress(e: MotionEvent?) {
             }
 
-            override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
                 return false
             }
         })
@@ -1397,6 +1410,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
                 val endValue   = (endingTimestamps * 100 / maxDuration).toFloat()
                 extendRangeMarker(startValue, endValue)
+                player.setSeekParameters(SeekParameters.EXACT)
 
                 if (isSeekbarShown) {
                     seekBar.hideScrubber()
@@ -2061,36 +2075,21 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
             }
 
-            if(showBuffer) {
-                //  select which player window needs to be played
-                if (newSeekPosition >= player.contentDuration && player.currentWindowIndex == 0) {
-                    if (player.hasNext()) {
-                        player.next()
-                        startScrollingSeekPosition = 0
-                        player.seekTo(startScrollingSeekPosition)
-                    }
-                }
-                if (newSeekPosition <= 0L && player.currentWindowIndex == 1) {
-                    if (player.hasPrevious()) {
-                        player.previous()
-                        startScrollingSeekPosition = bufferDuration
-                        player.seekTo(startScrollingSeekPosition)
-                    }
-                }
-            }
-
             if (editAction == EditAction.EXTEND_TRIM) {
                 // newSeekPosition resets on each player window.
                 when (editSeekAction) {
                     EditSeekControl.MOVE_START -> {
-                        if (getCorrectedTimeBarPosition() >= endingTimestamps) {
-                            newSeekPosition = if (player.currentWindowIndex == 1) {
-                                endingTimestamps - bufferDuration - 500
-                            } else {
-                                endingTimestamps - 500
+                        startingTimestamps = getCorrectedTimeBarPosition()
+                        if (player.currentWindowIndex == 1) {
+                            if (newSeekPosition + bufferDuration > endingTimestamps) {
+                                startingTimestamps = endingTimestamps - 500
+                                newSeekPosition = startingTimestamps - bufferDuration
                             }
                         } else {
-                            startingTimestamps = getCorrectedTimeBarPosition()
+                            if (newSeekPosition > endingTimestamps) {
+                                startingTimestamps = endingTimestamps - 500
+                                newSeekPosition = startingTimestamps
+                            }
                         }
 
                         trimSegment!!.setMinStartValue((startingTimestamps * 100 / maxDuration).toFloat())
@@ -2099,20 +2098,40 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             .apply()
                     }
                     EditSeekControl.MOVE_END -> {
-                        if (getCorrectedTimeBarPosition() <= startingTimestamps) {
-                            newSeekPosition = if (player.currentWindowIndex == 1) {
-                                    startingTimestamps - bufferDuration
-                                } else {
-                                    startingTimestamps
-                                }
-                        } else {
-                            endingTimestamps = getCorrectedTimeBarPosition()
+                        endingTimestamps = getCorrectedTimeBarPosition()
+                        if(player.currentWindowIndex == 1){
+                            if(newSeekPosition + bufferDuration < startingTimestamps){
+                                endingTimestamps = startingTimestamps + 500
+                                newSeekPosition = endingTimestamps - bufferDuration
+                            }
+                        }else {
+                            if(newSeekPosition < startingTimestamps){
+                                endingTimestamps = startingTimestamps + 500
+                                newSeekPosition = endingTimestamps
+                            }
                         }
-
                         trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat())
                             .apply()
                     }
                     else -> { }
+                }
+            }
+
+            if(showBuffer) {
+                //  select which player window needs to be played
+                if (newSeekPosition >= player.contentDuration && player.currentWindowIndex == 0) {
+                    if (player.hasNext()) {
+                        player.next()
+                        startScrollingSeekPosition = 0
+                        player.seekTo(1,0)
+                    }
+                }
+                if (newSeekPosition <= 0L && player.currentWindowIndex == 1) {
+                    if (player.hasPrevious()) {
+                        player.previous()
+                        startScrollingSeekPosition = bufferDuration
+                        player.seekTo(0, bufferDuration)
+                    }
                 }
             }
 
@@ -2137,7 +2156,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
     private fun getCorrectedTimeBarPosition(): Long {
         return if(player.currentWindowIndex == 0){
-            player.currentPosition
+            if(player.currentPosition == 0L)    //  we are getting 0 as the current position when we make the jump this is a problem
+                bufferDuration
+            else
+                player.currentPosition
         }else{  //  exoplayer can be messed up
             player.currentPosition + bufferDuration
         }

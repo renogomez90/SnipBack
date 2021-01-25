@@ -498,8 +498,14 @@ class QuickEditFragment: Fragment() {
         }
         acceptBtn.setOnClickListener {
             Log.d(TAG, "bindListeners: selected start = $editedStart, selected end = $editedEnd")
-            createModifiedVideo()
-            showProgress()
+            if(editedStart == editedEnd){
+                Toast.makeText(requireContext(),
+                    "Modified range is not possible",
+                    Toast.LENGTH_SHORT).show()
+            }else {
+                createModifiedVideo()
+                showProgress()
+            }
         }
 
         rejectBtn.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
@@ -580,21 +586,45 @@ class QuickEditFragment: Fragment() {
 
             when (seekAction) {
                 EditSeekControl.MOVE_START -> {
-                    if(getCorrectedTimebarPosition() > editedEnd){
+                    /*if(getCorrectedTimebarPosition() > editedEnd){
                         newSeekPosition =
                             (if(player.currentWindowIndex == 1) editedEnd - bufferDuration else editedEnd)
                     }else {
                         editedStart = getCorrectedTimebarPosition()
+                    }*/
+                    editedStart = getCorrectedTimebarPosition()
+                    if (player.currentWindowIndex == 1) {
+                        if (newSeekPosition + bufferDuration > editedEnd) {
+                            editedStart = editedEnd - 500
+                            newSeekPosition = editedStart - bufferDuration
+                        }
+                    } else {
+                        if (newSeekPosition > editedEnd) {
+                            editedStart = editedEnd - 500
+                            newSeekPosition = editedStart
+                        }
                     }
                     trimSegment.setMinStartValue((editedStart * 100 / maxDuration).toFloat()).apply()
                     trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
                 }
                 EditSeekControl.MOVE_END -> {
-                    if(getCorrectedTimebarPosition() < editedStart){
+                    /*if(getCorrectedTimebarPosition() < editedStart){
                         newSeekPosition =
                             (if(player.currentWindowIndex == 1) editedStart - bufferDuration else editedStart)
                     }else{
                         editedEnd = getCorrectedTimebarPosition()
+                    }*/
+                    editedEnd = getCorrectedTimebarPosition()
+                    if(player.currentWindowIndex == 1){
+                        if(newSeekPosition + bufferDuration < editedStart){
+                            editedEnd = editedStart + 500
+                            newSeekPosition = editedEnd - bufferDuration
+                        }
+                    }else {
+                        if(newSeekPosition < editedStart){
+                            editedEnd = editedStart + 500
+                            newSeekPosition = editedEnd
+                        }
                     }
                     trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
                 }
