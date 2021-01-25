@@ -822,18 +822,31 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         accept.setOnClickListener {
             if (isEditActionSpeedChange()) {
                 acceptSpeedChanges()
-            } else if (editAction == EditAction.EXTEND_TRIM) {
-                removeBufferOverlays()
-                acceptTrimChanges()
-                showAdjustedSpeedChanges()
 
-                editHistory.add(editAction)
-                startRangeUI()
-                resetPlaybackUI()
-            }
-            if (!isSeekbarShown) {
-                seekBar.showScrubber()
-                isSeekbarShown = true
+                if (!isSeekbarShown) {
+                    seekBar.showScrubber()
+                    isSeekbarShown = true
+                }
+            } else if (editAction == EditAction.EXTEND_TRIM) {
+                if(startingTimestamps >= endingTimestamps ||
+                    trimSegment!!.selectedMinValue.toFloat() == trimSegment!!.selectedMaxValue.toFloat()){
+                    Toast.makeText(requireContext(),
+                        "Modified range is not possible",
+                        Toast.LENGTH_SHORT).show()
+                }else {
+                    removeBufferOverlays()
+                    acceptTrimChanges()
+                    showAdjustedSpeedChanges()
+
+                    editHistory.add(editAction)
+                    startRangeUI()
+                    resetPlaybackUI()
+
+                    if (!isSeekbarShown) {
+                        seekBar.showScrubber()
+                        isSeekbarShown = true
+                    }
+                }
             }
         }
 
@@ -2000,19 +2013,26 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             }
                         }
 
-                        if (uiRangeSegments!![currentEditSegment].maxSelection()
-                                .toInt() == 100
-                        ) {
+                        if (uiRangeSegments!![currentEditSegment].maxSelection().toInt() == 100) {
                             uiRangeSegments!![currentEditSegment].setMaxStartValue(((endingTimestamps) * 100 / maxDuration).toFloat())
                                 .apply()
                         }
-                        if (player.currentWindowIndex == 1) {
-                            uiRangeSegments!![currentEditSegment].setMinStartValue(((bufferDuration + newSeekPosition) * 100 / maxDuration).toFloat())
-                                .apply()
-                        } else {
-                            uiRangeSegments!![currentEditSegment].setMinStartValue((newSeekPosition * 100 / maxDuration).toFloat())
-                                .apply()
+
+                        var startValue =
+                            if (player.currentWindowIndex == 1) ((bufferDuration + newSeekPosition) * 100 / maxDuration).toFloat()
+                            else (newSeekPosition * 100 / maxDuration).toFloat()
+
+                        //  prevent point on top of each other
+                        if (startValue == uiRangeSegments!![currentEditSegment].selectedMaxValue.toFloat()) {
+                            startValue -= 1 //  reduce the start point and adjust the newSeekPosition accordingly
+                            newSeekPosition = if (player.currentWindowIndex == 1) {
+                                (startValue * maxDuration / 100 - bufferDuration).toLong()
+                            } else {
+                                (startValue * maxDuration / 100).toLong()
+                            }
                         }
+
+                        uiRangeSegments!![currentEditSegment].setMinStartValue(startValue).apply()
                     }
                     EditSeekControl.MOVE_END -> {
                         if (newSeekPosition < startingTimestamps && !showBuffer) {
@@ -2020,10 +2040,21 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         }
                         if (newSeekPosition > higher)
                             newSeekPosition = higher
-                        if(player.currentWindowIndex == 1)
-                            uiRangeSegments!![currentEditSegment].setMaxStartValue(((bufferDuration + newSeekPosition) * 100 / maxDuration).toFloat()).apply()
-                        else
-                            uiRangeSegments!![currentEditSegment].setMaxStartValue((newSeekPosition * 100 / maxDuration).toFloat()).apply()
+
+                        var endValue = if (player.currentWindowIndex == 1) ((bufferDuration + newSeekPosition) * 100 / maxDuration).toFloat()
+                        else (newSeekPosition * 100 / maxDuration).toFloat()
+
+                        //  prevent point on top of each other
+                        if (endValue == uiRangeSegments!![currentEditSegment].selectedMinValue.toFloat()) {
+                            endValue += 1 //  reduce the start point and adjust the newSeekPosition accordingly
+                            newSeekPosition = if (player.currentWindowIndex == 1) {
+                                (endValue * maxDuration / 100 - bufferDuration).toLong()
+                            } else {
+                                (endValue * maxDuration / 100).toLong()
+                            }
+                        }
+
+                        uiRangeSegments!![currentEditSegment].setMaxStartValue(endValue).apply()
                     }
                     else -> {
                     }
@@ -2031,6 +2062,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
 
             if(showBuffer) {
+                //  select which player window needs to be played
                 if (newSeekPosition >= player.contentDuration && player.currentWindowIndex == 0) {
                     if (player.hasNext()) {
                         player.next()
@@ -2051,23 +2083,34 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 // newSeekPosition resets on each player window.
                 when (editSeekAction) {
                     EditSeekControl.MOVE_START -> {
-                        if(getCorrectedTimeBarPosition() > endingTimestamps){
-                            newSeekPosition =
-                                (if(player.currentWindowIndex == 1) endingTimestamps - bufferDuration else endingTimestamps)
-                        }else {
+                        if (getCorrectedTimeBarPosition() >= endingTimestamps) {
+                            newSeekPosition = if (player.currentWindowIndex == 1) {
+                                endingTimestamps - bufferDuration - 500
+                            } else {
+                                endingTimestamps - 500
+                            }
+                        } else {
                             startingTimestamps = getCorrectedTimeBarPosition()
                         }
-                        trimSegment!!.setMinStartValue((startingTimestamps * 100 / maxDuration).toFloat()).apply()
-                        trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat()).apply()
+
+                        trimSegment!!.setMinStartValue((startingTimestamps * 100 / maxDuration).toFloat())
+                            .apply()
+                        trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat())
+                            .apply()
                     }
                     EditSeekControl.MOVE_END -> {
-                        if(getCorrectedTimeBarPosition() < startingTimestamps){
-                            newSeekPosition =
-                                (if(player.currentWindowIndex == 1) startingTimestamps - bufferDuration else startingTimestamps)
-                        }else{
+                        if (getCorrectedTimeBarPosition() <= startingTimestamps) {
+                            newSeekPosition = if (player.currentWindowIndex == 1) {
+                                    startingTimestamps - bufferDuration
+                                } else {
+                                    startingTimestamps
+                                }
+                        } else {
                             endingTimestamps = getCorrectedTimeBarPosition()
                         }
-                        trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat()).apply()
+
+                        trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat())
+                            .apply()
                     }
                     else -> { }
                 }
