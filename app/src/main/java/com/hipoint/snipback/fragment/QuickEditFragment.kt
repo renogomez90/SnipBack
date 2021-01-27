@@ -595,12 +595,12 @@ class QuickEditFragment: Fragment() {
                     editedStart = getCorrectedTimebarPosition()
                     if (player.currentWindowIndex == 1) {
                         if (newSeekPosition + bufferDuration > editedEnd) {
-                            editedStart = editedEnd - 500
+                            editedStart = editedEnd - 50
                             newSeekPosition = editedStart - bufferDuration
                         }
                     } else {
                         if (newSeekPosition > editedEnd) {
-                            editedStart = editedEnd - 500
+                            editedStart = editedEnd - 50
                             newSeekPosition = editedStart
                         }
                     }
@@ -617,12 +617,12 @@ class QuickEditFragment: Fragment() {
                     editedEnd = getCorrectedTimebarPosition()
                     if(player.currentWindowIndex == 1){
                         if(newSeekPosition + bufferDuration < editedStart){
-                            editedEnd = editedStart + 500
+                            editedEnd = editedStart + 50
                             newSeekPosition = editedEnd - bufferDuration
                         }
                     }else {
                         if(newSeekPosition < editedStart){
-                            editedEnd = editedStart + 500
+                            editedEnd = editedStart + 50
                             newSeekPosition = editedEnd
                         }
                     }
