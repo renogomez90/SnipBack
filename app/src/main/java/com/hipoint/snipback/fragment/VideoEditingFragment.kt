@@ -142,6 +142,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private var bufferDuration  = 0L
     private var videoDuration   = 0L
     private var showBuffer      = false
+    private var trimOnly        = false
     private var isStartInBuffer = true
     private var isEndInBuffer   = false
 
@@ -258,10 +259,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     trimmedItemCount++
 
                     if(saveAction == SaveActionType.SAVE) {
-                        if(speedDetailSet.isNotEmpty())
+//                        if(speedDetailSet.isNotEmpty())
                             replaceRequired.replace(snip!!.videoFilePath, speedChangedPath)
-                        else
-                            replaceRequired.replace(snip!!.videoFilePath, trimmedOutputPath)
+//                        else
+//                            replaceRequired.replace(snip!!.videoFilePath, trimmedOutputPath)
                     }
 
                     if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty() && trimmedItemCount == 1){
@@ -284,7 +285,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         taskList.add(trimTask)
                     }
 
-                    if(trimmedItemCount == 2 || saveAction == SaveActionType.SAVE_AS) {
+                    if(trimmedItemCount == 2 || saveAction == SaveActionType.SAVE_AS || trimOnly) {
                         trimmedItemCount = 0
 
                         val trimmedDuration =
@@ -459,6 +460,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         snip = requireArguments().getParcelable("snip")
         thumbnailExtractionStarted = requireArguments().getBoolean("thumbnailExtractionStarted")
         saveAction = SaveActionType.CANCEL
+
+        videoDuration = TimeUnit.SECONDS.toMillis(snip!!.snip_duration.toLong())
+        originalVideoDuration = videoDuration
+        maxDuration = videoDuration
 
         bindViews()
         bindListeners()
@@ -637,7 +642,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         //  the user wishes to move the starting point only
                         acceptRejectHolder.visibility = View.VISIBLE
                         if (startingTimestamps != -1L) {
-                            if(tmpSpeedDetails?.startWindowIndex ?: 0 == 0)
+                            if(tmpSpeedDetails?.startWindowIndex ?: 0 == 0 || trimOnly)
                                 player.seekTo(0, startingTimestamps)
                             else
                                 player.seekTo(1, startingTimestamps - bufferDuration)
@@ -645,7 +650,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     }
                 }
                 EditAction.EXTEND_TRIM -> {
-                    if (startingTimestamps < bufferDuration) {
+                    if (startingTimestamps < bufferDuration || trimOnly) {
                         player.setSeekParameters(SeekParameters.EXACT)
                         player.seekTo(0, startingTimestamps)
                     } else {
@@ -750,7 +755,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
                 EditAction.EXTEND_TRIM -> {
                     startingTimestamps = getCorrectedTimeBarPosition()
-                    if (endingTimestamps > bufferDuration) {
+                    if (endingTimestamps > bufferDuration && !trimOnly) {
                         player.setSeekParameters(SeekParameters.EXACT)
                         player.seekTo(1, endingTimestamps - bufferDuration)
                     } else {
@@ -1223,7 +1228,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         var clip2: ClippingMediaSource? = null
         val clipsList = arrayListOf<ClippingMediaSource>()
 
-        if (isStartInBuffer) {
+        if (isStartInBuffer && !trimOnly) {
             editedStart = startBClip
             if (isEndInBuffer) {//  clippingMediaSource used as workaround for timeline scrubbing
                 clip1 = ClippingMediaSource(bufferSource, TimeUnit.MILLISECONDS.toMicros(startBClip), TimeUnit.MILLISECONDS.toMicros(endBClip))
@@ -1382,6 +1387,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 isEditOnGoing  = true
                 isEditExisting = false
                 editAction     = EditAction.EXTEND_TRIM
+                setIconActive()
                 editSeekAction = EditSeekControl.MOVE_START
                 trimSegment    = RangeSeekbarCustom(requireContext())
 
@@ -1399,11 +1405,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     bufferDuration + videoDuration
                 }else {
                     previousEditEnd
-                    /*if(isEndInBuffer) {
-                        previousEditEnd
-                    }else{
-                        originalBufferDuration + previousEditEnd
-                    }*/
                 }
 
                 maxDuration    = bufferDuration + videoDuration
@@ -1823,34 +1824,37 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 player.addMediaSource(clippingMediaSource)
 //                player.setMediaItem(mediaItem)
             }
-        } else {
-            if (bufferPath.isNotEmpty()) {
+        } else {    //  show buffer if available else show trim
+            val clipList = arrayListOf<ClippingMediaSource>()
+            if(!trimOnly) {
                 val bufferSource =
                     ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
                         .createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
-                val videoSource =
-                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
-                        .createMediaSource(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
-                //  clippingMediaSource used as workaround for timeline scrubbing
                 val clip1 = ClippingMediaSource(
                     bufferSource,
                     0,
                     TimeUnit.MILLISECONDS.toMicros(bufferDuration)
                 )
-                val clip2 = ClippingMediaSource(
-                    videoSource,
-                    0,
-                    TimeUnit.MILLISECONDS.toMicros(videoDuration)
-                )
-                maxDuration = bufferDuration + videoDuration
-
-                val mediaSource = ConcatenatingMediaSource(true, clip1, clip2)
-                player.setMediaSource(mediaSource)
-                playerView.setShowMultiWindowTimeBar(true)
-                val jumpTo = if (editedStart < 0) bufferDuration else editedStart
-                player.seekTo(0, jumpTo)
-                showBufferOverlay()
+                clipList.add(clip1)
             }
+
+            val videoSource =
+                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
+                    .createMediaSource(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
+            //  clippingMediaSource used as workaround for timeline scrubbing
+            val clip2 = ClippingMediaSource(
+                videoSource,
+                0,
+                TimeUnit.MILLISECONDS.toMicros(videoDuration)
+            )
+            clipList.add(clip2)
+            maxDuration = bufferDuration + videoDuration
+            val mediaSource = ConcatenatingMediaSource(true, *clipList.toTypedArray())
+            player.setMediaSource(mediaSource)
+            playerView.setShowMultiWindowTimeBar(true)
+            val jumpTo = if (editedStart < 0) bufferDuration else editedStart
+            player.seekTo(0, jumpTo)
+            showBufferOverlay()
         }
 
         player.apply {
@@ -1870,8 +1874,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         pauseVideo()
-
-        seekBar
 
         player.addListener(object : Player.EventListener {
             override fun onPlayerError(error: ExoPlaybackException) {
@@ -2084,12 +2086,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         startingTimestamps = getCorrectedTimeBarPosition()
                         if (player.currentWindowIndex == 1) {
                             if (newSeekPosition + bufferDuration > endingTimestamps) {
-                                startingTimestamps = endingTimestamps - 500
+                                startingTimestamps = endingTimestamps - 50
                                 newSeekPosition = startingTimestamps - bufferDuration
                             }
                         } else {
                             if (newSeekPosition > endingTimestamps) {
-                                startingTimestamps = endingTimestamps - 500
+                                startingTimestamps = endingTimestamps - 50
                                 newSeekPosition = startingTimestamps
                             }
                         }
@@ -2103,12 +2105,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         endingTimestamps = getCorrectedTimeBarPosition()
                         if(player.currentWindowIndex == 1){
                             if(newSeekPosition + bufferDuration < startingTimestamps){
-                                endingTimestamps = startingTimestamps + 500
+                                endingTimestamps = startingTimestamps + 50
                                 newSeekPosition = endingTimestamps - bufferDuration
                             }
                         }else {
                             if(newSeekPosition < startingTimestamps){
-                                endingTimestamps = startingTimestamps + 500
+                                endingTimestamps = startingTimestamps + 50
                                 newSeekPosition = endingTimestamps
                             }
                         }
@@ -2119,7 +2121,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
             }
 
-            if(showBuffer) {
+            if(showBuffer && !trimOnly) {
                 //  select which player window needs to be played
                 if (newSeekPosition >= player.contentDuration && player.currentWindowIndex == 0) {
                     if (player.hasNext()) {
@@ -2387,7 +2389,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         withContext(Main) {
             Toast.makeText(requireContext(), "buffered content unavailable", Toast.LENGTH_SHORT).show()
             removeBufferOverlays()
-            resetPlaybackUI()
         }
     }
 
@@ -2404,14 +2405,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 //  implementations
 
     /**
-     * our query result is avaialble here.
+     * our query result is available here.
      *
      * @param hdSnips List<Hd_snips>?
      */
     override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
         hdSnips?.let{
             if(it.size < 2){
-                showContentUnavailableToast()
+                setupForTrimOnly()
                 return@let
             }
 
@@ -2420,9 +2421,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             sorted.forEach { item -> Log.d(TAG, "queryResult: ${item.video_path_processed}") }
 
             if(sorted[0].video_path_processed == sorted[1].video_path_processed){       //  there is no buffer
-                editAction = EditAction.NORMAL
-                showContentUnavailableToast()
-                return@let
+                setupForTrimOnly()
             }else {
                 try {
                     val retriever = MediaMetadataRetriever()
@@ -2436,20 +2435,27 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     originalVideoDuration  = videoDuration
 
                     if(bufferDuration > 0L && videoDuration > 0L) {
+                        trimOnly = false
                         bufferHdSnipId = sorted[0].hd_snip_id
                         addToVideoPlayback(sorted[0].video_path_processed)
                     }else {
-                        editAction = EditAction.NORMAL
-                        showContentUnavailableToast()
+                        setupForTrimOnly()
                     }
 
                 }catch (e: IllegalArgumentException){
-                    editAction = EditAction.NORMAL
-                    showContentUnavailableToast()
+                    setupForTrimOnly()
                     e.printStackTrace()
                 }
             }
         }
+    }
+
+    private suspend fun setupForTrimOnly() {
+        trimOnly = true
+        showContentUnavailableToast()
+        originalBufferDuration = bufferDuration
+        originalVideoDuration = videoDuration
+        addToVideoPlayback("")
     }
 
     /**
@@ -2526,22 +2532,33 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val videoPath = snip!!.videoFilePath
         val concatOutputPath = "${File(videoPath).parent}/$timeStamp.mp4"
-
-        val concatenateTask = VideoOpItem(
-            operation = IVideoOpListener.VideoOp.CONCAT,
-            clips = arrayListOf(bufferPath, snip!!.videoFilePath),
-            outputPath = concatOutputPath,
-            comingFrom = CurrentOperation.VIDEO_EDITING)
-
         val taskList = arrayListOf<VideoOpItem>()
 
-        taskList.apply {
-            add(concatenateTask)
-        }
-        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)
-        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
-        if(saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty())
+        if(!trimOnly) {
+            val concatenateTask = VideoOpItem(
+                operation = IVideoOpListener.VideoOp.CONCAT,
+                clips = arrayListOf(bufferPath, snip!!.videoFilePath),
+                outputPath = concatOutputPath,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
+
+            taskList.apply { add(concatenateTask) }
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)
             VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
+            if (saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty())
+                VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
+        } else {
+            val trimmedOutputPath = "${File(videoPath).parent}/trimmed-$timeStamp.mp4"
+            val trimTask = VideoOpItem(
+                operation = IVideoOpListener.VideoOp.TRIMMED,
+                clips = arrayListOf(videoPath),
+                startTime = editedStart.milliToFloatSecond(),
+                endTime = editedEnd.milliToFloatSecond(),
+                outputPath = trimmedOutputPath,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
+
+            taskList.apply { add(trimTask) }
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
+        }
 
         val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
         createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
