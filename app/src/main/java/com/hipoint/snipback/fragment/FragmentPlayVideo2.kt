@@ -42,13 +42,12 @@ import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.videoControl.VideoOpItem
-import com.hipoint.snipback.videoControl.VideoService
+import com.hipoint.snipback.service.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_main2.*
 import kotlinx.android.synthetic.main.exo_controls.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter

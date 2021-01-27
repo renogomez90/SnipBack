@@ -120,6 +120,13 @@ class AppRepository(context: Context?) {
         listener.queryResult(mutableListOf(result.await()))
     }
 
+    suspend fun getAllHDSnips(): MutableList<Hd_snips>? {
+        val result = CoroutineScope(IO).async {
+            hd_snipsDao.getAll()
+        }
+        return result.await()
+    }
+
     //HDSNIP Table Actions END//
     //SNIP table Actions START//
     val snipsData: LiveData<List<Snip>>
@@ -173,6 +180,13 @@ class AppRepository(context: Context?) {
         withContext(IO) {
             snipsDao.deleteAll()
         }
+    }
+
+    suspend fun getAllSnips(): MutableList<Snip>? {
+        val result = CoroutineScope(IO).async {
+            snipsDao.getAll()
+        }
+        return result.await()
     }
 
     var eventId = 0

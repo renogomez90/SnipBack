@@ -58,7 +58,7 @@ import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.videoControl.SpeedDetails
 import com.hipoint.snipback.videoControl.VideoOpItem
-import com.hipoint.snipback.videoControl.VideoService
+import com.hipoint.snipback.service.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.*

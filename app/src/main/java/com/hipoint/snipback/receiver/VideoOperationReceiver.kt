@@ -8,7 +8,6 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.os.Build
 import android.util.Log
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.hipoint.snipback.AppMainActivity
@@ -22,7 +21,6 @@ import com.hipoint.snipback.Utils.isPathInList
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.application.AppClass.showInGallery
 import com.hipoint.snipback.application.AppClass.swipeProcessed
-import com.hipoint.snipback.control.CameraControl
 import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
@@ -35,7 +33,7 @@ import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.videoControl.VideoOpItem
-import com.hipoint.snipback.videoControl.VideoService
+import com.hipoint.snipback.service.VideoService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -45,7 +43,6 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
-import kotlin.math.max
 
 class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted {
     private val TAG = VideoOperationReceiver::class.java.simpleName

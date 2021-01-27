@@ -35,12 +35,11 @@ import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.EditSeekControl
 import com.hipoint.snipback.listener.IVideoOpListener
-import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.videoControl.VideoOpItem
-import com.hipoint.snipback.videoControl.VideoService
+import com.hipoint.snipback.service.VideoService
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.*

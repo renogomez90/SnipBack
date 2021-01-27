@@ -56,9 +56,11 @@
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <service
-            android:name=".videoControl.VideoService"
+            android:name=".service.VideoService"
             android:label="Video Processing"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+
+        <service android:name=".service.CleanupService"/>
 
         <provider
             android:name="androidx.core.content.FileProvider"

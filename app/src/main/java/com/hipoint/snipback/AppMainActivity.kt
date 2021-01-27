@@ -20,18 +20,15 @@ import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.Utils.isPathInList
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.application.AppClass.showInGallery
-import com.hipoint.snipback.enums.CurrentOperation
-import com.hipoint.snipback.enums.SwipeAction
 import com.hipoint.snipback.fragment.*
 import com.hipoint.snipback.listener.IReplaceRequired
-import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
-import com.hipoint.snipback.videoControl.VideoService
-import com.hipoint.snipback.videoControl.VideoService.Companion.ignoreResultOf
+import com.hipoint.snipback.service.CleanupService
+import com.hipoint.snipback.service.VideoService
 import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
@@ -117,6 +114,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         isPausing = true
 //        unregisterReceiver(videoOperationReceiver)
         super.onPause()
+    }
+
+    override fun onDestroy() {
+        //  so that clutter is removed
+        val cleanupIntent = Intent(this, CleanupService::class.java)
+        startService(cleanupIntent)
+        super.onDestroy()
     }
 
     fun registerMyOnTouchListener(listener: MyOnTouchListener) {
@@ -541,225 +545,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     }
 
     /**
-     * Checks if the required item is available in the list
-     *
-     * @param listOfPaths ArrayList<String>
-     * @param filePath String?
-     * @return Boolean
-     */
-/*    private fun isInList(listOfPaths: ArrayList<String>, filePath: String?): Boolean {
-        var isInList = false
-        listOfPaths.forEach {
-            if (File(it).nameWithoutExtension == File(filePath!!).nameWithoutExtension)
-                isInList = true
-        }
-        return isInList
-    }*/
-
-    /**
-     * Video was successfully trimmed and is available at processedVideoPath
-     *
-     * @param processedVideoPath String
-     */
-    /*private fun videoTrimCompleted(
-        processedVideoPath: String,
-        fromOperation: CurrentOperation,
-        swipeAction: SwipeAction
-    ) {
-        if (ignoreResultOf.isNotEmpty()) {
-            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.TRIMMED) {
-                ignoreResultOf.removeAt(0)
-                if(fromOperation == CurrentOperation.VIDEO_EDITING) {
-                    val trimCompleteReceiver = Intent(VideoEditingFragment.EXTEND_TRIM_ACTION)
-                    trimCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
-                    trimCompleteReceiver.putExtra("fileName", processedVideoPath)
-                    sendBroadcast(trimCompleteReceiver)
-                }else if(fromOperation == CurrentOperation.CLIP_RECORDING && swipeAction == SwipeAction.SWIPE_RIGHT){
-                    val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
-                    snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
-                    snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
-                    sendBroadcast(snapbackCompleteReceiver)
-                }
-                return
-            }
-        }
-
-        Log.d(TAG, "videoTrimCompleted $processedVideoPath Completed")
-        if (virtualToReal) {
-            virtualToReal = false
-            val virtualToRealCompletedIntent = Intent(VIRTUAL_TO_REAL_ACTION)
-            virtualToRealCompletedIntent.putExtra("video_path", processedVideoPath)
-            sendBroadcast(virtualToRealCompletedIntent)
-        } else {
-            if (fromOperation == CurrentOperation.VIDEO_EDITING)
-                return
-
-            CoroutineScope(IO).launch {
-                val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-                addSnip(processedVideoPath, duration, duration)
-            }
-            if (!swipeProcessed && fromOperation == CurrentOperation.VIDEO_RECORDING) {
-                videoModeFragment.processPendingSwipes()
-            }
-        }
-    }*/
-
-    /**
-     * Video was successfully split and is available at processedVideoPath
-     * Processed video is added to snip
-     *
-     * @param processedVideoPath String
-     */
-    /*private fun videoSplitCompleted(
-        processedVideoPath: String,
-        comingFrom: CurrentOperation,
-        swipeAction: SwipeAction
-    ) {
-        if (ignoreResultOf.isNotEmpty()) {
-            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.SPLIT) {
-                ignoreResultOf.removeAt(0)
-                return
-            }
-        }
-        Log.d(TAG, "$processedVideoPath Completed")
-        CoroutineScope(IO).launch {
-            val pathList = arrayListOf("$processedVideoPath-0.mp4", "$processedVideoPath-1.mp4")
-            getMetadataDurations(pathList).forEachIndexed { index, dur ->
-                addSnip(
-                    "${File(processedVideoPath).parent}/${File(processedVideoPath).nameWithoutExtension}-${index}.mp4",
-                    dur,
-                    dur
-                )
-            }
-        }
-        if (!swipeProcessed) {
-            videoModeFragment.processPendingSwipes(currentOperation = comingFrom)
-        }
-    }*/
-
-    /**
-     * Video concatenation was successfully done and is available at processedVideoPath
-     * Processed video is added to snip
-     *
-     * @param processedVideoPath
-     */
-    /*fun videoConcatCompleted(
-        processedVideoPath: String,
-        comingFrom: CurrentOperation,
-        swipeAction: SwipeAction
-    ) {
-        if (ignoreResultOf.isNotEmpty()) {
-            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.CONCAT) {
-                ignoreResultOf.removeAt(0)
-                val concatCompleteReceiver = Intent(VideoEditingFragment.EXTEND_TRIM_ACTION)
-                concatCompleteReceiver.putExtra("operation", IVideoOpListener.VideoOp.CONCAT.name)
-                concatCompleteReceiver.putExtra("fileName", processedVideoPath)
-                sendBroadcast(concatCompleteReceiver)
-                return
-            }
-        }
-
-        val totalDuration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-        *//*if (comingFrom != CurrentOperation.VIDEO_RECORDING) {
-            addSnip(
-                processedVideoPath,
-                totalDuration,
-                totalDuration
-            )     //  merged file is saved to DB
-        }*//*
-        val swipeClipDuration = videoModeFragment.swipeValue / 1000
-        val bufferDuration = videoModeFragment.clipDuration / 1000
-
-        if (comingFrom == CurrentOperation.CLIP_RECORDING) {  //  concat was triggered when automatic capture was ongoing
-            //  merged clips to be trimmed to size
-            val intentService = Intent(this, VideoService::class.java)
-            val buffFile =
-                "${File(processedVideoPath).parent}/buff-${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that is the buffer
-            val split2File =
-                "${File(processedVideoPath).parent}/${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
-            val taskList = arrayListOf<VideoOpItem>()
-
-            if(swipeAction == SwipeAction.SWIPE_LEFT) {
-                val bufferFile = VideoOpItem(
-                    operation = IVideoOpListener.VideoOp.TRIMMED,
-                    clips = arrayListOf(processedVideoPath),
-                    startTime = max((totalDuration - swipeClipDuration - bufferDuration).toInt(),0).toFloat(),
-                    endTime = (totalDuration - swipeClipDuration).toFloat(),
-                    outputPath = buffFile,
-                    comingFrom = comingFrom,
-                    swipeAction = swipeAction
-                )
-
-                VideoService.bufferDetails.add(BufferDataDetails(buffFile, split2File))
-                taskList.add(bufferFile)
-            }
-
-            val videoFile = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(processedVideoPath),
-                startTime = (totalDuration - swipeClipDuration).toFloat(),
-                endTime = totalDuration.toFloat(),
-                outputPath = split2File,
-                comingFrom = comingFrom,
-                swipeAction = swipeAction
-            )
-
-            taskList.add(videoFile)
-
-            intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
-            VideoService.enqueueWork(this, intentService)
-        } else if (!swipeProcessed && comingFrom == CurrentOperation.VIDEO_RECORDING) {
-            videoModeFragment.processPendingSwipes(processedVideoPath, comingFrom)
-        }
-    }*/
-
-    /**
-     * Video speed change was successfully done and is available at processedVideoPath
-     * Processed video is added to snip
-     *
-     * @param processedVideoPath
-     */
-    /*private fun videoSpeedChangeCompleted(
-        processedVideoPath: String,
-        comingFrom: CurrentOperation,
-        swipeAction: SwipeAction
-    ) {
-        if (ignoreResultOf.isNotEmpty()) {
-            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.SPEED) {
-                ignoreResultOf.removeAt(0)
-                return
-            }
-        }
-
-        Log.d(TAG, "videoSpeedChangeCompleted: Video Saved at $processedVideoPath")
-        Toast.makeText(this, "Video Saved at $processedVideoPath", Toast.LENGTH_SHORT).show()
-        val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-
-        if (doReplace) {
-            CoroutineScope(IO).launch {
-                //  DB update is not required since we are just replacing the existing file with modified content
-                if (fileToReplace.isNotNullOrEmpty() && replacedWith.equals(processedVideoPath)) {
-                    parentSnip = appRepository.getSnipByVideoPath(fileToReplace!!)
-                    parentSnip?.snip_duration = duration.toDouble()
-                    parentSnip?.total_video_duration = duration
-                    appRepository.updateSnip(parentSnip!!)
-
-                    File(parentSnip?.videoFilePath!!).delete()
-                    File(processedVideoPath).renameTo(File(parentSnip?.videoFilePath!!))
-
-                    fileToReplace = null
-                    replacedWith  = null
-                    doReplace     = false
-                    dismissEditFragmentProcessingDialog(parentSnip?.videoFilePath!!)
-                }
-            }
-        } else {
-            //  IReplaceRequired.parent must be called before this point for proper functioning
-            addSnip(processedVideoPath, duration, duration)
-        }
-    }*/
-
-    /**
      * Dismisses the progress dialog in edit fragment if available,
      * starts the FragmentPlayVideo2 with the edited video for playback
      *
@@ -802,97 +587,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         }
     }
 
-    /*private fun dismissQuickEditProcessingDialog(){
-        val fm = supportFragmentManager
-        (fm.findFragmentByTag(QUICK_EDIT_TAG) as? QuickEditFragment)?.hideProgress()
-        Toast.makeText(this, "Edit Failed", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun videoPreviewFramesCompleted(
-        processedVideoPath: String,
-        comingFrom: CurrentOperation,
-        swipeAction: SwipeAction
-    ) {
-        if (ignoreResultOf.isNotEmpty()) {
-            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.FRAMES) {
-                ignoreResultOf.removeAt(0)
-                return
-            }
-        }
-
-        val previewIntent = Intent()
-        previewIntent.putExtra("preview_path", processedVideoPath)
-        previewIntent.action = VideoEditingFragment.PREVIEW_ACTION
-        sendBroadcast(previewIntent)
-    }*/
-
-    /**
-     * Receives events from VideoService
-     * */
-    /*private val videoOperationReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-
-        override fun onReceive(context: Context, intent: Intent) {
-
-            val operation = intent.getStringExtra("operation")
-            val showProgress = intent.getIntExtra("progress", -1)
-            val processedVideoPath = intent.getStringExtra("processedVideoPath")
-            val currentOperationString = intent.getStringExtra(LAUNCHED_FROM_EXTRA)
-            val swipeActionString = intent.getStringExtra(SWIPE_ACTION_EXTRA)
-            val currentOperation = getCurrentOperation(currentOperationString)
-            val swipeAction = getCurrentSwipeAction(swipeActionString)
-
-            if (isFragmentVisible(VIDEO_MODE_TAG))
-                if (showProgress == VideoService.STATUS_SHOW_PROGRESS) {
-                    videoModeFragment.videoProcessing(true)
-                } else {
-                    videoModeFragment.videoProcessing(false)
-                }
-            if (isFragmentVisible(EDIT_VIDEO_TAG))
-                if (showProgress == VideoService.STATUS_SHOW_PROGRESS) {
-//                    (supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as VideoEditingFragment).showProgress()
-                } else {
-//                    (supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as VideoEditingFragment).hideProgress()
-                }
-
-            if (processedVideoPath.isNullOrBlank())
-                return
-
-            when (intent.getIntExtra("status", VideoService.STATUS_NO_VALUE)) {
-                VideoService.STATUS_OP_SUCCESS -> {
-                    when (operation) {
-                        IVideoOpListener.VideoOp.CONCAT.name -> {
-                            videoConcatCompleted(processedVideoPath, currentOperation, swipeAction)
-                        }
-                        IVideoOpListener.VideoOp.TRIMMED.name -> {
-                            videoTrimCompleted(processedVideoPath, currentOperation, swipeAction)
-                        }
-                        IVideoOpListener.VideoOp.SPLIT.name -> {
-                            videoSplitCompleted(processedVideoPath, currentOperation, swipeAction)
-                        }
-                        IVideoOpListener.VideoOp.SPEED.name -> {
-                            videoSpeedChangeCompleted(processedVideoPath, currentOperation, swipeAction)
-                        }
-                        IVideoOpListener.VideoOp.FRAMES.name -> {
-                            videoPreviewFramesCompleted(processedVideoPath, currentOperation, swipeAction)
-                        }
-                        IVideoOpListener.VideoOp.KEY_FRAMES.name -> {
-                            videoFramesAdded(processedVideoPath, currentOperation, swipeAction)
-                        }
-                        else -> {
-                        }
-                    }
-                }
-                VideoService.STATUS_OP_FAILED -> {
-                    Log.e(TAG, "onReceive: $operation failed")
-                    dismissEditFragmentProcessingDialog(null)
-                    dismissQuickEditProcessingDialog()
-                }
-                else -> {
-                }
-            }
-        }
-    }*/
-
     /**
      *  Takes in a list of media files and returns a list of durations
      *
@@ -920,53 +614,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         return durationList
     }
 
-/*
-    private fun videoFramesAdded(processedVideoPath: String, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
-        if (ignoreResultOf.isNotEmpty()) {
-            if (ignoreResultOf[0] == IVideoOpListener.VideoOp.KEY_FRAMES) {
-                ignoreResultOf.removeAt(0)
-                return
-            }
-        }
-
-        val intent = Intent("frames_added")
-        sendBroadcast(intent)
-    }
-*/
-
     private fun isFragmentVisible(fragmentTag: String): Boolean {
         val frag = supportFragmentManager.findFragmentByTag(fragmentTag)
         return frag?.isVisible ?: false
     }
-
-/*
-    private fun getCurrentOperation(fromOperation: String?): CurrentOperation {
-        if (fromOperation == null)
-            return CurrentOperation.CLIP_RECORDING
-
-        return when (fromOperation) {
-            CurrentOperation.VIDEO_RECORDING.name -> CurrentOperation.VIDEO_RECORDING
-            CurrentOperation.CLIP_RECORDING.name -> CurrentOperation.CLIP_RECORDING
-            CurrentOperation.VIDEO_EDITING.name -> CurrentOperation.VIDEO_EDITING
-            else -> {
-                CurrentOperation.CLIP_RECORDING
-            }
-        }
-    }
-
-    private fun getCurrentSwipeAction(swipeAction: String?): SwipeAction {
-        if (swipeAction == null)
-            return SwipeAction.NO_ACTION
-
-        return when (swipeAction) {
-            SwipeAction.SWIPE_RIGHT.name -> SwipeAction.SWIPE_RIGHT
-            SwipeAction.SWIPE_LEFT.name -> SwipeAction.SWIPE_LEFT
-            SwipeAction.SWIPE_DOWN.name -> SwipeAction.SWIPE_DOWN
-            SwipeAction.SWIPE_UP.name -> SwipeAction.SWIPE_UP
-            else -> SwipeAction.NO_ACTION
-        }
-    }
-*/
 
     override fun replace(oldFilePath: String, newFilePath: String) {
         fileToReplace = oldFilePath

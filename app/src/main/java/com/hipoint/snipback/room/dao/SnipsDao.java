@@ -35,4 +35,7 @@ public interface SnipsDao {
 
     @Query("SELECT * from Snip")
     LiveData<List<Snip>> getSnipsData();
+
+    @Query("SELECT * FROM Snip")
+    List<Snip> getAll();
 }

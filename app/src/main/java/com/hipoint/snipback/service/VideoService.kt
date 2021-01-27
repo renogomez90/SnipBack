@@ -1,4 +1,4 @@
-package com.hipoint.snipback.videoControl
+package com.hipoint.snipback.service
 
 import android.content.Context
 import android.content.Intent
@@ -12,6 +12,7 @@ import com.hipoint.snipback.enums.SwipeAction
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.receiver.VideoOperationReceiver
+import com.hipoint.snipback.videoControl.VideoOpItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch

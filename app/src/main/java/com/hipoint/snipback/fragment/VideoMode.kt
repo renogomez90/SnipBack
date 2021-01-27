@@ -47,9 +47,10 @@ import com.hipoint.snipback.listener.IVideoOpListener.VideoOp
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppRepository.Companion.instance
+import com.hipoint.snipback.service.CleanupService
 import com.hipoint.snipback.videoControl.VideoOpItem
-import com.hipoint.snipback.videoControl.VideoService
-import com.hipoint.snipback.videoControl.VideoService.Companion.bufferDetails
+import com.hipoint.snipback.service.VideoService
+import com.hipoint.snipback.service.VideoService.Companion.bufferDetails
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -300,13 +301,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         bindListeners()
 
         return rootView
-    }
-
-    override fun onDestroyView() {  //  so that clutter is removed
-        while(cameraControl?.clipQueueSize()?:0 > 0){
-            cameraControl?.removeClipQueueItem()!!.delete()
-        }
-        super.onDestroyView()
     }
 
     private fun setupCameraControl() {
