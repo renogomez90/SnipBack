@@ -90,6 +90,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var parentSnip           : Snip?             = null
     private var currentOperation     : CurrentOperation  = CurrentOperation.CLIP_RECORDING
 
+    //  orientation previous orientation to decide button rotation animation
+    var previousOrientation = SimpleOrientationListener.VideoModeOrientation.PORTRAIT
+
     //dialogs
     var settingsDialog: SettingsDialog? = null
 
@@ -344,15 +347,18 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         val mOrientationListener: SimpleOrientationListener = object : SimpleOrientationListener(
                 context) {
             override fun onSimpleOrientationChanged(orientation: Int) {
-                when (orientation) {
+                previousOrientation = when (orientation) {
                     VideoModeOrientation.LANDSCAPE.ordinal -> {
                         doRotation90F()
+                        VideoModeOrientation.LANDSCAPE
                     }
                     VideoModeOrientation.REV_LANDSCAPE.ordinal -> {
                         doRotation270F()
+                        VideoModeOrientation.REV_LANDSCAPE
                     }
                     else -> {
                         doRotation0F()
+                        VideoModeOrientation.PORTRAIT
                     }
                 }
                 Log.d("orientation", "$orientation")
@@ -370,22 +376,23 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
   }
 
     private fun portraitMode(view: View?) {
-        if (SimpleOrientationListener.VideoModeOrientation.PORTRAIT.ordinal==1){
+        if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.LANDSCAPE){
             val rotate = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
             rotate.duration = 800
             rotate.start()
-        } else{
+        } else if(previousOrientation == SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE){
             val rotate = ObjectAnimator.ofFloat(view, "rotation", -90F, 0F)
             rotate.duration = 800
             rotate.start()
         }
     }
+
     private fun revLandScapeMode(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, -90F)
         rotate.duration = 800
         rotate.start()
-
     }
+
     fun doRotation0F() {
         portraitMode(takePhoto)
         portraitMode(gallery)
@@ -401,15 +408,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         landScapeMode(settings)
         landScapeMode(con)
     }
+
     fun doRotation270F(){
         revLandScapeMode(takePhoto)
         revLandScapeMode(gallery)
         revLandScapeMode(changeCamera)
         revLandScapeMode(settings)
         revLandScapeMode(con)
-
     }
-
 
     private fun setupCameraControl() {
         if(cameraControl == null)
