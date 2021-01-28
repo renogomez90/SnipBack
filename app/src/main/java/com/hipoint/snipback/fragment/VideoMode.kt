@@ -12,6 +12,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.*
+import android.hardware.SensorManager
 import android.hardware.camera2.params.MeteringRectangle
 import android.media.MediaMetadataRetriever
 import android.net.Uri
@@ -23,6 +24,7 @@ import android.view.*
 import android.view.View.OnTouchListener
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.view.animation.LinearInterpolator
 import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.SeekBar.OnSeekBarChangeListener
@@ -363,19 +365,26 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     private fun landScapeMode(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, 90F)
-        rotate.duration = 700
+        rotate.duration = 800
         rotate.start()
   }
 
     private fun portraitMode(view: View?) {
-        val rotate = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
-        rotate.duration = 700
-        rotate.start()
+        if (SimpleOrientationListener.VideoModeOrientation.PORTRAIT.ordinal==1){
+            val rotate = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
+            rotate.duration = 800
+            rotate.start()
+        } else{
+            val rotate = ObjectAnimator.ofFloat(view, "rotation", -90F, 0F)
+            rotate.duration = 800
+            rotate.start()
+        }
     }
     private fun revLandScapeMode(view: View?) {
-        val rotate = ObjectAnimator.ofFloat(view, "rotation", 180F, 270F)
-        rotate.duration = 700
+        val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, -90F)
+        rotate.duration = 800
         rotate.start()
+
     }
     fun doRotation0F() {
         portraitMode(takePhoto)
