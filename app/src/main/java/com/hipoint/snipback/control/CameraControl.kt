@@ -6,6 +6,7 @@ import android.content.Context.CAMERA_SERVICE
 import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
+import android.hardware.camera2.params.MeteringRectangle
 import android.media.*
 import android.media.ImageReader.OnImageAvailableListener
 import android.os.Handler
@@ -214,7 +215,7 @@ class CameraControl(val activity: FragmentActivity) {
                     try {
                         mMediaRecorder?.start()
                         mIsRecordingVideo = true
-                    } catch (e : IllegalStateException){
+                    } catch (e: IllegalStateException){
                         Log.e(TAG, "restartRecording: app may have gone to the background")
                     }
                 }
@@ -848,6 +849,7 @@ class CameraControl(val activity: FragmentActivity) {
             CameraCharacteristics.LENS_FACING,
             CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP,
             CameraCharacteristics.SENSOR_ORIENTATION,
+            CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE,
             -> {
                 characteristics.get(key)!!
             }
@@ -1075,5 +1077,37 @@ class CameraControl(val activity: FragmentActivity) {
         val x = event.getX(0) - event.getX(1)
         val y = event.getY(0) - event.getY(1)
         return sqrt(x * x + y * y.toDouble()).toFloat()
+    }
+
+    fun getSensorSize(): Rect? {
+        val cameraId = if (isBackFacingRequired) CameraCharacteristics.LENS_FACING_BACK else CameraCharacteristics.LENS_FACING_FRONT
+        return cameraCharacteristics(cameraId.toString(),
+            CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE)
+    }
+
+    /**
+     * attempts to focus on touched area
+     */
+    fun startFocus(focusAreaTouch: MeteringRectangle) {
+        mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL)
+        mRequestBuilder?.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
+        try {
+            mRecordSession?.capture(mRequestBuilder!!.build(), null, mBackgroundHandler)
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
+        }
+        mRequestBuilder?.apply {
+            set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+            set(CaptureRequest.CONTROL_AF_REGIONS, arrayOf(focusAreaTouch))
+            set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
+            set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START)
+            setTag("FOCUS_TAG")
+        }
+
+        try {
+            mRecordSession?.capture(mRequestBuilder!!.build(),null, mBackgroundHandler)
+        } catch (e: CameraAccessException) {
+            e.printStackTrace()
+        }
     }
 }
