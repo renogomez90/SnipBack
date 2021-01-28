@@ -347,7 +347,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         doRotation90F()
                     }
                     VideoModeOrientation.REV_LANDSCAPE.ordinal -> {
-                        //  todo: add the new rotation here
+                        doRotation270F()
                     }
                     else -> {
                         doRotation0F()
@@ -361,31 +361,44 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         return rootView
     }
 
-    private fun rotateClockwise(view: View?) {
+    private fun landScapeMode(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, 90F)
         rotate.duration = 700
         rotate.start()
   }
 
-    private fun rotateAntiClockwise(view: View?) {
+    private fun portraitMode(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
         rotate.duration = 700
         rotate.start()
     }
+    private fun revLandScapeMode(view: View?) {
+        val rotate = ObjectAnimator.ofFloat(view, "rotation", 180F, 270F)
+        rotate.duration = 700
+        rotate.start()
+    }
     fun doRotation0F() {
-        rotateAntiClockwise(takePhoto)
-        rotateAntiClockwise(gallery)
-        rotateAntiClockwise(changeCamera)
-        rotateAntiClockwise(settings)
-        rotateAntiClockwise(con)
+        portraitMode(takePhoto)
+        portraitMode(gallery)
+        portraitMode(changeCamera)
+        portraitMode(settings)
+        portraitMode(con)
     }
 
     fun doRotation90F() {
-        rotateClockwise(takePhoto)
-        rotateClockwise(gallery)
-        rotateClockwise(changeCamera)
-        rotateClockwise(settings)
-        rotateClockwise(con)
+        landScapeMode(takePhoto)
+        landScapeMode(gallery)
+        landScapeMode(changeCamera)
+        landScapeMode(settings)
+        landScapeMode(con)
+    }
+    fun doRotation270F(){
+        revLandScapeMode(takePhoto)
+        revLandScapeMode(gallery)
+        revLandScapeMode(changeCamera)
+        revLandScapeMode(settings)
+        revLandScapeMode(con)
+
     }
 
 
