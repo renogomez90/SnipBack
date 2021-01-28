@@ -11,6 +11,7 @@ import android.app.Dialog
 import android.content.*
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.params.MeteringRectangle
 import android.media.MediaMetadataRetriever
@@ -23,6 +24,8 @@ import android.view.*
 import android.view.View.OnTouchListener
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.view.animation.Interpolator
+import android.view.animation.LinearInterpolator
 import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.SeekBar.OnSeekBarChangeListener
@@ -37,6 +40,7 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.SwipedRecording
 import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.Utils.BufferDataDetails
+import com.hipoint.snipback.Utils.SimpleOrientationListener
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.application.AppClass.swipeProcessed
 import com.hipoint.snipback.control.CameraControl
@@ -57,7 +61,10 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import kotlinx.android.synthetic.main.activity_main2.*
+import kotlinx.android.synthetic.main.dont_show_layout.*
 import kotlinx.android.synthetic.main.fragment_gallery.*
+import kotlinx.android.synthetic.main.fragment_videomode.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
@@ -334,39 +341,19 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         setupCameraControl()
         bindListeners()
 
-        val mOrientationListener: OrientationEventListener = object : OrientationEventListener(
+
+        val mOrientationListener: SimpleOrientationListener = object : SimpleOrientationListener(
                 context) {
-            override fun onOrientationChanged(orientation: Int) {
-                if (orientation >= 330 || orientation < 30) {
-                    currentOrientation = Surface.ROTATION_0;
-                    if(currentOrientation==0){
-                        if (isLandscape){
-                            doRotation0F()
-                            isLandscape=false
-                        }
-                    }
-
-                } else if (orientation in 60..119) {
-                    currentOrientation = Surface.ROTATION_90;
-
-                } else if (orientation in 150..209) {
-                    currentOrientation = Surface.ROTATION_180;
-
-                } else if (orientation in 240..299) {
-                    currentOrientation = Surface.ROTATION_270;
-                    if(currentOrientation==3){
-                        if (!isLandscape){
-                            doRotation90F()
-                            isLandscape=true
-                        }
-                    }
+            override fun onSimpleOrientationChanged(orientation: Int) {
+                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    doRotation90F()
+                } else if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    doRotation0F()
                 }
+                Log.d("orientation", "$orientation")
             }
         }
-
-        if (mOrientationListener.canDetectOrientation()) {
-            mOrientationListener.enable()
-        }
+        mOrientationListener.enable()
 
         return rootView
     }
@@ -375,7 +362,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, 90F)
         rotate.duration = 700
         rotate.start()
-    }
+  }
 
     private fun rotateAntiClockwise(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
@@ -397,6 +384,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         rotateClockwise(settings)
         rotateClockwise(con)
     }
+
 
     private fun setupCameraControl() {
         if(cameraControl == null)

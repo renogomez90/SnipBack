@@ -65,13 +65,12 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
                     params.width = (totalWidth - (int) dpToPx(context,4)) / 4;
                     params.height = (totalWidth - (int) dpToPx(context,4)) / 4;
-                    holder.relativeLayoutImage.setLayoutParams(params);
                 }else {
                     params.width = totalWidth / 8;
                     params.height = totalWidth / 8;
                     params.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,4));
-                    holder.relativeLayoutImage.setLayoutParams(params);
                 }
+                holder.relativeLayoutImage.setLayoutParams(params);
 
                 if (snip.getParent_snip_id() != 0 && snip.getIs_virtual_version() == 1) {
                     holder.tvVersionLabel.setVisibility(View.VISIBLE);

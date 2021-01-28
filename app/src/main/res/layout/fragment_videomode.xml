@@ -153,6 +153,7 @@
             android:contentDescription="@string/no_desc"
             app:layout_constraintBottom_toBottomOf="@id/bottom_cont"
             app:layout_constraintEnd_toStartOf="@id/switch_cam_btn"
+            app:layout_constraintHorizontal_chainStyle="spread"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
             app:srcCompat="@drawable/ic_gallery"
