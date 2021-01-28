@@ -7,6 +7,8 @@ import android.view.OrientationEventListener;
 import android.view.Surface;
 import android.view.WindowManager;
 
+import com.hipoint.snipback.fragment.VideoMode;
+
 import java.util.concurrent.locks.ReentrantLock;
 
 import kotlin.jvm.Volatile;
@@ -59,9 +61,11 @@ public abstract class SimpleOrientationListener extends OrientationEventListener
         int toReportOrientation;
 
         if (currentOrientation == Surface.ROTATION_0 || currentOrientation == Surface.ROTATION_180)
-            toReportOrientation = defaultOrientation;
+            toReportOrientation = VideoModeOrientation.PORTRAIT.ordinal();
+        else if(currentOrientation == Surface.ROTATION_90)
+            toReportOrientation = VideoModeOrientation.REV_LANDSCAPE.ordinal();
         else
-            toReportOrientation = orthogonalOrientation;
+            toReportOrientation = VideoModeOrientation.LANDSCAPE.ordinal();
 
         onSimpleOrientationChanged(toReportOrientation);
     }
@@ -109,5 +113,9 @@ public abstract class SimpleOrientationListener extends OrientationEventListener
      * @param orientation value of {@link Configuration#ORIENTATION_LANDSCAPE} or {@link Configuration#ORIENTATION_PORTRAIT}
      */
     public abstract void onSimpleOrientationChanged(int orientation);
+
+    public enum VideoModeOrientation {
+        UNDEFINED, LANDSCAPE, PORTRAIT, REV_LANDSCAPE
+    }
 
 }

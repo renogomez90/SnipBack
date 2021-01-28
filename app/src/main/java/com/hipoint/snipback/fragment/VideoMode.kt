@@ -342,10 +342,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         val mOrientationListener: SimpleOrientationListener = object : SimpleOrientationListener(
                 context) {
             override fun onSimpleOrientationChanged(orientation: Int) {
-                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    doRotation90F()
-                } else if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    doRotation0F()
+                when (orientation) {
+                    VideoModeOrientation.LANDSCAPE.ordinal -> {
+                        doRotation90F()
+                    }
+                    VideoModeOrientation.REV_LANDSCAPE.ordinal -> {
+                        //  todo: add the new rotation here
+                    }
+                    else -> {
+                        doRotation0F()
+                    }
                 }
                 Log.d("orientation", "$orientation")
             }
