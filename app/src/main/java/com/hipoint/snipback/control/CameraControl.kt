@@ -6,6 +6,7 @@ import android.content.Context.CAMERA_SERVICE
 import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
+import android.hardware.camera2.CameraCaptureSession.CaptureCallback
 import android.hardware.camera2.params.MeteringRectangle
 import android.media.*
 import android.media.ImageReader.OnImageAvailableListener
@@ -547,7 +548,7 @@ class CameraControl(val activity: FragmentActivity) {
             } catch (e: IllegalStateException) {
                 //  apart from the obvious, this seems to happen when the app is moving to background
                 //  if that is the case then we can stop the activity
-                Toast.makeText(activity, "Unable to record audio", Toast.LENGTH_SHORT).show()
+//                Toast.makeText(activity, "Unable to record audio", Toast.LENGTH_SHORT).show()
                 e.printStackTrace()
                 if (AppMainActivity.isPausing){
                     activity.finish()
@@ -1089,10 +1090,36 @@ class CameraControl(val activity: FragmentActivity) {
      * attempts to focus on touched area
      */
     fun startFocus(focusAreaTouch: MeteringRectangle) {
-        mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL)
+        val captureCallbackHandler: CaptureCallback = object : CaptureCallback() {
+            override fun onCaptureCompleted(
+                session: CameraCaptureSession,
+                request: CaptureRequest,
+                result: TotalCaptureResult,
+            ) {
+                super.onCaptureCompleted(session, request, result)
+                if (request.tag === "FOCUS_TAG") {
+                    //the focus trigger is complete -
+                    //resume repeating (preview surface will get frames), clear AF trigger
+                    mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER, null)
+                    mRecordSession?.setRepeatingRequest(mRequestBuilder!!.build(), null, null)
+                }
+            }
+
+            override fun onCaptureFailed(
+                session: CameraCaptureSession,
+                request: CaptureRequest,
+                failure: CaptureFailure,
+            ) {
+                super.onCaptureFailed(session, request, failure)
+                Log.e(TAG, "Manual AF failure: $failure")
+            }
+        }
+
+        mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER,
+            CameraMetadata.CONTROL_AF_TRIGGER_CANCEL)
         mRequestBuilder?.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
         try {
-            mRecordSession?.capture(mRequestBuilder!!.build(), null, mBackgroundHandler)
+            mRecordSession?.capture(mRequestBuilder!!.build(), captureCallbackHandler, mBackgroundHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
@@ -1105,7 +1132,7 @@ class CameraControl(val activity: FragmentActivity) {
         }
 
         try {
-            mRecordSession?.capture(mRequestBuilder!!.build(),null, mBackgroundHandler)
+            mRecordSession?.capture(mRequestBuilder!!.build(), captureCallbackHandler, mBackgroundHandler)
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
