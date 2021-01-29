@@ -12,44 +12,44 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:time_bar_min_update_interval="20"
-        app:controller_layout_id="@layout/exo_edit_controller"
+        app:controller_layout_id="@layout/exo_edit_controller_land"
         app:resize_mode="fit"
         app:use_controller="true"
-        app:layout_constraintBottom_toTopOf="@id/edit_controls"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/edit_controls"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
     <LinearLayout
         android:id="@+id/edit_controls"
-        android:layout_width="match_parent"
-        android:layout_height="67dp"
+        android:layout_width="67dp"
+        android:layout_height="match_parent"
         android:background="@color/bottom_menu"
+        android:orientation="vertical"
         android:baselineAligned="false"
         android:gravity="center"
         android:visibility="visible"
         android:transitionName="edit_controls"
         android:transitionGroup="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
             <TextView
                 android:id="@+id/extent_text"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="0.2"
-                android:layout_marginStart="20dp"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="4dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
+                android:layout_weight="0.2"
+                android:drawablePadding="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Extend/Trim"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10sp"
-                android:drawablePadding="4dp"
                 app:drawableTopCompat="@drawable/ic_extend"/>
 
             <TextView
@@ -61,12 +61,12 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:layout_weight="0.2"
+                android:drawablePadding="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="CutOut"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10sp"
-                android:drawablePadding="4dp"
                 app:drawableTopCompat="@drawable/ic_cutout"/>
 
             <TextView
@@ -78,12 +78,12 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:layout_weight="0.2"
+                android:drawablePadding="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Highlight"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10sp"
-                android:drawablePadding="4dp"
                 app:drawableTopCompat="@drawable/ic_highlight"/>
 
             <TextView
@@ -95,12 +95,12 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:layout_weight="0.2"
+                android:drawablePadding="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Slow"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10sp"
-                android:drawablePadding="4dp"
                 app:drawableTopCompat="@drawable/ic_slow"/>
 
             <TextView
@@ -112,13 +112,12 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:layout_weight="0.2"
-                android:layout_marginEnd="20dp"
+                android:drawablePadding="4dp"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
                 android:text="Speed"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="10sp"
-                android:drawablePadding="4dp"
                 app:drawableTopCompat="@drawable/ic_speed" />
 
     </LinearLayout>
