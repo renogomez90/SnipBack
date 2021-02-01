@@ -77,7 +77,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         setContentView(R.layout.appmain_activity)
         if (onTouchListeners == null) {
             onTouchListeners = ArrayList()
