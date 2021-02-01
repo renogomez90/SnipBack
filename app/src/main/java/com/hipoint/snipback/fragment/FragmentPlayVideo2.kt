@@ -101,7 +101,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     // new added
     private var snip: Snip? = null
     private var bufferHDSnip: Hd_snips? = null
-    private var isPlaying                  =false
     private var paused                     = false
     private var thumbnailExtractionStarted = false
     private var isInEditMode               = false
@@ -156,6 +155,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         initSetup()
         bindListeners()
+
         Log.d(TAG, "onResume: started")
     }
 
@@ -168,7 +168,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
 
         bindViews()
-        retainInstance = true;
 
         return rootView
     }
@@ -181,7 +180,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         super.onDestroy()
         player.playWhenReady = false
         seekToPoint=0
-        whenReady=false
     }
 
     /**
@@ -197,18 +195,13 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private fun initSetup() {
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
-
         setVideoSource()
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
-            playWhenReady = false
-            if (!whenReady && !paused){
-                player.playWhenReady = true
-                player.seekTo(seekToPoint)
-            }
-
+            playWhenReady = true
+            player.seekTo(seekToPoint)
         }
 
         playerView.apply {
@@ -260,6 +253,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         if(!VideoService.isProcessing)  //  in case we are coming from video editing there is a chance for crash
             getVideoPreviewFrames()
     }
+
 
     /**
      * set up playback video source
@@ -322,13 +316,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             }
             player.playWhenReady = true
             paused = false
-            isPlaying = true
         }
 
         pauseBtn.onClick {
             player.playWhenReady = false
             paused = true
-            isPlaying =false
         }
 
         tvConvertToReal.setOnClickListener { validateVideo(snip) }
@@ -398,8 +390,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         savedInstanceState?.let {
             seekToPoint = it.getLong("KEY_PLAYER_POSITION")
             whenReady = it.getBoolean("KEY_PLAYER_PLAY_WHEN_READY")
-            Log.d("seekto and whenready","seekPoint is $seekToPoint and whenReady is $whenReady")
+            Log.d("seekto and whenready", "seekPoint is $seekToPoint and whenReady is $whenReady")
         }
+
     }
 
 

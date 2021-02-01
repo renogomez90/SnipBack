@@ -106,8 +106,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     val zoomStep        = 1f
 
     //left swipe
-    private var x1 = 0f
-    private var x2 = 0f
+    private var point1 = 0f
+    private var point2 = 0f
+
     private val swipeAnimationListener = object : Animator.AnimatorListener {
         override fun onAnimationStart(animation: Animator?) = Unit
 
@@ -133,13 +134,34 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         if(v.id == R.id.swipeDetection) {
             when (event.action) {
-                MotionEvent.ACTION_DOWN -> x1 = event.x
+                MotionEvent.ACTION_DOWN ->
+                    point1 = when (previousOrientation) {
+                    SimpleOrientationListener.VideoModeOrientation.PORTRAIT -> {
+                        event.x
+                    }
+                    SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE -> {
+                        -(event.y)
+                    }
+                    else -> {
+                        event.y
+                    }
+                }
                 MotionEvent.ACTION_UP -> {
-                    x2 = event.x
-                    val deltaX = x2 - x1
+                    point2 = when (previousOrientation) {
+                        SimpleOrientationListener.VideoModeOrientation.PORTRAIT -> {
+                            event.x
+                        }
+                        SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE -> {
+                            -(event.y)
+                        }
+                        else -> {
+                            event.y
+                        }
+                    }
+                    val deltaX = point2 - point1
                     if (abs(deltaX) > MIN_DISTANCE) {
                         // Left to Right swipe action
-                        if (x2 > x1) {
+                        if (point2 > point1) {
                             if (cameraControl!!.isRecordingVideo()) {   //  media recorder is capturing
                                 if (cameraControl!!.isRecordingClips()) {
                                     handleRightSwipe()
@@ -154,7 +176,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             }
                         }
                         //  Right to left swipe action
-                        if (x2 < x1) {
+                        if (point2 < point1) {
                             if (cameraControl!!.isRecordingVideo()) {
                                 handleLeftSwipe()
                             }
@@ -338,7 +360,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
-
         bindViews()
         setupCameraControl()
         bindListeners()
@@ -361,7 +382,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         VideoModeOrientation.PORTRAIT
                     }
                 }
-                Log.d("orientation", "$orientation")
             }
         }
         mOrientationListener.enable()
