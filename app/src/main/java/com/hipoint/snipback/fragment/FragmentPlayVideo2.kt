@@ -189,7 +189,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      */
     override fun onDestroy() {
         super.onDestroy()
-        player.playWhenReady = false
+        if (this::player.isInitialized) {
+            player.apply {
+                playWhenReady = false
+            }
+        }
         seekToPoint=0
         (activity as AppMainActivity?)?.showStatusBar()
 
@@ -407,8 +411,14 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putLong("KEY_PLAYER_POSITION", player.contentPosition)
-        outState.putBoolean("KEY_PLAYER_PLAY_WHEN_READY", whenReady)
+
+        outState.apply {
+            if (this@FragmentPlayVideo2::player.isInitialized) {
+                putLong("KEY_PLAYER_POSITION", player.contentPosition)
+            }
+            putBoolean("KEY_PLAYER_PLAY_WHEN_READY", whenReady)
+
+        }
         super.onSaveInstanceState(outState)
     }
 

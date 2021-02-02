@@ -495,6 +495,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         bindListeners()
         setupPlayer()
         restorePreviousState()
+        (activity as AppMainActivity?)?.hideStatusBar()
         return rootView
     }
 
@@ -690,6 +691,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
             subscriptions.dispose()
         }
+        (activity as AppMainActivity?)?.hideStatusBar()
         super.onDestroy()
     }
 
