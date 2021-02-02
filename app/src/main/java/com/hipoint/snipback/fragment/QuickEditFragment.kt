@@ -379,8 +379,9 @@ class QuickEditFragment: Fragment() {
         }
 
         playerView.apply {
-            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             controllerShowTimeoutMs = 2000
+            setBackgroundColor(Color.BLACK)
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
             showController()
         }

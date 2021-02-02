@@ -224,12 +224,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         playerView.apply {
 
             val orientation = requireContext().resources.configuration.orientation
-            resizeMode = if (orientation == Configuration.ORIENTATION_PORTRAIT)
-                AspectRatioFrameLayout.RESIZE_MODE_FILL
-            else
-                AspectRatioFrameLayout.RESIZE_MODE_FIT
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             setBackgroundColor(Color.BLACK)
-            controllerShowTimeoutMs=2500
+            controllerShowTimeoutMs=3000
 
 //            setControllerVisibilityListener { i ->
 //                if (i==8) {

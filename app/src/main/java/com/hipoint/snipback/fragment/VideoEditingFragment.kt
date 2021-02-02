@@ -2129,14 +2129,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         playerView.apply {
-            resizeMode = if(currentOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
-                AspectRatioFrameLayout.RESIZE_MODE_FILL
-            else
-                AspectRatioFrameLayout.RESIZE_MODE_FIT
-
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             controllerAutoShow = false
             controllerShowTimeoutMs = -1
             controllerHideOnTouch = false
+            setBackgroundColor(Color.BLACK)
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
             setShowMultiWindowTimeBar(showBuffer)
             showController()
