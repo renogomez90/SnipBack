@@ -333,6 +333,15 @@ class QuickEditFragment: Fragment() {
         super.onPause()
     }
 
+    /**
+     * Called when the fragment is no longer in use.  This is called
+     * after [.onStop] and before [.onDetach].
+     */
+    override fun onDestroy() {
+        (activity as AppMainActivity?)?.showStatusBar()
+        super.onDestroy()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -349,6 +358,7 @@ class QuickEditFragment: Fragment() {
 
         bindViews()
         bindListeners()
+        (activity as AppMainActivity?)?.hideStatusBar()
         return rootView
     }
 
@@ -369,8 +379,9 @@ class QuickEditFragment: Fragment() {
         }
 
         playerView.apply {
-            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             controllerShowTimeoutMs = 2000
+            setBackgroundColor(Color.BLACK)
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
             showController()
         }

@@ -95,6 +95,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private lateinit var buttonCamera          : RelativeLayout
     private lateinit var tvConvertToReal       : ImageButton
     private lateinit var swipeDetector         : SwipeDistanceView
+    private lateinit var bottomMenu            : LinearLayout
 
     // new
     private var event: Event? = null
@@ -122,6 +123,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                     playerView.hideController()
                 else
                     playerView.showController()
+
                 return false
             }
 
@@ -176,6 +178,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
 
         bindViews()
+        (activity as AppMainActivity?)?.hideStatusBar()
 
         return rootView
     }
@@ -186,9 +189,14 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      */
     override fun onDestroy() {
         super.onDestroy()
-        if(this::player.isInitialized)
-            player.playWhenReady = false
-        seekToPoint = 0
+        if (this::player.isInitialized) {
+            player.apply {
+                playWhenReady = false
+            }
+        }
+        seekToPoint=0
+        (activity as AppMainActivity?)?.showStatusBar()
+
     }
 
     /**
@@ -214,12 +222,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         }
 
         playerView.apply {
+
             val orientation = requireContext().resources.configuration.orientation
-            resizeMode = if (orientation == Configuration.ORIENTATION_PORTRAIT)
-                AspectRatioFrameLayout.RESIZE_MODE_FILL
-            else
-                AspectRatioFrameLayout.RESIZE_MODE_FIT
+            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             setBackgroundColor(Color.BLACK)
+            controllerShowTimeoutMs=3000
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
         }
 
@@ -316,6 +323,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         pauseBtn               = rootView.findViewById(R.id.exo_pause)
         quickEditBtn           = rootView.findViewById(R.id.quickEdit_button)
         quickEditTimeTxt       = rootView.findViewById(R.id.quick_edit_time)
+        bottomMenu             = rootView.findViewById(R.id.bottom_menu)
+
     }
 
     private fun bindListeners() {
@@ -390,9 +399,14 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        if(this::player.isInitialized)
-            outState.putLong("KEY_PLAYER_POSITION", player.contentPosition)
-        outState.putBoolean("KEY_PLAYER_PLAY_WHEN_READY", whenReady)
+
+        outState.apply {
+            if (this@FragmentPlayVideo2::player.isInitialized) {
+                putLong("KEY_PLAYER_POSITION", player.contentPosition)
+            }
+            putBoolean("KEY_PLAYER_PLAY_WHEN_READY", whenReady)
+
+        }
         super.onSaveInstanceState(outState)
     }
 

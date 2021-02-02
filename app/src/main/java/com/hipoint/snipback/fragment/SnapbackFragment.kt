@@ -208,7 +208,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private fun setupPlayer(videoPath: String) {
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
-        playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+        playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
 
         player.apply {
             setMediaItem(MediaItem.fromUri(Uri.parse(videoPath)))
