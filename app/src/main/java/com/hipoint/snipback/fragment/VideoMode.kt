@@ -371,14 +371,17 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             override fun onSimpleOrientationChanged(orientation: Int) {
                 previousOrientation = when (orientation) {
                     VideoModeOrientation.LANDSCAPE.ordinal -> {
+                        cameraControl?.setCurrentOrientation(90)
                         doRotation90F()
                         VideoModeOrientation.LANDSCAPE
                     }
                     VideoModeOrientation.REV_LANDSCAPE.ordinal -> {
+                        cameraControl?.setCurrentOrientation(270)
                         doRotation270F()
                         VideoModeOrientation.REV_LANDSCAPE
                     }
                     else -> {
+                        cameraControl?.setCurrentOrientation(0)
                         doRotation0F()
                         VideoModeOrientation.PORTRAIT
                     }

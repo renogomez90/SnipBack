@@ -195,6 +195,11 @@ class CameraControl(val activity: FragmentActivity) {
     private var mIsRecordingVideo = false
 
     /**
+     * camera orientation
+     */
+    private var currentOrientation = 0
+
+    /**
      * Stops and restarts the mediaRecorder,
      * assuming the mediaRecorder is initialized and already recording
      */
@@ -288,6 +293,10 @@ class CameraControl(val activity: FragmentActivity) {
 
     fun isRecordingClips(): Boolean{
         return recordClips
+    }
+
+    fun setCurrentOrientation(orientation: Int){
+        currentOrientation = orientation
     }
 
     fun getZoomLevel(): Double{
@@ -540,7 +549,7 @@ class CameraControl(val activity: FragmentActivity) {
         //  ensuring the media recorder is recreated
 
         outputFilePath = outputMediaFile!!.absolutePath
-        val rotation = activity.windowManager?.defaultDisplay?.rotation
+        val rotation = currentOrientation
 
         mMediaRecorder!!.apply {
             try {
@@ -1090,7 +1099,6 @@ class CameraControl(val activity: FragmentActivity) {
      * attempts to focus on touched area
      */
     fun startFocus(focusAreaTouch: MeteringRectangle) {
-        Log.d(TAG, "startFocus: focus area = ${focusAreaTouch.x} x ${focusAreaTouch.y}, ${focusAreaTouch.meteringWeight}")
         val captureCallbackHandler: CaptureCallback = object : CaptureCallback() {
             override fun onCaptureCompleted(
                 session: CameraCaptureSession,
