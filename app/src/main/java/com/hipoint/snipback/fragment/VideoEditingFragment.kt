@@ -512,7 +512,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             if(editListAdapter != null){    //  already some edit was saved here
                 slideUpAnimation(changeList)
-            } else if(speedDetailSet.isNotEmpty()){
+            } else if(speedDetailSet.isNotEmpty() && !newSpeedChangeStart){
                 setupEditList()
                 slideUpAnimation(changeList)
             }
@@ -524,6 +524,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 } else null
 
                 showAdjustedSpeedChanges()
+                if(newSpeedChangeStart) {
+                    progressTracker?.stopTracking()
+                    progressTracker = null
+                }
                 if(tmpUiRangeSegment != null){
                     uiRangeSegments?.add(tmpUiRangeSegment)
                 }
@@ -548,16 +552,17 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
                     acceptRejectHolder.visibility = View.VISIBLE
 
-                    if (isSeekbarShown && !isEditExisting) {
-                        seekBar.hideScrubber()
-                        isSeekbarShown = false
-                    }
-
                     val endValue =
                         if (restoreCurrentWindow == 1) ((bufferDuration + restoreCurrentPoint) * 100 / maxDuration).toFloat()
                         else (restoreCurrentPoint * 100 / maxDuration).toFloat()
                     uiRangeSegments!![currentEditSegment].setMaxStartValue(endValue).apply()
                 }
+
+                if (isSeekbarShown && !isEditExisting) {
+                    seekBar.hideScrubber()
+                    isSeekbarShown = false
+                }
+
             } else {    //  extend/trim is ongoing
                 speedIndicator.visibility     = View.GONE
                 changeList.visibility         = View.GONE
@@ -572,6 +577,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 extendRangeMarker(startValue, endValue)
             }
 
+            enableEditOptions(false)
             setIconActive()
         }
         //  restores the current position after orientation change
@@ -617,6 +623,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             putBoolean("previousStartInBuffer", previousStartInBuffer)
             putBoolean("previousEndInBuffer"  , previousEndInBuffer)
             putBoolean("paused"               , paused)
+            putBoolean("newSpeedChangeStart"  , newSpeedChangeStart)
             putSerializable("editHistory"     , editHistory)
             putSerializable("speedDuration"   , speedDuration)
             putSerializable("editAction"      , editAction)
@@ -657,6 +664,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             previousStartInBuffer  = getBoolean("previousStartInBuffer")
             previousEndInBuffer    = getBoolean("previousEndInBuffer")
             paused                 = getBoolean("paused")
+            newSpeedChangeStart    = getBoolean("newSpeedChangeStart")
             editHistory            = getSerializable("editHistory") as ArrayList<EditAction>
             speedDuration          = getSerializable("speedDuration") as Pair<Long          , Long>
             editAction             = getSerializable("editAction") as EditAction
