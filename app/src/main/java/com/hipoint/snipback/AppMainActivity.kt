@@ -3,7 +3,6 @@ package com.hipoint.snipback
 import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
@@ -11,6 +10,9 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
+import android.view.View
+import android.view.WindowManager
+import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
@@ -42,13 +44,14 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
+
 class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     AppRepository.OnTaskCompleted, IReplaceRequired {
     var PERMISSION_ALL = 1
     var PERMISSIONS = arrayOf(
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.INTERNET
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.INTERNET
     )
 
     //    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
@@ -74,6 +77,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         isPausing = false
 //        registerReceiver(videoOperationReceiver, IntentFilter(VideoService.ACTION))
     }
+    fun hideStatusBar() {
+        this.window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+    }
+    fun showStatusBar() {
+        this.window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -206,8 +216,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         Log.d(TAG, "onBackPressed: stack count $count")
         for (entry in 0 until count)
             Log.d(
-                TAG,
-                "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}"
+                    TAG,
+                    "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}"
             )
 
         if (videoModeFragment.isVisible || count == 1) {    //  we are at the first fragment when back was pressed. we can exit
@@ -268,9 +278,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             if (context != null) {
                 for (permission in permissions) {
                     if (ActivityCompat.checkSelfPermission(
-                            context,
-                            permission!!
-                        ) != PackageManager.PERMISSION_GRANTED
+                                    context,
+                                    permission!!
+                            ) != PackageManager.PERMISSION_GRANTED
                     ) {
                         return false
                     }
@@ -469,26 +479,26 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 //            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
 //                    VIDEO_DIRECTORY_NAME);
             val thumbsStorageDir = File(
-                "$dataDir/$VIDEO_DIRECTORY_NAME",
-                THUMBS_DIRECTORY_NAME
+                    "$dataDir/$VIDEO_DIRECTORY_NAME",
+                    THUMBS_DIRECTORY_NAME
             )
             if (!thumbsStorageDir.exists()) {
                 if (!thumbsStorageDir.mkdirs()) {
                     Log.d(
-                        TAG, "Oops! Failed create "
-                                + VIDEO_DIRECTORY_NAME + " directory"
+                            TAG, "Oops! Failed create "
+                            + VIDEO_DIRECTORY_NAME + " directory"
                     )
                     return
                 }
             }
             val fullThumbPath: File
             fullThumbPath = File(
-                thumbsStorageDir.path + File.separator
-                        + "snip_" + snip!!.snip_id + ".png"
+                    thumbsStorageDir.path + File.separator
+                            + "snip_" + snip!!.snip_id + ".png"
             )
             Log.d(
-                TAG,
-                "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.absolutePath
+                    TAG,
+                    "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.absolutePath
             )
             //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
             val streamThumbnail = FileOutputStream(fullThumbPath)
@@ -501,13 +511,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 thumb = if (snip.is_virtual_version != 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                         retriever.getScaledFrameAtTime(
-                            snip.start_time.toInt() * 1000000.toLong(),
-                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100
+                                snip.start_time.toInt() * 1000000.toLong(),
+                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100
                         )
                     } else {
                         retriever.getFrameAtTime(
-                            snip.start_time.toInt() * 1000000.toLong(),
-                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                                snip.start_time.toInt() * 1000000.toLong(),
+                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC
                         )
                     }
                 } else {
@@ -600,7 +610,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             try {
                 retriever.setDataSource(it)
                 duration = TimeUnit.MILLISECONDS.toSeconds(
-                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                 ).toInt()
                 durationList.add(duration)
             } catch (e: IllegalArgumentException) {
