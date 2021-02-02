@@ -14,4 +14,6 @@ class SnipbackTimeBar@JvmOverloads constructor(context: Context, val attrs: Attr
     override fun getPreferredUpdateDelay(): Long {
         return 5L
     }
+
+
 }

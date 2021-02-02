@@ -101,12 +101,12 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     // new added
     private var snip        : Snip?     = null
     private var bufferHDSnip: Hd_snips? = null
+
     private var thumbnailExtractionStarted = false
     private var isInEditMode               = false
     private var bufferDuration             = -1L
     private var videoDuration              = -1L
     private var maxDuration                = 0L
-
 
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive

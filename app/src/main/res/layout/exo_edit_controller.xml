@@ -294,6 +294,7 @@
                 android:layout_height="35dp">
 
                 <com.hipoint.snipback.Utils.SnipbackTimeBar
+                    android:tag="main_scrubber"
                     android:id="@id/exo_progress"
                     android:layout_width="match_parent"
                     android:layout_height="35dp"
