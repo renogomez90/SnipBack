@@ -1090,6 +1090,7 @@ class CameraControl(val activity: FragmentActivity) {
      * attempts to focus on touched area
      */
     fun startFocus(focusAreaTouch: MeteringRectangle) {
+        Log.d(TAG, "startFocus: focus area = ${focusAreaTouch.x} x ${focusAreaTouch.y}, ${focusAreaTouch.meteringWeight}")
         val captureCallbackHandler: CaptureCallback = object : CaptureCallback() {
             override fun onCaptureCompleted(
                 session: CameraCaptureSession,
@@ -1100,8 +1101,16 @@ class CameraControl(val activity: FragmentActivity) {
                 if (request.tag === "FOCUS_TAG") {
                     //the focus trigger is complete -
                     //resume repeating (preview surface will get frames), clear AF trigger
+                    /*mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER, null)
+                    mRecordSession?.setRepeatingRequest(mRequestBuilder!!.build(), null, null)*/
+                    mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE)
+                    mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL)
                     mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER, null)
-                    mRecordSession?.setRepeatingRequest(mRequestBuilder!!.build(), null, null)
+                    try {
+                        mRecordSession?.setRepeatingRequest(mRequestBuilder!!.build(), null, mBackgroundHandler)
+                    } catch (e: CameraAccessException) {
+                        e.printStackTrace()
+                    }
                 }
             }
 
@@ -1115,8 +1124,7 @@ class CameraControl(val activity: FragmentActivity) {
             }
         }
 
-        mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER,
-            CameraMetadata.CONTROL_AF_TRIGGER_CANCEL)
+        mRequestBuilder?.set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_CANCEL)
         mRequestBuilder?.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_OFF)
         try {
             mRecordSession?.capture(mRequestBuilder!!.build(), captureCallbackHandler, mBackgroundHandler)
@@ -1127,6 +1135,7 @@ class CameraControl(val activity: FragmentActivity) {
             set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
             set(CaptureRequest.CONTROL_AF_REGIONS, arrayOf(focusAreaTouch))
             set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO)
+            set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_IDLE)
             set(CaptureRequest.CONTROL_AF_TRIGGER, CameraMetadata.CONTROL_AF_TRIGGER_START)
             setTag("FOCUS_TAG")
         }

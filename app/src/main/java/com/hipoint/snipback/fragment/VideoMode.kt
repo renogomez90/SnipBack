@@ -201,8 +201,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val halfTouchWidth = 50
             val halfTouchHeight = 50
             val focusAreaTouch =
-                MeteringRectangle(max((event.y / view.height.toFloat() * sensorArraySize.width().toFloat()) - halfTouchWidth, 0F).roundToInt(),
-                    max((event.x / view.width.toFloat() * sensorArraySize.height().toFloat()) - halfTouchHeight, 0F).roundToInt(),
+                MeteringRectangle(
+                    max(((event.x / view.width.toFloat()) * sensorArraySize.width().toFloat()) - halfTouchHeight, 0F).roundToInt(),
+                    max(((event.y / view.height.toFloat()) * sensorArraySize.height().toFloat()) - halfTouchWidth, 0F).roundToInt(),
                     halfTouchWidth * 2,
                     halfTouchHeight * 2,
                     MeteringRectangle.METERING_WEIGHT_MAX - 1)
