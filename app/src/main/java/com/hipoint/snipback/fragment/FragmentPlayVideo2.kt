@@ -69,8 +69,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     private val retries = 3
     private var tries   = 0
-    private var seekToPoint:Long=0
-    private var whenReady:Boolean=false
+    private var seekToPoint: Long    = 0
+    private var whenReady  : Boolean = false
 
     private var subscriptions: CompositeDisposable? = null
 
@@ -99,9 +99,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     // new
     private var event: Event? = null
     // new added
-    private var snip: Snip? = null
+    private var snip        : Snip?     = null
     private var bufferHDSnip: Hd_snips? = null
-    private var paused                     = false
     private var thumbnailExtractionStarted = false
     private var isInEditMode               = false
     private var bufferDuration             = -1L
@@ -159,6 +158,15 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         Log.d(TAG, "onResume: started")
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        savedInstanceState?.let {
+            seekToPoint = it.getLong("KEY_PLAYER_POSITION")
+            whenReady = it.getBoolean("KEY_PLAYER_PLAY_WHEN_READY")
+            Log.d("seekto and whenready", "seekPoint is $seekToPoint and whenReady is $whenReady")
+        }
+    }
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         rootView = inflater.inflate(R.layout.layout_play_video, container, false)
@@ -200,7 +208,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
-            playWhenReady = true
+            playWhenReady = whenReady
             player.seekTo(seekToPoint)
         }
 
@@ -315,12 +323,12 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 player.seekTo(0)
             }
             player.playWhenReady = true
-            paused = false
+            whenReady = true
         }
 
         pauseBtn.onClick {
             player.playWhenReady = false
-            paused = true
+            whenReady = false
         }
 
         tvConvertToReal.setOnClickListener { validateVideo(snip) }
@@ -382,19 +390,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putLong("KEY_PLAYER_POSITION", player.contentPosition)
-        outState.putBoolean("KEY_PLAYER_PLAY_WHEN_READY", player.playWhenReady)
+        outState.putBoolean("KEY_PLAYER_PLAY_WHEN_READY", whenReady)
         super.onSaveInstanceState(outState)
     }
-    override fun onViewStateRestored(savedInstanceState: Bundle?) {
-        super.onViewStateRestored(savedInstanceState)
-        savedInstanceState?.let {
-            seekToPoint = it.getLong("KEY_PLAYER_POSITION")
-            whenReady = it.getBoolean("KEY_PLAYER_PLAY_WHEN_READY")
-            Log.d("seekto and whenready", "seekPoint is $seekToPoint and whenReady is $whenReady")
-        }
-
-    }
-
 
     /**
      * start quick edit
