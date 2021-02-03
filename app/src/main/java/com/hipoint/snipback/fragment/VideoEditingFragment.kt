@@ -377,8 +377,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         withContext(Main) {
                             if (snip != null) {
                                 (requireActivity() as AppMainActivity).loadFragment(
-                                    FragmentPlayVideo2.newInstance(
-                                        snip),
+                                    FragmentPlayVideo2.newInstance(snip),
                                     true)
                             }
                         }
@@ -1780,7 +1779,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         seekBar.hideScrubber()
 
         if (timebarHolder.indexOfChild(uiRangeSegments!![currentEditSegment]) < 0) { //  View doesn't exist and can be added
-            timebarHolder.addView(uiRangeSegments!![currentEditSegment])
+            try {
+                timebarHolder.addView(uiRangeSegments!![currentEditSegment])
+            } catch (e: IllegalStateException) {
+                Log.e(TAG,
+                    "handleNewSpeedChange: video cannot be added, since it was already added")
+                e.printStackTrace()
+            }
         }
 
         newSpeedChangeStart = true
@@ -2923,6 +2928,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * */
     override fun editPoint(position: Int, speedDetails: SpeedDetails) {
         isEditExisting = true
+        newSpeedChangeStart = false
 
         if(uiRangeSegments?.size!! >= speedDetailSet.size){
             if(uiRangeSegments!!.size == speedDetailSet.size)
