@@ -128,8 +128,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private lateinit var playerView: PlayerView
     private lateinit var player    : SimpleExoPlayer
 
-    private var progressTracker: ProgressTracker? = null
-
     //    Snip
     private var snip: Snip? = null
 
@@ -377,8 +375,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         withContext(Main) {
                             if (snip != null) {
                                 (requireActivity() as AppMainActivity).loadFragment(
-                                    FragmentPlayVideo2.newInstance(
-                                        snip),
+                                    FragmentPlayVideo2.newInstance(snip),
                                     true)
                             }
                         }
@@ -527,10 +524,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 } else null
 
                 showAdjustedSpeedChanges()
-                if(newSpeedChangeStart) {
+                /*if(newSpeedChangeStart) {
+                    progressTracker?.setChangeAccepted(false)
                     progressTracker?.stopTracking()
                     progressTracker = null
-                }
+                }*/
                 if(tmpUiRangeSegment != null){
                     uiRangeSegments?.add(tmpUiRangeSegment)
                 }
@@ -1780,7 +1778,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         seekBar.hideScrubber()
 
         if (timebarHolder.indexOfChild(uiRangeSegments!![currentEditSegment]) < 0) { //  View doesn't exist and can be added
-            timebarHolder.addView(uiRangeSegments!![currentEditSegment])
+            try {
+                timebarHolder.addView(uiRangeSegments!![currentEditSegment])
+            } catch (e: IllegalStateException) {
+                Log.e(TAG,
+                    "handleNewSpeedChange: video cannot be added, since it was already added")
+                e.printStackTrace()
+            }
         }
 
         newSpeedChangeStart = true
@@ -2517,6 +2521,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
         private var restrictList   : ArrayList<SpeedDetails>?       = null //  speed details to prevent users from selecting an existing edit
+        private var progressTracker: ProgressTracker?               = null
 
         var saveAction: SaveActionType        = SaveActionType.CANCEL
         var fragment  : VideoEditingFragment? = null
@@ -2922,7 +2927,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * move the cursor to the starting point of the edit segment with start selected.
      * */
     override fun editPoint(position: Int, speedDetails: SpeedDetails) {
+        if(isEditExisting) {
+            return
+        }
+
         isEditExisting = true
+        newSpeedChangeStart = false
 
         if(uiRangeSegments?.size!! >= speedDetailSet.size){
             if(uiRangeSegments!!.size == speedDetailSet.size)
@@ -3084,7 +3094,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     var isPresent = false
                     var tmp: SpeedDetails? = null
                     speedDetailList.forEach{
-                        if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second) {
+                        if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second &&
+                            !(it.timeDuration!!.first == it.timeDuration!!.second &&
+                                    it.startWindowIndex == it.endWindowIndex)) {
                             isPresent = true
                             tmp = it
                             return@forEach
@@ -3156,6 +3168,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         fun stopTracking(){
+            colourOverlay.visibility = View.GONE
             handler?.removeCallbacksAndMessages(null)
             handler = null
         }
