@@ -13,7 +13,6 @@
         android:layout_height="match_parent"
         app:time_bar_min_update_interval="20"
         app:controller_layout_id="@layout/exo_edit_controller"
-        app:resize_mode="fit"
         app:use_controller="true"
         app:layout_constraintBottom_toTopOf="@id/relativeLayout"
         app:layout_constraintEnd_toEndOf="parent"
