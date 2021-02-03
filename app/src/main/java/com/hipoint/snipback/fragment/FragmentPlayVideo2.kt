@@ -260,6 +260,10 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                         seekBar.setDuration(maxDuration)
                     }
                 }
+                if (playbackState == Player.STATE_ENDED && player.currentPosition >= player.duration){
+                    player.playWhenReady = false
+                    whenReady = false
+                }
             }
         })
 
