@@ -138,7 +138,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip clip to be trimmed
      * @param parentFolder Path to save output
      */
-    suspend fun trimToClip(clip: File, outputPath: String, startSecond: Float, endSecond: Float, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
+    suspend fun trimToClip(clip: File, outputPath: String, startSecond: Float, endSecond: Float, comingFrom: CurrentOperation, swipeAction: SwipeAction, orientationPref: Int) {
         var start = startSecond
         var end = endSecond
         val retriever = MediaMetadataRetriever()
@@ -154,10 +154,15 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (sec < end)
             end = sec
 
-        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT)
+        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT) {
             "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
-        else
-            "-ss $start -i ${clip.absolutePath} -to ${end - start} -c copy -y $outputPath"   // without re-encoding
+        }else {
+            if(swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1) {
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -metadata:s:v rotate=$orientationPref -c copy -y $outputPath"
+            }else {
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -c copy -y $outputPath"   // without re-encoding
+            }
+        }
 
         /*"-ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -threads 4 -y $outputPath"   // without re-encoding*/
 
