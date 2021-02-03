@@ -7,6 +7,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.*
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.media.MediaMetadataRetriever
 import android.media.MediaScannerConnection
@@ -70,6 +71,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
     private val retries = 3
     private var tries   = 0
+    private var seekToPoint: Long = 0
 
     private var progressDialog : SnapbackProcessingDialog? = null
     private var saveVideoDialog: KeepSnapbackVideoDialog?  = null
@@ -137,10 +139,10 @@ class SnapbackFragment: Fragment(), ISaveListener {
             override fun onSingleTapUp(e: MotionEvent?): Boolean = false
 
             override fun onScroll(
-                e1: MotionEvent?,
-                e2: MotionEvent?,
-                distanceX: Float,
-                distanceY: Float,
+                    e1: MotionEvent?,
+                    e2: MotionEvent?,
+                    distanceX: Float,
+                    distanceY: Float,
             ): Boolean {
                 if (e1 != null && e2 != null) {
                     val speed = (distanceX / (e2.eventTime - e1.eventTime)).absoluteValue
@@ -161,25 +163,44 @@ class SnapbackFragment: Fragment(), ISaveListener {
             override fun onLongPress(e: MotionEvent?) = Unit
 
             override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent?,
-                velocityX: Float,
-                velocityY: Float,
+                    e1: MotionEvent?,
+                    e2: MotionEvent?,
+                    velocityX: Float,
+                    velocityY: Float,
             ): Boolean =
-                false
+                    false
         })
+    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        savedInstanceState?.let {
+            seekToPoint = it.getLong("KEY_PLAYER_POSITION")
+            Log.d("seekto and whenready", "seekPoint is $seekToPoint")
+        }
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?,
     ): View? {
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        (activity as AppMainActivity?)?.hideStatusBar()
         rootView = inflater.inflate(R.layout.fragment_snapback, container, false)
         bindViews()
         bindListeners()
 
         return rootView
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.apply {
+            if (this@SnapbackFragment::player.isInitialized) {
+                putLong("KEY_PLAYER_POSITION", player.contentPosition)
+            }
+
+        }
+        super.onSaveInstanceState(outState)
     }
 
     override fun onResume() {
@@ -216,6 +237,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
             playWhenReady = false
+            seekTo(seekToPoint)
         }
 
         playerView.controllerShowTimeoutMs = 2000
@@ -230,11 +252,11 @@ class SnapbackFragment: Fragment(), ISaveListener {
                     CoroutineScope(Dispatchers.Main).launch {
                         delay(500)
                         val frag = requireActivity().supportFragmentManager
-                            .findFragmentByTag(AppMainActivity.PLAY_SNAPBACK_TAG)
+                                .findFragmentByTag(AppMainActivity.PLAY_SNAPBACK_TAG)
                         requireActivity().supportFragmentManager.beginTransaction()
-                            .detach(frag!!)
-                            .attach(frag)
-                            .commit()
+                                .detach(frag!!)
+                                .attach(frag)
+                                .commit()
                     }
                 }
             }
@@ -278,19 +300,19 @@ class SnapbackFragment: Fragment(), ISaveListener {
             val photoLaunchIntent = Intent(Intent.ACTION_VIEW)
             val mediaDirPath = requireContext().externalMediaDirs[0].absolutePath + "/Snipback/"
             val fileUri = FileProvider.getUriForFile(requireContext().applicationContext,
-                requireContext().packageName + ".fileprovider",
-                File(mediaDirPath))
+                    requireContext().packageName + ".fileprovider",
+                    File(mediaDirPath))
             photoLaunchIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
 
             photoLaunchIntent.setDataAndType(fileUri,
-                DocumentsContract.Document.MIME_TYPE_DIR) //   this is correct way to do this BUT Samsung and Huawei doesn't support it
+                    DocumentsContract.Document.MIME_TYPE_DIR) //   this is correct way to do this BUT Samsung and Huawei doesn't support it
 
 
             if (photoLaunchIntent.resolveActivityInfo(requireContext().packageManager, 0) == null) {
                 photoLaunchIntent.setDataAndType(fileUri,
-                    "resource/folder") //  this will work with some file managers
+                        "resource/folder") //  this will work with some file managers
                 if (photoLaunchIntent.resolveActivityInfo(requireContext().packageManager,
-                        0) == null
+                                0) == null
                 ) {
                     photoLaunchIntent.setDataAndType(fileUri, "*/*") //  just open with anything
                 }
@@ -332,25 +354,25 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
                 override fun onPermissionDenied(p0: PermissionDeniedResponse?) {
                     Toast.makeText(requireContext(),
-                        "cannot capture without storage permission",
-                        Toast.LENGTH_SHORT).show()
+                            "cannot capture without storage permission",
+                            Toast.LENGTH_SHORT).show()
                 }
 
                 override fun onPermissionRationaleShouldBeShown(
-                    p0: PermissionRequest?,
-                    p1: PermissionToken?,
+                        p0: PermissionRequest?,
+                        p1: PermissionToken?,
                 ) {
                 }
             }).withErrorListener { Toast.makeText(requireActivity().applicationContext,
-                "Error occurred! ",
-                Toast.LENGTH_SHORT).show() }
+                        "Error occurred! ",
+                        Toast.LENGTH_SHORT).show() }
             .onSameThread()
             .check()
     }
 
     private fun hasStoragePermission(): Boolean =
         ActivityCompat.checkSelfPermission(requireActivity(),
-            Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
 
 
     private fun bindViews() {
@@ -457,10 +479,10 @@ class SnapbackFragment: Fragment(), ISaveListener {
             override fun onSuccess() {
                 Log.d(TAG, "onSuccess: image saved")
                 MediaScannerConnection.scanFile(
-                    requireContext(),
-                    arrayOf("${mediaStorageDir!!.path}/${timeStamp}.jpg"),
-                    arrayOf(MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")),
-                    null
+                        requireContext(),
+                        arrayOf("${mediaStorageDir!!.path}/${timeStamp}.jpg"),
+                        arrayOf(MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")),
+                        null
                 )
 
                 val values = ContentValues()
@@ -468,7 +490,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
                 values.put(Images.Media.DATE_TAKEN, System.currentTimeMillis())
                 values.put(Images.Media.MIME_TYPE, "image/jpeg")
                 values.put(MediaStore.MediaColumns.DATA,
-                    "${EXTERNAL_DIR_PATH}/IMAGE_${timeStamp}.jpg")
+                        "${EXTERNAL_DIR_PATH}/IMAGE_${timeStamp}.jpg")
 
                 context!!.contentResolver.insert(Images.Media.EXTERNAL_CONTENT_URI, values)
             }
@@ -486,7 +508,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(videoPath)
         val duration = TimeUnit.MILLISECONDS.toSeconds(retriever.extractMetadata(
-            MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
+                MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()).toInt()
 
         if(activity is AppMainActivity){
             showInGallery.add(File(videoPath!!).nameWithoutExtension)
@@ -506,6 +528,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
     override fun onDestroy() {
         videoPath = ""
+        (activity as AppMainActivity?)?.showStatusBar()
         super.onDestroy()
     }
 
