@@ -76,7 +76,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                 putExtra(LAUNCHED_FROM_EXTRA, work.comingFrom.name)
             }
             LocalBroadcastManager.getInstance(this@VideoService).sendBroadcast(updateUiIntent)
-            Log.d(TAG, "AVA processQueue: processing operation: ${work.operation} on ${work.clips} to get ${work.outputPath}")
+            Log.d(TAG, "processQueue: processing operation: ${work.operation} on ${work.clips} to get ${work.outputPath}")
             with(work) {
                 when (operation) {
                     IVideoOpListener.VideoOp.CONCAT -> {
@@ -111,7 +111,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         } else {
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).trimToClip(File(clips[0]), outputPath, startTime, endTime, comingFrom, swipeAction)
+                                VideoUtils(this@VideoService).trimToClip(File(clips[0]), outputPath, startTime, endTime, comingFrom, swipeAction, orientationPreference)
                                 return@launch
                             }
                         }

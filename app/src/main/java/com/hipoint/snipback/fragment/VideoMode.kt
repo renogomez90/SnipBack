@@ -1110,6 +1110,24 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val intentService = Intent(requireContext(), VideoService::class.java)
             val taskList = arrayListOf<VideoOpItem>()
 
+            /*
+            DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90)
+            DEFAULT_ORIENTATIONS.append(Surface.ROTATION_90, 0)
+            DEFAULT_ORIENTATIONS.append(Surface.ROTATION_180, 270)
+            DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 180)
+
+            INVERSE_ORIENTATIONS.append(Surface.ROTATION_0, 270)
+            INVERSE_ORIENTATIONS.append(Surface.ROTATION_90, 180)
+            INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 90)
+            INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0)
+            */
+
+            val orientationPref = when(previousOrientation){
+                SimpleOrientationListener.VideoModeOrientation.LANDSCAPE -> 90 - 90
+                SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE -> 270 - 90
+                else -> 0 - 90
+            }
+
             if (swipeAction == SwipeAction.SWIPE_LEFT) {   //  since we don't need the buffer for right swipe
                 val bufferTask = VideoOpItem(
                     operation = VideoOp.TRIMMED,
@@ -1118,7 +1136,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     endTime = (actualClipTime - swipeClipDuration).toFloat(),
                     outputPath = bufferFile,
                     comingFrom = CurrentOperation.CLIP_RECORDING,
-                    swipeAction = swipeAction)
+                    swipeAction = swipeAction,
+                    orientationPreference = orientationPref)
 
                 bufferDetails.add(BufferDataDetails(bufferFile, videoFile))
                 taskList.add(bufferTask)
@@ -1130,7 +1149,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 endTime = actualClipTime.toFloat(),
                 outputPath = videoFile,
                 comingFrom = CurrentOperation.CLIP_RECORDING,
-                swipeAction = swipeAction)
+                swipeAction = swipeAction,
+                orientationPreference = orientationPref)
 
             taskList.add(videoTask)
 

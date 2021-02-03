@@ -15,7 +15,8 @@ data class VideoOpItem(val operation: IVideoOpListener.VideoOp,
                        var splitTime: Int = -1,
                        val speedDetailsList: ArrayList<SpeedDetails>? = arrayListOf(),
                        val comingFrom: CurrentOperation,
-                       val swipeAction: SwipeAction = SwipeAction.NO_ACTION) : Parcelable {
+                       val swipeAction: SwipeAction = SwipeAction.NO_ACTION,
+                       val orientationPreference: Int = -1) : Parcelable {
 
     override fun toString(): String {
         return """
@@ -29,6 +30,7 @@ data class VideoOpItem(val operation: IVideoOpListener.VideoOp,
            | speedDetails=$speedDetailsList,
            | comingFrom=$comingFrom,
            | swipeAction=$swipeAction
+           | orientationPreference=$orientationPreference
             """.trimMargin()
     }
 }
