@@ -128,8 +128,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private lateinit var playerView: PlayerView
     private lateinit var player    : SimpleExoPlayer
 
-    private var progressTracker: ProgressTracker? = null
-
     //    Snip
     private var snip: Snip? = null
 
@@ -526,10 +524,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 } else null
 
                 showAdjustedSpeedChanges()
-                if(newSpeedChangeStart) {
+                /*if(newSpeedChangeStart) {
+                    progressTracker?.setChangeAccepted(false)
                     progressTracker?.stopTracking()
                     progressTracker = null
-                }
+                }*/
                 if(tmpUiRangeSegment != null){
                     uiRangeSegments?.add(tmpUiRangeSegment)
                 }
@@ -2522,6 +2521,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
         private var restrictList   : ArrayList<SpeedDetails>?       = null //  speed details to prevent users from selecting an existing edit
+        private var progressTracker: ProgressTracker?               = null
 
         var saveAction: SaveActionType        = SaveActionType.CANCEL
         var fragment  : VideoEditingFragment? = null
@@ -3094,7 +3094,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     var isPresent = false
                     var tmp: SpeedDetails? = null
                     speedDetailList.forEach{
-                        if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second) {
+                        if (currentPosition in it.timeDuration!!.first..it.timeDuration!!.second &&
+                            !(it.timeDuration!!.first == it.timeDuration!!.second &&
+                                    it.startWindowIndex == it.endWindowIndex)) {
                             isPresent = true
                             tmp = it
                             return@forEach
@@ -3166,6 +3168,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         fun stopTracking(){
+            colourOverlay.visibility = View.GONE
             handler?.removeCallbacksAndMessages(null)
             handler = null
         }
