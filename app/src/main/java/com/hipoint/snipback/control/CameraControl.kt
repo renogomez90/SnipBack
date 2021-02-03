@@ -198,6 +198,7 @@ class CameraControl(val activity: FragmentActivity) {
      * camera orientation
      */
     private var currentOrientation = 0
+    private var previousOrientation = 0
 
     /**
      * Stops and restarts the mediaRecorder,
@@ -296,6 +297,7 @@ class CameraControl(val activity: FragmentActivity) {
     }
 
     fun setCurrentOrientation(orientation: Int){
+        previousOrientation = currentOrientation
         currentOrientation = orientation
     }
 
@@ -362,7 +364,10 @@ class CameraControl(val activity: FragmentActivity) {
             mImageReader!!.setOnImageAvailableListener(mOnImageAvailableListener,
                 mBackgroundHandler)
 
-            val orientation = activity.resources.configuration.orientation
+            val orientation = when(currentOrientation){
+                0, 180 -> Configuration.ORIENTATION_PORTRAIT
+                else -> Configuration.ORIENTATION_LANDSCAPE
+            }
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mTextureView?.setAspectRatio(mPreviewSize!!.width, mPreviewSize!!.height)
             } else {
@@ -552,6 +557,17 @@ class CameraControl(val activity: FragmentActivity) {
         val rotation = currentOrientation
 
         mMediaRecorder!!.apply {
+
+            when (mSensorOrientation) {
+                SENSOR_ORIENTATION_DEFAULT_DEGREES -> {
+                    mMediaRecorder!!.setOrientationHint(DEFAULT_ORIENTATIONS[rotation])
+                }
+
+                SENSOR_ORIENTATION_INVERSE_DEGREES -> {
+                    mMediaRecorder!!.setOrientationHint(INVERSE_ORIENTATIONS[rotation])
+                }
+            }
+
             try {
                 setAudioSource(MediaRecorder.AudioSource.MIC)
             } catch (e: IllegalStateException) {
@@ -594,25 +610,8 @@ class CameraControl(val activity: FragmentActivity) {
                     }
                 }
             }
-
-            when (mSensorOrientation) {
-                SENSOR_ORIENTATION_DEFAULT_DEGREES -> {
-                    Log.d(TAG,
-                        "setUpMediaRecorder: setting orientation ${DEFAULT_ORIENTATIONS[rotation!!]}")
-                    mMediaRecorder!!.setOrientationHint(DEFAULT_ORIENTATIONS[rotation!!])
-                }
-
-                SENSOR_ORIENTATION_INVERSE_DEGREES -> {
-                    Log.d(TAG,
-                        "setUpMediaRecorder: setting orientation ${INVERSE_ORIENTATIONS[rotation!!]}")
-                    mMediaRecorder!!.setOrientationHint(INVERSE_ORIENTATIONS[rotation!!])
-                }
-            }
-
             prepare()
         }
-
-        Log.d(TAG, "setUpMediaRecorder: thread ${Thread.currentThread().name}")
     }
 
     // External sdcard file location
