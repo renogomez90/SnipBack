@@ -122,7 +122,7 @@
                 android:layout_below="@id/camera"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
-                android:text="CAMERA"
+                android:text="Camera"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="11sp" />
         </RelativeLayout>
@@ -152,7 +152,7 @@
                 android:layout_below="@id/link"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
-                android:text="LINK"
+                android:text="Link"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="11sp" />
         </RelativeLayout>
@@ -182,7 +182,7 @@
                 android:layout_below="@id/filter"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
-                android:text="FILTER"
+                android:text="Filter"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="11sp" />
         </RelativeLayout>
@@ -213,7 +213,7 @@
                 android:layout_below="@id/_button_view"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
-                android:text="VIEW"
+                android:text="View"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="11sp" />
         </RelativeLayout>
@@ -244,7 +244,7 @@
                 android:layout_below="@id/dropdown_menu"
                 android:fontFamily="@font/barlow_regular"
                 android:gravity="center"
-                android:text="MENU"
+                android:text="Menu"
                 android:textColor="@color/colorPrimaryGrey"
                 android:textSize="11sp" />
         </RelativeLayout>

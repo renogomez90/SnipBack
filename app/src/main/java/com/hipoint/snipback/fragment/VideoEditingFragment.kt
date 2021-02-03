@@ -117,9 +117,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private lateinit var previewBarProgress: ProgressBar
     private lateinit var swipeDetector     : SwipeDistanceView //  detects swiping actions for scrolling with preview
 
-    private lateinit var commonTransition: ArrayList<androidx.core.util.Pair<View, String>>
-    private lateinit var editControls    : LinearLayout
-    private lateinit var layoutImages    : FrameLayout
+    private lateinit var commonTransition  : ArrayList<androidx.core.util.Pair<View, String>>
+    private lateinit var editControls      : LinearLayout
+    private lateinit var layoutImages      : FrameLayout
+
+    //horizontal line
+    private lateinit var horizontalView    : View
 
     //    Exoplayer
     private lateinit var playerView: PlayerView
@@ -738,8 +741,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             previewBarProgress = findViewById(R.id.previewBarProgress)
             swipeDetector      = findViewById(R.id.edit_swipe_detector)
 
-            editControls = findViewById(R.id.edit_controls)
-            layoutImages = findViewById(R.id.layout_images)
+            editControls       = findViewById(R.id.edit_controls)
+            layoutImages       = findViewById(R.id.layout_images)
+            horizontalView     = findViewById(R.id.separator)
         }
 
         commonTransition = arrayListOf()
@@ -896,6 +900,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
             start.setBackgroundResource(R.drawable.end_curve)
             end.setBackgroundResource(R.drawable.end_curve_red)
+            horizontalView.setBackgroundResource(R.color.colorPrimaryAccentRed)
             val currentPosition = player.currentPosition
             editSeekAction = EditSeekControl.MOVE_END
 
@@ -1882,6 +1887,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      */
     private fun startRangeUI() {
         start.setBackgroundResource(R.drawable.start_curve)
+        horizontalView.setBackgroundResource(R.color.horizontalViewColor)
         end.setBackgroundResource(R.drawable.end_curve)
     }
 

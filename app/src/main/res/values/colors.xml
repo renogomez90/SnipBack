@@ -32,4 +32,5 @@
     <color name="blackOverlay">#80000000</color>
     <color name="blue">#0099CC</color>
     <color name="green">#669900</color>
+    <color name="horizontalViewColor">#65E580</color>
 </resources>
