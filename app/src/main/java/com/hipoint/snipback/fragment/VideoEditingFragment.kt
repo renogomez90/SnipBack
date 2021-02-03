@@ -2927,6 +2927,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * move the cursor to the starting point of the edit segment with start selected.
      * */
     override fun editPoint(position: Int, speedDetails: SpeedDetails) {
+        if(isEditExisting) {
+            return
+        }
+
         isEditExisting = true
         newSpeedChangeStart = false
 
