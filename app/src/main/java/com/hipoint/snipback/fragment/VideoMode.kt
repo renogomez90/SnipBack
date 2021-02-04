@@ -166,11 +166,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                                 if (cameraControl!!.isRecordingClips()) {
                                     handleRightSwipe()
                                 } else {
-                                    swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
-                                    if (swipedRecording == null) {
-                                        swipedRecording = cameraControl?.getCurrentOutputPath()
-                                            ?.let { SwipedRecording(it) }
-                                    }
                                     saveSnipTimeToLocal()
                                 }
                             }
@@ -1445,6 +1440,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     private fun saveSnipTimeToLocal() {
+        swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
+        if (swipedRecording == null) {
+            swipedRecording = cameraControl?.getCurrentOutputPath()
+                ?.let { SwipedRecording(it) }
+        }
         if (timerSecond != 0) { //  user recording is in progress
             val endSecond = timerSecond
             AppClass.getAppInstance().setSnipDurations(endSecond)
