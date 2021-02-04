@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
 import android.media.MediaMetadataRetriever
@@ -356,6 +357,7 @@ class QuickEditFragment: Fragment() {
         bufferPath     = requireArguments().getString("bufferPath")
         videoPath      = requireArguments().getString("videoPath")
 
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         bindViews()
         bindListeners()
         (activity as AppMainActivity?)?.hideStatusBar()
@@ -365,11 +367,8 @@ class QuickEditFragment: Fragment() {
     private fun setupPlayer(){
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
-
         setupMediaSource()
-
         playerView.setShowMultiWindowTimeBar(true)
-
         maxDuration = bufferDuration + videoDuration
 
         player.apply {
@@ -404,8 +403,6 @@ class QuickEditFragment: Fragment() {
                 }
             }
         })
-
-
         initSwipeControls()
         previewThumbs = File("${ File(videoPath).parent}/previewThumbs")
         if (previewThumbs != null) {
