@@ -36,6 +36,20 @@ android {
         }
         useLibrary 'org.apache.http.legacy'
     }
+    signingConfigs {
+        release {
+            storeFile file('keystore/snipback.jks')
+            storePassword '54a26e92c3a6f1c7fc451f3b6f78ddd9'
+            keyAlias 'snipback_android'
+            keyPassword '54a26e92c3a6f1c7fc451f3b6f78ddd9'
+        }
+        debug {
+            storeFile file('keystore/snipback.jks')
+            storePassword '54a26e92c3a6f1c7fc451f3b6f78ddd9'
+            keyAlias 'snipback_android'
+            keyPassword '54a26e92c3a6f1c7fc451f3b6f78ddd9'
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false

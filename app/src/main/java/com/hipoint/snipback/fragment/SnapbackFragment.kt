@@ -221,6 +221,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         if(this::player.isInitialized)
             player.release()
 
+        hideProgressDialog()
         requireActivity().unregisterReceiver(videoPathReceiver)
         super.onPause()
     }

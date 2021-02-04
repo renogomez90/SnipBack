@@ -1320,6 +1320,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         progressTracker = ProgressTracker(player)
         with(progressTracker!!) {
             setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
+            setSpeed(getCurrentEditSpeed().toFloat())
             setChangeAccepted(true)
             run()
         }
@@ -1607,12 +1608,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         if(progressTracker == null)
             progressTracker = ProgressTracker(player)
-        with(progressTracker!!) {
-            setChangeAccepted(true)
-            setSpeed(getCurrentEditSpeed().toFloat())
-            setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
-            run()
-        }
+        setupProgressTracker()
 
         isEditOnGoing = false
         isEditExisting = false
