@@ -149,6 +149,7 @@
             android:orientation="horizontal"
             android:visibility="gone"
             android:weightSum="10"
+            android:gravity="center"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@id/layout_images">
