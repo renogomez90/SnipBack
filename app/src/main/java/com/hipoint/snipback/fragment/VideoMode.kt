@@ -176,7 +176,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                                 handleLeftSwipe()
                             }
                         }
-                    } else {    //  todo trigger touch to focus
+                    } else {
                         startFocusAtTouchPoint(v, event)
                     }
                 }
