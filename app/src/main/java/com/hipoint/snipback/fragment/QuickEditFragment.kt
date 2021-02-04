@@ -30,6 +30,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
+import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.dialog.ProcessingDialog
@@ -92,6 +93,7 @@ class QuickEditFragment: Fragment() {
     private lateinit var previewTileList   : RecyclerView
     private lateinit var swipeDetector     : SwipeDistanceView
     private lateinit var timebarHolder     : FrameLayout
+    private lateinit var seekbar           : SnipbackTimeBar
 
     private var maxDuration    = 0L
     private var bufferDuration = -1L
@@ -370,11 +372,13 @@ class QuickEditFragment: Fragment() {
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
         maxDuration = bufferDuration + videoDuration
+        seekbar.hideScrubber()
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
             playWhenReady = false
+
         }
 
         playerView.apply {
@@ -544,6 +548,8 @@ class QuickEditFragment: Fragment() {
         timebarHolder      = rootView.findViewById(R.id.timebar_holder)
         previewTileList    = rootView.findViewById(R.id.previewFrameList)
         previewBarProgress = rootView.findViewById(R.id.previewBarProgress)
+        seekbar            = rootView.findViewById(R.id.exo_progress)
+
     }
 
     private fun initSwipeControls() {
