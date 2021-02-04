@@ -73,7 +73,6 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private var tries   = 0
     private var seekToPoint: Long = 0
 
-    private var progressDialog : SnapbackProcessingDialog? = null
     private var saveVideoDialog: KeepSnapbackVideoDialog?  = null
     private var subscriptions  : CompositeDisposable?      = null
     private var animBlink      : Animation?                = null
@@ -110,6 +109,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         val EXTRA_VIDEO_PATH = "videoPath"
 
         var fragment: SnapbackFragment? = null
+        private var progressDialog : SnapbackProcessingDialog? = null
 
         @JvmStatic
         var videoPath: String? = null
