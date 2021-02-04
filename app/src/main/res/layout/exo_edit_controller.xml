@@ -358,7 +358,7 @@
     <LinearLayout
         android:id="@+id/edit_controls"
         android:layout_width="match_parent"
-        android:layout_height="67dp"
+        android:layout_height="66dp"
         android:background="@color/bottom_menu"
         android:baselineAligned="false"
         android:gravity="center"
@@ -375,15 +375,15 @@
             android:layout_height="match_parent"
             android:layout_weight="0.2"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:fontFamily="@font/barlow_regular"
             android:gravity="center"
             android:text="Extend/Trim"
             android:textColor="@color/colorPrimaryGrey"
-            android:textSize="10sp"
+            android:textSize="11sp"
             android:drawablePadding="4dp"
             app:drawableTopCompat="@drawable/ic_extend"/>
 
@@ -391,8 +391,8 @@
             android:id="@+id/cut_text_btn"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:layout_weight="0.2"
@@ -400,7 +400,7 @@
             android:gravity="center"
             android:text="CutOut"
             android:textColor="@color/colorPrimaryGrey"
-            android:textSize="10sp"
+            android:textSize="11sp"
             android:drawablePadding="4dp"
             app:drawableTopCompat="@drawable/ic_cutout"/>
 
@@ -408,8 +408,8 @@
             android:id="@+id/highlight_text_btn"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:layout_weight="0.2"
@@ -417,7 +417,7 @@
             android:gravity="center"
             android:text="Highlight"
             android:textColor="@color/colorPrimaryGrey"
-            android:textSize="10sp"
+            android:textSize="11sp"
             android:drawablePadding="4dp"
             app:drawableTopCompat="@drawable/ic_highlight"/>
 
@@ -425,8 +425,8 @@
             android:id="@+id/slow_text_btn"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:layout_weight="0.2"
@@ -434,7 +434,7 @@
             android:gravity="center"
             android:text="Slow"
             android:textColor="@color/colorPrimaryGrey"
-            android:textSize="10sp"
+            android:textSize="11sp"
             android:drawablePadding="4dp"
             app:drawableTopCompat="@drawable/ic_slow"/>
 
@@ -442,8 +442,8 @@
             android:id="@+id/speedup_text_btn"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginBottom="2dp"
             android:paddingTop="8dp"
             android:paddingBottom="8dp"
             android:layout_weight="0.2"
@@ -452,7 +452,7 @@
             android:gravity="center"
             android:text="Speed"
             android:textColor="@color/colorPrimaryGrey"
-            android:textSize="10sp"
+            android:textSize="11sp"
             android:drawablePadding="4dp"
             app:drawableTopCompat="@drawable/ic_speed" />
 

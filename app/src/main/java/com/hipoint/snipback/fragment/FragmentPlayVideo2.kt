@@ -68,46 +68,50 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private val VIDEO_DIRECTORY_NAME = "Snipback"
 
     private val retries = 3
-    private var tries   = 0
-    private var seekToPoint: Long    = 0
-    private var whenReady  : Boolean = false
+    private var tries = 0
+    private var seekToPoint: Long = 0
+    private var whenReady: Boolean = false
 
     private var subscriptions: CompositeDisposable? = null
 
-    private lateinit var mediaSource           : MediaSource
-    private lateinit var player                : SimpleExoPlayer
-    private lateinit var dataSourceFactory     : DataSource.Factory
-    private lateinit var defaultBandwidthMeter : DefaultBandwidthMeter
-    private lateinit var appRepository         : AppRepository
-    private lateinit var appViewModel          : AppViewModel
-    private lateinit var playerView            : PlayerView
-    private lateinit var playBtn               : ImageButton
-    private lateinit var pauseBtn              : ImageButton
-    private lateinit var editBtn               : ImageButton
+    private lateinit var mediaSource: MediaSource
+    private lateinit var player: SimpleExoPlayer
+    private lateinit var dataSourceFactory: DataSource.Factory
+    private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
+    private lateinit var appRepository: AppRepository
+    private lateinit var appViewModel: AppViewModel
+    private lateinit var playerView: PlayerView
+    private lateinit var playBtn: ImageButton
+    private lateinit var pauseBtn: ImageButton
     private lateinit var progressDurationHolder: LinearLayout
-    private lateinit var playPauseHolder       : FrameLayout
-    private lateinit var quickEditBtn          : ConstraintLayout
-    private lateinit var quickEditTimeTxt      : TextView
-    private lateinit var seekBar               : DefaultTimeBar
-    private lateinit var rootView              : View
-    private lateinit var tag                   : ImageView
-    private lateinit var backArrow             : RelativeLayout
-    private lateinit var buttonCamera          : RelativeLayout
-    private lateinit var tvConvertToReal       : ImageButton
-    private lateinit var swipeDetector         : SwipeDistanceView
-    private lateinit var bottomMenu            : LinearLayout
+    private lateinit var playPauseHolder: FrameLayout
+    private lateinit var quickEditBtn: ConstraintLayout
+    private lateinit var quickEditTimeTxt: TextView
+    private lateinit var seekBar: DefaultTimeBar
+    private lateinit var rootView: View
+    private lateinit var editBtn: TextView
+    private lateinit var tag: TextView
+    private lateinit var shutter: TextView
+    private lateinit var share: TextView
+    private lateinit var delete: TextView
+    private lateinit var backArrow: RelativeLayout
+    private lateinit var buttonCamera: RelativeLayout
+    private lateinit var tvConvertToReal: ImageButton
+    private lateinit var swipeDetector: SwipeDistanceView
+    private lateinit var bottomMenu: LinearLayout
 
     // new
     private var event: Event? = null
+
     // new added
-    private var snip        : Snip?     = null
+    private var snip: Snip? = null
     private var bufferHDSnip: Hd_snips? = null
 
     private var thumbnailExtractionStarted = false
-    private var isInEditMode               = false
-    private var bufferDuration             = -1L
-    private var videoDuration              = -1L
-    private var maxDuration                = 0L
+    private var isInEditMode = false
+    private var bufferDuration = -1L
+    private var videoDuration = -1L
+    private var maxDuration = 0L
 
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
@@ -153,10 +157,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     override fun onResume() {
         super.onResume()
-
         initSetup()
         bindListeners()
-
         Log.d(TAG, "onResume: started")
     }
 
@@ -194,7 +196,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 playWhenReady = false
             }
         }
-        seekToPoint=0
+        seekToPoint = 0
         (activity as AppMainActivity?)?.showStatusBar()
 
     }
@@ -203,7 +205,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * restarts the player with the updated snips.
      * To be called after an edited file has been saved
      */
-    fun updatePlaybackFile(updatedSnip: Snip){
+    fun updatePlaybackFile(updatedSnip: Snip) {
         snip = updatedSnip
         player.release()
         initSetup()
@@ -226,7 +228,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             val orientation = requireContext().resources.configuration.orientation
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             setBackgroundColor(Color.BLACK)
-            controllerShowTimeoutMs=3000
+            controllerShowTimeoutMs = 3000
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
         }
 
@@ -260,7 +262,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                         seekBar.setDuration(maxDuration)
                     }
                 }
-                if (playbackState == Player.STATE_ENDED && player.currentPosition >= player.duration){
+                if (playbackState == Player.STATE_ENDED && player.currentPosition >= player.duration) {
                     player.playWhenReady = false
                     whenReady = false
                 }
@@ -270,7 +272,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         maxDuration = player.duration
         checkBufferAvailable()
 
-        if(!VideoService.isProcessing)  //  in case we are coming from video editing there is a chance for crash
+        if (!VideoService.isProcessing)  //  in case we are coming from video editing there is a chance for crash
             getVideoPreviewFrames()
     }
 
@@ -284,7 +286,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
 
         mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
-            .createMediaSource(Uri.parse(snip!!.videoFilePath))
+                .createMediaSource(Uri.parse(snip!!.videoFilePath))
 
         if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
             val clippingMediaSource = ClippingMediaSource(mediaSource,
@@ -313,21 +315,24 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     }
 
     private fun bindViews() {
-        buttonCamera           = rootView.findViewById(R.id.button_camera)
-        backArrow              = rootView.findViewById(R.id.back_arrow)
-        tvConvertToReal        = rootView.findViewById(R.id.tvConvertToReal)
-        playerView             = rootView.findViewById(R.id.player_view)
-        editBtn                = rootView.findViewById(R.id.edit)
-        tag                    = rootView.findViewById(R.id.tag)
-        swipeDetector          = rootView.findViewById(R.id.swipe_detector)
+        buttonCamera = rootView.findViewById(R.id.button_camera)
+        backArrow = rootView.findViewById(R.id.back_arrow)
+        tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal)
+        playerView = rootView.findViewById(R.id.player_view)
+        editBtn = rootView.findViewById(R.id.edit)
+        tag = rootView.findViewById(R.id.tag)
+        shutter = rootView.findViewById(R.id.shutter)
+        share = rootView.findViewById(R.id._button_share)
+        delete = rootView.findViewById(R.id.button_delete)
+        swipeDetector = rootView.findViewById(R.id.swipe_detector)
         progressDurationHolder = rootView.findViewById(R.id.progress_duration_holder)
-        playPauseHolder        = rootView.findViewById(R.id.play_pause_holder)
-        seekBar                = rootView.findViewById(R.id.exo_progress)
-        playBtn                = rootView.findViewById(R.id.exo_play)
-        pauseBtn               = rootView.findViewById(R.id.exo_pause)
-        quickEditBtn           = rootView.findViewById(R.id.quickEdit_button)
-        quickEditTimeTxt       = rootView.findViewById(R.id.quick_edit_time)
-        bottomMenu             = rootView.findViewById(R.id.bottom_menu)
+        playPauseHolder = rootView.findViewById(R.id.play_pause_holder)
+        seekBar = rootView.findViewById(R.id.exo_progress)
+        playBtn = rootView.findViewById(R.id.exo_play)
+        pauseBtn = rootView.findViewById(R.id.exo_pause)
+        quickEditBtn = rootView.findViewById(R.id.quickEdit_button)
+        quickEditTimeTxt = rootView.findViewById(R.id.quick_edit_time)
+        bottomMenu = rootView.findViewById(R.id.bottom_menu)
 
     }
 
@@ -370,6 +375,15 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         tag.setOnClickListener {
             // ((AppMainActivity) requireActivity()).loadFragment(CreateTag.newInstance(), true);
         }
+        shutter.setOnClickListener {
+
+        }
+        share.setOnClickListener {
+
+        }
+        delete.setOnClickListener {
+
+        }
 
         editBtn.setOnClickListener {
             player.playWhenReady = false
@@ -390,9 +404,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         })
 
         seekBar.setOnTouchListener { v, event ->
-            if(event.action == MotionEvent.ACTION_MOVE){
+            if (event.action == MotionEvent.ACTION_MOVE) {
                 val totalX = seekBar.width
-                val seekPercent = (event.x*100)/totalX
+                val seekPercent = (event.x * 100) / totalX
                 val newSeekPosition = player.duration * seekPercent / 100
                 player.seekTo(newSeekPosition.toLong())
             }
@@ -426,7 +440,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     /**
      * restores the original video to be played
      */
-    private fun restoreOriginalMedia(){
+    private fun restoreOriginalMedia() {
         player.release()
         initSetup()
         initSwipeControls() //  because the player instance has changed
@@ -435,8 +449,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private fun popToVideoMode() {
         val fm = requireActivity().supportFragmentManager
 
-        for(i in fm.backStackEntryCount - 1 downTo 0){
-            if(!fm.getBackStackEntryAt(i).name.equals(AppMainActivity.VIDEO_MODE_TAG, true))
+        for (i in fm.backStackEntryCount - 1 downTo 0) {
+            if (!fm.getBackStackEntryAt(i).name.equals(AppMainActivity.VIDEO_MODE_TAG, true))
                 fm.popBackStack()
         }
     }
@@ -481,7 +495,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
             if (newSeekPosition < 0) {
                 newSeekPosition = 0
-            }else if (newSeekPosition > maxDuration) {
+            } else if (newSeekPosition > maxDuration) {
                 newSeekPosition = maxDuration
             }
 
@@ -543,7 +557,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         fun newInstance(snip: Snip?): FragmentPlayVideo2 {
             //  we need to create new fragments for each video
             // otherwise the smooth scrolling is having issues for some reason
-            if(fragment == null)
+            if (fragment == null)
                 fragment = FragmentPlayVideo2()
 
             val bundle = Bundle()
@@ -607,19 +621,19 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                     val retriever = MediaMetadataRetriever()
                     retriever.setDataSource(sorted[0].video_path_processed)
                     bufferDuration =
-                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                            .toLong()
+                            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                                    .toLong()
                     retriever.setDataSource(snip!!.videoFilePath)
                     videoDuration =
-                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
-                            .toLong()
+                            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                                    .toLong()
                     retriever.release()
 
                     if (bufferDuration > 500L && videoDuration > 0L) {  //  if the buffer is over 100 milli seconds then show the quick edit button
                         withContext(Main) {
                             quickEditBtn.visibility = View.VISIBLE
                             quickEditTimeTxt.text =
-                                "-${(bufferDuration.toFloat()/1000).roundToInt()} s"
+                                    "-${(bufferDuration.toFloat() / 1000).roundToInt()} s"
                         }
                         bufferAvailable = true
                         bufferPath = sorted[0].video_path_processed
