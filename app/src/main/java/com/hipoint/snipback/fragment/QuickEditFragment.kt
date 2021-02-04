@@ -308,6 +308,26 @@ class QuickEditFragment: Fragment() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong("KEY_START", editedStart)
+        outState.putLong("KEY_END", editedEnd)
+        outState.putInt("KEY_START_WINDOW", startWindow)
+        outState.putInt("KEY_END-WIDNOW", endWindow)
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        savedInstanceState?.let { restoreState(it) }
+    }
+
+    private fun restoreState(savedState: Bundle){
+        editedStart = savedState.getLong("KEY_START")
+        editedEnd   = savedState.getLong("KEY_END")
+        startWindow = savedState.getInt("KEY_START_WINDOW")
+        endWindow   = savedState.getInt("KEY_END-WIDNOW")
+    }
+
     override fun onResume() {
         super.onResume()
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(VideoEditingFragment.PREVIEW_ACTION))
@@ -378,7 +398,6 @@ class QuickEditFragment: Fragment() {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
             playWhenReady = false
-
         }
 
         playerView.apply {
@@ -451,16 +470,22 @@ class QuickEditFragment: Fragment() {
     }
 
     private fun prepareForEdit() {
-        val startValue = (bufferDuration * 100 / (bufferDuration + videoDuration)).toFloat()
-        val endValue = 100F
+        if(startWindow < 0 || endWindow < 0){
+            startWindow = 0
+            endWindow   = 1
+        }
+        if(editedStart < 0 || editedEnd < 0){
+            editedStart = bufferDuration
+            editedEnd   = bufferDuration + videoDuration
+        }
 
-        startWindow = 0
-        endWindow   = 1
-        editedStart = bufferDuration
-        editedEnd   = bufferDuration + videoDuration
+        val startValue: Float = editedStart.toFloat() * 100 / maxDuration
+        val endValue: Float = editedEnd.toFloat() * 100 / maxDuration
+
         maxDuration = bufferDuration + videoDuration
 
-        player.seekTo(startWindow, editedStart)
+        if(startWindow == 0) player.seekTo(startWindow, editedStart)
+        else player.seekTo(startWindow, editedStart - bufferDuration)
 
         extendRangeMarker(startValue, endValue)
         start.performClick()
@@ -599,45 +624,37 @@ class QuickEditFragment: Fragment() {
 
             when (seekAction) {
                 EditSeekControl.MOVE_START -> {
-                    /*if(getCorrectedTimebarPosition() > editedEnd){
-                        newSeekPosition =
-                            (if(player.currentWindowIndex == 1) editedEnd - bufferDuration else editedEnd)
-                    }else {
-                        editedStart = getCorrectedTimebarPosition()
-                    }*/
                     editedStart = getCorrectedTimebarPosition()
                     if (player.currentWindowIndex == 1) {
                         if (newSeekPosition + bufferDuration > editedEnd) {
                             editedStart = editedEnd - 50
                             newSeekPosition = editedStart - bufferDuration
                         }
+                        startWindow = 1
                     } else {
                         if (newSeekPosition > editedEnd) {
                             editedStart = editedEnd - 50
                             newSeekPosition = editedStart
                         }
+                        startWindow = 0
                     }
                     trimSegment.setMinStartValue((editedStart * 100 / maxDuration).toFloat()).apply()
                     trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
                 }
                 EditSeekControl.MOVE_END -> {
-                    /*if(getCorrectedTimebarPosition() < editedStart){
-                        newSeekPosition =
-                            (if(player.currentWindowIndex == 1) editedStart - bufferDuration else editedStart)
-                    }else{
-                        editedEnd = getCorrectedTimebarPosition()
-                    }*/
                     editedEnd = getCorrectedTimebarPosition()
                     if(player.currentWindowIndex == 1){
                         if(newSeekPosition + bufferDuration < editedStart){
                             editedEnd = editedStart + 50
                             newSeekPosition = editedEnd - bufferDuration
                         }
+                        endWindow = 1
                     }else {
                         if(newSeekPosition < editedStart){
                             editedEnd = editedStart + 50
                             newSeekPosition = editedEnd
                         }
+                        endWindow = 0
                     }
                     trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
                 }

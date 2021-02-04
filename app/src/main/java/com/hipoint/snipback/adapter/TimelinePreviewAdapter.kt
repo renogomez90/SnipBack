@@ -2,6 +2,7 @@ package com.hipoint.snipback.adapter
 
 import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
 import android.view.LayoutInflater
@@ -32,10 +33,16 @@ class TimelinePreviewAdapter(val context: Context, val photoList: ArrayList<Bitm
 
     override fun onBindViewHolder(holder: PreviewTileVH, position: Int) {
         if(photoList.size <= 9){
+
             val currentWidth = holder.previewTile.width
             val displaymetrics = DisplayMetrics()
             (context as Activity).windowManager.defaultDisplay.getMetrics(displaymetrics)
-            val devicewidth = displaymetrics.widthPixels / photoList.size
+            val devicewidth = if (context.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                displaymetrics.widthPixels / photoList.size
+            } else {
+                displaymetrics.heightPixels / photoList.size
+            }
+
             holder.previewTile.layoutParams.width = devicewidth
         }
         Glide.with(context).load(photoList[position]).into(holder.previewTile)
