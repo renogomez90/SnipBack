@@ -26,6 +26,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.exozet.android.core.extensions.hide
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
@@ -2962,15 +2963,18 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         endingTimestamps = speedDetails.timeDuration!!.second
 
         //  setting up the right UI for the edit action
+        val startValue = startingTimestamps * 100 / maxDuration
+        val endValue = endingTimestamps * 100 / maxDuration
+        setupRangeMarker(startValue.toFloat(), endValue.toFloat())
         startRangeUI()
         editSeekAction = EditSeekControl.MOVE_START
         editAction = if(speedDetails.isFast) EditAction.FAST else EditAction.SLOW
         setIconActive()
         acceptRejectHolder.visibility = View.VISIBLE
 
-        if (!isSeekbarShown) {  //  otherwise we won't have a clue as to where it is
-            seekBar.showScrubber()
-            isSeekbarShown = true
+        if (isSeekbarShown) {  //  otherwise we won't have a clue as to where it is
+            seekBar.hideScrubber()
+            isSeekbarShown = false
         }
     }
 
