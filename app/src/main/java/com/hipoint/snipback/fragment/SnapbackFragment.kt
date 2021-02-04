@@ -176,6 +176,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         savedInstanceState?.let {
             seekToPoint = it.getLong("KEY_PLAYER_POSITION")
             Log.d("seekto and whenready", "seekPoint is $seekToPoint")
+            videoPath = it.getString("KEY_VIDEO_PATH")
         }
     }
 
@@ -198,7 +199,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
             if (this@SnapbackFragment::player.isInitialized) {
                 putLong("KEY_PLAYER_POSITION", player.contentPosition)
             }
-
+            putString("KEY_VIDEO_PATH", videoPath)
         }
         super.onSaveInstanceState(outState)
     }
@@ -208,9 +209,10 @@ class SnapbackFragment: Fragment(), ISaveListener {
         if(videoPath.isNullOrEmpty())
             videoPath = arguments?.getString(EXTRA_VIDEO_PATH) ?: ""
 
-        if(videoPath.isNotNullOrEmpty())
+        if(videoPath.isNotNullOrEmpty()) {
+            hideProgressDialog()
             setupPlayer(videoPath!!)
-        else
+        }else
             showProgressDialog()
         requireActivity().registerReceiver(videoPathReceiver, IntentFilter(SNAPBACK_PATH_ACTION))
     }
@@ -241,7 +243,6 @@ class SnapbackFragment: Fragment(), ISaveListener {
         }
 
         playerView.controllerShowTimeoutMs = 2000
-        playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
 
         player.addListener(object : Player.EventListener {
             override fun onPlayerError(error: ExoPlaybackException) {

@@ -24,6 +24,8 @@
         android:layout_gravity="center"
         app:time_bar_min_update_interval="20"
         app:controller_layout_id="@layout/exo_snapback_controls_land"
+        android:background="@color/colorBlack"
+        app:shutter_background_color="@android:color/transparent"
         app:use_controller="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
