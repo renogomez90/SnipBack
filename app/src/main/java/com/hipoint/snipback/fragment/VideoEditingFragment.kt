@@ -1152,6 +1152,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             if (player.currentPosition >= maxDuration)
                 player.seekTo(0, 0)
             playVideo()
+
+            if(progressTracker == null) setupProgressTracker()
+            else if(!progressTracker!!.isTrackingProgress){
+                progressTracker!!.setChangeAccepted(true)
+            }
             Log.d(TAG, "Start Playback")
         }
 
@@ -1245,21 +1250,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         mOrientationListener.enable()
     }
 
-    /*private fun enableSpeedEdit(isEnable: Boolean) {
-        slowTextBtn.isEnabled    = isEnable
-        slowTextBtn.isClickable  = isEnable
-        speedTextBtn.isEnabled   = isEnable
-        speedTextBtn.isClickable = isEnable
-
-        if (isEnable) {
-            slowTextBtn.alpha  = 1F
-            speedTextBtn.alpha = 1F
-        } else {
-            slowTextBtn.alpha  = 0.5F
-            speedTextBtn.alpha = 0.5F
-        }
-    }*/
-
     /**
      * resets the editor to play the original video
      */
@@ -1320,6 +1310,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         //  start tracking these changes
         progressTracker = null
+        setupProgressTracker()
+    }
+
+    /**
+     * start tracking progress
+     */
+    private fun setupProgressTracker() {
         progressTracker = ProgressTracker(player)
         with(progressTracker!!) {
             setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
@@ -3085,6 +3082,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         private var currentSpeed: Float = 1F
         private var isChangeAccepted: Boolean = false
+        var isTrackingProgress = false
 
         override fun run() {
             if(context != null) {
@@ -3156,6 +3154,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         fun setChangeAccepted(isAccepted: Boolean) {
             isChangeAccepted = isAccepted
+            isTrackingProgress = isAccepted
         }
 
         fun setSpeedDetails(speedDetails: ArrayList<SpeedDetails>) {
@@ -3175,6 +3174,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             colourOverlay.visibility = View.GONE
             handler?.removeCallbacksAndMessages(null)
             handler = null
+            isTrackingProgress = false
         }
     }
 }
