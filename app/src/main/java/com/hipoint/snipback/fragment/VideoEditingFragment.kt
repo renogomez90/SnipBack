@@ -2153,7 +2153,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             //  clippingMediaSource used as workaround for timeline scrubbing
             val clip2 = ClippingMediaSource(
                 videoSource,
-                if(bufferDuration == 0L) TimeUnit.MILLISECONDS.toMicros(editedStart) else 0,
+                if(bufferDuration == 0L && editedStart > 0) TimeUnit.MILLISECONDS.toMicros(editedStart) else 0,
                 TimeUnit.MILLISECONDS.toMicros(videoDuration)
             )
             clipList.add(clip2)
