@@ -4,7 +4,6 @@ import Jni.FFmpegCmd
 import VideoHandle.OnEditorListener
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import android.graphics.*
 import android.media.MediaMetadataRetriever
 import android.net.Uri
@@ -13,6 +12,7 @@ import android.os.Environment
 import android.util.Log
 import android.view.*
 import android.widget.*
+import androidx.activity.OnBackPressedCallback
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -178,10 +178,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         appViewModel = ViewModelProvider(this).get(AppViewModel::class.java)
         snip = requireArguments().getParcelable("snip")
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
-
         bindViews()
         (activity as AppMainActivity?)?.hideStatusBar()
-
         return rootView
     }
 
@@ -342,7 +340,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 player.seekTo(0)
             }
             player.playWhenReady = true
-            whenReady = true
+            whenReady = false // changed to false ,as video was auto-playing sometimes
         }
 
         pauseBtn.onClick {
@@ -359,6 +357,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         backArrow.setOnClickListener {
             player.release()
+            playerView.player=null
+//            playerView.hideController()
             requireActivity().onBackPressed()
         }
 
@@ -415,6 +415,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         initSwipeControls()
     }
+
 
     override fun onSaveInstanceState(outState: Bundle) {
 
