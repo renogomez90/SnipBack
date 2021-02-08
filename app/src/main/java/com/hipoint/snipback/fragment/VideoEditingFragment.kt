@@ -708,7 +708,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             subscriptions.dispose()
         }
         (activity as AppMainActivity?)?.hideStatusBar()
-        mWakeLock?.release();
         super.onDestroy()
     }
 
