@@ -1528,8 +1528,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     fun videoProcessing(isProcessing: Boolean) {
         if (isProcessing) {
-            gallery.alpha = .5F
-            changeCamera.alpha = .5F
+//            gallery.alpha = .5F
+//            changeCamera.alpha = .5F
             gallery.isEnabled = false
             changeCamera.isEnabled = false
         } else {
