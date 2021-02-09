@@ -388,6 +388,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         return rootView
     }
 
+    override fun onDestroy() {
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        super.onDestroy()
+    }
+
     private fun landScapeMode(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, 90F)
         rotate.duration = 800
@@ -579,6 +584,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 IntentFilter(
                         PENDING_SWIPE_ACTION))
         videoProcessing(false)
+
     }
 
     /**
@@ -591,6 +597,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(uiUpdateReceiver)
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(processSwipeReceiver)
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onPause()
     }
 

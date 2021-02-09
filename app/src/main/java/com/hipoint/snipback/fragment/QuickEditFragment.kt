@@ -1,5 +1,6 @@
 package com.hipoint.snipback.fragment
 
+import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -10,6 +11,7 @@ import android.graphics.drawable.VectorDrawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -102,7 +104,9 @@ class QuickEditFragment: Fragment() {
     private var endWindow      = -1
     private var editedStart    = -1L
     private var editedEnd      = -1L
-    
+    private var mWakeLock: PowerManager.WakeLock? = null
+
+
     private val trimSegment  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
     private val bufferOverlay: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
@@ -328,6 +332,7 @@ class QuickEditFragment: Fragment() {
         endWindow   = savedState.getInt("KEY_END-WIDNOW")
     }
 
+    @SuppressLint("WakelockTimeout")
     override fun onResume() {
         super.onResume()
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(VideoEditingFragment.PREVIEW_ACTION))
@@ -362,6 +367,9 @@ class QuickEditFragment: Fragment() {
      */
     override fun onDestroy() {
         (activity as AppMainActivity?)?.showStatusBar()
+        if (mWakeLock?.isHeld == true) { //release onDestroy
+            mWakeLock?.release()
+        }
         super.onDestroy()
     }
 
@@ -378,7 +386,9 @@ class QuickEditFragment: Fragment() {
         videoSnipId    = requireArguments().getInt("videoSnipId")
         bufferPath     = requireArguments().getString("bufferPath")
         videoPath      = requireArguments().getString("videoPath")
-
+        mWakeLock = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager)
+                .newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+                        or PowerManager.ON_AFTER_RELEASE, javaClass.name)
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         bindViews()
         bindListeners()
@@ -711,11 +721,13 @@ class QuickEditFragment: Fragment() {
         }
     }
 
+    @SuppressLint("WakelockTimeout")
     private fun showProgress(){
         if(processingDialog == null)
             processingDialog = ProcessingDialog()
         processingDialog!!.isCancelable = false
         processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
+        mWakeLock?.acquire() //acquire on accept
     }
 
     fun hideProgress(){

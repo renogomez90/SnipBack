@@ -496,7 +496,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         originalVideoDuration = videoDuration
         maxDuration = videoDuration
         mWakeLock = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager)
-                .newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, javaClass.name)
+                                .newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+                                 or PowerManager.ON_AFTER_RELEASE, javaClass.name)
+
         bindViews()
         bindListeners()
         setupPlayer()
@@ -708,6 +710,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             subscriptions.dispose()
         }
         (activity as AppMainActivity?)?.hideStatusBar()
+        if (mWakeLock?.isHeld == true) {
+            mWakeLock?.release()
+        }
         super.onDestroy()
     }
 
@@ -837,6 +842,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     /**
      * Binds listeners for view references
      */
+    @SuppressLint("WakelockTimeout")
     private fun bindListeners() {
         /**
          * sets up the start position UI and increments the segmentCount indicating the number of edit segments available
@@ -1162,6 +1168,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             else if(!progressTracker!!.isTrackingProgress){
                 progressTracker!!.setChangeAccepted(true)
             }
+            mWakeLock?.acquire()
             Log.d(TAG, "Start Playback")
         }
 
@@ -2264,6 +2271,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             saveDialog = SaveEditDialog(this@VideoEditingFragment)
 
         saveDialog!!.show(requireActivity().supportFragmentManager, SAVE_DIALOG)
+        mWakeLock?.acquire()
     }
 
     private fun showDialogDelete() {
@@ -2731,6 +2739,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private fun pauseVideo(){
         player.playWhenReady = false
         paused = true
+        if (mWakeLock?.isHeld == true) {
+            mWakeLock?.release()
+        }
     }
 
     private fun playVideo(){

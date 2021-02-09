@@ -2,6 +2,8 @@ package com.hipoint.snipback.fragment
 
 import Jni.FFmpegCmd
 import VideoHandle.OnEditorListener
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.*
@@ -9,6 +11,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.os.PowerManager
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -112,6 +115,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var bufferDuration = -1L
     private var videoDuration = -1L
     private var maxDuration = 0L
+    private var mWakeLock: PowerManager.WakeLock? = null
 
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
@@ -159,6 +163,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         super.onResume()
         initSetup()
         bindListeners()
+        setOnBackButtonPressed()
         Log.d(TAG, "onResume: started")
     }
 
@@ -178,24 +183,40 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         appViewModel = ViewModelProvider(this).get(AppViewModel::class.java)
         snip = requireArguments().getParcelable("snip")
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
+        mWakeLock = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager)
+                .newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK  or PowerManager.ON_AFTER_RELEASE, javaClass.name)
         bindViews()
         (activity as AppMainActivity?)?.hideStatusBar()
         return rootView
     }
+    private fun setOnBackButtonPressed() {
+
+        rootView.setOnKeyListener { v, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                playerView.player=null
+            }
+            false
+        }
+    }
+
 
     /**
      * Called when the fragment is no longer in use.  This is called
      * after [.onStop] and before [.onDetach].
      */
     override fun onDestroy() {
-        super.onDestroy()
         if (this::player.isInitialized) {
             player.apply {
                 playWhenReady = false
             }
         }
         seekToPoint = 0
+        whenReady=false
         (activity as AppMainActivity?)?.showStatusBar()
+        if (mWakeLock?.isHeld == true) { // release onDestroy
+            mWakeLock?.release();
+        }
+        super.onDestroy()
 
     }
 
@@ -222,8 +243,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         }
 
         playerView.apply {
-
-            val orientation = requireContext().resources.configuration.orientation
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             setBackgroundColor(Color.BLACK)
             controllerShowTimeoutMs = 3000
@@ -260,9 +279,13 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                         seekBar.setDuration(maxDuration)
                     }
                 }
-                if (playbackState == Player.STATE_ENDED && player.currentPosition >= player.duration) {
+
+                if (playbackState==Player.STATE_ENDED && player.currentPosition >= player.duration) {
                     player.playWhenReady = false
                     whenReady = false
+                    if (mWakeLock?.isHeld == true) { // when playing ends automatically
+                        mWakeLock?.release()
+                    }
                 }
             }
         })
@@ -334,13 +357,15 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     }
 
+    @SuppressLint("WakelockTimeout")
     private fun bindListeners() {
         playBtn.onClick {
             if (player.currentPosition >= player.contentDuration) {
                 player.seekTo(0)
             }
             player.playWhenReady = true
-            whenReady = false // changed to false ,as video was auto-playing sometimes
+            whenReady = true
+            mWakeLock?.acquire() //when playing starts
         }
 
         pauseBtn.onClick {
@@ -581,6 +606,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 release()
             }
         }
+
 
         subscriptions?.dispose()
         super.onPause()
