@@ -710,9 +710,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             subscriptions.dispose()
         }
         (activity as AppMainActivity?)?.hideStatusBar()
-        if (mWakeLock?.isHeld == true) {
-            mWakeLock?.release()
-        }
+//        if (mWakeLock?.isHeld == true) {
+//            mWakeLock?.release()
+//        }
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onDestroy()
     }
 
@@ -1168,7 +1169,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             else if(!progressTracker!!.isTrackingProgress){
                 progressTracker!!.setChangeAccepted(true)
             }
-            mWakeLock?.acquire()
+            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             Log.d(TAG, "Start Playback")
         }
 
@@ -2271,7 +2272,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             saveDialog = SaveEditDialog(this@VideoEditingFragment)
 
         saveDialog!!.show(requireActivity().supportFragmentManager, SAVE_DIALOG)
-        mWakeLock?.acquire()
+//        mWakeLock?.acquire()
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     private fun showDialogDelete() {
@@ -2739,9 +2741,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private fun pauseVideo(){
         player.playWhenReady = false
         paused = true
-        if (mWakeLock?.isHeld == true) {
-            mWakeLock?.release()
-        }
+//        if (mWakeLock?.isHeld == true) {
+//            mWakeLock?.release()
+//        }
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     private fun playVideo(){

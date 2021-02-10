@@ -213,9 +213,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         seekToPoint = 0
         whenReady=false
         (activity as AppMainActivity?)?.showStatusBar()
-        if (mWakeLock?.isHeld == true) { // release onDestroy
-            mWakeLock?.release();
-        }
+//        if (mWakeLock?.isHeld == true) { // release onDestroy
+//            mWakeLock?.release();
+//        }
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         super.onDestroy()
 
     }
@@ -283,9 +285,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 if (playbackState==Player.STATE_ENDED && player.currentPosition >= player.duration) {
                     player.playWhenReady = false
                     whenReady = false
-                    if (mWakeLock?.isHeld == true) { // when playing ends automatically
-                        mWakeLock?.release()
-                    }
+//                    if (mWakeLock?.isHeld == true) { // when playing ends automatically
+//                        mWakeLock?.release()
+//                    }
+                    requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
                 }
             }
         })
@@ -365,7 +369,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             }
             player.playWhenReady = true
             whenReady = true
-            mWakeLock?.acquire() //when playing starts
+//            mWakeLock?.acquire() //when playing starts
+            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
         pauseBtn.onClick {
@@ -373,7 +378,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             whenReady = false
         }
 
-        tvConvertToReal.setOnClickListener { validateVideo(snip) }
+        tvConvertToReal.setOnClickListener {
+            validateVideo(snip)
+//            mWakeLock?.acquire()
+            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
         if ((if (snip != null) snip!!.is_virtual_version else 0) == 1) {
             tvConvertToReal.visibility = View.VISIBLE
         } else {
@@ -547,8 +556,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         val hud = CommonUtils.showProgressDialog(activity)
         FFmpegCmd.exec(complexCommand, 0, object : OnEditorListener {
             override fun onSuccess() {
-                snip.is_virtual_version = 0
+                snip.is_virtual_version = (snip.start_time.toLong()-snip.end_time.toLong()).toInt()
                 snip.videoFilePath = mediaFile.absolutePath
+                snip.total_video_duration=5
                 AppClass.getAppInstance().setEventSnipsFromDb(event, snip)
                 CoroutineScope(IO).launch { appRepository.updateSnip(snip) }
                 val hdSnips = Hd_snips()
@@ -558,8 +568,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 CoroutineScope(IO).launch { appRepository.insertHd_snips(hdSnips) }
                 AppClass.getAppInstance().isInsertionInProgress = true
                 if (hud.isShowing) hud.dismiss()
-                requireActivity().runOnUiThread { Toast.makeText(activity, "Video saved to gallery", Toast.LENGTH_SHORT).show() }
-
+                requireActivity().runOnUiThread {
+                    Toast.makeText(activity, "Video saved to gallery", Toast.LENGTH_SHORT).show()
+                    tvConvertToReal.visibility=View.GONE
+                    requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
 //                appViewModel.loadGalleryDataFromDB(ActivityPlayVideo.this);
             }
 

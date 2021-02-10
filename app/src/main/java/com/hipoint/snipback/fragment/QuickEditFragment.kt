@@ -367,9 +367,10 @@ class QuickEditFragment: Fragment() {
      */
     override fun onDestroy() {
         (activity as AppMainActivity?)?.showStatusBar()
-        if (mWakeLock?.isHeld == true) { //release onDestroy
-            mWakeLock?.release()
-        }
+//        if (mWakeLock?.isHeld == true) { //release onDestroy
+//            mWakeLock?.release()
+//        }
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onDestroy()
     }
 
@@ -727,7 +728,8 @@ class QuickEditFragment: Fragment() {
             processingDialog = ProcessingDialog()
         processingDialog!!.isCancelable = false
         processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
-        mWakeLock?.acquire() //acquire on accept
+//        mWakeLock?.acquire() //acquire on accept
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     fun hideProgress(){
