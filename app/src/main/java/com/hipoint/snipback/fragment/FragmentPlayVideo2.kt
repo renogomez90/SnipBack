@@ -556,9 +556,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         val hud = CommonUtils.showProgressDialog(activity)
         FFmpegCmd.exec(complexCommand, 0, object : OnEditorListener {
             override fun onSuccess() {
-                snip.is_virtual_version = (snip.start_time.toLong()-snip.end_time.toLong()).toInt()
+                snip.is_virtual_version = 0
                 snip.videoFilePath = mediaFile.absolutePath
-                snip.total_video_duration=5
+                snip.total_video_duration=(snip.start_time.toLong()-snip.end_time.toLong()).toInt()
                 AppClass.getAppInstance().setEventSnipsFromDb(event, snip)
                 CoroutineScope(IO).launch { appRepository.updateSnip(snip) }
                 val hdSnips = Hd_snips()
