@@ -15,7 +15,6 @@ import android.os.PowerManager
 import android.util.Log
 import android.view.*
 import android.widget.*
-import androidx.activity.OnBackPressedCallback
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -115,7 +114,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var bufferDuration = -1L
     private var videoDuration = -1L
     private var maxDuration = 0L
-    private var mWakeLock: PowerManager.WakeLock? = null
 
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
@@ -163,7 +161,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         super.onResume()
         initSetup()
         bindListeners()
-        setOnBackButtonPressed()
+//        setOnBackButtonPressed()
         Log.d(TAG, "onResume: started")
     }
 
@@ -183,20 +181,23 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         appViewModel = ViewModelProvider(this).get(AppViewModel::class.java)
         snip = requireArguments().getParcelable("snip")
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
-        mWakeLock = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager)
-                .newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK  or PowerManager.ON_AFTER_RELEASE, javaClass.name)
         bindViews()
         (activity as AppMainActivity?)?.hideStatusBar()
         return rootView
     }
     private fun setOnBackButtonPressed() {
 
-        rootView.setOnKeyListener { v, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_BACK) {
-                playerView.player=null
+        rootView.isFocusableInTouchMode = true
+        rootView.requestFocus()
+        rootView.setOnKeyListener(object : View.OnKeyListener {
+            override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    playerView.hideController()
+                    return true
+                }
+                return false
             }
-            false
-        }
+        })
     }
 
 
@@ -213,9 +214,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         seekToPoint = 0
         whenReady=false
         (activity as AppMainActivity?)?.showStatusBar()
-//        if (mWakeLock?.isHeld == true) { // release onDestroy
-//            mWakeLock?.release();
-//        }
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         super.onDestroy()
@@ -285,9 +283,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 if (playbackState==Player.STATE_ENDED && player.currentPosition >= player.duration) {
                     player.playWhenReady = false
                     whenReady = false
-//                    if (mWakeLock?.isHeld == true) { // when playing ends automatically
-//                        mWakeLock?.release()
-//                    }
                     requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
                 }
@@ -361,7 +356,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     }
 
-    @SuppressLint("WakelockTimeout")
+
     private fun bindListeners() {
         playBtn.onClick {
             if (player.currentPosition >= player.contentDuration) {
@@ -369,7 +364,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             }
             player.playWhenReady = true
             whenReady = true
-//            mWakeLock?.acquire() //when playing starts
             requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
@@ -380,7 +374,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         tvConvertToReal.setOnClickListener {
             validateVideo(snip)
-//            mWakeLock?.acquire()
             requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
         if ((if (snip != null) snip!!.is_virtual_version else 0) == 1) {
@@ -558,7 +551,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             override fun onSuccess() {
                 snip.is_virtual_version = 0
                 snip.videoFilePath = mediaFile.absolutePath
-                snip.total_video_duration=(snip.start_time.toLong()-snip.end_time.toLong()).toInt()
+                snip.total_video_duration=(snip.end_time.toLong()-snip.start_time.toLong()).toInt()
                 AppClass.getAppInstance().setEventSnipsFromDb(event, snip)
                 CoroutineScope(IO).launch { appRepository.updateSnip(snip) }
                 val hdSnips = Hd_snips()

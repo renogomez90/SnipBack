@@ -188,8 +188,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private var editAction            = EditAction.NORMAL
     private var editSeekAction        = EditSeekControl.MOVE_NORMAL
     private var currentEditSegment    = -1
-    private var mWakeLock: PowerManager.WakeLock? = null
-
 
     //  dialogs
     private var saveDialog      : SaveEditDialog?             = null
@@ -495,9 +493,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         videoDuration = TimeUnit.SECONDS.toMillis(snip!!.snip_duration.toLong())
         originalVideoDuration = videoDuration
         maxDuration = videoDuration
-        mWakeLock = (requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager)
-                                .newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK
-                                 or PowerManager.ON_AFTER_RELEASE, javaClass.name)
 
         bindViews()
         bindListeners()
@@ -710,9 +705,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             subscriptions.dispose()
         }
         (activity as AppMainActivity?)?.hideStatusBar()
-//        if (mWakeLock?.isHeld == true) {
-//            mWakeLock?.release()
-//        }
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onDestroy()
     }
@@ -843,7 +835,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     /**
      * Binds listeners for view references
      */
-    @SuppressLint("WakelockTimeout")
     private fun bindListeners() {
         /**
          * sets up the start position UI and increments the segmentCount indicating the number of edit segments available
@@ -1169,7 +1160,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             else if(!progressTracker!!.isTrackingProgress){
                 progressTracker!!.setChangeAccepted(true)
             }
-            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+//            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             Log.d(TAG, "Start Playback")
         }
 
@@ -2272,7 +2263,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             saveDialog = SaveEditDialog(this@VideoEditingFragment)
 
         saveDialog!!.show(requireActivity().supportFragmentManager, SAVE_DIALOG)
-//        mWakeLock?.acquire()
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
@@ -2355,6 +2345,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                 newSeekPosition = lower
                             }
                         }
+                        if (newSeekPosition==startingTimestamps){
+                            player.setSeekParameters(SeekParameters.EXACT)
+                        }
 
 //                        if (uiRangeSegments!![currentEditSegment].maxSelection().toInt() == 100 ) {
                         if (newSpeedChangeStart) {
@@ -2404,6 +2397,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             } else {
                                 (endValue * maxDuration / 100).toLong()
                             }
+                        }
+                        if (newSeekPosition==endingTimestamps){
+                            player.setSeekParameters(SeekParameters.EXACT)
                         }
 
                         uiRangeSegments!![currentEditSegment].setMaxStartValue(endValue).apply()
@@ -2741,9 +2737,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private fun pauseVideo(){
         player.playWhenReady = false
         paused = true
-//        if (mWakeLock?.isHeld == true) {
-//            mWakeLock?.release()
-//        }
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
@@ -2812,7 +2805,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     /**
      * saves as a new file
      * */
-    @SuppressLint("WakelockTimeout")
     override fun saveAs() {
         saveAction = SaveActionType.SAVE_AS
         saveDialog?.dismiss()
@@ -2845,7 +2837,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     /**
      * save over existing file
      * */
-    @SuppressLint("WakelockTimeout")
     override fun save() {
         saveAction = SaveActionType.SAVE
         saveDialog?.dismiss()
