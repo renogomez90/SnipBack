@@ -186,7 +186,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
             savedInstanceState: Bundle?,
     ): View? {
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
-        (activity as AppMainActivity?)?.hideStatusBar()
+//        (activity as AppMainActivity?)?.hideStatusBar()
         rootView = inflater.inflate(R.layout.fragment_snapback, container, false)
         bindViews()
         bindListeners()
@@ -530,7 +530,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
     override fun onDestroy() {
         videoPath = ""
-        (activity as AppMainActivity?)?.showStatusBar()
+//        (activity as AppMainActivity?)?.showStatusBar()
         super.onDestroy()
     }
 

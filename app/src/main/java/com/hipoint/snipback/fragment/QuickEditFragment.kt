@@ -364,7 +364,7 @@ class QuickEditFragment: Fragment() {
      * after [.onStop] and before [.onDetach].
      */
     override fun onDestroy() {
-        (activity as AppMainActivity?)?.showStatusBar()
+//        (activity as AppMainActivity?)?.showStatusBar()
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         editedStart=-1L
         editedEnd=-1L
@@ -387,7 +387,7 @@ class QuickEditFragment: Fragment() {
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         bindViews()
         bindListeners()
-        (activity as AppMainActivity?)?.hideStatusBar()
+//        (activity as AppMainActivity?)?.hideStatusBar()
         return rootView
     }
 

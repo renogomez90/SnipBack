@@ -2,8 +2,6 @@ package com.hipoint.snipback.fragment
 
 import Jni.FFmpegCmd
 import VideoHandle.OnEditorListener
-import android.annotation.SuppressLint
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.*
@@ -11,7 +9,6 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
-import android.os.PowerManager
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -51,6 +48,7 @@ import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.android.synthetic.main.activity_main2.*
 import kotlinx.android.synthetic.main.exo_controls.*
+import kotlinx.android.synthetic.main.layout_play_video.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -129,7 +127,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                     playerView.hideController()
                 else
                     playerView.showController()
-
                 return false
             }
 
@@ -182,9 +179,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         snip = requireArguments().getParcelable("snip")
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
         bindViews()
-        (activity as AppMainActivity?)?.hideStatusBar()
+//        hideSystemUI()
+//        (activity as AppMainActivity?)?.hideStatusBar()
         return rootView
     }
+
     private fun setOnBackButtonPressed() {
 
         rootView.isFocusableInTouchMode = true
@@ -213,7 +212,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         }
         seekToPoint = 0
         whenReady=false
-        (activity as AppMainActivity?)?.showStatusBar()
+//        (activity as AppMainActivity?)?.showStatusBar()
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         super.onDestroy()
@@ -247,6 +246,13 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             setBackgroundColor(Color.BLACK)
             controllerShowTimeoutMs = 3000
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
+//            setControllerVisibilityListener { i ->
+//                if (i == 8) {
+//                    hideSystemUI()
+//                } else {
+//                    showSystemUI()
+//                }
+//            }
         }
 
         player.addListener(object : Player.EventListener {
@@ -280,7 +286,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                     }
                 }
 
-                if (playbackState==Player.STATE_ENDED && player.currentPosition >= player.duration) {
+                if (playbackState == Player.STATE_ENDED && player.currentPosition >= player.duration) {
                     player.playWhenReady = false
                     whenReady = false
                     requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -384,7 +390,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         backArrow.setOnClickListener {
             player.release()
-            playerView.player=null
 //            playerView.hideController()
             requireActivity().onBackPressed()
         }
@@ -551,7 +556,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             override fun onSuccess() {
                 snip.is_virtual_version = 0
                 snip.videoFilePath = mediaFile.absolutePath
-                snip.total_video_duration=(snip.end_time.toLong()-snip.start_time.toLong()).toInt()
+                snip.total_video_duration = (snip.end_time.toLong() - snip.start_time.toLong()).toInt()
                 AppClass.getAppInstance().setEventSnipsFromDb(event, snip)
                 CoroutineScope(IO).launch { appRepository.updateSnip(snip) }
                 val hdSnips = Hd_snips()
@@ -563,7 +568,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 if (hud.isShowing) hud.dismiss()
                 requireActivity().runOnUiThread {
                     Toast.makeText(activity, "Video saved to gallery", Toast.LENGTH_SHORT).show()
-                    tvConvertToReal.visibility=View.GONE
+                    tvConvertToReal.visibility = View.GONE
                     requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
 //                appViewModel.loadGalleryDataFromDB(ActivityPlayVideo.this);

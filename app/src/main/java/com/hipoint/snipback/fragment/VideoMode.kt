@@ -359,6 +359,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         bindViews()
         setupCameraControl()
         bindListeners()
+//        (activity as AppMainActivity?)?.hideStatusBar()
 
 
         val mOrientationListener: SimpleOrientationListener = object : SimpleOrientationListener(
@@ -390,6 +391,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     override fun onDestroy() {
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+//        (activity as AppMainActivity?)?.showStatusBar()
         super.onDestroy()
     }
 
