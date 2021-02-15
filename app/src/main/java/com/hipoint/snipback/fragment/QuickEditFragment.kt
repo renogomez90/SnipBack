@@ -316,7 +316,7 @@ class QuickEditFragment: Fragment() {
         outState.putLong("KEY_START", editedStart)
         outState.putLong("KEY_END", editedEnd)
         outState.putInt("KEY_START_WINDOW", startWindow)
-        outState.putInt("KEY_END-WIDNOW", endWindow)
+        outState.putInt("KEY_END_WINDOW", endWindow)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -328,7 +328,7 @@ class QuickEditFragment: Fragment() {
         editedStart = savedState.getLong("KEY_START")
         editedEnd   = savedState.getLong("KEY_END")
         startWindow = savedState.getInt("KEY_START_WINDOW")
-        endWindow   = savedState.getInt("KEY_END-WIDNOW")
+        endWindow   = savedState.getInt("KEY_END_WINDOW")
     }
 
     override fun onResume() {
@@ -401,7 +401,7 @@ class QuickEditFragment: Fragment() {
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
-            setSeekParameters(SeekParameters.CLOSEST_SYNC)
+            setSeekParameters(SeekParameters.EXACT)
             playWhenReady = false
         }
 
