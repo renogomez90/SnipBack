@@ -122,7 +122,7 @@
         android:orientation="vertical"
         android:paddingTop="10dp"
         android:visibility="visible"
-        android:layout_marginBottom="67dp"
+        app:layout_constraintBottom_toTopOf="@+id/edit_controls"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">

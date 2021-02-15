@@ -538,7 +538,8 @@ class QuickEditFragment: Fragment() {
         }
         acceptBtn.setOnClickListener {
             Log.d(TAG, "bindListeners: selected start = $editedStart, selected end = $editedEnd")
-            if(editedStart == editedEnd){
+            if(editedStart >= editedEnd ||
+                    trimSegment.selectedMinValue.toFloat() == trimSegment.selectedMaxValue.toFloat()){
                 Toast.makeText(requireContext(),
                     "Modified range is not possible",
                     Toast.LENGTH_SHORT).show()
@@ -672,6 +673,7 @@ class QuickEditFragment: Fragment() {
             }
 
             player.seekTo(newSeekPosition)
+            Log.d("seekPos2","$newSeekPosition")
 //            emitter.seekFast(newSeekPosition)
         }
     }
