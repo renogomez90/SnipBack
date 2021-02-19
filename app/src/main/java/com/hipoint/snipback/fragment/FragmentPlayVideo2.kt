@@ -180,7 +180,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
         bindViews()
 //        hideSystemUI()
-//        (activity as AppMainActivity?)?.hideStatusBar()
         return rootView
     }
 
@@ -212,7 +211,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         }
         seekToPoint = 0
         whenReady=false
-//        (activity as AppMainActivity?)?.showStatusBar()
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         super.onDestroy()

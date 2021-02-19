@@ -350,9 +350,9 @@ class QuickEditFragment: Fragment() {
                 setVideoSurface(null)
                 release()
             }
+            subscriptions?.dispose()
         }
 
-        subscriptions?.dispose()
         timebarHolder.removeView(bufferOverlay)
         timebarHolder.removeView(trimSegment)
 
