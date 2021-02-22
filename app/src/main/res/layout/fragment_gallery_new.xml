@@ -104,7 +104,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="2dp"
             android:layout_weight="0.2"
-            android:drawablePadding="4dp"
+            android:drawablePadding="3dp"
             android:fontFamily="@font/barlow_regular"
             android:gravity="center"
             android:paddingTop="8dp"

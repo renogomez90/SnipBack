@@ -321,8 +321,8 @@
                 android:clipToPadding="true"
                 android:nestedScrollingEnabled="false"
                 android:overScrollMode="never"
-                android:paddingStart="@dimen/app_margin"
-                android:paddingEnd="@dimen/app_margin"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
                 android:scrollbars="none" />
 
             <FrameLayout
