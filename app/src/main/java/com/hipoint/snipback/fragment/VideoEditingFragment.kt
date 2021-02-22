@@ -77,6 +77,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.Comparator
 import kotlin.math.absoluteValue
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -844,8 +845,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             startRangeUI()
 
             editSeekAction = EditSeekControl.MOVE_START
-            endingTimestamps =
-                (if (player.currentWindowIndex == 0) player.currentPosition else bufferDuration + player.currentPosition)
+            endingTimestamps = if (player.currentWindowIndex == 0)
+                player.currentPosition
+            else {
+                if(bufferDuration + player.currentPosition >= maxDuration){
+                    maxDuration
+                }else {
+                    bufferDuration + player.currentPosition
+                }
+            }
 
             when(editAction){
                 EditAction.SLOW,
@@ -2485,7 +2493,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             else
                 player.currentPosition
         }else{  //  exoplayer can be messed up
-            player.currentPosition + bufferDuration
+            if(player.currentPosition + bufferDuration > maxDuration){
+                maxDuration
+            }else {
+                player.currentPosition + bufferDuration
+            }
         }
     }
 

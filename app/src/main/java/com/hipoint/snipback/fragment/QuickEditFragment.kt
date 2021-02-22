@@ -517,6 +517,7 @@ class QuickEditFragment: Fragment() {
             else
                 player.seekTo(startWindow, editedStart)
         }
+
         end.setOnClickListener {
             // saves the current start point
             startWindow = player.currentWindowIndex
@@ -629,6 +630,13 @@ class QuickEditFragment: Fragment() {
                 }
             }
 
+            if(player.currentPosition in ((player.duration - 1500) .. player.duration) ||
+                    player.currentPosition in 0 .. 1000){
+                player.setSeekParameters(SeekParameters.EXACT)
+            }else {
+                player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+            }
+
             when (seekAction) {
                 EditSeekControl.MOVE_START -> {
                     editedStart = getCorrectedTimebarPosition()
@@ -674,9 +682,9 @@ class QuickEditFragment: Fragment() {
                 newSeekPosition = maxDuration
             }
 
-            player.seekTo(newSeekPosition)
+//            player.seekTo(newSeekPosition)
             Log.d("seekPos2","$newSeekPosition")
-//            emitter.seekFast(newSeekPosition)
+            emitter.seekFast(newSeekPosition)
         }
     }
     
@@ -715,7 +723,11 @@ class QuickEditFragment: Fragment() {
         return if(player.currentWindowIndex == 0){
             player.currentPosition
         }else{  //  exoplayer can be messed up
-            player.currentPosition + bufferDuration
+            player.setSeekParameters(SeekParameters.EXACT)
+            if (player.currentPosition + bufferDuration > maxDuration)
+                maxDuration
+            else
+                player.currentPosition + bufferDuration
         }
     }
 
