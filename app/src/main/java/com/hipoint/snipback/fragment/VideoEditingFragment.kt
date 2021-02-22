@@ -1,6 +1,5 @@
 package com.hipoint.snipback.fragment
 
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -13,7 +12,6 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.os.PowerManager
 import android.util.Log
 import android.view.*
 import android.view.animation.AlphaAnimation
@@ -1128,11 +1126,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             startRangeUI()
             resetPlaybackUI()
 
-            progressTracker?.run {
-                setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
-                setChangeAccepted(true)
-                run()
-            }
+            setupProgressTracker()
             updateRestrictedList()
 
             editAction = EditAction.NORMAL
@@ -1154,10 +1148,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 player.seekTo(0, 0)
             playVideo()
 
-            if(progressTracker == null) setupProgressTracker()
-            else if(!progressTracker!!.isTrackingProgress){
-                progressTracker!!.setChangeAccepted(true)
-            }
+            setupProgressTracker()
 //            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             Log.d(TAG, "Start Playback")
         }
@@ -1311,7 +1302,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         //  start tracking these changes
-        progressTracker = null
         setupProgressTracker()
     }
 
@@ -1319,6 +1309,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * start tracking progress
      */
     private fun setupProgressTracker() {
+        progressTracker?.setChangeAccepted(false)
+        progressTracker?.stopTracking()
+        progressTracker = null
+
         progressTracker = ProgressTracker(player)
         with(progressTracker!!) {
             setSpeedDetails(speedDetailSet.toMutableList() as ArrayList<SpeedDetails>)
@@ -1608,8 +1602,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         tmpSpeedDetails = null
 
-        if(progressTracker == null)
-            progressTracker = ProgressTracker(player)
         setupProgressTracker()
 
         isEditOnGoing = false
@@ -3088,7 +3080,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         private var currentSpeed: Float = 1F
         private var isChangeAccepted: Boolean = false
-        var isTrackingProgress = false
+        private var isTrackingProgress = false
 
         override fun run() {
             if(context != null) {
@@ -3161,10 +3153,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         fun setChangeAccepted(isAccepted: Boolean) {
             isChangeAccepted = isAccepted
             isTrackingProgress = isAccepted
+            if(handler == null && isAccepted){
+                handler = Handler()
+                handler!!.post(this)
+            }
         }
 
         fun setSpeedDetails(speedDetails: ArrayList<SpeedDetails>) {
-//            speedDetailList.addAll(speedDetails)
             speedDetailList = speedDetails
             speedDetailList.sortWith(speedDetailsComparator)
         }
@@ -3181,6 +3176,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             handler?.removeCallbacksAndMessages(null)
             handler = null
             isTrackingProgress = false
+        }
+
+        fun isCurrentlyTracking(): Boolean {
+            return isTrackingProgress && handler != null
         }
     }
 }
