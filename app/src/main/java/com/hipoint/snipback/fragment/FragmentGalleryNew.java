@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,6 +24,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
@@ -64,7 +66,7 @@ public class FragmentGalleryNew extends Fragment {
     RecyclerView mainCategoryRecycler;
     MainRecyclerAdapter mainRecyclerAdapter;
     SwipeRefreshLayout pullToRefresh;
-    ImageButton filter_button, view_button, menu_button, camera_button;
+    TextView filter_button, view_button, menu_button, camera_button;
     TextView filter_label, view_label, menu_label, photolabel;
     ImageView autodelete_arrow, player_view_image;
     RecyclerView recycler_view;
@@ -183,8 +185,8 @@ public class FragmentGalleryNew extends Fragment {
         });
         menu_button.setOnClickListener(v -> {
             final Dialog dialog = new Dialog(requireActivity());
-            view_button.setImageResource(R.drawable.ic_view_unselected);
-            view_label.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
+            view_button.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_view_unselected, 0, 0);
+            view_button.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
             Window window = dialog.getWindow();
             WindowManager.LayoutParams wlp = window.getAttributes();
             wlp.gravity = Gravity.BOTTOM;
@@ -235,8 +237,8 @@ public class FragmentGalleryNew extends Fragment {
             public void onClick(View v) {
                 final Dialog dialogFilter = new Dialog(requireActivity());
                 Window window = dialogFilter.getWindow();
-                filter_button.setImageResource(R.drawable.ic_filter_selected);
-                filter_label.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
+                filter_button.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_filter_selected, 0, 0);
+                filter_button.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
                 window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
                 dialogFilter.setContentView(R.layout.filter_layout);
                 dialogFilter.show();
@@ -278,11 +280,11 @@ public class FragmentGalleryNew extends Fragment {
 
     private void updateViewButtonUI(Boolean viewButtonClicked){ // view button wasn't changing on rotation
         if (viewButtonClicked){
-            view_button.setImageResource(R.drawable.ic_view);
-            view_label.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
+            view_button.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_view, 0,0);
+            view_button.setTextColor(getResources().getColor(R.color.colorPrimaryDimRed));
         } else {
-            view_button.setImageResource(R.drawable.ic_view_unselected);
-            view_label.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
+            view_button.setCompoundDrawablesWithIntrinsicBounds(0, R.drawable.ic_view_unselected, 0,0);
+            view_button.setTextColor(getResources().getColor(R.color.colorDarkGreyDim));
         }
     }
 

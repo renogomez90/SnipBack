@@ -366,8 +366,10 @@ class QuickEditFragment: Fragment() {
     override fun onDestroy() {
 //        (activity as AppMainActivity?)?.showStatusBar()
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // reset edit markers and startWindow on Destroy
         editedStart=-1L
         editedEnd=-1L
+        startWindow=0
         super.onDestroy()
     }
 

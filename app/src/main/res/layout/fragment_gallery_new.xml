@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary">
@@ -22,10 +22,10 @@
         android:id="@+id/pullToRefresh"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="5dp"
-        android:layout_marginTop="5dp"
         android:layout_above="@id/llfooter"
-        android:layout_below="@id/photolabel">
+        android:layout_below="@id/photolabel"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/main_recycler"
@@ -43,10 +43,10 @@
         android:visibility="invisible">
 
         <ImageView
-            android:contentDescription="@string/no_desc"
             android:layout_width="100dp"
             android:layout_height="100dp"
-            android:adjustViewBounds="true" />
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/no_desc" />
 
         <ProgressBar
             style="?android:attr/progressBarStyleSmall"
@@ -66,12 +66,12 @@
         android:visibility="gone">
 
         <ImageView
-            android:contentDescription="@string/no_desc"
             android:id="@+id/player_view_image"
             android:layout_width="145dp"
             android:layout_height="145dp"
             android:layout_marginStart="44dp"
             android:layout_marginTop="24dp"
+            android:contentDescription="@string/no_desc"
             android:scaleType="fitXY"
             android:visibility="visible" />
 
@@ -91,163 +91,96 @@
         android:id="@+id/llfooter"
         android:layout_width="match_parent"
         android:layout_height="66dp"
+        android:gravity="center"
         android:layout_alignParentBottom="true"
         android:background="@color/bottom_menu"
-        android:baselineAligned="false"
-        android:gravity="center">
+        android:visibility="visible"
+        android:weightSum="1">
 
-        <RelativeLayout
-            android:id="@+id/layout_camera"
+        <TextView
+            android:id="@+id/camera"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_gravity="center"
-            android:layout_marginStart="20dp"
+            android:layout_marginTop="2dp"
             android:layout_weight="0.2"
-            android:layout_marginBottom="3dp"
-            android:gravity="center">
-
-            <ImageButton
-            android:contentDescription="@string/no_desc"
-                android:id="@+id/camera"
-                android:layout_width="match_parent"
-                android:padding="7dp"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_camera" />
-
-            <TextView
-                android:id="@+id/camera_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/camera"
-                android:fontFamily="@font/barlow_regular"
-                android:gravity="center"
-                android:text="Camera"
-                android:textColor="@color/colorPrimaryGrey"
-                android:textSize="11sp" />
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/layout_link"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="0.2"
-            android:layout_marginBottom="5dp"
-            android:gravity="center">
-
-            <ImageButton
-            android:contentDescription="@string/no_desc"
-                android:id="@+id/link"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_link" />
-
-            <TextView
-                android:id="@+id/link_text"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/link"
-                android:fontFamily="@font/barlow_regular"
-                android:gravity="center"
-                android:text="Link"
-                android:textColor="@color/colorPrimaryGrey"
-                android:textSize="11sp" />
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/layout_filter"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_weight="0.2"
-            android:layout_marginBottom="4dp"
-            android:gravity="center">
-
-            <ImageButton
-            android:contentDescription="@string/no_desc"
-                android:id="@+id/filter"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="9dp"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_filter_results_button" />
-
-            <TextView
-                android:id="@+id/highlight_text_btn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/filter"
-                android:fontFamily="@font/barlow_regular"
-                android:gravity="center"
-                android:text="Filter"
-                android:textColor="@color/colorPrimaryGrey"
-                android:textSize="11sp" />
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/layout_view"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginBottom="5dp"
-            android:layout_weight="0.2"
+            android:drawablePadding="4dp"
+            android:fontFamily="@font/barlow_regular"
             android:gravity="center"
-            android:clickable="false">
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Camera"
+            android:textColor="@color/colorPrimaryGrey"
+            android:textSize="11sp"
+            app:drawableTopCompat="@drawable/ic_camera" />
 
-            <ImageButton
-            android:contentDescription="@string/no_desc"
-                android:id="@+id/_button_view"
-                android:layout_width="match_parent"
-                android:padding="10dp"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_view_unselected" />
-
-            <TextView
-                android:id="@+id/slow_text_btn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/_button_view"
-                android:fontFamily="@font/barlow_regular"
-                android:gravity="center"
-                android:text="View"
-                android:textColor="@color/colorPrimaryGrey"
-                android:textSize="11sp" />
-        </RelativeLayout>
-
-        <RelativeLayout
-            android:id="@+id/layout_menu"
+        <TextView
+            android:id="@+id/link"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_gravity="center"
-            android:layout_marginEnd="20dp"
+            android:layout_marginTop="2dp"
             android:layout_weight="0.2"
-            android:layout_marginBottom="5dp"
-            android:gravity="center">
+            android:drawablePadding="4dp"
+            android:fontFamily="@font/barlow_regular"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Link"
+            android:textColor="@color/colorPrimaryGrey"
+            android:textSize="11sp"
+            app:drawableTopCompat="@drawable/ic_link" />
 
-            <ImageButton
-            android:contentDescription="@string/no_desc"
-                android:id="@+id/dropdown_menu"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="11dp"
-                android:background="@android:color/transparent"
-                android:src="@drawable/ic_menu" />
+        <TextView
+            android:id="@+id/filter"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="2dp"
+            android:layout_weight="0.2"
+            android:drawablePadding="4dp"
+            android:layout_gravity="center"
+            android:fontFamily="@font/barlow_regular"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Filter"
+            android:textColor="@color/colorPrimaryGrey"
+            android:textSize="11sp"
+            app:drawableTopCompat="@drawable/ic_filter_results_button" />
 
-            <TextView
-                android:id="@+id/speedup_text_btn"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/dropdown_menu"
-                android:fontFamily="@font/barlow_regular"
-                android:gravity="center"
-                android:text="Menu"
-                android:textColor="@color/colorPrimaryGrey"
-                android:textSize="11sp" />
-        </RelativeLayout>
+        <TextView
+            android:id="@+id/_button_view"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="2dp"
+            android:layout_weight="0.2"
+            android:drawablePadding="4dp"
+            android:fontFamily="@font/barlow_regular"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="View"
+            android:textColor="@color/colorPrimaryGrey"
+            android:textSize="11sp"
+            app:drawableTopCompat="@drawable/ic_view_unselected" />
+
+        <TextView
+            android:id="@+id/dropdown_menu"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginTop="2dp"
+            android:layout_weight="0.2"
+            android:drawablePadding="4dp"
+            android:layout_gravity="center"
+            android:fontFamily="@font/barlow_regular"
+            android:gravity="center"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="Menu"
+            android:textColor="@color/colorPrimaryGrey"
+            android:textSize="11sp"
+            app:drawableTopCompat="@drawable/ic_menu" />
     </LinearLayout>
 
 </RelativeLayout>
