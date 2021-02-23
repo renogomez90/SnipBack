@@ -530,6 +530,12 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 newSeekPosition = maxDuration
             }
 
+            //  if we are scrolling to the beginning of the video or to the end, seek exactly
+            if(newSeekPosition in 0 .. 1500 ||
+                newSeekPosition in ((maxDuration - 1500) .. maxDuration)){
+                player.setSeekParameters(SeekParameters.EXACT)
+            }
+
             player.seekTo(newSeekPosition)
 //            emitter.seekFast(newSeekPosition)
         }

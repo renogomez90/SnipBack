@@ -2450,6 +2450,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                 newSeekPosition = endingTimestamps
                             }
                         }
+                        //  if endingTimestamps are near max duration we probably need to make that max duration
+                        if(endingTimestamps > maxDuration - 50)
+                            endingTimestamps = maxDuration
                         trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat())
                                 .apply()
                     }
@@ -2475,10 +2478,32 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
             }
 
-            if (newSeekPosition < 0) {
-                newSeekPosition = 0
-            }else if (newSeekPosition > maxDuration) {
-                newSeekPosition = maxDuration
+             if(player.currentWindowIndex == 0) {
+                if (newSeekPosition < 0) {
+                    newSeekPosition = 0
+                }else if (newSeekPosition > maxDuration) {
+                    newSeekPosition = maxDuration
+                }
+             }else {
+                 if (newSeekPosition < 0) {
+                    newSeekPosition = 0
+                }else if (newSeekPosition > maxDuration - bufferDuration) {
+                    newSeekPosition = maxDuration - bufferDuration
+                }
+             }
+
+            //  if we are scrolling to the beginning of the video or to the end, seek exactly
+            if(player.currentWindowIndex == 0) {
+                if (newSeekPosition in 0..1500 ||
+                    newSeekPosition in ((maxDuration - 1500)..maxDuration)
+                ) {
+                    player.setSeekParameters(SeekParameters.EXACT)
+                }
+            } else {
+                if(newSeekPosition in 0 .. 1500 ||
+                        newSeekPosition in ((maxDuration - bufferDuration - 1500) .. (maxDuration - bufferDuration))){
+                    player.setSeekParameters(SeekParameters.EXACT)
+                }
             }
 
             player.seekTo(newSeekPosition)  //  window is chosen previously

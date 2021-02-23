@@ -671,15 +671,40 @@ class QuickEditFragment: Fragment() {
                         }
                         endWindow = 0
                     }
+                    //  if endingTimestamps are near max duration we probably need to make that max duration
+                    if(editedEnd > maxDuration - 50)
+                        editedEnd = maxDuration
                     trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
                 }
                 else -> {}
             }
 
-            if (newSeekPosition < 0) {
-                newSeekPosition = 0
-            }else if (newSeekPosition > maxDuration) {
-                newSeekPosition = maxDuration
+            if(player.currentWindowIndex == 0) {
+                if (newSeekPosition < 0) {
+                    newSeekPosition = 0
+                }else if (newSeekPosition > maxDuration) {
+                    newSeekPosition = maxDuration
+                }
+            }else {
+                if (newSeekPosition < 0) {
+                    newSeekPosition = 0
+                }else if (newSeekPosition > maxDuration - bufferDuration) {
+                    newSeekPosition = maxDuration - bufferDuration
+                }
+            }
+
+            //  if we are scrolling to the beginning of the video or to the end, seek exactly
+            if(player.currentWindowIndex == 0) {
+                if (newSeekPosition in 0..1500 ||
+                    newSeekPosition in ((maxDuration - 1500)..maxDuration)
+                ) {
+                    player.setSeekParameters(SeekParameters.EXACT)
+                }
+            } else {
+                if(newSeekPosition in 0 .. 1500 ||
+                    newSeekPosition in ((maxDuration - bufferDuration - 1500) .. (maxDuration - bufferDuration))){
+                    player.setSeekParameters(SeekParameters.EXACT)
+                }
             }
 
 //            player.seekTo(newSeekPosition)
