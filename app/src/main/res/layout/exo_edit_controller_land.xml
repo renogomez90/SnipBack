@@ -319,7 +319,7 @@
             android:layout_marginBottom="10dp"
             android:background="@drawable/background_screentwo_editer_image"
             android:gravity="center"
-            android:padding="4dp"
+            android:padding="5dp"
             android:transitionGroup="true"
             android:transitionName="layout_images"
             android:visibility="visible"
@@ -337,8 +337,8 @@
                 android:clipToPadding="true"
                 android:nestedScrollingEnabled="false"
                 android:overScrollMode="never"
-                android:paddingStart="@dimen/app_margin"
-                android:paddingEnd="@dimen/app_margin"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
                 android:scrollbars="none" />
 
             <FrameLayout

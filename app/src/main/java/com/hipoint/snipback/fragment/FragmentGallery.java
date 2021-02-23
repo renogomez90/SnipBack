@@ -71,7 +71,7 @@ public class FragmentGallery extends Fragment implements AdapterGallery.ItemList
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
-        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT);
+        requireActivity().setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_FULL_USER);
 
         import_con = rootView.findViewById(R.id.import_con);
         player_view_image = rootView.findViewById(R.id.player_view_image);

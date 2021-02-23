@@ -12,6 +12,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.view.animation.AlphaAnimation
@@ -1248,7 +1249,14 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
             }
         }
-        mOrientationListener.enable()
+        if (android.provider.Settings.System.getInt(requireContext().contentResolver,
+                        Settings.System.ACCELEROMETER_ROTATION, 0) == 1){
+            mOrientationListener.enable()
+
+        }
+        else{
+            mOrientationListener.disable()
+        }
     }
 
     /**
