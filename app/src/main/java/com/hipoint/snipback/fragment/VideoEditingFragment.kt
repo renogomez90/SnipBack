@@ -2435,10 +2435,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                 newSeekPosition = startingTimestamps
                             }
                         }
-
-                        trimSegment!!.setMinStartValue((startingTimestamps * 100 / maxDuration).toFloat())
+                        trimSegment!!.setMinStartValue((startingTimestamps.toFloat() * 100 / maxDuration).roundToInt().toFloat())
                                 .apply()
-                        trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat())
+                        trimSegment!!.setMaxStartValue((endingTimestamps.toFloat() * 100 / maxDuration).roundToInt().toFloat())
                                 .apply()
                     }
                     EditSeekControl.MOVE_END -> {

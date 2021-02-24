@@ -55,6 +55,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 class QuickEditFragment: Fragment() {
@@ -653,8 +654,8 @@ class QuickEditFragment: Fragment() {
                         }
                         startWindow = 0
                     }
-                    trimSegment.setMinStartValue((editedStart * 100 / maxDuration).toFloat()).apply()
-                    trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
+                    trimSegment.setMinStartValue((editedStart.toFloat() * 100 / maxDuration).roundToInt().toFloat()).apply()
+                    trimSegment.setMaxStartValue((editedEnd.toFloat() * 100 / maxDuration).roundToInt().toFloat()).apply()
                 }
                 EditSeekControl.MOVE_END -> {
                     editedEnd = getCorrectedTimebarPosition()
@@ -674,7 +675,7 @@ class QuickEditFragment: Fragment() {
                     //  if endingTimestamps are near max duration we probably need to make that max duration
                     if(editedEnd > maxDuration - 50)
                         editedEnd = maxDuration
-                    trimSegment.setMaxStartValue((editedEnd * 100 / maxDuration).toFloat()).apply()
+                    trimSegment.setMaxStartValue((editedEnd.toFloat() * 100 / maxDuration).roundToInt().toFloat()).apply()
                 }
                 else -> {}
             }
