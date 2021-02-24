@@ -2163,10 +2163,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
                     .createMediaSource(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
             //  clippingMediaSource used as workaround for timeline scrubbing
+            val clippedVideoDuration = videoDuration/1000
             val clip2 = ClippingMediaSource(
                     videoSource,
-                    if (bufferDuration == 0L && editedStart > 0) TimeUnit.MILLISECONDS.toMicros(editedStart) else 0,
-                    TimeUnit.MILLISECONDS.toMicros(videoDuration)
+                    if (bufferDuration == 0L && editedStart > 0)
+                        TimeUnit.MILLISECONDS.toMicros(editedStart)
+                    else 0,
+                    TimeUnit.SECONDS.toMicros(clippedVideoDuration)
             )
             clipList.add(clip2)
             maxDuration = bufferDuration + videoDuration
