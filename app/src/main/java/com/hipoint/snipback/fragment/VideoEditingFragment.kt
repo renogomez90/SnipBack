@@ -554,11 +554,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     end.setBackgroundResource(R.drawable.end_curve_red)
 
                     acceptRejectHolder.visibility = View.VISIBLE
-
+                    //rounded to int
                     val endValue =
-                        if (restoreCurrentWindow == 1) ((bufferDuration + restoreCurrentPoint) * 100 / maxDuration).toFloat()
-                        else (restoreCurrentPoint * 100 / maxDuration).toFloat()
-                    uiRangeSegments!![currentEditSegment].setMaxStartValue(endValue).apply()
+                        if (restoreCurrentWindow == 1) ((bufferDuration + restoreCurrentPoint).toFloat() * 100 / maxDuration).roundToInt()
+                        else (restoreCurrentPoint.toFloat() * 100 / maxDuration).roundToInt()
+
+                    uiRangeSegments!![currentEditSegment].setMaxStartValue(endValue.toFloat()).apply()
                 }
 
                 if (isSeekbarShown && !isEditExisting) {
@@ -575,9 +576,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 seekBar.hideScrubber()
                 setIconActive()
                 trimSegment = RangeSeekbarCustom(requireContext())
-                val startValue = startingTimestamps.toFloat() * 100 / maxDuration
-                val endValue = endingTimestamps.toFloat() * 100 / maxDuration
-                extendRangeMarker(startValue, endValue)
+                //rounded to int
+                val startValue = (startingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+                val endValue = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+                Log.e("endingValue582","$endValue")
+
+                extendRangeMarker(startValue.toFloat(), endValue.toFloat())
             }
 
             enableEditOptions(false)
@@ -1294,8 +1298,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             else resources.getColor(R.color.greenOverlay, context?.theme)
 
             val tmp = RangeSeekbarCustom(requireContext())
-            val startValue = (it.timeDuration!!.first * 100 / maxDuration).toFloat()
-            val endValue = (it.timeDuration!!.second * 100 / maxDuration).toFloat()
+            //rounded to int
+            val startValue = (it.timeDuration!!.first.toFloat() * 100 / maxDuration).roundToInt()
+            val endValue = (it.timeDuration!!.second.toFloat() * 100 / maxDuration).roundToInt()
 
             tmp.apply {
                 minimumHeight = height
@@ -1308,8 +1313,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 setBarHighlightColor(colour)
                 setMinValue(0F)
                 setMaxValue(100F)
-                setMinStartValue(startValue).apply()
-                setMaxStartValue(endValue).apply()
+                setMinStartValue(startValue.toFloat()).apply()
+                setMaxStartValue(endValue.toFloat()).apply()
                 setOnTouchListener { _, _ -> true }
             }
 
@@ -1623,12 +1628,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         isEditOnGoing = false
         isEditExisting = false
         isSpeedChanged = true
+        // rounded to int
+        val startValue = (startingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+        val endValue = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
 
-        val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
-        val endValue = (endingTimestamps * 100 / maxDuration).toFloat()
-
-        setupRangeMarker(startValue, endValue)
-        fixRangeMarker(startValue, endValue)
+        setupRangeMarker(startValue.toFloat(), endValue.toFloat())
+        fixRangeMarker(startValue.toFloat(), endValue.toFloat())
 
         updateRestrictedList()
 
@@ -1684,11 +1689,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }else {
                     previousEditEnd
                 }
-
+                //rounded to int
                 maxDuration    = bufferDuration + videoDuration
-                val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
-                val endValue   = (endingTimestamps * 100 / maxDuration).toFloat()
-                extendRangeMarker(startValue, endValue)
+                val startValue = (startingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+                val endValue   = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+                extendRangeMarker(startValue.toFloat(), endValue.toFloat())
+
                 player.setSeekParameters(SeekParameters.EXACT)
 
                 if (isSeekbarShown) {
@@ -1735,10 +1741,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     multiplier = getCurrentEditSpeed(),
                     timeDuration = Pair(startingTimestamps, endingTimestamps))
             speedDetailSet.add(tmpSpeedDetails!!)
-
-            val startValue = (startingTimestamps * 100 / maxDuration).toFloat()
-            val endValue = (endingTimestamps * 100 / maxDuration).toFloat()
-            setupRangeMarker(startValue, endValue)
+            //rounded to int
+            val startValue = (startingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+            val endValue = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+            setupRangeMarker(startValue.toFloat(), endValue.toFloat())
         }
     }
 
@@ -2227,13 +2233,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private fun showBufferOverlay() {
         val colour = resources.getColor(R.color.blackOverlay, context?.theme)
         val (_, height, padding) = setupCommonRangeUiElements()
-
         val thumbDrawable = getBitmap(ResourcesCompat.getDrawable(resources,
                 R.drawable.ic_thumb_transparent,
                 context?.theme) as VectorDrawable,
                 resources.getColor(android.R.color.transparent, context?.theme))
-
-        val endValue = (bufferDuration * 100 / (bufferDuration + videoDuration)).toFloat()
+        //rounded to int
+        val endValue = (bufferDuration.toFloat() * 100 / (bufferDuration + videoDuration)).roundToInt()
 
         bufferOverlay.apply {
             minimumHeight = height
@@ -2247,7 +2252,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             setMinValue(0F)
             setMaxValue(100F)
             setMinStartValue(0F).apply()
-            setMaxStartValue(endValue).apply()
+            setMaxStartValue(endValue.toFloat()).apply()
 
             setOnTouchListener { _, _ -> true }
         }
@@ -2354,26 +2359,25 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         if (newSeekPosition==startingTimestamps){
                             player.setSeekParameters(SeekParameters.EXACT)
                         }
-
+                        //rounded to int
 //                        if (uiRangeSegments!![currentEditSegment].maxSelection().toInt() == 100 ) {
                         if (newSpeedChangeStart) {
                             val startPosition = if (player.currentWindowIndex == 1) player.currentPosition + bufferDuration else player.currentPosition
-                            val adjustedEnd = ((startPosition * 100 / maxDuration) + 1).toFloat()  // to maintain a small gap
-
-                            uiRangeSegments!![currentEditSegment].setMaxStartValue(adjustedEnd)
+                            val adjustedEnd = ((startPosition.toFloat() * 100 / maxDuration) + 1).roundToInt()  // to maintain a small gap
+                            uiRangeSegments!![currentEditSegment].setMaxStartValue(adjustedEnd.toFloat())
                                     .apply()
                         } else {
-                            uiRangeSegments!![currentEditSegment].setMaxStartValue(((endingTimestamps) * 100 / maxDuration).toFloat())
+                            uiRangeSegments!![currentEditSegment].setMaxStartValue(((endingTimestamps.toFloat()) * 100 / maxDuration).roundToInt().toFloat())
                                     .apply()
                         }
 //                        }
 
                         var startValue =
-                                if (player.currentWindowIndex == 1) ((bufferDuration + newSeekPosition) * 100 / maxDuration).toFloat()
-                                else (newSeekPosition * 100 / maxDuration).toFloat()
+                                if (player.currentWindowIndex == 1) ((bufferDuration + newSeekPosition).toFloat() * 100 / maxDuration).roundToInt()
+                                else (newSeekPosition.toFloat() * 100 / maxDuration).roundToInt()
 
                         //  prevent point on top of each other
-                        if (startValue == uiRangeSegments!![currentEditSegment].selectedMaxValue.toFloat()) {
+                        if (startValue.toFloat() == uiRangeSegments!![currentEditSegment].selectedMaxValue.toFloat()) {
                             startValue -= 1 //  reduce the start point and adjust the newSeekPosition accordingly
                             newSeekPosition = if (player.currentWindowIndex == 1) {
                                 (startValue * maxDuration / 100 - bufferDuration).toLong()
@@ -2382,7 +2386,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             }
                         }
 
-                        uiRangeSegments!![currentEditSegment].setMinStartValue(startValue).apply()
+                        uiRangeSegments!![currentEditSegment].setMinStartValue(startValue.toFloat()).apply()
                     }
                     EditSeekControl.MOVE_END -> {
                         if (newSeekPosition < startingTimestamps && !showBuffer) {
@@ -2390,13 +2394,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         }
                         if (newSeekPosition > higher)
                             newSeekPosition = higher
-
+                        //rounded to int
                         var endValue =
-                                if (player.currentWindowIndex == 1) ((bufferDuration + newSeekPosition) * 100 / maxDuration).toFloat()
-                                else (newSeekPosition * 100 / maxDuration).toFloat()
+                                if (player.currentWindowIndex == 1) ((bufferDuration + newSeekPosition).toFloat() * 100 / maxDuration).roundToInt()
+                                else (newSeekPosition.toFloat() * 100 / maxDuration).roundToInt()
 
                         //  prevent point on top of each other
-                        if (endValue == uiRangeSegments!![currentEditSegment].selectedMinValue.toFloat()) {
+                        if (endValue.toFloat() == uiRangeSegments!![currentEditSegment].selectedMinValue.toFloat()) {
                             endValue += 1 //  reduce the start point and adjust the newSeekPosition accordingly
                             newSeekPosition = if (player.currentWindowIndex == 1) {
                                 (endValue * maxDuration / 100 - bufferDuration).toLong()
@@ -2408,7 +2412,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             player.setSeekParameters(SeekParameters.EXACT)
                         }
 
-                        uiRangeSegments!![currentEditSegment].setMaxStartValue(endValue).apply()
+                        uiRangeSegments!![currentEditSegment].setMaxStartValue(endValue.toFloat()).apply()
                     }
                     else -> {
                     }
@@ -3001,10 +3005,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
         startingTimestamps = speedDetails.timeDuration!!.first
         endingTimestamps = speedDetails.timeDuration!!.second
-
+        //rounded to int
         //  setting up the right UI for the edit action
-        val startValue = startingTimestamps * 100 / maxDuration
-        val endValue = endingTimestamps * 100 / maxDuration
+        val startValue = (startingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+        val endValue = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
         setupRangeMarker(startValue.toFloat(), endValue.toFloat())
         startRangeUI()
         editSeekAction = EditSeekControl.MOVE_START
