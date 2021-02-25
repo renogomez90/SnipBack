@@ -754,8 +754,8 @@ class CameraControl(val activity: FragmentActivity) {
      */
     private fun chooseOptimalSize(
         choices: Array<Size>,
-        width: Int = 720,
-        height: Int = 1280,
+        width: Int = 1080,
+        height: Int = 1920,
         aspectRatio: Size?,
     ): Size {
         val bigEnough = arrayListOf<Size>() // Collect the supported resolutions that are at least as big as the preview Surface
@@ -935,12 +935,12 @@ class CameraControl(val activity: FragmentActivity) {
 //        Log.e(TAG, "Couldn't find any suitable video size");
 //        return choices[choices.length - 1];
         for (size in choices) {
-            if (1280 == size.width && 720 == size.height) {
+            if (1920 == size.width && 1080 == size.height) {
                 return size
             }
         }
         for (size in choices) {
-            if (size.width == size.height * 4 / 3 && size.width <= 720) {
+            if (size.width == size.height * 4 / 3 && size.width <= 1080) {
                 return size
             }
         }
