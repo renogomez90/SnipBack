@@ -13,12 +13,12 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
-import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.exozet.android.core.utils.FragmentExtensions.setCustomAnimations
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.Utils.isPathInList
 import com.hipoint.snipback.application.AppClass
@@ -189,6 +189,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     //    public void loadFragment(Fragment fragment,boolean addtoBackStack) {
     fun loadFragment(fragment: Fragment, addToBackStack: Boolean) {
         val ft = supportFragmentManager.beginTransaction()
+        ft.setCustomAnimations(
+                R.anim.slide_in,
+                R.anim.fade_out,
+                R.anim.fade_in,
+                R.anim.slide_out
+        )
 
         val tag = when (fragment) {
             is VideoMode -> VIDEO_MODE_TAG
