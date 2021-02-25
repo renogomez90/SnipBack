@@ -190,11 +190,16 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     fun loadFragment(fragment: Fragment, addToBackStack: Boolean) {
         val ft = supportFragmentManager.beginTransaction()
         ft.setCustomAnimations(
-                R.anim.slide_in,
-                R.anim.fade_out,
-                R.anim.fade_in,
-                R.anim.slide_out
-        )
+                R.anim.slide_in_left_to_right,
+                R.anim.slide_out_left_to_right,
+                R.anim.slide_in_right_to_left,
+                R.anim.slide_out_right_to_left)
+//        ft.setCustomAnimations(
+//                R.anim.slide_in,
+//                R.anim.fade_out,
+//                R.anim.fade_in,
+//                R.anim.slide_out
+//        )
 
         val tag = when (fragment) {
             is VideoMode -> VIDEO_MODE_TAG
