@@ -78,10 +78,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.Comparator
-import kotlin.math.absoluteValue
-import kotlin.math.max
-import kotlin.math.roundToInt
-import kotlin.math.roundToLong
+import kotlin.math.*
 
 
 class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRepository.HDSnipResult {
@@ -1692,7 +1689,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
                 //rounded to int
                 maxDuration    = bufferDuration + videoDuration
-                val startValue = (startingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
+                val startValue = floor((startingTimestamps.toFloat() * 100 / maxDuration)).roundToInt()
                 val endValue   = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
                 extendRangeMarker(startValue.toFloat(), endValue.toFloat())
 
@@ -2179,6 +2176,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             playerView.setShowMultiWindowTimeBar(true)
             val jumpTo = if (editedStart < 0) bufferDuration else editedStart
             player.seekTo(0, jumpTo)
+
             showBufferOverlay()
         }
 

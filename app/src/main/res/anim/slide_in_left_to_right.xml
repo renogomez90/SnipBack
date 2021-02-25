@@ -16,11 +16,11 @@
 -->
 
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-
+    android:startOffset="100"
      >
 
     <translate
-        android:duration="350"
+        android:duration="300"
         android:fromYDelta="0"
         android:toYDelta="0"
         android:toXDelta="0"
