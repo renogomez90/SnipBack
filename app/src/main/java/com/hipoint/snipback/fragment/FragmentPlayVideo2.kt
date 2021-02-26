@@ -374,6 +374,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         pauseBtn.onClick {
             player.playWhenReady = false
             whenReady = false
+            requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
         tvConvertToReal.setOnClickListener {

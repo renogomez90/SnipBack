@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.R;
-import com.hipoint.snipback.adapter.AdapterPhotos;
 
 public class FragmentMultiDeletePhoto extends Fragment {
     private View rootView;
@@ -28,8 +27,8 @@ public class FragmentMultiDeletePhoto extends Fragment {
         rootView = inflater.inflate(R.layout.fragment_multideletephoto, container, false);
         recycler_view = rootView.findViewById(R.id.recycler_view);
         recycler_view.setLayoutManager(new LinearLayoutManager(requireActivity()));
-        AdapterPhotos adapterPhotos = new AdapterPhotos(requireActivity());
-        recycler_view.setAdapter(adapterPhotos);
+//        AdapterPhotos adapterPhotos = new AdapterPhotos(requireActivity());
+//        recycler_view.setAdapter(adapterPhotos);
         return rootView;
     }
 
