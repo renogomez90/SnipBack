@@ -29,7 +29,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
-import com.exozet.android.core.utils.MathExtensions.floor
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -1627,7 +1626,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         isEditExisting = false
         isSpeedChanged = true
         // rounded to int
-        val startValue = floor(startingTimestamps.toFloat() * 100 / maxDuration)
+        val startValue = floor((startingTimestamps.toFloat() * 100 / maxDuration)).roundToInt()
         val endValue = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
 
         setupRangeMarker(startValue.toFloat(), endValue.toFloat())
@@ -1689,10 +1688,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
                 //rounded to int
                 maxDuration    = bufferDuration + videoDuration
-                val startValue = floor((startingTimestamps.toFloat() * 100 / maxDuration)).roundToInt()
+                val startValue = if (bufferDuration < 200) 0 else floor((startingTimestamps.toFloat() * 100 / maxDuration))
                 val endValue   = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
                 extendRangeMarker(startValue.toFloat(), endValue.toFloat())
-
                 player.setSeekParameters(SeekParameters.EXACT)
 
                 if (isSeekbarShown) {
