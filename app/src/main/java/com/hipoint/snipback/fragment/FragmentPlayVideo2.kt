@@ -158,6 +158,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         super.onResume()
         initSetup()
         bindListeners()
+        startPostponedEnterTransition()
 //        setOnBackButtonPressed()
         Log.d(TAG, "onResume: started")
     }
@@ -173,10 +174,12 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
-        rootView = inflater.inflate(R.layout.layout_play_video, container, false)
+        postponeEnterTransition()
+        rootView      = inflater.inflate(R.layout.layout_play_video, container, false)
         appRepository = AppRepository(requireActivity().applicationContext)
-        appViewModel = ViewModelProvider(this).get(AppViewModel::class.java)
-        snip = requireArguments().getParcelable("snip")
+        appViewModel  = ViewModelProvider(this).get(AppViewModel::class.java)
+        snip          = requireArguments().getParcelable("snip")
+
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
         bindViews()
 //        hideSystemUI()

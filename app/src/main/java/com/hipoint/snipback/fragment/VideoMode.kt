@@ -501,7 +501,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         swipeDetection.setOnTouchListener(this)
         gallery.setOnClickListener {
             Log.d(TAG, "bindListeners: gallery btn clicked")
-            (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance(),
+            (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance()!!,
                 true)
         }
         settings.setOnClickListener { showDialogSettingsMain() }
