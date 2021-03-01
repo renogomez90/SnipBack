@@ -86,9 +86,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     var userRecordDuration = 0          //  duration of user recorded time
 
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
-    private val swipedFileNames      : ArrayList<String> = arrayListOf()                   //  names of files generated from swiping left
-    private var parentSnip           : Snip?             = null
-    private var currentOperation     : CurrentOperation  = CurrentOperation.CLIP_RECORDING
+    private val swipedFileNames : ArrayList<String> = arrayListOf()                   //  names of files generated from swiping left
+    private var parentSnip      : Snip?             = null
+    private var currentOperation: CurrentOperation  = CurrentOperation.CLIP_RECORDING
 
     //  orientation previous orientation to decide button rotation animation
     var previousOrientation = SimpleOrientationListener.VideoModeOrientation.PORTRAIT
@@ -540,18 +540,17 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
         mMinZoom = cameraControl!!.getMinZoom()
         mMaxZoom = cameraControl!!.getMaxZoom() - 1
-        seekBar.max = (mMaxZoom - mMinZoom).roundToInt()
+//        seekBar.max = (mMaxZoom - mMinZoom).roundToInt()
+        seekBar.max = 100
         seekBar.setOnSeekBarChangeListener(
             object : OnSeekBarChangeListener {
                 override fun onStopTrackingTouch(seekBar: SeekBar) {
-                    cameraControl?.setCurrentZoom((mMinZoom + 1 + mProgress * zoomStep).roundToInt()
-                        .toFloat())
+                    cameraControl?.setCurrentZoom(1 + mMaxZoom * mProgress / 100)
                 }
 
                 override fun onStartTrackingTouch(seekBar: SeekBar) {}
                 override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
-                    cameraControl?.setCurrentZoom((mMinZoom + 1 + progress.toFloat() * zoomStep).roundToInt()
-                        .toFloat())
+                    cameraControl?.setCurrentZoom(1 + mMaxZoom * progress.toFloat() / 100)
                     if (fromUser) mProgress = progress.toFloat()
                 }
             }

@@ -975,11 +975,6 @@ class CameraControl(val activity: FragmentActivity) {
                             delta = (zoomLevel - 1f).toFloat()
                         }
                         zoomLevel -= delta
-                        //                        if (zoom_level == 1){
-                        //                            seekBar.setProgress(0);
-                        //                        } else {
-                        ////                            seekBar.setProgress((int) zoom_level);
-                        //                        }
                     }
                     val ratio = (1.toFloat() / zoomLevel).toFloat()
                     //This ratio is the ratio of cropped Rect to Camera's original(Maximum) Rect
