@@ -12,7 +12,7 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProviders
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -25,10 +25,6 @@ import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.Main
-import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -62,6 +58,10 @@ class FragmentGalleryNew : Fragment() {
     var viewChange: String? = null
     var orientation: Int? = null
     private val uri: Uri? = null
+
+    private val allEvents: MutableList<Event> = ArrayList()
+    private val hdSnips: MutableList<Hd_snips> = ArrayList()
+    private val snip: MutableList<Snip> = ArrayList()
 
     enum class ViewType {
         NORMAL, ENLARGED
@@ -250,15 +250,20 @@ class FragmentGalleryNew : Fragment() {
     private fun pulltoRefresh() {
         pullToRefresh.setOnRefreshListener {
             pullToRefresh.isRefreshing = false
-            loadGalleryDataFromDB()
+//            loadGalleryDataFromDB()
+
+            prepareGalleryItems(allEvents, hdSnips, snip)
         }
     }
 
     override fun onResume() {
         super.onResume()
-        loadGalleryDataFromDB()
+//        loadGalleryDataFromDB()
+        loadData()
         startPostponedEnterTransition()
-        //        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
+
+
+//        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
 //            loadGalleryDataFromDB();
 //            AppClass.getAppInsatnce().setInsertionInProgress(false);
 //        }else{
@@ -271,11 +276,85 @@ class FragmentGalleryNew : Fragment() {
 //        }
     }
 
+    private fun loadData(){
+        AppClass.getAppInstance().clearAllParentSnips()
+        AppClass.getAppInstance().clearAllSnips()
+        val appViewModel = ViewModelProvider(this@FragmentGalleryNew).get(AppViewModel::class.java)
+
+        appViewModel.eventLiveData.observe(viewLifecycleOwner, { events: List<Event>? ->
+            events?.let { allEvents.addAll(it) }
+        })
+
+        appViewModel.hdSnipsLiveData.observe(viewLifecycleOwner, { hd_snips: List<Hd_snips>? ->
+            hd_snips?.let {
+                hdSnips.addAll(it)
+                removeBufferContent(hdSnips as ArrayList<Hd_snips>)
+            }
+        })
+
+        appViewModel.snipsLiveData.observe(viewLifecycleOwner, { snips: List<Snip>? ->
+            snips?.let{
+                snip.addAll(it)
+                prepareGalleryItems(allEvents, hdSnips, snips)
+            }
+        })
+    }
+
+    private fun prepareGalleryItems(
+        allEvents: MutableList<Event>,
+        hdSnips: MutableList<Hd_snips>,
+        snips: List<Snip>
+    ) {
+        if (snips != null && snips.isNotEmpty()) {
+            for (snip in snips) {
+                for (hdSnip in hdSnips) {
+                    if (hdSnip.snip_id == snip.parent_snip_id || hdSnip.snip_id == snip.snip_id) {  //  if HD snip is a parent of a snip or HD snip is the current snip
+                        if (snip.videoFilePath == null && hdSnip.snip_id == snip.parent_snip_id) {
+                            snip.videoFilePath =
+                                hdSnip.video_path_processed
+                        }
+                        //  snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
+                        for (event in allEvents) {
+                            if (event.event_id == snip.event_id) {
+                                AppClass.getAppInstance()
+                                    .setEventSnipsFromDb(event,
+                                        snip)
+                                if (snip.parent_snip_id == 0) {
+                                    AppClass.getAppInstance()
+                                        .setEventParentSnipsFromDb(
+                                            event,
+                                            snip)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            pullToRefresh.isRefreshing = false
+            val allSnips = AppClass.getAppInstance().allSnip
+            val allParentSnip =
+                AppClass.getAppInstance().allParentSnip
+            //  if (mainRecyclerAdapter == null) {
+            val layoutManager: RecyclerView.LayoutManager =
+                LinearLayoutManager(requireActivity())
+            mainCategoryRecycler.layoutManager =
+                layoutManager
+            mainRecyclerAdapter =
+                MainRecyclerAdapter(requireActivity(),
+                    allParentSnip,
+                    allSnips,
+                    viewChange)
+            mainCategoryRecycler.adapter =
+                mainRecyclerAdapter
+            //                                }
+            mainRecyclerAdapter?.notifyDataSetChanged()
+        }
+    }
+
     private fun loadGalleryDataFromDB() {
         AppClass.getAppInstance().clearAllParentSnips()
         AppClass.getAppInstance().clearAllSnips()
-        val appViewModel = ViewModelProviders.of(this@FragmentGalleryNew).get(
-            AppViewModel::class.java)
+        val appViewModel = ViewModelProvider(this@FragmentGalleryNew).get(AppViewModel::class.java)
         //        getFilePathFromInternalStorage();
         val allEvents: MutableList<Event> = ArrayList()
         appViewModel.eventLiveData.observe(viewLifecycleOwner, { events: List<Event>? ->
@@ -292,57 +371,54 @@ class FragmentGalleryNew : Fragment() {
                             appViewModel.snipsLiveData.observe(viewLifecycleOwner
                             ) { snips: List<Snip>? ->  //get snips
 
-                                CoroutineScope(Default).launch {
-                                    if (snips != null && snips.size > 0) {
-                                        for (snip in snips) {
-                                            for (hdSnip in hdSnips) {
-                                                if (hdSnip.snip_id == snip.parent_snip_id || hdSnip.snip_id == snip.snip_id) {  //  if HD snip is a parent of a snip or HD snip is the current snip
-                                                    if (snip.videoFilePath == null && hdSnip.snip_id == snip.parent_snip_id) {
-                                                        snip.videoFilePath =
-                                                            hdSnip.video_path_processed
-                                                    }
-                                                    //                                            snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
-                                                    for (event in allEvents) {
-                                                        if (event.event_id == snip.event_id) {
+                                if (snips != null && snips.isNotEmpty()) {
+                                    for (snip in snips) {
+                                        for (hdSnip in hdSnips) {
+                                            if (hdSnip.snip_id == snip.parent_snip_id || hdSnip.snip_id == snip.snip_id) {  //  if HD snip is a parent of a snip or HD snip is the current snip
+                                                if (snip.videoFilePath == null && hdSnip.snip_id == snip.parent_snip_id) {
+                                                    snip.videoFilePath =
+                                                        hdSnip.video_path_processed
+                                                }
+                                                //  snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
+                                                for (event in allEvents) {
+                                                    if (event.event_id == snip.event_id) {
+                                                        AppClass.getAppInstance()
+                                                            .setEventSnipsFromDb(event,
+                                                                snip)
+                                                        if (snip.parent_snip_id == 0) {
                                                             AppClass.getAppInstance()
-                                                                .setEventSnipsFromDb(event,
+                                                                .setEventParentSnipsFromDb(
+                                                                    event,
                                                                     snip)
-                                                            if (snip.parent_snip_id == 0) {
-                                                                AppClass.getAppInstance()
-                                                                    .setEventParentSnipsFromDb(
-                                                                        event,
-                                                                        snip)
-                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
-                                        pullToRefresh.isRefreshing = false
-                                        val allSnips = AppClass.getAppInstance().allSnip
-                                        val allParentSnip =
-                                            AppClass.getAppInstance().allParentSnip
-                                        //                                if (mainRecyclerAdapter == null) {
-                                        CoroutineScope(Main).launch {
-                                            val layoutManager: RecyclerView.LayoutManager =
-                                                LinearLayoutManager(requireActivity())
-                                            mainCategoryRecycler.layoutManager =
-                                                layoutManager
-                                            mainRecyclerAdapter =
-                                                MainRecyclerAdapter(requireActivity(),
-                                                    allParentSnip,
-                                                    allSnips,
-                                                    viewChange)
-                                            mainCategoryRecycler.adapter =
-                                                mainRecyclerAdapter
-                                            //                                }
-                                            mainRecyclerAdapter?.notifyDataSetChanged()
-                                        }
                                     }
+                                    pullToRefresh.isRefreshing = false
+                                    val allSnips = AppClass.getAppInstance().allSnip
+                                    val allParentSnip =
+                                        AppClass.getAppInstance().allParentSnip
+                                    //  if (mainRecyclerAdapter == null) {
+                                    val layoutManager: RecyclerView.LayoutManager =
+                                        LinearLayoutManager(requireActivity())
+                                    mainCategoryRecycler.layoutManager =
+                                        layoutManager
+                                    mainRecyclerAdapter =
+                                        MainRecyclerAdapter(requireActivity(),
+                                            allParentSnip,
+                                            allSnips,
+                                            viewChange)
+                                    mainCategoryRecycler.adapter =
+                                        mainRecyclerAdapter
+                                    //                                }
+                                    mainRecyclerAdapter?.notifyDataSetChanged()
                                 }
                             }
                         }
-                    })
+                    }
+                )
             }
         })
     }

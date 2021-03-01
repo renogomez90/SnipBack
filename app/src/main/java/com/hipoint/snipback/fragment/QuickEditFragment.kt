@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
+import com.exozet.android.core.utils.MathExtensions.floor
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
@@ -654,7 +655,7 @@ class QuickEditFragment: Fragment() {
                         }
                         startWindow = 0
                     }
-                    trimSegment.setMinStartValue((editedStart.toFloat() * 100 / maxDuration).roundToInt().toFloat()).apply()
+                    trimSegment.setMinStartValue(floor(editedStart.toFloat() * 100 / maxDuration).toFloat()).apply()
                     trimSegment.setMaxStartValue((editedEnd.toFloat() * 100 / maxDuration).roundToInt().toFloat()).apply()
                 }
                 EditSeekControl.MOVE_END -> {
