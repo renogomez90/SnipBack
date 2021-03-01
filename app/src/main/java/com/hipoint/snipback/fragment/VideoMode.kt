@@ -322,11 +322,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             override fun onReceive(context: Context?, intent: Intent?) {
                 intent?.let {
                     val showProgress = intent.getIntExtra("progress", -1)
-                    if (showProgress == VideoService.STATUS_SHOW_PROGRESS) {
-                        videoProcessing(true)
-                    } else {
-                        videoProcessing(false)
-                    }
+//                    if (showProgress == VideoService.STATUS_SHOW_PROGRESS) {
+//                        videoProcessing(true)
+//                    } else {
+//                        videoProcessing(false)
+//                    }
                 }
             }
         }
@@ -583,7 +583,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(processSwipeReceiver,
                 IntentFilter(
                         PENDING_SWIPE_ACTION))
-        videoProcessing(false)
+//        videoProcessing(false)
 
     }
 
@@ -972,7 +972,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         triggerRightSwipeAnimation()
 
         if(currentOperation == CurrentOperation.CLIP_RECORDING) {
-            videoProcessing(true)
+//            videoProcessing(true)
             takePhoto.isEnabled = false
             takePhoto.alpha = 0.5F
             r2Shutter.isEnabled = false
@@ -1068,7 +1068,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
         if(swipeAction == SwipeAction.SWIPE_RIGHT) {
             CoroutineScope(Main).launch{
-                videoProcessing(false)
+//                videoProcessing(false)
                 takePhoto.isEnabled = true
                 takePhoto.alpha = 1F
                 r2Shutter.isEnabled = true
@@ -1161,7 +1161,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             if(swipeAction == SwipeAction.SWIPE_RIGHT) {
                 CoroutineScope(Main).launch{
-                    videoProcessing(false)
+//                    videoProcessing(false)
                     takePhoto.isEnabled = true
                     takePhoto.alpha = 1F
                     r2Shutter.isEnabled = true
@@ -1182,7 +1182,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
             if(swipeAction == SwipeAction.SWIPE_RIGHT) {
                 CoroutineScope(Main).launch{
-                    videoProcessing(false)
+//                    videoProcessing(false)
                     takePhoto.isEnabled = true
                     takePhoto.alpha = 1F
                     r2Shutter.isEnabled = true
