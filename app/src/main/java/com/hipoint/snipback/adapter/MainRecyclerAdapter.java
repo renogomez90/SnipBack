@@ -37,9 +37,14 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         this.allSnips = allEventSnip;
         this.parentSnips = allParentSnip;
         this.viewChangeValue = viewChange;
-
     }
 
+    public void updateData(List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange){
+        this.allSnips = allEventSnip;
+        this.parentSnips = allParentSnip;
+        this.viewChangeValue = viewChange;
+        notifyDataSetChanged();
+    }
 
     @NonNull
     @Override
