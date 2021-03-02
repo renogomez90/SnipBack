@@ -1718,9 +1718,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      */
     private fun handleExistingSpeedChange(currentPosition: Long, isFast: Boolean) {
         if (tmpSpeedDetails != null) {
-            val startWindow = tmpSpeedDetails?.startWindowIndex ?: 0
-            val endWindow = tmpSpeedDetails?.endWindowIndex ?: 0
-
             speedDetailSet.remove(tmpSpeedDetails)
             if (editSeekAction == EditSeekControl.MOVE_END &&
                 currentPosition != maxDuration) {
@@ -1730,17 +1727,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 startingTimestamps = currentPosition
             }
 
-            tmpSpeedDetails = SpeedDetails(
-                    startWindowIndex = startWindow,
-                    endWindowIndex = endWindow,
-                    isFast = isFast,
-                    multiplier = getCurrentEditSpeed(),
-                    timeDuration = Pair(startingTimestamps, endingTimestamps))
+            tmpSpeedDetails!!.isFast = isFast
             speedDetailSet.add(tmpSpeedDetails!!)
-            //rounded to int
-            val startValue = (startingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
-            val endValue = (endingTimestamps.toFloat() * 100 / maxDuration).roundToInt()
-            setupRangeMarker(startValue.toFloat(), endValue.toFloat())
+
+            setupRangeMarker(uiRangeSegments!![currentEditSegment].selectedMinValue.toFloat(), uiRangeSegments!![currentEditSegment].selectedMaxValue.toFloat())
         }
     }
 
