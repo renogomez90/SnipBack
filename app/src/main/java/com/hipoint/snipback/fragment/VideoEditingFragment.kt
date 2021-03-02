@@ -1765,10 +1765,13 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             uiRangeSegments?.add(RangeSeekbarCustom(requireContext()))
         }
 
-        val startPoint = if (player.currentWindowIndex == 0) currentPosition  //    take the starting point when end is pressed
+        var startPoint = if (player.currentWindowIndex == 0) currentPosition  //    take the starting point when end is pressed
             else bufferDuration + currentPosition
 
-        val startValue = (startPoint * 100 / maxDuration).toFloat()
+        if(startPoint > maxDuration)
+            startPoint = maxDuration - 1
+
+        val startValue =(startPoint * 100 / maxDuration).toFloat()
 
         tmpSpeedDetails = SpeedDetails(
                 startWindowIndex = player.currentWindowIndex,
