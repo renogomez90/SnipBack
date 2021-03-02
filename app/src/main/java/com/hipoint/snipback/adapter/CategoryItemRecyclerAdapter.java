@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.CircularProgressDrawable;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.Utils.CommonUtils;
@@ -98,7 +99,11 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
                     circularProgressDrawable.setStrokeWidth(5F);
                     circularProgressDrawable.setCenterRadius(30F);
                     circularProgressDrawable.start();
-                    Glide.with(context).load(myBitmap).placeholder(circularProgressDrawable).into(holder.itemImage);
+                    Glide.with(context)
+                            .load(myBitmap)
+                            .placeholder(circularProgressDrawable)
+                            .diskCacheStrategy(DiskCacheStrategy.ALL)
+                            .into(holder.itemImage);
                     if (viewChangeValue != null && orientation == Configuration.ORIENTATION_PORTRAIT) {
                         enlargedPortraitView(holder);
 

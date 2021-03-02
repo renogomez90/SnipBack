@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.hipoint.snipback.R
 
 
@@ -45,7 +46,10 @@ class TimelinePreviewAdapter(val context: Context, val photoList: ArrayList<Bitm
 
             holder.previewTile.layoutParams.width = devicewidth
         }
-        Glide.with(context).load(photoList[position]).into(holder.previewTile)
+        Glide.with(context)
+            .load(photoList[position])
+            .diskCacheStrategy(DiskCacheStrategy.ALL)
+            .into(holder.previewTile)
     }
 
     class PreviewTileVH(view: View) : RecyclerView.ViewHolder(view) {

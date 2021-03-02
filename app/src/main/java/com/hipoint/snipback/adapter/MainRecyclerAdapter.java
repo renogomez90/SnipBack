@@ -10,11 +10,13 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.Swipper;
+import com.hipoint.snipback.Utils.GalleryDiffUtlCallback;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
 import com.hipoint.snipback.room.entities.EventData;
@@ -34,15 +36,25 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 
     public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange) {
         this.context = context;
-        this.allSnips = allEventSnip;
-        this.parentSnips = allParentSnip;
+        this.allSnips = new ArrayList<>();
+        this.parentSnips = new ArrayList<>();
+        this.allSnips.addAll(allEventSnip);
+        this.parentSnips.addAll(allParentSnip);
         this.viewChangeValue = viewChange;
     }
 
-    public void updateData(List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange){
-        this.allSnips = allEventSnip;
-        this.parentSnips = allParentSnip;
-        this.viewChangeValue = viewChange;
+    public void updateData(List<EventData> updatedAllParentSnip, List<EventData> updatedAllEventSnip, String updatedViewChange){
+        /*GalleryDiffUtlCallback parentDiffCallback = new GalleryDiffUtlCallback(this.parentSnips, updatedAllParentSnip);
+        GalleryDiffUtlCallback snipDiffCallback = new GalleryDiffUtlCallback(this.allSnips, updatedAllEventSnip);
+        DiffUtil.DiffResult parentDiffResult = DiffUtil.calculateDiff(parentDiffCallback);
+        DiffUtil.DiffResult snipDiffResult = DiffUtil.calculateDiff(snipDiffCallback);*/
+        this.allSnips.clear();
+        this.parentSnips.clear();
+        this.allSnips.addAll(updatedAllEventSnip);
+        this.parentSnips.addAll(updatedAllParentSnip);
+        this.viewChangeValue = updatedViewChange;
+        /*parentDiffResult.dispatchUpdatesTo(this);
+        snipDiffResult.dispatchUpdatesTo(this);*/
         notifyDataSetChanged();
     }
 

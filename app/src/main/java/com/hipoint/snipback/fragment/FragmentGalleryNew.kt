@@ -142,11 +142,13 @@ class FragmentGalleryNew : Fragment() {
             }
             startActivity(Intent.createChooser(photoLaunchIntent, "Choose"))
         }
-        camera_button.setOnClickListener(View.OnClickListener { v: View? ->
+
+        camera_button.setOnClickListener { v: View? ->
 //            ((AppMainActivity) requireActivity()).loadFragment(VideoMode.newInstance(), false);
             requireActivity().supportFragmentManager.popBackStack() //  assuming that FragmentGalleryNew is loaded only from VideoMode
-        })
-        menu_button.setOnClickListener(View.OnClickListener { v: View? ->
+        }
+
+        menu_button.setOnClickListener { v: View? ->
             val dialog = Dialog(requireActivity())
             view_button.setCompoundDrawablesWithIntrinsicBounds(0,
                 R.drawable.ic_view_unselected,
@@ -186,8 +188,9 @@ class FragmentGalleryNew : Fragment() {
                 dialog.dismiss()
             }
             dialog.show()
-        })
-        filter_button.setOnClickListener(View.OnClickListener {
+        }
+
+        filter_button.setOnClickListener {
             val dialogFilter = Dialog(requireActivity())
             val window = dialogFilter.window
             filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
@@ -199,16 +202,17 @@ class FragmentGalleryNew : Fragment() {
                 ViewGroup.LayoutParams.WRAP_CONTENT)
             dialogFilter.setContentView(R.layout.filter_layout)
             dialogFilter.show()
-        })
-        click.setOnClickListener(View.OnClickListener { //                ((AppMainActivity) requireActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
+        }
+
+        click.setOnClickListener {
+            //                ((AppMainActivity) requireActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
 //                Intent intent = new Intent(requireActivity(), ActivityPlayVideo.class);
             val intent = Intent(requireActivity(), ActivityPlayVideo::class.java)
             intent.putExtra("uri", uri.toString())
             startActivity(intent)
-        })
-        view_button.setOnClickListener(View.OnClickListener
-        //enlarge Views on click
-        {
+        }
+
+        view_button.setOnClickListener {
             if (!viewButtonClicked) {
                 viewButtonClicked = true
                 viewChange = ViewType.ENLARGED.toString()
@@ -217,7 +221,8 @@ class FragmentGalleryNew : Fragment() {
                 viewChange = ViewType.NORMAL.toString()
             }
             galleryEnlargedView(viewChange!!, viewButtonClicked)
-        })
+        }
+
         mainCategoryRecycler = rootView.findViewById(R.id.main_recycler)
 
 //        AppViewModel appViewModel = ViewModelProviders.ofrequireActivity().get(AppViewModel.class);
