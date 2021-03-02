@@ -1072,11 +1072,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         accept.setOnClickListener {
             if (isEditActionSpeedChange()) {
                 acceptSpeedChanges()
-
-                if (!isSeekbarShown) {
-                    seekBar.showScrubber()
-                    isSeekbarShown = true
-                }
             } else if (editAction == EditAction.EXTEND_TRIM) {
                 if(startingTimestamps >= endingTimestamps ||
                     trimSegment!!.selectedMinValue.toFloat() == trimSegment!!.selectedMaxValue.toFloat()){
@@ -1574,11 +1569,19 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         var endWindow = tmpSpeedDetails?.endWindowIndex ?: 0
 
         if (editSeekAction == EditSeekControl.MOVE_END) {
+            if (startingTimestamps == currentPosition){ //  this means start and end are the same point
+                Toast.makeText(requireContext(), "Range is not acceptable", Toast.LENGTH_SHORT).show()
+                return
+            }
             if (endingTimestamps != currentPosition) {
                 endingTimestamps = currentPosition
                 endWindow = player.currentWindowIndex
             }
         } else {
+            if(endingTimestamps == currentPosition){
+                Toast.makeText(requireContext(), "Range is not acceptable", Toast.LENGTH_SHORT).show()
+                return
+            }
             if (startingTimestamps != currentPosition) {
                 startingTimestamps = currentPosition
                 startWindow = player.currentWindowIndex
@@ -1648,6 +1651,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         startRangeUI()
         resetPlaybackUI()
         currentEditSegment = speedDetailSet.size - 1
+
+        if (!isSeekbarShown) {
+            seekBar.showScrubber()
+            isSeekbarShown = true
+        }
     }
 
     /**
@@ -2349,7 +2357,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                 newSeekPosition = lower
                             }
                         }
-                        if (newSeekPosition==startingTimestamps){
+                        if (newSeekPosition == startingTimestamps){
                             player.setSeekParameters(SeekParameters.EXACT)
                         }
                         //rounded to int
