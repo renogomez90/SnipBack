@@ -1182,6 +1182,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 reject.performClick()
             }
 
+            jumpToEndOfPreviousEdit()
+
             val currentPosition = player.currentPosition
             editAction = EditAction.SLOW
             setIconActive()
@@ -1201,6 +1203,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             if(isEditOnGoing && editAction == EditAction.EXTEND_TRIM) { //  reject the ongoing edit and do this one
                 reject.performClick()
             }
+
+            jumpToEndOfPreviousEdit()
 
             val currentPosition = player.currentPosition
             editAction = EditAction.FAST
@@ -1253,6 +1257,27 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         else{
             mOrientationListener.disable()
         }
+    }
+
+    /**
+     * if there is a previous edit then seek to a point shortly after that point for the new edit
+     */
+    private fun jumpToEndOfPreviousEdit() {
+        if (speedDetailSet.isEmpty())
+            return
+
+        var previousEditEnd =
+            speedDetailSet.elementAt(speedDetailSet.size - 1).timeDuration!!.second + 100
+        val endWindow = speedDetailSet.elementAt(speedDetailSet.size - 1).endWindowIndex
+        if (previousEditEnd > maxDuration)
+            previousEditEnd = maxDuration
+
+        if (endWindow == 1) {
+            previousEditEnd -= bufferDuration
+        }
+        player.setSeekParameters(SeekParameters.EXACT)
+
+        player.seekTo(endWindow, previousEditEnd)
     }
 
     /**
