@@ -2378,7 +2378,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                 else floor((newSeekPosition.toFloat() * 100 / maxDuration))
 
                         //  prevent point on top of each other
-                        if (startValue.toFloat() == uiRangeSegments!![currentEditSegment].selectedMaxValue.toFloat()) {
+                        if (startValue == uiRangeSegments!![currentEditSegment].selectedMaxValue.toFloat()) {
                             startValue -= 1 //  reduce the start point and adjust the newSeekPosition accordingly
                             newSeekPosition = if (player.currentWindowIndex == 1) {
                                 (startValue * maxDuration / 100 - bufferDuration).toLong()
@@ -2436,9 +2436,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                                 newSeekPosition = startingTimestamps
                             }
                         }
+                        if(endingTimestamps >= (maxDuration - 50)){
+                            endingTimestamps = maxDuration
+                        }
                         trimSegment!!.setMinStartValue(floor((startingTimestamps.toFloat() * 100 / maxDuration)).toFloat())
                                 .apply()
-                        trimSegment!!.setMaxStartValue((endingTimestamps.toFloat() * 100 / maxDuration).roundToInt().toFloat())
+                        trimSegment!!.setMaxStartValue((endingTimestamps.toFloat() * 100 / maxDuration))
                                 .apply()
                     }
                     EditSeekControl.MOVE_END -> {
@@ -2455,10 +2458,16 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             }
                         }
                         //  if endingTimestamps are near max duration we probably need to make that max duration
-                        if(endingTimestamps > maxDuration - 50)
-                            endingTimestamps = maxDuration
+                        if (player.currentWindowIndex == 1) {
+                            if (newSeekPosition + bufferDuration > maxDuration - 50)
+                                endingTimestamps = maxDuration
+                        }else {
+                            if (newSeekPosition > maxDuration - 50)
+                                endingTimestamps = maxDuration
+                        }
+
                         trimSegment!!.setMaxStartValue((endingTimestamps * 100 / maxDuration).toFloat())
-                                .apply()
+                            .apply()
                     }
                     else -> { }
                 }
@@ -2811,7 +2820,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     retriever.setDataSource(sorted[0].video_path_processed)
                     bufferDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     retriever.setDataSource(snip!!.videoFilePath)
-                    videoDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+//                    videoDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     retriever.release()
 
                     originalBufferDuration = bufferDuration
