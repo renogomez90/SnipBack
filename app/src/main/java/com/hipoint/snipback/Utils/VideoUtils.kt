@@ -97,14 +97,14 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val tmpFile = createFileList(fileList)
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING){
             if(filter.isNotBlank())
-                "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -tune film -crf 22 -threads 4 -y -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -y -b:v 2M $outputPath"
             else
-                "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -tune film -crf 22 -threads 4 -y -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -y -b:v 2M $outputPath"
         } else {
             if(rotation == 0)
-                "-f concat -safe 0 -i $tmpFile -metadata:s:v rotate=$rotation -x264opts -keyint_min=1 -c copy -threads 4 -y -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -metadata:s:v rotate=$rotation -x264opts -keyint_min=1 -c copy -y -b:v 2M $outputPath"
             else
-                "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -c copy -threads 4 -y -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -c copy -y -b:v 2M $outputPath"
         }
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
@@ -155,7 +155,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             end = sec
 
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT) {
-            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -threads 4 -y $outputPath"   // with re-encoding
+            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -y $outputPath"   // with re-encoding
         }else {
             if(swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1) {
                 "-ss $start -i ${clip.absolutePath} -to ${end - start} -metadata:s:v rotate=$orientationPref -c copy -y $outputPath"
@@ -164,7 +164,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             }
         }
 
-        /*"-ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -threads 4 -y $outputPath"   // without re-encoding*/
+        /*"-ss $start -i ${clip.absolutePath} -to $end -avoid_negative_ts make_zero -x264opts -keyint_min=1 -c copy -y $outputPath"   // without re-encoding*/
 
         Log.d(TAG, "trimToClip: cmd= $cmd")
         Log.d(TAG, "trimToClip: trim clips => ${end - start} = $end, $start")
@@ -187,8 +187,8 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
     suspend fun addIDRFrame(clip:File, outputFolder: String, comingFrom: CurrentOperation, swipeAction: SwipeAction){
 
-//        val cmd = "-i ${clip.absolutePath} -c:v libx264 -profile:v baseline -level 3.0 -x264opts keyint=5:min-keyint=5 -g 10 -movflags +faststart+rtphint -maxrate:v 4000k -bufsize:v 4500k -preset ultrafast -threads 4 -y $outputFolder/out.mp4"
-        val cmd = "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -threads 4 -y $outputFolder/out.mp4"
+//        val cmd = "-i ${clip.absolutePath} -c:v libx264 -profile:v baseline -level 3.0 -x264opts keyint=5:min-keyint=5 -g 10 -movflags +faststart+rtphint -maxrate:v 4000k -bufsize:v 4500k -preset ultrafast -y $outputFolder/out.mp4"
+        val cmd = "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -y $outputFolder/out.mp4"
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
                 //mv $outputFolder/out.mp4 ava_${clip.absolutePath}
@@ -218,7 +218,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (splitTime > duration)
             throw IllegalArgumentException("splitTime must be within video duration")
 
-        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -x264opts -keyint_min=1 -c copy -reset_timestamps 1 -map 0 -threads 4 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
+        val cmd = "-i ${clip.absolutePath} -f segment -segment_time $splitTime -x264opts -keyint_min=1 -c copy -reset_timestamps 1 -map 0 $outputFolder/${clip.nameWithoutExtension}-%d.mp4"
 
         Log.d(TAG, "splitVideo: cmd= $cmd")
 
@@ -263,7 +263,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }else {
             val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
             Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
-            "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -strict -2 -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -threads 4 -y $outputPath"
+            "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -y $outputPath"
         }
 
         Log.d(TAG, "changeSpeed: cmd = $cmd")
@@ -387,11 +387,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         val interval = duration.toFloat() / 9
 
-        val cmd = "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -s 40x40 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"
+        val cmd = "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -s 40x40 -frames:v 10 -y $outputParent/previewThumbs/thumb%03d.bmp"
         /*val cmd = if (duration >= 9)
-            "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"
+            "-skip_frame nokey -i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -y $outputParent/previewThumbs/thumb%03d.bmp"
         else    //  since we may not have enough key frames to skip over
-            "-i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -threads 4 -y $outputParent/previewThumbs/thumb%03d.bmp"*/
+            "-i ${clip.absolutePath} -r 1/$interval -s 50x50 -frames:v 10 -y $outputParent/previewThumbs/thumb%03d.bmp"*/
 
         Log.d(TAG, "getThumbnails: cmd = $cmd")
 
