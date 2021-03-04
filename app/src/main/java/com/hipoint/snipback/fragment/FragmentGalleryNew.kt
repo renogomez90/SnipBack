@@ -1,12 +1,12 @@
 package com.hipoint.snipback.fragment
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
-import android.util.Log
 import android.view.*
 import android.widget.ImageView
 import android.widget.RelativeLayout
@@ -17,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.google.android.play.core.splitinstall.d
 import com.hipoint.snipback.ActivityPlayVideo
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
@@ -29,6 +30,7 @@ import com.hipoint.snipback.room.repository.AppViewModel
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
+
 
 class FragmentGalleryNew : Fragment() {
     private val TAG = FragmentPlayVideo2::class.java.simpleName
@@ -56,7 +58,7 @@ class FragmentGalleryNew : Fragment() {
     private var mainRecyclerAdapter: MainRecyclerAdapter? = null
 
     var snipArrayList: List<Snip> = ArrayList()
-    var viewButtonClicked = false
+    private var viewButtonClicked = false
     var viewChange: String? = null
     var orientation: Int? = null
     private val uri: Uri? = null
@@ -85,9 +87,9 @@ class FragmentGalleryNew : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?,
     ): View? {
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         postponeEnterTransition()
@@ -126,16 +128,16 @@ class FragmentGalleryNew : Fragment() {
             val mediaDirPath = requireContext().externalMediaDirs[0].absolutePath + "/Snipback/"
             //                Uri fileUri = Uri.fromFile(new File(mediaDirPath));
             val fileUri = FileProvider.getUriForFile(requireContext().applicationContext,
-                requireContext().packageName + ".fileprovider",
-                File(mediaDirPath))
+                    requireContext().packageName + ".fileprovider",
+                    File(mediaDirPath))
             photoLaunchIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
             photoLaunchIntent.setDataAndType(fileUri,
-                DocumentsContract.Document.MIME_TYPE_DIR) //   this is correct way to do this BUT Samsung and Huawei doesn't support it
+                    DocumentsContract.Document.MIME_TYPE_DIR) //   this is correct way to do this BUT Samsung and Huawei doesn't support it
             if (photoLaunchIntent.resolveActivityInfo(requireContext().packageManager, 0) == null) {
                 photoLaunchIntent.setDataAndType(fileUri,
-                    "resource/folder") //  this will work with some file managers
+                        "resource/folder") //  this will work with some file managers
                 if (photoLaunchIntent.resolveActivityInfo(requireContext().packageManager,
-                        0) == null
+                                0) == null
                 ) {
                     photoLaunchIntent.setDataAndType(fileUri, "*/*") //  just open with anything
                 }
@@ -150,11 +152,6 @@ class FragmentGalleryNew : Fragment() {
 
         menu_button.setOnClickListener { v: View? ->
             val dialog = Dialog(requireActivity())
-            view_button.setCompoundDrawablesWithIntrinsicBounds(0,
-                R.drawable.ic_view_unselected,
-                0,
-                0)
-            view_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
             val window = dialog.window
             val wlp = window!!.attributes
             wlp.gravity = Gravity.BOTTOM
@@ -164,6 +161,11 @@ class FragmentGalleryNew : Fragment() {
             val params = dialog.window!!.attributes // change this to your dialog.
             params.y = 150
             dialog.window!!.attributes = params
+            menu_button.setCompoundDrawablesWithIntrinsicBounds(0,
+                    R.drawable.ic_menu_selected,
+                    0,
+                    0)
+            menu_button.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
             layout_autodelete = dialog.findViewById(R.id.layout_autodelete)
             relativeLayout_autodeleteactions = dialog.findViewById(R.id.layout_autodeleteactions)
             autodelete_arrow = dialog.findViewById(R.id.autodelete_arrow)
@@ -177,7 +179,7 @@ class FragmentGalleryNew : Fragment() {
                 autodelete_arrow.setImageResource(R.drawable.ic_forward)
                 dialog.cancel()
                 (requireActivity() as AppMainActivity).loadFragment(FragmentMultiDeletePhoto.newInstance(),
-                    true)
+                        true)
             })
             val layout_import = dialog.findViewById<RelativeLayout>(R.id.layout_import)
             layout_import.setOnClickListener {
@@ -188,20 +190,36 @@ class FragmentGalleryNew : Fragment() {
                 dialog.dismiss()
             }
             dialog.show()
+            dialog.setOnDismissListener {
+                menu_button.setCompoundDrawablesWithIntrinsicBounds(0,
+                        R.drawable.ic_menu,
+                        0,
+                        0)
+                menu_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
+            }
         }
 
         filter_button.setOnClickListener {
             val dialogFilter = Dialog(requireActivity())
             val window = dialogFilter.window
+
             filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
-                R.drawable.ic_filter_selected,
-                0,
-                0)
+                        R.drawable.ic_filter_selected,
+                        0,
+                        0)
             filter_button.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
             window!!.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT)
+                    ViewGroup.LayoutParams.WRAP_CONTENT)
             dialogFilter.setContentView(R.layout.filter_layout)
             dialogFilter.show()
+
+            dialogFilter.setOnDismissListener {
+                filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
+                        R.drawable.ic_filter_results_button,
+                        0,
+                        0)
+                filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
+            }
         }
 
         click.setOnClickListener {
@@ -237,9 +255,9 @@ class FragmentGalleryNew : Fragment() {
             view_button.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
         } else {
             view_button.setCompoundDrawablesWithIntrinsicBounds(0,
-                R.drawable.ic_view_unselected,
-                0,
-                0)
+                    R.drawable.ic_view_unselected,
+                    0,
+                    0)
             view_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
         }
     }
@@ -301,7 +319,7 @@ class FragmentGalleryNew : Fragment() {
                 hdSnips.clear()
                 hdSnips.addAll(it)
                 removeBufferContent(hdSnips as ArrayList<Hd_snips>)
-                if(snip.isNotEmpty()){
+                if (snip.isNotEmpty()) {
                     prepareGalleryItems(allEvents, hdSnips, snip)
                 }
             }
@@ -316,7 +334,7 @@ class FragmentGalleryNew : Fragment() {
         })
     }
 
-    private fun prepareGalleryItems(allEvents: MutableList<Event>,hdSnips: MutableList<Hd_snips>,snips: List<Snip>) {
+    private fun prepareGalleryItems(allEvents: MutableList<Event>, hdSnips: MutableList<Hd_snips>, snips: List<Snip>) {
         if (snips.isNotEmpty()) {
             for (snip in snips) {
                 for (hdSnip in hdSnips) {
@@ -348,7 +366,7 @@ class FragmentGalleryNew : Fragment() {
 
             if(mainCategoryRecycler.adapter == null) {
                 mainRecyclerAdapter = MainRecyclerAdapter(requireActivity(),
-                    allParentSnip, allSnips, viewChange)
+                        allParentSnip, allSnips, viewChange)
                 mainCategoryRecycler.adapter = mainRecyclerAdapter
             } else {
                 (mainCategoryRecycler.adapter as MainRecyclerAdapter).updateData(allParentSnip, allSnips, viewChange)
@@ -368,62 +386,62 @@ class FragmentGalleryNew : Fragment() {
                 allEvents.addAll(events)
                 val hdSnips: MutableList<Hd_snips> = ArrayList()
                 appViewModel.hdSnipsLiveData.observe(viewLifecycleOwner,
-                    { hd_snips: List<Hd_snips>? ->
-                        if (hd_snips != null && hd_snips.isNotEmpty()) {  //  get available HD Snips
-                            hdSnips.addAll(hd_snips)
+                        { hd_snips: List<Hd_snips>? ->
+                            if (hd_snips != null && hd_snips.isNotEmpty()) {  //  get available HD Snips
+                                hdSnips.addAll(hd_snips)
 
-                            // sort by Snip ID then by name, to weed out the buffer videos
-                            removeBufferContent(hdSnips as ArrayList<Hd_snips>)
-                            appViewModel.snipsLiveData.observe(viewLifecycleOwner
-                            ) { snips: List<Snip>? ->  //get snips
+                                // sort by Snip ID then by name, to weed out the buffer videos
+                                removeBufferContent(hdSnips as ArrayList<Hd_snips>)
+                                appViewModel.snipsLiveData.observe(viewLifecycleOwner
+                                ) { snips: List<Snip>? ->  //get snips
 
-                                if (snips != null && snips.isNotEmpty()) {
-                                    for (snip in snips) {
-                                        for (hdSnip in hdSnips) {
-                                            if (hdSnip.snip_id == snip.parent_snip_id || hdSnip.snip_id == snip.snip_id) {  //  if HD snip is a parent of a snip or HD snip is the current snip
-                                                if (snip.videoFilePath == null && hdSnip.snip_id == snip.parent_snip_id) {
-                                                    snip.videoFilePath =
-                                                        hdSnip.video_path_processed
-                                                }
-                                                //  snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
-                                                for (event in allEvents) {
-                                                    if (event.event_id == snip.event_id) {
-                                                        AppClass.getAppInstance()
-                                                            .setEventSnipsFromDb(event,
-                                                                snip)
-                                                        if (snip.parent_snip_id == 0) {
+                                    if (snips != null && snips.isNotEmpty()) {
+                                        for (snip in snips) {
+                                            for (hdSnip in hdSnips) {
+                                                if (hdSnip.snip_id == snip.parent_snip_id || hdSnip.snip_id == snip.snip_id) {  //  if HD snip is a parent of a snip or HD snip is the current snip
+                                                    if (snip.videoFilePath == null && hdSnip.snip_id == snip.parent_snip_id) {
+                                                        snip.videoFilePath =
+                                                                hdSnip.video_path_processed
+                                                    }
+                                                    //  snip.setVideoFilePath(hdSnip.getVideo_path_processed());    //  sets the video path for the snip
+                                                    for (event in allEvents) {
+                                                        if (event.event_id == snip.event_id) {
                                                             AppClass.getAppInstance()
-                                                                .setEventParentSnipsFromDb(
-                                                                    event,
-                                                                    snip)
+                                                                    .setEventSnipsFromDb(event,
+                                                                            snip)
+                                                            if (snip.parent_snip_id == 0) {
+                                                                AppClass.getAppInstance()
+                                                                        .setEventParentSnipsFromDb(
+                                                                                event,
+                                                                                snip)
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+                                        pullToRefresh.isRefreshing = false
+                                        val allSnips = AppClass.getAppInstance().allSnip
+                                        val allParentSnip =
+                                                AppClass.getAppInstance().allParentSnip
+                                        //  if (mainRecyclerAdapter == null) {
+                                        val layoutManager: RecyclerView.LayoutManager =
+                                                LinearLayoutManager(requireActivity())
+                                        mainCategoryRecycler.layoutManager =
+                                                layoutManager
+                                        mainRecyclerAdapter =
+                                                MainRecyclerAdapter(requireActivity(),
+                                                        allParentSnip,
+                                                        allSnips,
+                                                        viewChange)
+                                        mainCategoryRecycler.adapter =
+                                                mainRecyclerAdapter
+                                        //                                }
+                                        mainRecyclerAdapter?.notifyDataSetChanged()
                                     }
-                                    pullToRefresh.isRefreshing = false
-                                    val allSnips = AppClass.getAppInstance().allSnip
-                                    val allParentSnip =
-                                        AppClass.getAppInstance().allParentSnip
-                                    //  if (mainRecyclerAdapter == null) {
-                                    val layoutManager: RecyclerView.LayoutManager =
-                                        LinearLayoutManager(requireActivity())
-                                    mainCategoryRecycler.layoutManager =
-                                        layoutManager
-                                    mainRecyclerAdapter =
-                                        MainRecyclerAdapter(requireActivity(),
-                                            allParentSnip,
-                                            allSnips,
-                                            viewChange)
-                                    mainCategoryRecycler.adapter =
-                                        mainRecyclerAdapter
-                                    //                                }
-                                    mainRecyclerAdapter?.notifyDataSetChanged()
                                 }
                             }
                         }
-                    }
                 )
             }
         })
@@ -451,7 +469,7 @@ class FragmentGalleryNew : Fragment() {
         for (i in 1 until hdSnips.size) {
             if (hdSnips[i - 1].snip_id == hdSnips[i].snip_id) {
 //                hdSnips.removeAt(i - 1)
-                removableElement.add(hdSnips[i -1])
+                removableElement.add(hdSnips[i - 1])
             }
         }
         removableElement.forEach{
@@ -493,9 +511,9 @@ class FragmentGalleryNew : Fragment() {
             //        if (Environment.getExternalStorageState() == null) {
             //create new file directory object
             directory = File(requireActivity().dataDir
-                .toString() + "/" + VIDEO_DIRECTORY_NAME + "/")
+                    .toString() + "/" + VIDEO_DIRECTORY_NAME + "/")
             photoDirectory = File(requireActivity().dataDir
-                .toString() + "/" + VIDEO_DIRECTORY_NAME + "/" + THUMBS_DIRECTORY_NAME + "/")
+                    .toString() + "/" + VIDEO_DIRECTORY_NAME + "/" + THUMBS_DIRECTORY_NAME + "/")
             if (photoDirectory.exists()) {
                 val dirFiles = photoDirectory.listFiles()
                 if (dirFiles != null && dirFiles.size != 0) {
