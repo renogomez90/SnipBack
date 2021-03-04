@@ -268,6 +268,7 @@ class FragmentGalleryNew : Fragment() {
 //        loadGalleryDataFromDB()
         loadData()
         startPostponedEnterTransition()
+        updateViewButtonUI(viewButtonClicked)
 
 
 //        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
