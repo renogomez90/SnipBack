@@ -2361,7 +2361,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         swipeDetector.onScroll { percentX, _ ->
             // left swipe is positive, right is negative
 
-            val maxPercent = 0.75f
+            val maxPercent = 0.4f   //  0.75F
             val scaledPercent = percentX * maxPercent
             val percentOfDuration = scaledPercent * -1 * maxDuration + startScrollingSeekPosition
 
@@ -2518,15 +2518,19 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 if (newSeekPosition >= player.contentDuration && player.currentWindowIndex == 0) {
                     if (player.hasNext()) {
                         player.next()
-                        startScrollingSeekPosition = 0
+                        player.setSeekParameters(SeekParameters.EXACT)
                         player.seekTo(1, 0)
+                        startScrollingSeekPosition = player.currentPosition
+                        return@onScroll
                     }
                 }
                 if (newSeekPosition <= 0L && player.currentWindowIndex == 1) {
                     if (player.hasPrevious()) {
                         player.previous()
-                        startScrollingSeekPosition = bufferDuration
+                        player.setSeekParameters(SeekParameters.EXACT)
                         player.seekTo(0, bufferDuration)
+                        startScrollingSeekPosition = player.currentPosition
+                        return@onScroll
                     }
                 }
             }
@@ -2860,6 +2864,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     retriever.setDataSource(sorted[0].video_path_processed)
                     bufferDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     retriever.setDataSource(snip!!.videoFilePath)
+                    videoDuration = TimeUnit.SECONDS.toMillis(snip!!.total_video_duration.toLong())
 //                    videoDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                     retriever.release()
 
