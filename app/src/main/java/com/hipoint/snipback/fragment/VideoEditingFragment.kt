@@ -81,118 +81,118 @@ import kotlin.math.*
 
 
 class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRepository.HDSnipResult {
-    private val TAG = VideoEditingFragment::class.java.simpleName
-    private val SAVE_DIALOG = "dialog_save"
+    private val TAG                 = VideoEditingFragment::class.java.simpleName
+    private val SAVE_DIALOG         = "dialog_save"
     private val EXIT_CONFIRM_DIALOG = "dialog_exit_confirm"
-    private val PROCESSING_DIALOG = "dialog_processing"
-    private val retries = 3
+    private val PROCESSING_DIALOG   = "dialog_processing"
+    private val retries             = 3
 
     //    UI
-    private lateinit var rootView: View
-    private lateinit var back: ImageView         //  for leaving the edit fragment
-    private lateinit var back1: ImageView         //  for leaving the ongoing edit
-    private lateinit var save: ImageView         //  saving the edited file
-    private lateinit var accept: ImageView         //  saving the edited file
-    private lateinit var reject: ImageView         //  closing the ongoing edit
-    private lateinit var playCon1: LinearLayout
-    private lateinit var playCon2: LinearLayout
+    private lateinit var rootView          : View
+    private lateinit var back              : ImageView         //  for leaving the edit fragment
+    private lateinit var back1             : ImageView         //  for leaving the ongoing edit
+    private lateinit var save              : ImageView         //  saving the edited file
+    private lateinit var accept            : ImageView         //  saving the edited file
+    private lateinit var reject            : ImageView         //  closing the ongoing edit
+    private lateinit var playCon1          : LinearLayout
+    private lateinit var playCon2          : LinearLayout
     private lateinit var acceptRejectHolder: LinearLayout
-    private lateinit var speedIndicator: TextView
-    private lateinit var extendTextBtn: TextView          //  extend or trim the video
-    private lateinit var cutTextBtn: TextView
-    private lateinit var highlightTextBtn: TextView
-    private lateinit var slowTextBtn: TextView
-    private lateinit var speedTextBtn: TextView
-    private lateinit var end: TextView
-    private lateinit var start: TextView
-    private lateinit var playBtn: ImageButton       //  playback the video
-    private lateinit var pauseBtn: ImageButton       //  stop video playback
-    private lateinit var toStartBtn: ImageButton       //  seek back to start of video
-    private lateinit var playCon: ConstraintLayout
-    private lateinit var previewTileList: RecyclerView
-    private lateinit var changeList: RecyclerView
-    private lateinit var seekBar: SnipbackTimeBar
-    private lateinit var timebarHolder: FrameLayout
-    private lateinit var colourOverlay: LinearLayout
+    private lateinit var speedIndicator    : TextView
+    private lateinit var extendTextBtn     : TextView          //  extend or trim the video
+    private lateinit var cutTextBtn        : TextView
+    private lateinit var highlightTextBtn  : TextView
+    private lateinit var slowTextBtn       : TextView
+    private lateinit var speedTextBtn      : TextView
+    private lateinit var end               : TextView
+    private lateinit var start             : TextView
+    private lateinit var playBtn           : ImageButton       //  playback the video
+    private lateinit var pauseBtn          : ImageButton       //  stop video playback
+    private lateinit var toStartBtn        : ImageButton       //  seek back to start of video
+    private lateinit var playCon           : ConstraintLayout
+    private lateinit var previewTileList   : RecyclerView
+    private lateinit var changeList        : RecyclerView
+    private lateinit var seekBar           : SnipbackTimeBar
+    private lateinit var timebarHolder     : FrameLayout
+    private lateinit var colourOverlay     : LinearLayout
     private lateinit var previewBarProgress: ProgressBar
-    private lateinit var swipeDetector: SwipeDistanceView //  detects swiping actions for scrolling with preview
+    private lateinit var swipeDetector     : SwipeDistanceView //  detects swiping actions for scrolling with preview
 
     private lateinit var commonTransition: ArrayList<androidx.core.util.Pair<View, String>>
-    private lateinit var editControls: LinearLayout
-    private lateinit var layoutImages: FrameLayout
+    private lateinit var editControls    : LinearLayout
+    private lateinit var layoutImages    : FrameLayout
 
     //horizontal line
     private lateinit var horizontalView: View
 
     //    Exoplayer
     private lateinit var playerView: PlayerView
-    private lateinit var player: SimpleExoPlayer
+    private lateinit var player    : SimpleExoPlayer
 
     //    Snip
     private var snip: Snip? = null
 
     //  adapters
     private var timelinePreviewAdapter: TimelinePreviewAdapter? = null
-    private var editListAdapter: EditChangeListAdapter? = null
+    private var editListAdapter       : EditChangeListAdapter?  = null
 
     //  Seek handling
     private var subscriptions = CompositeDisposable()
-    private var paused = true
+    private var paused        = true
 
     //  speed change
     var isSpeedChanged = false
-    var isEditOnGoing = false
+    var isEditOnGoing  = false
     var isEditExisting = false
     var isSeekbarShown = true
 
     private var tmpSpeedDetails: SpeedDetails? = null
 
     //  extend/trim
-    private var bufferPath = ""
-    private var bufferHdSnipId = 0
-    private var bufferDuration = 0L
-    private var videoDuration = 0L
-    private var showBuffer = false
-    private var trimOnly = false
+    private var bufferPath      = ""
+    private var bufferHdSnipId  = 0
+    private var bufferDuration  = 0L
+    private var videoDuration   = 0L
+    private var showBuffer      = false
+    private var trimOnly        = false
     private var isStartInBuffer = true
-    private var isEndInBuffer = false
+    private var isEndInBuffer   = false
 
     private var trimSegment: RangeSeekbarCustom? = null
 
     //  handling existing edits
-    private var newSpeedChangeStart = false
+    private var newSpeedChangeStart    = false
     private var originalBufferDuration = 0L
-    private var originalVideoDuration = 0L
-    private var editHistory = arrayListOf<EditAction>() //  list of edit actions that were performed
+    private var originalVideoDuration  = 0L
+    private var editHistory            = arrayListOf<EditAction>() //  list of edit actions that were performed
 
     //  once the user decides to save the video after trimming/extending
     private var editedStart = -1L
-    private var editedEnd = -1L
+    private var editedEnd   = -1L
 
-    private var restoreCurrentWindow = 0
-    private var restoreCurrentPoint = 0L
-    private var maxDuration = 0L
-    private var previousMaxDuration = 0L
-    private var previousEditStart = -1L
-    private var previousEditEnd = -1L
+    private var restoreCurrentWindow  = 0
+    private var restoreCurrentPoint   = 0L
+    private var maxDuration           = 0L
+    private var previousMaxDuration   = 0L
+    private var previousEditStart     = -1L
+    private var previousEditEnd       = -1L
     private var previousStartInBuffer = true
-    private var previousEndInBuffer = false
-    private var currentSpeed = 3
-    private var startingTimestamps = -1L
-    private var endingTimestamps = -1L
-    private var segmentCount = 0
-    private var speedDuration = Pair<Long, Long>(0, 0)
-    private var editAction = EditAction.NORMAL
-    private var editSeekAction = EditSeekControl.MOVE_NORMAL
-    private var currentEditSegment = -1
+    private var previousEndInBuffer   = false
+    private var currentSpeed          = 3
+    private var startingTimestamps    = -1L
+    private var endingTimestamps      = -1L
+    private var segmentCount          = 0
+    private var speedDuration         = Pair<Long, Long>(0, 0)
+    private var editAction            = EditAction.NORMAL
+    private var editSeekAction        = EditSeekControl.MOVE_NORMAL
+    private var currentEditSegment    = -1
 
     //  dialogs
-    private var saveDialog: SaveEditDialog? = null
+    private var saveDialog      : SaveEditDialog?             = null
     private var exitConfirmation: ExitEditConfirmationDialog? = null
-    private var processingDialog: ProcessingDialog? = null
+    private var processingDialog: ProcessingDialog?           = null
 
     private var thumbnailExtractionStarted: Boolean = false
-    private var generatePreviewTile: Boolean = true
+    private var generatePreviewTile       : Boolean = true
 
     private var timeStamp: String? = null
 
@@ -215,10 +215,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      *
      * Once this is completed the speed changes are triggered
      */
-    private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+    private val extendTrimReceiver: BroadcastReceiver = object: BroadcastReceiver() {
         var trimmedItemCount = 0
-        var concatOutput: String = ""
-        var fullExtension = false
+        var concatOutput     = ""
+        var fullExtension    = false
 
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
@@ -284,10 +284,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             appRepository.updateSnip(snip!!)
                         }
                         val trimTask = VideoOpItem(
-                                operation = IVideoOpListener.VideoOp.TRIMMED,
-                                clips = arrayListOf(concatOutput),
-                                startTime = editedStart.milliToFloatSecond(),
-                                endTime = editedEnd.milliToFloatSecond(),
+                                operation  = IVideoOpListener.VideoOp.TRIMMED,
+                                clips      = arrayListOf(concatOutput),
+                                startTime  = editedStart.milliToFloatSecond(),
+                                endTime    = editedEnd.milliToFloatSecond(),
                                 outputPath = trimmedOutputPath,
                                 comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -303,11 +303,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         Log.d(TAG, "onReceive: TRIMMED duration = $trimmedDuration")
 
                         val speedChangeTask = VideoOpItem(
-                                operation = IVideoOpListener.VideoOp.SPEED,
-                                clips = arrayListOf(inputName),
-                                outputPath = speedChangedPath,
+                                operation        = IVideoOpListener.VideoOp.SPEED,
+                                clips            = arrayListOf(inputName),
+                                outputPath       = speedChangedPath,
                                 speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
-                                comingFrom = CurrentOperation.VIDEO_EDITING)
+                                comingFrom       = CurrentOperation.VIDEO_EDITING)
 
                         taskList.add(speedChangeTask)
                     }
@@ -600,82 +600,82 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 putInt("currentWindow", player.currentWindowIndex)
                 putLong("currentSeek", player.currentPosition)
             }
-            putInt("currentEditSegment", currentEditSegment)
-            putInt("currentEditSegment", currentEditSegment)
-            putInt("bufferHdSnipId", bufferHdSnipId)
-            putInt("currentSpeed", currentSpeed)
-            putInt("segmentCount", segmentCount)
-            putLong("bufferDuration", bufferDuration)
-            putLong("videoDuration", videoDuration)
-            putLong("originalBufferDuration", originalBufferDuration)
-            putLong("originalVideoDuration", originalVideoDuration)
-            putLong("editedStart", editedStart)
-            putLong("editedEnd", editedEnd)
-            putLong("maxDuration", maxDuration)
-            putLong("previousMaxDuration", previousMaxDuration)
-            putLong("previousEditStart", previousEditStart)
-            putLong("previousEditEnd", previousEditEnd)
-            putLong("startingTimestamps", startingTimestamps)
-            putLong("endingTimestamps", endingTimestamps)
-            putString("bufferPath", bufferPath)
-            putBoolean("isSpeedChanged", isSpeedChanged)
-            putBoolean("isEditOnGoing", isEditOnGoing)
-            putBoolean("isEditExisting", isEditExisting)
-            putBoolean("isSeekbarShown", isSeekbarShown)
-            putBoolean("showBuffer", showBuffer)
-            putBoolean("trimOnly", trimOnly)
-            putBoolean("isStartInBuffer", isStartInBuffer)
-            putBoolean("isEndInBuffer", isEndInBuffer)
+            putInt("currentEditSegment"       , currentEditSegment)
+            putInt("currentEditSegment"       , currentEditSegment)
+            putInt("bufferHdSnipId"           , bufferHdSnipId)
+            putInt("currentSpeed"             , currentSpeed)
+            putInt("segmentCount"             , segmentCount)
+            putLong("bufferDuration"          , bufferDuration)
+            putLong("videoDuration"           , videoDuration)
+            putLong("originalBufferDuration"  , originalBufferDuration)
+            putLong("originalVideoDuration"   , originalVideoDuration)
+            putLong("editedStart"             , editedStart)
+            putLong("editedEnd"               , editedEnd)
+            putLong("maxDuration"             , maxDuration)
+            putLong("previousMaxDuration"     , previousMaxDuration)
+            putLong("previousEditStart"       , previousEditStart)
+            putLong("previousEditEnd"         , previousEditEnd)
+            putLong("startingTimestamps"      , startingTimestamps)
+            putLong("endingTimestamps"        , endingTimestamps)
+            putString("bufferPath"            , bufferPath)
+            putBoolean("isSpeedChanged"       , isSpeedChanged)
+            putBoolean("isEditOnGoing"        , isEditOnGoing)
+            putBoolean("isEditExisting"       , isEditExisting)
+            putBoolean("isSeekbarShown"       , isSeekbarShown)
+            putBoolean("showBuffer"           , showBuffer)
+            putBoolean("trimOnly"             , trimOnly)
+            putBoolean("isStartInBuffer"      , isStartInBuffer)
+            putBoolean("isEndInBuffer"        , isEndInBuffer)
             putBoolean("previousStartInBuffer", previousStartInBuffer)
-            putBoolean("previousEndInBuffer", previousEndInBuffer)
-            putBoolean("paused", paused)
-            putBoolean("newSpeedChangeStart", newSpeedChangeStart)
-            putSerializable("editHistory", editHistory)
-            putSerializable("speedDuration", speedDuration)
-            putSerializable("editAction", editAction)
-            putSerializable("editSeekAction", editSeekAction)
-            putParcelable("tmpSpeedDetails", tmpSpeedDetails)
+            putBoolean("previousEndInBuffer"  , previousEndInBuffer)
+            putBoolean("paused"               , paused)
+            putBoolean("newSpeedChangeStart"  , newSpeedChangeStart)
+            putSerializable("editHistory"     , editHistory)
+            putSerializable("speedDuration"   , speedDuration)
+            putSerializable("editAction"      , editAction)
+            putSerializable("editSeekAction"  , editSeekAction)
+            putParcelable("tmpSpeedDetails"   , tmpSpeedDetails)
         }
     }
 
     private fun restoreFromBundle(inState: Bundle?) {
         inState?.apply {
-            restoreCurrentWindow = getInt("currentWindow")
-            restoreCurrentPoint = getLong("currentSeek")
-            currentEditSegment = getInt("currentEditSegment")
-            bufferHdSnipId = getInt("bufferHdSnipId")
-            currentSpeed = getInt("currentSpeed")
-            segmentCount = getInt("segmentCount")
-            bufferDuration = getLong("bufferDuration")
-            videoDuration = getLong("videoDuration")
+            restoreCurrentWindow   = getInt("currentWindow")
+            restoreCurrentPoint    = getLong("currentSeek")
+            currentEditSegment     = getInt("currentEditSegment")
+            bufferHdSnipId         = getInt("bufferHdSnipId")
+            currentSpeed           = getInt("currentSpeed")
+            segmentCount           = getInt("segmentCount")
+            bufferDuration         = getLong("bufferDuration")
+            videoDuration          = getLong("videoDuration")
             originalBufferDuration = getLong("originalBufferDuration")
-            originalVideoDuration = getLong("originalVideoDuration")
-            editedStart = getLong("editedStart")
-            editedEnd = getLong("editedEnd")
-            maxDuration = getLong("maxDuration")
-            previousMaxDuration = getLong("previousMaxDuration")
-            previousEditStart = getLong("previousEditStart")
-            previousEditEnd = getLong("previousEditEnd")
-            startingTimestamps = getLong("startingTimestamps")
-            endingTimestamps = getLong("endingTimestamps")
-            bufferPath = getString("bufferPath", "")
-            isSpeedChanged = getBoolean("isSpeedChanged")
-            isEditOnGoing = getBoolean("isEditOnGoing")
-            isEditExisting = getBoolean("isEditExisting")
-            isSeekbarShown = getBoolean("isSeekbarShown")
-            showBuffer = getBoolean("showBuffer")
-            trimOnly = getBoolean("trimOnly")
-            isStartInBuffer = getBoolean("isStartInBuffer")
-            isEndInBuffer = getBoolean("isEndInBuffer")
-            previousStartInBuffer = getBoolean("previousStartInBuffer")
-            previousEndInBuffer = getBoolean("previousEndInBuffer")
-            paused = getBoolean("paused")
-            newSpeedChangeStart = getBoolean("newSpeedChangeStart")
-            editHistory = getSerializable("editHistory") as ArrayList<EditAction>
-            speedDuration = getSerializable("speedDuration") as Pair<Long, Long>
-            editAction = getSerializable("editAction") as EditAction
-            editSeekAction = getSerializable("editSeekAction") as EditSeekControl
-            tmpSpeedDetails = getParcelable("tmpSpeedDetails")
+            originalVideoDuration  = getLong("originalVideoDuration")
+            editedStart            = getLong("editedStart")
+            editedEnd              = getLong("editedEnd")
+            maxDuration            = getLong("maxDuration")
+            previousMaxDuration    = getLong("previousMaxDuration")
+            previousEditStart      = getLong("previousEditStart")
+            previousEditEnd        = getLong("previousEditEnd")
+            startingTimestamps     = getLong("startingTimestamps")
+            endingTimestamps       = getLong("endingTimestamps")
+            bufferPath             = getString("bufferPath", "")
+            isSpeedChanged         = getBoolean("isSpeedChanged")
+            isEditOnGoing          = getBoolean("isEditOnGoing")
+            isEditExisting         = getBoolean("isEditExisting")
+            isSeekbarShown         = getBoolean("isSeekbarShown")
+            showBuffer             = getBoolean("showBuffer")
+            trimOnly               = getBoolean("trimOnly")
+            isStartInBuffer        = getBoolean("isStartInBuffer")
+            isEndInBuffer          = getBoolean("isEndInBuffer")
+            previousStartInBuffer  = getBoolean("previousStartInBuffer")
+            previousEndInBuffer    = getBoolean("previousEndInBuffer")
+            paused                 = getBoolean("paused")
+            newSpeedChangeStart    = getBoolean("newSpeedChangeStart")
+            editHistory            = getSerializable("editHistory") as ArrayList<EditAction>
+            speedDuration          = getSerializable("speedDuration") as Pair<Long, Long>
+            editAction             = getSerializable("editAction") as EditAction
+            editSeekAction         = getSerializable("editSeekAction") as EditSeekControl
+            tmpSpeedDetails        = getParcelable("tmpSpeedDetails")
         }
     }
 
@@ -715,37 +715,37 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      */
     private fun bindViews() {
         with(rootView) {
-            playerView = findViewById(R.id.player_view)
-            playCon = findViewById(R.id.play_con)
-            playCon1 = findViewById(R.id.play_con1)
-            playCon2 = findViewById(R.id.play_con2)
+            playerView         = findViewById(R.id.player_view)
+            playCon            = findViewById(R.id.play_con)
+            playCon1           = findViewById(R.id.play_con1)
+            playCon2           = findViewById(R.id.play_con2)
             acceptRejectHolder = findViewById(R.id.accept_reject_holder)
-            speedIndicator = findViewById(R.id.speed_indicator)
-            extendTextBtn = findViewById(R.id.extent_text)
-            cutTextBtn = findViewById(R.id.cut_text_btn)
-            highlightTextBtn = findViewById(R.id.highlight_text_btn)
-            slowTextBtn = findViewById(R.id.slow_text_btn)
-            speedTextBtn = findViewById(R.id.speedup_text_btn)
-            save = findViewById(R.id.save)
-            accept = findViewById(R.id.accept)
-            end = findViewById(R.id.end)
-            start = findViewById(R.id.start)
-            reject = findViewById(R.id.reject)
-            playBtn = findViewById(R.id.exo_play)
-            pauseBtn = findViewById(R.id.exo_pause)
-            toStartBtn = findViewById(R.id.toStartBtn)
-            back = findViewById(R.id.back)
-            back1 = findViewById(R.id.back1)
-            seekBar = findViewById(R.id.exo_progress)
-            timebarHolder = findViewById(R.id.timebar_holder)
-            colourOverlay = findViewById(R.id.colour_overlay)
-            previewTileList = findViewById(R.id.previewFrameList)
-            changeList = findViewById(R.id.change_list)
+            speedIndicator     = findViewById(R.id.speed_indicator)
+            extendTextBtn      = findViewById(R.id.extent_text)
+            cutTextBtn         = findViewById(R.id.cut_text_btn)
+            highlightTextBtn   = findViewById(R.id.highlight_text_btn)
+            slowTextBtn        = findViewById(R.id.slow_text_btn)
+            speedTextBtn       = findViewById(R.id.speedup_text_btn)
+            save               = findViewById(R.id.save)
+            accept             = findViewById(R.id.accept)
+            end                = findViewById(R.id.end)
+            start              = findViewById(R.id.start)
+            reject             = findViewById(R.id.reject)
+            playBtn            = findViewById(R.id.exo_play)
+            pauseBtn           = findViewById(R.id.exo_pause)
+            toStartBtn         = findViewById(R.id.toStartBtn)
+            back               = findViewById(R.id.back)
+            back1              = findViewById(R.id.back1)
+            seekBar            = findViewById(R.id.exo_progress)
+            timebarHolder      = findViewById(R.id.timebar_holder)
+            colourOverlay      = findViewById(R.id.colour_overlay)
+            previewTileList    = findViewById(R.id.previewFrameList)
+            changeList         = findViewById(R.id.change_list)
             previewBarProgress = findViewById(R.id.previewBarProgress)
-            swipeDetector = findViewById(R.id.edit_swipe_detector)
+            swipeDetector      = findViewById(R.id.edit_swipe_detector)
 
-            editControls = findViewById(R.id.edit_controls)
-            layoutImages = findViewById(R.id.layout_images)
+            editControls   = findViewById(R.id.edit_controls)
+            layoutImages   = findViewById(R.id.layout_images)
             horizontalView = findViewById(R.id.separator)
         }
 
@@ -960,11 +960,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         if (tmpSpeedDetails == null) {
                             tmpSpeedDetails = SpeedDetails(
                                     startWindowIndex = startWindow,
-                                    endWindowIndex = endWindow,
-                                    isFast = editAction == EditAction.FAST,
-                                    multiplier = getCurrentEditSpeed(),
-                                    timeDuration = speedDuration
-                            )
+                                    endWindowIndex   = endWindow,
+                                    isFast           = editAction == EditAction.FAST,
+                                    multiplier       = getCurrentEditSpeed(),
+                                    timeDuration     = speedDuration)
 
                             speedDetailSet.add(tmpSpeedDetails!!)
 
@@ -2427,7 +2426,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                             }
                         }
 
-                        uiRangeSegments!![currentEditSegment].setMinStartValue(startValue.toFloat()).apply()
+                        uiRangeSegments!![currentEditSegment].setMinStartValue(startValue).apply()
                     }
                     EditSeekControl.MOVE_END -> {
                         if (newSeekPosition < startingTimestamps && !showBuffer) {

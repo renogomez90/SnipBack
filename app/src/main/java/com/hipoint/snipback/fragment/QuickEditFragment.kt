@@ -369,9 +369,9 @@ class QuickEditFragment: Fragment() {
 //        (activity as AppMainActivity?)?.showStatusBar()
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         // reset edit markers and startWindow on Destroy
-        editedStart=-1L
-        editedEnd=-1L
-        startWindow=0
+        editedStart = -1L
+        editedEnd   = -1L
+        startWindow = 0
         super.onDestroy()
     }
 
@@ -504,40 +504,45 @@ class QuickEditFragment: Fragment() {
             // saves the current end point if available
             if(editedEnd != maxDuration){
                 endWindow = player.currentWindowIndex
-                editedEnd = if(endWindow == 0)
-                    player.currentPosition
-                else
-                    player.currentPosition + bufferDuration
+                editedEnd = getCorrectedTimebarPosition()
             }
 
             // update button UI and flags
             startRangeUI()
             seekAction = EditSeekControl.MOVE_START
 
-            if(editedStart < 0)
+            if(editedStart < 0) {
+                player.setSeekParameters(SeekParameters.EXACT)
                 player.seekTo(0, bufferDuration)
-            else
+            }else {
+                player.setSeekParameters(SeekParameters.EXACT)
                 player.seekTo(startWindow, editedStart)
+            }
         }
 
         end.setOnClickListener {
             // saves the current start point
             startWindow = player.currentWindowIndex
-            editedStart = if(startWindow == 0)
-                player.currentPosition
-            else
-                player.currentPosition + bufferDuration
+            editedStart = getCorrectedTimebarPosition()
 
             // update button UI and flags
             endRangeUI()
             seekAction = EditSeekControl.MOVE_END
 
             //  moves the cursor to required point
-            if(editedEnd < 0)
+            if(editedEnd < 0) {
+                player.setSeekParameters(SeekParameters.EXACT)
                 player.seekTo(1, videoDuration)
-            else
-                player.seekTo(endWindow, editedEnd)
+            }
+            else {
+                player.setSeekParameters(SeekParameters.EXACT)
+                if (endWindow == 0)
+                    player.seekTo(endWindow, editedEnd)
+                else
+                    player.seekTo(endWindow, editedEnd - bufferDuration)
+            }
         }
+
         editBackBtn.setOnClickListener {
 
         }
@@ -621,6 +626,7 @@ class QuickEditFragment: Fragment() {
                 if (player.hasNext()) {
                     player.next()
                     startScrollingSeekPosition = 0
+                    player.setSeekParameters(SeekParameters.EXACT)
                     player.seekTo(startScrollingSeekPosition)
                 }
             }
@@ -628,12 +634,13 @@ class QuickEditFragment: Fragment() {
                 if (player.hasPrevious()) {
                     player.previous()
                     startScrollingSeekPosition = bufferDuration
+                    player.setSeekParameters(SeekParameters.EXACT)
                     player.seekTo(startScrollingSeekPosition)
                 }
             }
 
-            if(player.currentPosition in ((player.duration - 1500) .. player.duration) ||
-                    player.currentPosition in 0 .. 1000){
+            if(player.currentPosition > (player.duration - 1500) ||
+                    player.currentPosition < 1500){
                 player.setSeekParameters(SeekParameters.EXACT)
             }else {
                 player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
@@ -641,7 +648,7 @@ class QuickEditFragment: Fragment() {
 
             when (seekAction) {
                 EditSeekControl.MOVE_START -> {
-                    editedStart = getCorrectedTimebarPosition()
+                    editedStart = getCorrectedSeek(newSeekPosition)
                     if (player.currentWindowIndex == 1) {
                         if (newSeekPosition + bufferDuration > editedEnd) {
                             editedStart = editedEnd - 50
@@ -655,28 +662,31 @@ class QuickEditFragment: Fragment() {
                         }
                         startWindow = 0
                     }
-                    trimSegment.setMinStartValue(floor(editedStart.toFloat() * 100 / maxDuration).toFloat()).apply()
+                    trimSegment.setMinStartValue(floor(editedStart.toFloat() * 100 / maxDuration).toFloat())
+                        .apply()
                     trimSegment.setMaxStartValue((editedEnd.toFloat() * 100 / maxDuration).roundToInt().toFloat()).apply()
                 }
                 EditSeekControl.MOVE_END -> {
-                    editedEnd = getCorrectedTimebarPosition()
-                    if(player.currentWindowIndex == 1){
-                        if(newSeekPosition + bufferDuration < editedStart){
+                    editedEnd = getCorrectedSeek(newSeekPosition)
+                    if (player.currentWindowIndex == 1) {
+                        if (newSeekPosition + bufferDuration < editedStart) {
                             editedEnd = editedStart + 50
                             newSeekPosition = editedEnd - bufferDuration
                         }
                         endWindow = 1
-                    }else {
-                        if(newSeekPosition < editedStart){
+                    } else {
+                        if (newSeekPosition < editedStart) {
                             editedEnd = editedStart + 50
                             newSeekPosition = editedEnd
                         }
                         endWindow = 0
                     }
                     //  if endingTimestamps are near max duration we probably need to make that max duration
-                    if(editedEnd > maxDuration - 50)
+                    if (editedEnd > (maxDuration - 50))
                         editedEnd = maxDuration
-                    trimSegment.setMaxStartValue((editedEnd.toFloat() * 100 / maxDuration).roundToInt().toFloat()).apply()
+                    trimSegment.setMaxStartValue((editedEnd.toFloat() * 100 / maxDuration).roundToInt()
+                        .toFloat()).apply()
+                    Log.d(TAG, "initSwipeControls: edited end = $editedEnd")
                 }
                 else -> {}
             }
@@ -697,14 +707,13 @@ class QuickEditFragment: Fragment() {
 
             //  if we are scrolling to the beginning of the video or to the end, seek exactly
             if(player.currentWindowIndex == 0) {
-                if (newSeekPosition in 0..1500 ||
-                    newSeekPosition in ((maxDuration - 1500)..maxDuration)
-                ) {
+                if (newSeekPosition < 1500 ||
+                    newSeekPosition > (maxDuration - 1500)) {
                     player.setSeekParameters(SeekParameters.EXACT)
                 }
             } else {
-                if(newSeekPosition in 0 .. 1500 ||
-                    newSeekPosition in ((maxDuration - bufferDuration - 1500) .. (maxDuration - bufferDuration))){
+                if(newSeekPosition < 1500 ||
+                    newSeekPosition > (maxDuration - bufferDuration - 1500)){
                     player.setSeekParameters(SeekParameters.EXACT)
                 }
             }
@@ -755,6 +764,17 @@ class QuickEditFragment: Fragment() {
                 maxDuration
             else
                 player.currentPosition + bufferDuration
+        }
+    }
+
+    private fun getCorrectedSeek(newPos: Long): Long {
+        return if(player.currentWindowIndex == 0){
+            newPos
+        }else{  //  exoplayer can be messed up
+            if (newPos + bufferDuration >= maxDuration)
+                maxDuration
+            else
+                newPos + bufferDuration
         }
     }
 
