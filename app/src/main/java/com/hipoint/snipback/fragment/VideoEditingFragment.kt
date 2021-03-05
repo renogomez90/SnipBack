@@ -369,7 +369,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         var snip: Snip? = null
                         var tries = 0
                         while (snip == null && tries < 5) {
-                            delay(50)
+                            delay(100)
                             snip = appRepository.getSnipByVideoPath(processedVideoPath)
                             tries++
                         }

@@ -10,6 +10,7 @@ import android.media.MediaMetadataRetriever
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
@@ -18,6 +19,7 @@ import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import androidx.transition.Slide
 import com.exozet.android.core.utils.FragmentExtensions.setCustomAnimations
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.Utils.isPathInList
@@ -189,17 +191,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     //    public void loadFragment(Fragment fragment,boolean addtoBackStack) {
     fun loadFragment(fragment: Fragment, addToBackStack: Boolean) {
         val ft = supportFragmentManager.beginTransaction()
-        ft.setCustomAnimations(
-                R.anim.slide_in_left_to_right,
-                R.anim.slide_out_left_to_right,
-                R.anim.slide_in_right_to_left,
-                R.anim.slide_out_right_to_left)
-//        ft.setCustomAnimations(
-//                R.anim.slide_in,
-//                R.anim.fade_out,
-//                R.anim.fade_in,
-//                R.anim.slide_out
-//        )
 
         val tag = when (fragment) {
             is VideoMode -> VIDEO_MODE_TAG
@@ -209,6 +200,24 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             is QuickEditFragment -> QUICK_EDIT_TAG
             is SnapbackFragment -> SNAPBACK_VIDEO_TAG
             else -> ""
+        }
+
+        /*ft.setCustomAnimations(
+            R.anim.slide_in_left_to_right,
+            R.anim.slide_out_left_to_right,
+            R.anim.slide_in_right_to_left,
+            R.anim.slide_out_right_to_left)*/
+        if(tag == GALLERY_FRAGMENT_TAG){
+            fragment.apply {
+                enterTransition = Slide(Gravity.END)
+                exitTransition = Slide(Gravity.START)
+            }
+        }else {
+            ft.setCustomAnimations(
+                R.anim.slide_in_left_to_right,
+                R.anim.slide_out_left_to_right,
+                R.anim.slide_in_right_to_left,
+                R.anim.slide_out_right_to_left)
         }
 
         //  don't add is already present

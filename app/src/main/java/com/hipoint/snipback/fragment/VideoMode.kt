@@ -462,26 +462,26 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Binds views to references
      * */
     private fun bindViews() {
-        rlVideo           = rootView.findViewById(R.id.rl_video)
-        gallery           = rootView.findViewById(R.id.gallery_btn)
-        settings          = rootView.findViewById(R.id.menu_btn)
-        capturePrevious   = rootView.findViewById(R.id.back_video_btn)
-        changeCamera      = rootView.findViewById(R.id.switch_cam_btn)
-        recordButton      = rootView.findViewById(R.id.rec)
-        mChronometer      = rootView.findViewById(R.id.chronometer)
-        mTextureView      = rootView.findViewById(R.id.texture)
-        blinkEffect       = rootView.findViewById(R.id.overlay)
-        recStartLayout    = rootView.findViewById(R.id.rec_start_container)
-        bottomContainer   = rootView.findViewById(R.id.bottom_cont)
-        recordStopButton  = rootView.findViewById(R.id.rec_stop)
-        seekBar           = rootView.findViewById(R.id.zoom_controller)
-        r3Bookmark        = rootView.findViewById(R.id.r_3_bookmark)
-        r2Shutter         = rootView.findViewById(R.id.r_2_shutter)
-        takePhoto         = rootView.findViewById(R.id.shutter_btn)
-        snapbackBtn       = rootView.findViewById(R.id.back_photo_btn)
-        zoomFactor        = rootView.findViewById(R.id.zoom_factor)
-        swipeDetection    = rootView.findViewById(R.id.swipeDetection)
-        focusOverlay    = rootView.findViewById(R.id.focus_overlay)
+        rlVideo          = rootView.findViewById(R.id.rl_video)
+        gallery          = rootView.findViewById(R.id.gallery_btn)
+        settings         = rootView.findViewById(R.id.menu_btn)
+        capturePrevious  = rootView.findViewById(R.id.back_video_btn)
+        changeCamera     = rootView.findViewById(R.id.switch_cam_btn)
+        recordButton     = rootView.findViewById(R.id.rec)
+        mChronometer     = rootView.findViewById(R.id.chronometer)
+        mTextureView     = rootView.findViewById(R.id.texture)
+        blinkEffect      = rootView.findViewById(R.id.overlay)
+        recStartLayout   = rootView.findViewById(R.id.rec_start_container)
+        bottomContainer  = rootView.findViewById(R.id.bottom_cont)
+        recordStopButton = rootView.findViewById(R.id.rec_stop)
+        seekBar          = rootView.findViewById(R.id.zoom_controller)
+        r3Bookmark       = rootView.findViewById(R.id.r_3_bookmark)
+        r2Shutter        = rootView.findViewById(R.id.r_2_shutter)
+        takePhoto        = rootView.findViewById(R.id.shutter_btn)
+        snapbackBtn      = rootView.findViewById(R.id.back_photo_btn)
+        zoomFactor       = rootView.findViewById(R.id.zoom_factor)
+        swipeDetection   = rootView.findViewById(R.id.swipeDetection)
+        focusOverlay     = rootView.findViewById(R.id.focus_overlay)
     }
 
     /**
@@ -529,7 +529,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 val h = (time / 3600000).toInt()
                 val m = (time - h * 3600000).toInt() / 60000
                 val s = (time - h * 3600000 - m * 60000).toInt() / 1000
-                val t = (if (h < 10) "0$h" else h.toString()) + ":" + (if (m < 10) "0$m" else m) + ":" + if (s < 10) "0$s" else s
+                val t = "${if (h < 10) "0$h" else h.toString()}:${if (m < 10) "0$m" else m}:${if (s < 10) "0$s" else s}"
                 mChronometer.text = t
                 val minutes = (SystemClock.elapsedRealtime() - mChronometer.base) / 1000 / 60
                 val seconds = (SystemClock.elapsedRealtime() - mChronometer.base) / 1000 % 60
@@ -1579,7 +1579,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             userRecordDuration = timerSecond
             mChronometer.stop()
             mChronometer.visibility = View.INVISIBLE
-            mChronometer.text = ""
+            mChronometer.text = "00:00:00"
         }
     }
 
