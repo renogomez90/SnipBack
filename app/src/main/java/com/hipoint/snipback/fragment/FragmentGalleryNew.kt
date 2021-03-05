@@ -92,8 +92,7 @@ class FragmentGalleryNew : Fragment() {
             savedInstanceState: Bundle?,
     ): View? {
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
-        if(requireActivity().supportFragmentManager.backStackEntryCount > 2)
-            postponeEnterTransition()
+        postponeEnterTransition()
         rootView       = inflater.inflate(R.layout.fragment_gallery_new, container, false)
         retainInstance = true
 
@@ -284,12 +283,10 @@ class FragmentGalleryNew : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        startPostponedEnterTransition()
 //        loadGalleryDataFromDB()
         loadData()
-        if(requireActivity().supportFragmentManager.backStackEntryCount > 2)
-            startPostponedEnterTransition()
         updateViewButtonUI(viewButtonClicked)
-
 
 //        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
 //            loadGalleryDataFromDB();
