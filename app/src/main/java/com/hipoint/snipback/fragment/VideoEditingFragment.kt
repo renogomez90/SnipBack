@@ -1731,7 +1731,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 endingTimestamps = if (editedEnd < 0) {
                     bufferDuration + videoDuration
                 } else {
-                    previousEditEnd
+                    if(isEndInBuffer)
+                        previousEditEnd
+                    else
+                        originalBufferDuration + previousEditEnd
                 }
                 //rounded to int
                 maxDuration = bufferDuration + videoDuration
