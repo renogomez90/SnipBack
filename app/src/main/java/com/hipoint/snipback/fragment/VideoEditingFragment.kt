@@ -2903,6 +2903,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * saves as a new file
      * */
     override fun saveAs() {
+        player.playWhenReady = false
+        player.seekTo(0,0)
         saveAction = SaveActionType.SAVE_AS
         saveDialog?.dismiss()
         showProgress()
@@ -2935,6 +2937,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * save over existing file
      * */
     override fun save() {
+        player.playWhenReady = false
+        player.seekTo(0,0)
         saveAction = SaveActionType.SAVE
         saveDialog?.dismiss()
         showProgress()
