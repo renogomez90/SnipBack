@@ -29,6 +29,11 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
         this.viewChangeValue = viewChange;
     }
 
+    @Override
+    public long getItemId(int position) {
+        return (long) position;
+    }
+
     @NonNull
     @Override
     public ParentItemViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

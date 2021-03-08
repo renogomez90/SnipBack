@@ -268,6 +268,7 @@ class FragmentGalleryNew : Fragment() {
         val allParentSnip = AppClass.getAppInstance().allParentSnip
         mainRecyclerAdapter =
             MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange)
+        mainRecyclerAdapter!!.setHasStableIds(true)
         mainCategoryRecycler.adapter = mainRecyclerAdapter
         mainRecyclerAdapter?.notifyDataSetChanged()
     }

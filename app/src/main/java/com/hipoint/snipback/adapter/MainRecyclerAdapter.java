@@ -43,6 +43,11 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         this.viewChangeValue = viewChange;
     }
 
+    @Override
+    public long getItemId(int position) {
+        return (long) position;
+    }
+
     public void updateData(List<EventData> updatedAllParentSnip, List<EventData> updatedAllEventSnip, String updatedViewChange){
         /*GalleryDiffUtlCallback parentDiffCallback = new GalleryDiffUtlCallback(this.parentSnips, updatedAllParentSnip);
         GalleryDiffUtlCallback snipDiffCallback = new GalleryDiffUtlCallback(this.allSnips, updatedAllEventSnip);
@@ -103,6 +108,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange) {
         int spanCount = getSpanCount();
         ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange);
+        itemRecyclerAdapter.setHasStableIds(true);
         itemRecyclerAdapter.notifyDataSetChanged();
 //        recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
         GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount, RecyclerView.VERTICAL, false);
