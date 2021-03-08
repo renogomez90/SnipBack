@@ -283,6 +283,8 @@ class FragmentGalleryNew : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        (requireActivity() as AppMainActivity).hideOrShowProgress(visible = false)
+
         startPostponedEnterTransition()
 //        loadGalleryDataFromDB()
         loadData()

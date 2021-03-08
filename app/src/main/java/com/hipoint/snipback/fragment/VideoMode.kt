@@ -563,6 +563,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * */
     override fun onResume() {
         super.onResume()
+        (requireActivity() as AppMainActivity).hideOrShowProgress(visible = true)
+
         if(cameraControl == null){
             setupCameraControl()
         }

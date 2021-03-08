@@ -7,14 +7,19 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@android:color/transparent"
         android:id="@+id/mainFragment" >
 
         <ProgressBar
             android:layout_width="wrap_content"
+            android:id="@+id/galleryLoader"
             android:layout_height="wrap_content"
+            android:progressTint="@android:color/transparent"
             android:layout_gravity="center_horizontal"
             android:layout_marginTop="100dp"
+            android:progressBackgroundTint="@android:color/transparent"
+            android:backgroundTint="@android:color/transparent"
             android:indeterminateTint="@color/white"
-            android:background="@color/colorPrimary"/>
+            android:background="@android:color/transparent"/>
     </FrameLayout>
 </RelativeLayout>

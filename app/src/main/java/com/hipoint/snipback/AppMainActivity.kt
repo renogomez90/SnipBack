@@ -14,6 +14,8 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
+import android.widget.ProgressBar
+import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
@@ -71,6 +73,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     private var addedToSnip     : ArrayList<String>               = arrayListOf()
 
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
+    private lateinit var galleryLoader                        : ProgressBar
+
 
     /**
      * Registers a listener for receiving service broadcast for video operation status
@@ -84,6 +88,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.appmain_activity)
+        galleryLoader          = findViewById(R.id.galleryLoader)
+
         if (onTouchListeners == null) {
             onTouchListeners = ArrayList()
         }
@@ -139,6 +145,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                 or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION)
+    }
+    public fun hideOrShowProgress(visible:Boolean){
+        if (visible){
+            galleryLoader.visibility=View.GONE
+        } else{
+            galleryLoader.visibility=View.VISIBLE
+        }
     }
 
     override fun onDestroy() {
