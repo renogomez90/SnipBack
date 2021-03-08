@@ -43,6 +43,7 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import kotlin.math.floor
 
 class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted {
     private val TAG = VideoOperationReceiver::class.java.simpleName
@@ -563,9 +564,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         filePathList.forEach {
             try {
                 retriever.setDataSource(it)
-                duration = TimeUnit.MILLISECONDS.toSeconds(
-                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
-                ).toInt()
+                duration = floor(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toFloat()/1000).toInt()
+
                 durationList.add(duration)
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()
