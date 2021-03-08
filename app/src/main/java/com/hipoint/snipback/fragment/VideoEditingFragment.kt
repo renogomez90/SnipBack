@@ -1152,8 +1152,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         playBtn.setOnClickListener {
-            if (player.currentPosition >= maxDuration)
+            if (player.currentWindowIndex == 1 && player.currentPosition >= videoDuration ||
+                    player.currentPosition >= maxDuration)
                 player.seekTo(0, 0)
+
             playVideo()
 
             setupProgressTracker()
