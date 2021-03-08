@@ -1187,12 +1187,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 reject.performClick()
             }
 
-            jumpToEndOfPreviousEdit()
-
             val currentPosition = player.currentPosition
             editAction = EditAction.SLOW
             setIconActive()
             if (!isEditOnGoing) {
+                jumpToEndOfPreviousEdit()
                 handleNewSpeedChange(currentPosition)
             } else {
                 //  update the currently changing section to slow
@@ -1209,12 +1208,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 reject.performClick()
             }
 
-            jumpToEndOfPreviousEdit()
-
             val currentPosition = player.currentPosition
             editAction = EditAction.FAST
             setIconActive()
             if (!isEditOnGoing) {  //  we are editing afresh
+                jumpToEndOfPreviousEdit()
                 handleNewSpeedChange(currentPosition)
             } else {
 //                isEditExisting = true
