@@ -20,10 +20,11 @@
         android:id="@+id/progressContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="100dp"
         android:gravity="center"
-        android:layout_marginBottom="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:orientation="horizontal"
+        android:background="@color/blackOverlay"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf= "@+id/iconContainer"
@@ -67,11 +68,35 @@
         <com.hipoint.snipback.Utils.SnipbackTimeBar
             android:id="@id/exo_progress"
             style="@style/Base.Widget.AppCompat.SeekBar"
-            android:layout_width="match_parent"
-            android:layout_gravity="center"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:theme="@style/SeekBar"
-           />
+            android:layout_weight="1"
+            android:layout_gravity="center"
+            android:theme="@style/SeekBar"/>
+
+        <LinearLayout
+            android:id="@+id/switch_holder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginEnd="10dp">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/keep_video_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_gravity="center_vertical"
+                android:text="Keep Video"
+                android:textSize="15sp"
+                android:textColor="@color/white"/>
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout

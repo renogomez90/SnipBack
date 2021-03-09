@@ -17,113 +17,155 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:background="#44AA0000" />
 
-    <com.hipoint.snipback.Utils.SnipbackTimeBar
-        android:id="@id/exo_progress"
-        style="@style/Base.Widget.AppCompat.SeekBar"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="8dp"
-        android:theme="@style/SeekBar"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <RelativeLayout
-        android:id="@+id/back_arrow"
-        android:layout_width="43dp"
-        android:layout_height="43dp"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="37dp"
-        android:layout_marginBottom="12dp"
-        android:background="@drawable/background_black_round"
-        android:gravity="center"
+        android:orientation="vertical"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/exo_progress"
-        app:layout_constraintEnd_toStartOf="@id/button_gallery">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
-        <ImageView
-            android:layout_width="20dp"
-            android:layout_height="12dp"
-            android:contentDescription="@string/no_desc"
-            android:src="@drawable/ic_back_arrow" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:id="@+id/button_gallery"
-        android:layout_width="43dp"
-        android:layout_height="43dp"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="24dp"
-        android:layout_marginBottom="12dp"
-        android:layout_toEndOf="@id/back_arrow"
-        android:background="@drawable/background_black_round"
-        android:gravity="center"
-        app:layout_constraintBottom_toTopOf="@id/exo_progress"
-        app:layout_constraintStart_toEndOf="@id/back_arrow">
-
-        <ImageView
-            android:layout_width="19dp"
-            android:layout_height="13dp"
-            android:contentDescription="@string/no_desc"
-            android:src="@drawable/ic_gallery" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:id="@+id/button_capture"
-        android:layout_width="43dp"
-        android:layout_height="43dp"
-        android:layout_alignParentBottom="true"
-        android:layout_marginStart="24dp"
-        android:layout_marginBottom="12dp"
-        android:layout_toEndOf="@id/button_gallery"
-        android:background="@drawable/background_black_round"
-        android:gravity="center"
-        app:layout_constraintBottom_toTopOf="@id/exo_progress"
-        app:layout_constraintStart_toEndOf="@id/button_gallery">
-
-        <ImageView
-            android:layout_width="19dp"
-            android:layout_height="13dp"
-            android:contentDescription="@string/no_desc"
-            android:src="@drawable/ic_shutter" />
-    </RelativeLayout>
-
-    <LinearLayout
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_marginEnd="32dp"
+            android:layout_marginStart="16dp"
             android:layout_marginBottom="6dp"
-            android:background="@drawable/background_video_timer"
-            app:layout_constraintBottom_toTopOf="@id/exo_progress"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:background="@drawable/background_video_timer">
 
-        <TextView
+            <TextView
                 android:id="@+id/exo_position"
                 android:layout_width="50dp"
                 android:layout_height="32dp"
                 android:fontFamily="@font/barlow_semibold"
                 android:gravity="center"
-                android:text="00:00/00:08"
+                android:text="00:00"
                 android:textColor="@color/colorPrimaryWhite"
                 android:textSize="15sp" />
 
-        <TextView
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="/"
                 android:textColor="@color/colorPrimaryWhite" />
 
-        <TextView
+            <TextView
                 android:id="@+id/exo_duration"
                 android:layout_width="50dp"
                 android:layout_height="32dp"
                 android:fontFamily="@font/barlow_semibold"
                 android:gravity="center"
-                android:text="00:00/00:08"
+                android:text="00:00"
                 android:textColor="@color/colorPrimaryWhite"
                 android:textSize="15sp" />
-    </LinearLayout>
+        </LinearLayout>
 
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="16dp"
+            android:paddingBottom="16dp"
+            android:background="@color/blackOverlay">
+            
+            <com.hipoint.snipback.Utils.SnipbackTimeBar
+                android:id="@id/exo_progress"
+                style="@style/Base.Widget.AppCompat.SeekBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="8dp"
+                android:theme="@style/SeekBar"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <RelativeLayout
+                android:id="@+id/back_arrow"
+                android:layout_width="43dp"
+                android:layout_height="43dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="37dp"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/background_black_round"
+                android:gravity="center"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/exo_progress"
+                app:layout_constraintEnd_toStartOf="@id/button_gallery">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="12dp"
+                    android:contentDescription="@string/no_desc"
+                    android:src="@drawable/ic_back_arrow" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/button_gallery"
+                android:layout_width="43dp"
+                android:layout_height="43dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="24dp"
+                android:layout_marginBottom="12dp"
+                android:layout_toEndOf="@id/back_arrow"
+                android:background="@drawable/background_black_round"
+                android:gravity="center"
+                app:layout_constraintTop_toBottomOf="@id/exo_progress"
+                app:layout_constraintStart_toEndOf="@id/back_arrow">
+
+                <ImageView
+                    android:layout_width="19dp"
+                    android:layout_height="13dp"
+                    android:contentDescription="@string/no_desc"
+                    android:src="@drawable/ic_gallery" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/button_capture"
+                android:layout_width="43dp"
+                android:layout_height="43dp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginStart="24dp"
+                android:layout_marginBottom="12dp"
+                android:layout_toEndOf="@id/button_gallery"
+                android:background="@drawable/background_black_round"
+                android:gravity="center"
+                app:layout_constraintTop_toBottomOf="@id/exo_progress"
+                app:layout_constraintStart_toEndOf="@id/button_gallery"
+                app:layout_constraintEnd_toStartOf="@id/switch_holder">
+
+                <ImageView
+                    android:layout_width="19dp"
+                    android:layout_height="13dp"
+                    android:contentDescription="@string/no_desc"
+                    android:src="@drawable/ic_shutter" />
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/switch_holder"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginStart="24dp"
+                app:layout_constraintTop_toBottomOf="@id/exo_progress"
+                app:layout_constraintStart_toEndOf="@id/button_capture"
+                app:layout_constraintTop_toTopOf="@id/button_capture"
+                app:layout_constraintBottom_toBottomOf="@id/button_capture">
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/keep_video_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_gravity="center_vertical"
+                    android:text="Keep Video"
+                    android:textSize="15sp"
+                    android:textColor="@color/white"/>
+
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

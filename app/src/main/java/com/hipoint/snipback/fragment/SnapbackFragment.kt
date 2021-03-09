@@ -21,12 +21,15 @@ import android.view.*
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.webkit.MimeTypeMap
+import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
+import com.exozet.android.core.extensions.disable
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
@@ -87,6 +90,8 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private lateinit var playerHolder : ConstraintLayout
     private lateinit var seekBar      : SnipbackTimeBar
     private lateinit var swipeDetector: SwipeDistanceView
+    private lateinit var switchHolder: LinearLayout
+    private lateinit var keepVideoSwitch: SwitchCompat
 
     private val videoPathReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -330,6 +335,10 @@ class SnapbackFragment: Fragment(), ISaveListener {
             }
             return@setOnTouchListener false
         }
+
+        switchHolder.setOnClickListener {
+            keepVideoSwitch.isChecked = !keepVideoSwitch.isChecked
+        }
     }
 
     /**
@@ -377,15 +386,18 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
 
     private fun bindViews() {
-        playerHolder  = rootView.findViewById(R.id.player_holder)
-        blinkEffect   = rootView.findViewById(R.id.overlay)
-        playerView    = rootView.findViewById(R.id.snapback_player_view)
-        backBtn       = rootView.findViewById(R.id.back_arrow)
-        captureBtn    = rootView.findViewById(R.id.button_capture)
-        galleryBtn    = rootView.findViewById(R.id.button_gallery)
-        seekBar       = rootView.findViewById(R.id.exo_progress)
-        swipeDetector = rootView.findViewById(R.id.swipe_detector)
+        playerHolder    = rootView.findViewById(R.id.player_holder)
+        blinkEffect     = rootView.findViewById(R.id.overlay)
+        playerView      = rootView.findViewById(R.id.snapback_player_view)
+        backBtn         = rootView.findViewById(R.id.back_arrow)
+        captureBtn      = rootView.findViewById(R.id.button_capture)
+        galleryBtn      = rootView.findViewById(R.id.button_gallery)
+        seekBar         = rootView.findViewById(R.id.exo_progress)
+        swipeDetector   = rootView.findViewById(R.id.swipe_detector)
+        switchHolder    = rootView.findViewById(R.id.switch_holder)
+        keepVideoSwitch = rootView.findViewById(R.id.keep_video_switch)
 
+        keepVideoSwitch.isChecked = false
         animBlink = AnimationUtils.loadAnimation(requireContext(), R.anim.blink)
     }
 
@@ -442,6 +454,11 @@ class SnapbackFragment: Fragment(), ISaveListener {
     fun hideProgressDialog() = progressDialog?.dismiss()
 
     fun showSaveDialog(){
+        if(keepVideoSwitch.isChecked){
+            saveAs()
+            return
+        }
+
         if (saveVideoDialog == null) {
             saveVideoDialog = KeepSnapbackVideoDialog(this@SnapbackFragment)
         }
