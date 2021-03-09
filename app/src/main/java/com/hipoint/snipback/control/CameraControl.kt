@@ -553,7 +553,8 @@ class CameraControl(val activity: FragmentActivity) {
     private fun setUpMediaRecorder() {
         //  ensuring the media recorder is recreated
 
-        outputFilePath = outputMediaFile!!.absolutePath
+        outputFilePath = createOutputMediaFile()!!.absolutePath
+        Log.d(TAG, "AVA setUpMediaRecorder: recordfile = $outputFilePath")
         val rotation = currentOrientation
 
         mMediaRecorder!!.apply {
@@ -614,33 +615,41 @@ class CameraControl(val activity: FragmentActivity) {
     }
 
     // External sdcard file location
-    private val outputMediaFile: File?
-        get() {
-            if (clipQueue == null) {
-                clipQueue = LinkedList()
-            }
+//    private var outputMediaFile: File? = null
 
-            // External sdcard file location
-            val mediaStorageDir = File(activity.dataDir,
-                VideoMode.VIDEO_DIRECTORY_NAME)
-            // Create storage directory if it does not exist
-            if (!mediaStorageDir.exists()) {
-                if (!mediaStorageDir.mkdirs()) {
-                    Log.d(TAG, "Oops! Failed create "
-                            + VideoMode.VIDEO_DIRECTORY_NAME + " directory")
-                    return null
-                }
-            }
-            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss",
-                Locale.getDefault()).format(Date())
-            val mediaFile = File(mediaStorageDir.path + File.separator
-                    + "VID_" + timeStamp + ".mp4")
-
-            //  adds the created clips to queue
-            Log.d(TAG, "clip added to queue")
-            clipQueue!!.add(mediaFile)
-            return mediaFile
+    private fun createOutputMediaFile(): File? {
+        if (clipQueue == null) {
+            clipQueue = LinkedList()
         }
+
+        // External sdcard file location
+        val mediaStorageDir = File(activity.dataDir,
+            VideoMode.VIDEO_DIRECTORY_NAME)
+        // Create storage directory if it does not exist
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                Log.d(TAG, "Oops! Failed create "
+                        + VideoMode.VIDEO_DIRECTORY_NAME + " directory")
+                return null
+            }
+        }
+
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss",
+            Locale.getDefault()).format(Date())
+        val mediaFile = File(mediaStorageDir.path + File.separator
+                + "VID_" + timeStamp + ".mp4")
+
+        val created = mediaFile.createNewFile()
+        if(!created) {
+            //  adds the created clips to queue
+            Thread.sleep(200)
+            mediaFile.createNewFile()
+        }
+
+        Log.d(TAG, "clip added to queue")
+        clipQueue!!.add(mediaFile)
+        return mediaFile
+    }
 
     /**
      * Sets up the media recorder and starts the recording session

@@ -1277,7 +1277,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         var previousEditedStart = speedDetailSet.elementAt(speedDetailSet.size - 1).timeDuration!!.first - 100
 
         Log.e("tag1", "$previousEditEnd $previousEditedStart ")
-        if (previousEditEnd < (maxDuration - 500))
+        if (previousEditEnd < (maxDuration - 500) && previousEditEnd > 0)
             player.seekTo(endWindow, previousEditEnd)
 
         if (previousEditEnd > (maxDuration - 500)) {
@@ -1285,7 +1285,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 previousEditedStart -= bufferDuration
             }
             player.setSeekParameters(SeekParameters.EXACT)
-            player.seekTo(startWindow, previousEditedStart)
+            if(previousEditedStart in 0 .. maxDuration)
+                player.seekTo(startWindow, previousEditedStart)
         } else {
             if (endWindow == 1) {
                 previousEditEnd -= bufferDuration

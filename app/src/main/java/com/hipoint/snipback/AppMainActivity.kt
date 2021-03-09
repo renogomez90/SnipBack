@@ -3,6 +3,7 @@ package com.hipoint.snipback
 import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
@@ -15,14 +16,12 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.widget.ProgressBar
-import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.transition.Slide
-import com.exozet.android.core.utils.FragmentExtensions.setCustomAnimations
 import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.Utils.isPathInList
 import com.hipoint.snipback.application.AppClass
@@ -54,9 +53,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     AppRepository.OnTaskCompleted, IReplaceRequired {
     var PERMISSION_ALL = 1
     var PERMISSIONS = arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.INTERNET
+        Manifest.permission.READ_EXTERNAL_STORAGE,
+        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        Manifest.permission.INTERNET
     )
 
     //    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
@@ -87,8 +86,23 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+
+        window.decorView.systemUiVisibility = flags
+        val decorView = window.decorView
+        decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+            if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+                decorView.systemUiVisibility = flags
+            }
+        }
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+
         setContentView(R.layout.appmain_activity)
-        galleryLoader          = findViewById(R.id.galleryLoader)
+
+        galleryLoader = findViewById(R.id.galleryLoader)
 
         if (onTouchListeners == null) {
             onTouchListeners = ArrayList()
@@ -146,7 +160,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                 or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION)
     }
-    public fun hideOrShowProgress(visible:Boolean){
+    public fun hideOrShowProgress(visible: Boolean){
         if (visible){
             galleryLoader.visibility=View.GONE
         } else{
@@ -266,8 +280,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         Log.d(TAG, "onBackPressed: stack count $count")
         for (entry in 0 until count)
             Log.d(
-                    TAG,
-                    "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}"
+                TAG,
+                "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}"
             )
 
         if (videoModeFragment.isVisible || count == 1) {    //  we are at the first fragment when back was pressed. we can exit
@@ -328,9 +342,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             if (context != null) {
                 for (permission in permissions) {
                     if (ActivityCompat.checkSelfPermission(
-                                    context,
-                                    permission!!
-                            ) != PackageManager.PERMISSION_GRANTED
+                            context,
+                            permission!!
+                        ) != PackageManager.PERMISSION_GRANTED
                     ) {
                         return false
                     }
@@ -529,26 +543,26 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 //            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
 //                    VIDEO_DIRECTORY_NAME);
             val thumbsStorageDir = File(
-                    "$dataDir/$VIDEO_DIRECTORY_NAME",
-                    THUMBS_DIRECTORY_NAME
+                "$dataDir/$VIDEO_DIRECTORY_NAME",
+                THUMBS_DIRECTORY_NAME
             )
             if (!thumbsStorageDir.exists()) {
                 if (!thumbsStorageDir.mkdirs()) {
                     Log.d(
-                            TAG, "Oops! Failed create "
-                            + VIDEO_DIRECTORY_NAME + " directory"
+                        TAG, "Oops! Failed create "
+                                + VIDEO_DIRECTORY_NAME + " directory"
                     )
                     return
                 }
             }
             val fullThumbPath: File
             fullThumbPath = File(
-                    thumbsStorageDir.path + File.separator
-                            + "snip_" + snip!!.snip_id + ".png"
+                thumbsStorageDir.path + File.separator
+                        + "snip_" + snip!!.snip_id + ".png"
             )
             Log.d(
-                    TAG,
-                    "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.absolutePath
+                TAG,
+                "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.absolutePath
             )
             //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
             val streamThumbnail = FileOutputStream(fullThumbPath)
@@ -561,13 +575,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 thumb = if (snip.is_virtual_version != 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                         retriever.getScaledFrameAtTime(
-                                snip.start_time.toInt() * 1000000.toLong(),
-                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100
+                            snip.start_time.toInt() * 1000000.toLong(),
+                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100
                         )
                     } else {
                         retriever.getFrameAtTime(
-                                snip.start_time.toInt() * 1000000.toLong(),
-                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                            snip.start_time.toInt() * 1000000.toLong(),
+                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC
                         )
                     }
                 } else {
@@ -660,12 +674,12 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             try {
                 retriever.setDataSource(it)
                 duration = TimeUnit.MILLISECONDS.toSeconds(
-                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
                 ).toInt()
                 durationList.add(duration)
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()
-                Log.e(TAG, "getMetadataDurations: data file error; setting duration to -1")
+                Log.e(TAG, "getMetadataDurations: $it file error; setting duration to -1")
                 durationList.add(-1)
             }
         }

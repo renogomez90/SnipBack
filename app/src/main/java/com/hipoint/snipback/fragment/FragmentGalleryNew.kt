@@ -113,7 +113,6 @@ class FragmentGalleryNew : Fragment() {
             rlLoader.visibility = View.INVISIBLE
         }
 
-
         // direct to gallery to view
         photolabel.setOnClickListener {
             /*Intent intent = new Intent();
@@ -144,7 +143,6 @@ class FragmentGalleryNew : Fragment() {
         }
 
         camera_button.setOnClickListener { v: View? ->
-//            ((AppMainActivity) requireActivity()).loadFragment(VideoMode.newInstance(), false);
             requireActivity().supportFragmentManager.popBackStack() //  assuming that FragmentGalleryNew is loaded only from VideoMode
         }
 

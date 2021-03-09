@@ -155,12 +155,12 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             end = sec
 
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT) {
-            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -y $outputPath"   // with re-encoding
+            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -y $outputPath"   // with re-encoding
         }else {
             if(swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1) {
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -metadata:s:v rotate=$orientationPref -c copy -y $outputPath"
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -metadata:s:v rotate=$orientationPref -c copy -shortest -y $outputPath"
             }else {
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -c copy -y $outputPath"   // without re-encoding
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -c copy -shortest -y $outputPath"   // without re-encoding
             }
         }
 

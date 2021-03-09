@@ -32,6 +32,8 @@ import androidx.core.app.ActivityCompat.requestPermissions
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.exozet.android.core.extensions.disable
+import com.exozet.android.core.extensions.enable
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.FocusView
 import com.hipoint.snipback.R
@@ -350,13 +352,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             savedInstanceState: Bundle?,
     ): View? {
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        rootView = inflater.inflate(R.layout.fragment_videomode, container, false)
+
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-        animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
+
         previousOrientation = if(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
             SimpleOrientationListener.VideoModeOrientation.PORTRAIT
         else
             SimpleOrientationListener.VideoModeOrientation.LANDSCAPE
+
+        rootView = inflater.inflate(R.layout.fragment_videomode, container, false)
+        animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
         bindViews()
         setupCameraControl()
         bindListeners()
@@ -565,9 +570,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         super.onResume()
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = true)
 
-        if(cameraControl == null){
+        /*if(cameraControl == null){
             setupCameraControl()
-        }
+        }*/
 
         cameraControl?.startBackgroundThread()
         if(hasPermissionsGranted(VIDEO_PERMISSIONS)) {
@@ -618,7 +623,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     if (isRecordingVideo() && isRecordingClips()) {
                         updateFlags(recordClips = false, recordPressed = true, stopPressed = false)
                         try {
-                            CoroutineScope(Default).launch { restartRecording() }
+                            CoroutineScope(Default).launch { ensureRecordingRestart() }
                         } catch (e: IllegalStateException) {
                             //  attempt to reopen the camera
                             Log.e(TAG, "Forcing camera restart")
@@ -656,7 +661,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     updateFlags(recordClips = recordClips,
                             recordPressed = false,
                             stopPressed = true)
-                    cameraControl!!.restartRecording()
+                    ensureRecordingRestart()
                 }
             }
             R.id.r_3_bookmark -> {
@@ -931,9 +936,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun handleLeftSwipe() {
         //  button move animation
         triggerLeftActionAnimation()
-
         if (cameraControl!!.isRecordingClips() && currentOperation == CurrentOperation.CLIP_RECORDING) {    //  if clips are being recorded
-
+            gallery.disable()
             if (cameraControl!!.clipQueueSize() > 1) { // there is more than 1 items in the queue
                 if (concatOnSwipeDuringClipRecording(SwipeAction.SWIPE_LEFT))
                     return
@@ -949,6 +953,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     }
                 }
             }
+            gallery.enable()
         } else {    // swiped during video recording
             swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
             if (swipedRecording == null) {
@@ -974,6 +979,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         triggerRightSwipeAnimation()
 
         if(currentOperation == CurrentOperation.CLIP_RECORDING) {
+            gallery.disable()
 //            videoProcessing(true)
             takePhoto.isEnabled = false
             takePhoto.alpha = 0.5F
@@ -992,6 +998,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     }
                 }
             }
+            gallery.enable()
         }
     }
 
@@ -1089,8 +1096,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      **/
     private fun trimOnSwipeDuringClipRecording(swipeAction: SwipeAction) {
         Log.d(TAG, "trimOnSwipeDuringClipRecording: started")
-        val clip = cameraControl?.removeClipQueueItem()!!
+        val clip = cameraControl!!.removeClipQueueItem()!!
         val actualClipTime = try {
+            Log.d(TAG, "AVA trimOnSwipeDuringClipRecording: checking duration for file = ${clip.absolutePath}")
             (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
         } catch (e: NullPointerException) {
             e.printStackTrace()
