@@ -601,6 +601,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         cameraControl?.closeCamera()
         cameraControl?.stopBackgroundThread()
         cameraControl = null
+        seekBar.progress = 0
 
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(uiUpdateReceiver)
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(processSwipeReceiver)
