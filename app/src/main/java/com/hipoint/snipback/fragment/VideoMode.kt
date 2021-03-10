@@ -292,6 +292,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var appRepository               : AppRepository?   = null
     private var animBlink                   : Animation?       = null
     private var thumbnailProcessingCompleted: OnTaskCompleted? = null
+    private var sloMOClicked = false
+
 
     //Views
     private lateinit var rootView        : View
@@ -314,6 +316,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var recStartLayout  : ConstraintLayout
     private lateinit var bottomContainer : ConstraintLayout
     private lateinit var seekBar         : SeekBar
+    private lateinit var sloMO           : ImageButton
+    private lateinit var sloMOQuickback  : TextView
+    private lateinit var sloMOSpeed      : TextView
+    private lateinit var sloMOPreview    : TextView
+    private lateinit var sloMOContainer  : ConstraintLayout
 
     private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(
             SettingsDialog.SETTINGS_PREFERENCES,
@@ -490,11 +497,17 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         zoomFactor       = rootView.findViewById(R.id.zoom_factor)
         swipeDetection   = rootView.findViewById(R.id.swipeDetection)
         focusOverlay     = rootView.findViewById(R.id.focus_overlay)
+        sloMOContainer   = rootView.findViewById(R.id.slo_mo_container)
+        sloMO            = rootView.findViewById(R.id.sloMO_120)
+        sloMOQuickback   = rootView.findViewById(R.id.slo_mo_quick_back)
+        sloMOSpeed       = rootView.findViewById(R.id.slo_mo_speed)
+        sloMOPreview     = rootView.findViewById(R.id.slo_mo_preview_option)
     }
 
     /**
      * Binds views to required listeners
      * */
+    @SuppressLint("ClickableViewAccessibility")
     private fun bindListeners() {
         r3Bookmark.setOnClickListener(this)
         recordStopButton.setOnClickListener(this)
@@ -508,6 +521,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         rlVideo.setOnTouchListener(this)
         mTextureView.setOnTouchListener(this)
         swipeDetection.setOnTouchListener(this)
+        sloMOContainer.setOnTouchListener(this)
+        sloMO.setOnClickListener(this)
+        sloMOSpeed.setOnClickListener(this)
         gallery.setOnClickListener {
             Log.d(TAG, "bindListeners: gallery btn clicked")
             (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance()!!,
@@ -755,6 +771,22 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.texture -> saveSnipTimeToLocal()
             R.id.back_video_btn -> handleLeftSwipe()
             R.id.back_photo_btn -> handleRightSwipe()
+            R.id.sloMO_120 -> {
+                if (!sloMOClicked) {
+                    sloMOClicked=true
+                    sloMO.setImageResource(R.drawable.ic_speed_red)
+                    sloMOContainer.visibility=View.VISIBLE
+
+                } else {
+                    sloMOClicked=false
+                    sloMO.setImageResource(R.drawable.ic_speed)
+                    sloMOContainer.visibility=View.GONE
+                }
+            }
+            R.id.slo_mo_speed -> {
+                (requireActivity() as AppMainActivity).loadFragment(FragmentSloMo.newInstance()!!,
+                        true)
+            }
         }
     }
 
