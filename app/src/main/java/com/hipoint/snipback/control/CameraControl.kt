@@ -137,12 +137,15 @@ class CameraControl(val activity: FragmentActivity) {
             //  If recordClips is true the app will automatically start recording
             //  and saving clips while displaying the preview
             //  else preview is shown without recording.
-            if (recordClips && !stopPressed) {
+            if(!mIsRecordingVideo) {
+                if (recordClips && !stopPressed) {
 //                parentSnipId = AppClass.getAppInstance().lastSnipId + 1
-                startRecordingVideo()
-            } /*else startPreview()*/
-            mCameraOpenCloseLock.release()
-            configureTransform(mTextureView!!.width, mTextureView!!.height)
+                    Log.d(TAG, "onOpened: camera is opened and will start recording")
+                    startRecordingVideo()
+                } /*else startPreview()*/
+                mCameraOpenCloseLock.release()
+                configureTransform(mTextureView!!.width, mTextureView!!.height)
+            }
         }
 
         override fun onDisconnected(cameraDevice: CameraDevice) {
@@ -211,7 +214,8 @@ class CameraControl(val activity: FragmentActivity) {
             val done = CoroutineScope(Default).async {
                 Log.d(TAG, "restartRecording: recording restart")
                 try {
-                    mMediaRecorder?.stop()
+                    if(mIsRecordingVideo)
+                        mMediaRecorder?.stop()
                     mIsRecordingVideo = false
                 } catch (e: RuntimeException) {
                     e.printStackTrace()
@@ -556,7 +560,6 @@ class CameraControl(val activity: FragmentActivity) {
         //  ensuring the media recorder is recreated
 
         outputFilePath = createOutputMediaFile()!!.absolutePath
-        Log.d(TAG, "AVA setUpMediaRecorder: recordfile = $outputFilePath")
         val rotation = currentOrientation
 
         mMediaRecorder!!.apply {
@@ -648,7 +651,6 @@ class CameraControl(val activity: FragmentActivity) {
             mediaFile.createNewFile()
         }
 
-        Log.d(TAG, "clip added to queue")
         clipQueue!!.add(mediaFile)
         return mediaFile
     }
@@ -702,13 +704,13 @@ class CameraControl(val activity: FragmentActivity) {
                             e1.printStackTrace()
                             return
                         }
-                        mIsRecordingVideo = true
                         val vmFrag =
                             activity.supportFragmentManager.findFragmentByTag(AppMainActivity.VIDEO_MODE_TAG)
                         if (vmFrag != null) {
                             if ((vmFrag as VideoMode).isVisible) {
                                 try {
                                     mMediaRecorder!!.start()    //  already called from bg thread
+                                    mIsRecordingVideo = true
                                 } catch (e: IllegalStateException) {
                                     CoroutineScope(Default).launch { restartRecording() }
                                 }

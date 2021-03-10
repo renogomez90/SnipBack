@@ -371,17 +371,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-
-        previousOrientation = if(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
-            SimpleOrientationListener.VideoModeOrientation.PORTRAIT
-        else
-            SimpleOrientationListener.VideoModeOrientation.LANDSCAPE
-    }
-
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
             inflater: LayoutInflater,
@@ -390,6 +379,12 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     ): View? {
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         Log.d(TAG, "onCreateView")
+
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+        previousOrientation = if(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+            SimpleOrientationListener.VideoModeOrientation.PORTRAIT
+        else
+            SimpleOrientationListener.VideoModeOrientation.LANDSCAPE
 
         rootView = inflater.inflate(R.layout.fragment_videomode, container, false)
         animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
@@ -587,7 +582,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         if(hasPermissionsGranted(VIDEO_PERMISSIONS)) {
             if (mTextureView.isAvailable) {
                 cameraControl?.openCamera(mTextureView.width, mTextureView.height)
-            } else {
+            } else if(mTextureView.surfaceTextureListener == null){
                 mTextureView.surfaceTextureListener = mSurfaceTextureListener
             }
         }else{
@@ -1110,7 +1105,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         Log.d(TAG, "trimOnSwipeDuringClipRecording: started")
         val clip = cameraControl!!.removeClipQueueItem()!!
         val actualClipTime = try {
-            Log.d(TAG, "AVA trimOnSwipeDuringClipRecording: checking duration for file = ${clip.absolutePath}")
             (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
         } catch (e: NullPointerException) {
             e.printStackTrace()
@@ -1218,9 +1212,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         }
                         withContext(Main) {
                             openCamera(mTextureView.width, mTextureView.height)
+                            startRecordingVideo()
+                            currentOperation = CurrentOperation.CLIP_RECORDING
                         }
-                        startRecordingVideo()
-                        currentOperation = CurrentOperation.CLIP_RECORDING
                     }
                 }
             }
