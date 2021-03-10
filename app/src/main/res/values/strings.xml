@@ -77,5 +77,7 @@
     <string name="dialog_btn_cancel">CANCEL</string>
     <string name="dialog_btn_keep_vid">KEEP VIDEO</string>
     <string name="dialog_btn_discard_vid">DISCARD</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

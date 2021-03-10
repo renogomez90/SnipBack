@@ -39,7 +39,7 @@
         android:id="@+id/focus_overlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/transparent"/>
+        android:background="@android:color/transparent" />
 
     <Chronometer
         android:id="@+id/chronometer"
@@ -61,6 +61,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageButton
+        android:id="@+id/menu_btn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_toEndOf="@id/chronometer"
+        android:background="@drawable/round_transparent"
+        android:contentDescription="@string/no_desc"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_menu"
+        tools:ignore="VectorDrawableCompat" />
+
     <TextView
         android:id="@+id/zoom_factor"
         android:layout_width="wrap_content"
@@ -81,11 +96,65 @@
         android:layout_centerVertical="true"
         android:layout_marginStart="35dp"
         android:layout_marginEnd="35dp"
-        android:layout_marginBottom="170dp"
         android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@id/slo_mo_container"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:id="@+id/slo_mo_container"
+        android:fontFamily="@font/barlow_medium"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_cont"
+        >
+
+        <TextView
+            android:id="@+id/slo_mo_quick_back"
+            android:layout_width="90dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:background="@drawable/rounded_corners_one"
+            android:text="QB 5sec"
+            android:textColor="#fff"
+            android:gravity="center"
+            android:textSize="14sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+
+        <TextView
+            android:id="@+id/slo_mo_speed"
+            android:layout_width="50dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_corners_one"
+            android:layout_marginStart="30dp"
+            android:text="15X"
+            android:textColor="#fff"
+            android:gravity="center"
+            android:textSize="14sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/slo_mo_quick_back" />
+
+        <TextView
+            android:id="@+id/slo_mo_preview_option"
+            android:layout_width="120dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/rounded_corners_one"
+            android:gravity="center"
+            android:layout_marginStart="30dp"
+            android:text="AUTO PREVIEW"
+            android:textColor="#fff"
+            android:textSize="14sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/slo_mo_speed" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/rec_start_container"
@@ -236,14 +305,14 @@
             android:background="@drawable/round_transparent"
             android:contentDescription="@string/no_desc"
             app:layout_constraintBottom_toBottomOf="@id/bottom_cont"
-            app:layout_constraintEnd_toStartOf="@id/menu_btn"
+            app:layout_constraintEnd_toStartOf="@id/sloMO_120"
             app:layout_constraintStart_toEndOf="@id/con"
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
             app:srcCompat="@drawable/ic_camera_diaphram"
             tools:ignore="VectorDrawableCompat" />
 
         <ImageButton
-            android:id="@+id/menu_btn"
+            android:id="@+id/sloMO_120"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_toEndOf="@id/shutter_btn"
@@ -253,8 +322,10 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/shutter_btn"
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
-            app:srcCompat="@drawable/ic_menu"
+            app:srcCompat="@drawable/ic_speed"
             tools:ignore="VectorDrawableCompat" />
+
+
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
