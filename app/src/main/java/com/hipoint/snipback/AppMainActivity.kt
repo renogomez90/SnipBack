@@ -47,6 +47,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
+import kotlin.math.floor
 
 
 class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
@@ -673,9 +674,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         filePathList.forEach {
             try {
                 retriever.setDataSource(it)
-                duration = TimeUnit.MILLISECONDS.toSeconds(
-                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
-                ).toInt()
+                duration =
+                    floor(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toFloat() / 1000).toInt()
+
                 durationList.add(duration)
             } catch (e: IllegalArgumentException) {
                 e.printStackTrace()

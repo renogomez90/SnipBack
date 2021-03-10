@@ -222,7 +222,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         const val UI_UPDATE_ACTION     = "com.hipoint.snipback.UPDATE_UI"
         const val MIN_DISTANCE         = 150
 
-        private var videoMode      : VideoMode?       = null
+        private var videoMode       : VideoMode?       = null
+        private var cameraControl   : CameraControl?   = null
         internal var swipedRecording: SwipedRecording? = null
 
         private const val TAG = "Camera2VideoFragment"
@@ -290,7 +291,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var appRepository               : AppRepository?   = null
     private var animBlink                   : Animation?       = null
     private var thumbnailProcessingCompleted: OnTaskCompleted? = null
-    private var cameraControl               : CameraControl?   = null
 
     //Views
     private lateinit var rootView        : View
@@ -1108,7 +1108,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             return
         }
 
-        val swipeClipDuration = swipeValue / 1000
+        val swipeClipDuration = (swipeValue / 1000).toInt()
         if (actualClipTime > swipeClipDuration) {
             //  splitting may not work for this so we opt for trim
             Log.d(TAG,
@@ -1121,18 +1121,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val taskList = arrayListOf<VideoOpItem>()
-
-            /*
-            DEFAULT_ORIENTATIONS.append(Surface.ROTATION_0, 90)
-            DEFAULT_ORIENTATIONS.append(Surface.ROTATION_90, 0)
-            DEFAULT_ORIENTATIONS.append(Surface.ROTATION_180, 270)
-            DEFAULT_ORIENTATIONS.append(Surface.ROTATION_270, 180)
-
-            INVERSE_ORIENTATIONS.append(Surface.ROTATION_0, 270)
-            INVERSE_ORIENTATIONS.append(Surface.ROTATION_90, 180)
-            INVERSE_ORIENTATIONS.append(Surface.ROTATION_180, 90)
-            INVERSE_ORIENTATIONS.append(Surface.ROTATION_270, 0)
-            */
 
             val orientationPref = when(previousOrientation){
                 SimpleOrientationListener.VideoModeOrientation.LANDSCAPE -> 90 - 90
@@ -1157,7 +1145,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val videoTask = VideoOpItem(
                     operation = VideoOp.TRIMMED,
                     clips = arrayListOf(clip.absolutePath),
-                    startTime = max((actualClipTime - swipeClipDuration).toInt(), 0).toFloat(),
+                    startTime = max((actualClipTime - swipeClipDuration), 0).toFloat(),
                     endTime = actualClipTime.toFloat(),
                     outputPath = videoFile,
                     comingFrom = CurrentOperation.CLIP_RECORDING,
