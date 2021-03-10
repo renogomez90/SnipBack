@@ -346,29 +346,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?,
-    ): View? {
-        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-
-        previousOrientation = if(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
-            SimpleOrientationListener.VideoModeOrientation.PORTRAIT
-        else
-            SimpleOrientationListener.VideoModeOrientation.LANDSCAPE
-
-        rootView = inflater.inflate(R.layout.fragment_videomode, container, false)
-        animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
-        bindViews()
-        setupCameraControl()
-        bindListeners()
-
-        val mOrientationListener: SimpleOrientationListener = object : SimpleOrientationListener(
-                context) {
+    private val mOrientationListener: SimpleOrientationListener by lazy {
+        object : SimpleOrientationListener(
+            context) {
             override fun onSimpleOrientationChanged(orientation: Int) {
                 previousOrientation = when (orientation) {
                     VideoModeOrientation.LANDSCAPE.ordinal -> {
@@ -389,7 +369,33 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
             }
         }
-        mOrientationListener.enable()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+
+        previousOrientation = if(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+            SimpleOrientationListener.VideoModeOrientation.PORTRAIT
+        else
+            SimpleOrientationListener.VideoModeOrientation.LANDSCAPE
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?,
+    ): View? {
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        Log.d(TAG, "onCreateView")
+
+        rootView = inflater.inflate(R.layout.fragment_videomode, container, false)
+        animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
+        bindViews()
+        setupCameraControl()
+        bindListeners()
 
         return rootView
     }
@@ -571,6 +577,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     override fun onResume() {
         super.onResume()
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = true)
+        mOrientationListener.enable()
 
         if(cameraControl == null){
             setupCameraControl()
@@ -600,6 +607,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Closes the camera and stops the background thread when fragment is not in the foreground
      * */
     override fun onPause() {
+        mOrientationListener.disable()
+
         cameraControl?.closeCamera()
         cameraControl?.stopBackgroundThread()
         cameraControl = null

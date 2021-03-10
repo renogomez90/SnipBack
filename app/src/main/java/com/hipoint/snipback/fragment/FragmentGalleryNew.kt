@@ -143,6 +143,7 @@ class FragmentGalleryNew : Fragment() {
         }
 
         camera_button.setOnClickListener { v: View? ->
+            requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
             requireActivity().supportFragmentManager.popBackStack() //  assuming that FragmentGalleryNew is loaded only from VideoMode
         }
 
