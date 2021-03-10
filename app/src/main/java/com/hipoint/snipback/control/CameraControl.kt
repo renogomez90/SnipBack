@@ -215,6 +215,8 @@ class CameraControl(val activity: FragmentActivity) {
                     mIsRecordingVideo = false
                 } catch (e: RuntimeException) {
                     e.printStackTrace()
+                } catch (e1: IllegalStateException){
+                    e1.printStackTrace()
                 }
 
                 if(!AppMainActivity.isPausing) {    //   don't restart if the app is going to background
@@ -586,7 +588,7 @@ class CameraControl(val activity: FragmentActivity) {
             } else {
                 setMaxDuration(0)
             }
-            val profile = chooseCamcorderProfile()
+            val profile = /*CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_HIGH)*/ chooseCamcorderProfile()
             setProfile(profile)
             setInputSurface(persistentSurface)
             setOutputFile(outputFilePath)

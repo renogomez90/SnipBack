@@ -68,6 +68,7 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -366,7 +367,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         setupCameraControl()
         bindListeners()
 
-
         val mOrientationListener: SimpleOrientationListener = object : SimpleOrientationListener(
                 context) {
             override fun onSimpleOrientationChanged(orientation: Int) {
@@ -453,6 +453,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         clipDuration = (pref.getInt(SettingsDialog.BUFFER_DURATION, 1) * 60 * 1000).toLong()
         swipeValue = (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong()
+
+        cameraControl?.stopRecordingVideo()
 
         cameraControl!!.apply {
             setRecordUIListener(this@VideoMode)
@@ -1205,7 +1207,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         if(!isBgThreadRunning()){
                             cameraControl?.startBackgroundThread()
                         }
-                        openCamera(mTextureView.width, mTextureView.height)
+                        withContext(Main) {
+                            openCamera(mTextureView.width, mTextureView.height)
+                        }
                         startRecordingVideo()
                         currentOperation = CurrentOperation.CLIP_RECORDING
                     }

@@ -66,8 +66,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     private val VIDEO_DIRECTORY_NAME  = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
 
-    private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
-
     private var onTouchListeners: MutableList<MyOnTouchListener>? = null
     private var appViewModel    : AppViewModel?                   = null
     private var addedToSnip     : ArrayList<String>               = arrayListOf()
@@ -338,6 +336,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         const val EDIT_VIDEO_TAG       = "edit_frag"
         const val QUICK_EDIT_TAG       = "quick_edit_frag"
         const val SNAPBACK_VIDEO_TAG   = "snapback_frag"
+
+        private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
         fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
             if (context != null) {
