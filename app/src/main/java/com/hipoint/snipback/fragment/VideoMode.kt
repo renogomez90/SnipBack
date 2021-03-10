@@ -570,9 +570,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         super.onResume()
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = true)
 
-        /*if(cameraControl == null){
+        if(cameraControl == null){
             setupCameraControl()
-        }*/
+        }
 
         cameraControl?.startBackgroundThread()
         if(hasPermissionsGranted(VIDEO_PERMISSIONS)) {
