@@ -68,6 +68,7 @@ import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -345,30 +346,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?,
-    ): View? {
-        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-
-        previousOrientation = if(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
-            SimpleOrientationListener.VideoModeOrientation.PORTRAIT
-        else
-            SimpleOrientationListener.VideoModeOrientation.LANDSCAPE
-
-        rootView = inflater.inflate(R.layout.fragment_videomode, container, false)
-        animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
-        bindViews()
-        setupCameraControl()
-        bindListeners()
-
-
-        val mOrientationListener: SimpleOrientationListener = object : SimpleOrientationListener(
-                context) {
+    private val mOrientationListener: SimpleOrientationListener by lazy {
+        object : SimpleOrientationListener(
+            context) {
             override fun onSimpleOrientationChanged(orientation: Int) {
                 previousOrientation = when (orientation) {
                     VideoModeOrientation.LANDSCAPE.ordinal -> {
@@ -389,7 +369,28 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
             }
         }
-        mOrientationListener.enable()
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onCreateView(
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?,
+    ): View? {
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        Log.d(TAG, "onCreateView")
+
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+        previousOrientation = if(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
+            SimpleOrientationListener.VideoModeOrientation.PORTRAIT
+        else
+            SimpleOrientationListener.VideoModeOrientation.LANDSCAPE
+
+        rootView = inflater.inflate(R.layout.fragment_videomode, container, false)
+        animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
+        bindViews()
+        setupCameraControl()
+        bindListeners()
 
         return rootView
     }
@@ -453,6 +454,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         clipDuration = (pref.getInt(SettingsDialog.BUFFER_DURATION, 1) * 60 * 1000).toLong()
         swipeValue = (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong()
+
+        cameraControl?.stopRecordingVideo()
 
         cameraControl!!.apply {
             setRecordUIListener(this@VideoMode)
@@ -569,6 +572,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     override fun onResume() {
         super.onResume()
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = true)
+        mOrientationListener.enable()
 
         if(cameraControl == null){
             setupCameraControl()
@@ -578,7 +582,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         if(hasPermissionsGranted(VIDEO_PERMISSIONS)) {
             if (mTextureView.isAvailable) {
                 cameraControl?.openCamera(mTextureView.width, mTextureView.height)
-            } else {
+            } else if(mTextureView.surfaceTextureListener == null){
                 mTextureView.surfaceTextureListener = mSurfaceTextureListener
             }
         }else{
@@ -598,6 +602,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * Closes the camera and stops the background thread when fragment is not in the foreground
      * */
     override fun onPause() {
+        mOrientationListener.disable()
+
         cameraControl?.closeCamera()
         cameraControl?.stopBackgroundThread()
         cameraControl = null
@@ -1099,7 +1105,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         Log.d(TAG, "trimOnSwipeDuringClipRecording: started")
         val clip = cameraControl!!.removeClipQueueItem()!!
         val actualClipTime = try {
-            Log.d(TAG, "AVA trimOnSwipeDuringClipRecording: checking duration for file = ${clip.absolutePath}")
             (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
         } catch (e: NullPointerException) {
             e.printStackTrace()
@@ -1205,9 +1210,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         if(!isBgThreadRunning()){
                             cameraControl?.startBackgroundThread()
                         }
-                        openCamera(mTextureView.width, mTextureView.height)
-                        startRecordingVideo()
-                        currentOperation = CurrentOperation.CLIP_RECORDING
+                        withContext(Main) {
+                            openCamera(mTextureView.width, mTextureView.height)
+                            startRecordingVideo()
+                            currentOperation = CurrentOperation.CLIP_RECORDING
+                        }
                     }
                 }
             }

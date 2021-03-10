@@ -169,7 +169,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
     }
 
     override fun failed(operation: IVideoOpListener.VideoOp, calledFrom: CurrentOperation) {
-        Log.e(TAG, "AVA failed: ${operation.name}")
+        Log.e(TAG, "failed: ${operation.name}")
         isProcessing = false
         //  only process the next item after the previous one is completed
 
@@ -194,7 +194,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
         swipeAction: SwipeAction,
         processedVideoPath: String
     ) {
-        Log.i(TAG, "AVA ${operation.name} completed: $processedVideoPath")
+        Log.i(TAG, "${operation.name} completed: $processedVideoPath")
         isProcessing = false
         broadcastIntent.apply {
             action = ACTION

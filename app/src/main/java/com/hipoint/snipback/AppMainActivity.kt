@@ -66,8 +66,6 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     private val VIDEO_DIRECTORY_NAME  = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
 
-    private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
-
     private var onTouchListeners: MutableList<MyOnTouchListener>? = null
     private var appViewModel    : AppViewModel?                   = null
     private var addedToSnip     : ArrayList<String>               = arrayListOf()
@@ -99,6 +97,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 decorView.systemUiVisibility = flags
             }
         }
+
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
 
         setContentView(R.layout.appmain_activity)
@@ -116,7 +115,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
 //        appViewModel.loadGalleryDataFromDB(this);
 
-        if (!videoModeFragment.isAdded && supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
+        if(supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
             loadFragment(videoModeFragment, true)
         }
         /*
@@ -296,8 +295,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
             val snapbackFragment =
                 supportFragmentManager.findFragmentByTag(SNAPBACK_VIDEO_TAG) as? SnapbackFragment
+            val gallery =
+                supportFragmentManager.findFragmentByTag(GALLERY_FRAGMENT_TAG) as? FragmentGalleryNew
 
-            if (editFrag != null && editFrag.isVisible) {
+            if(gallery != null && gallery.isVisible){
+                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+                supportFragmentManager.popBackStack()
+            }else if (editFrag != null && editFrag.isVisible) {
                 editFrag.confirmExitOnBackPressed()
             } else if (snapbackFragment != null && snapbackFragment.isVisible) {
                 snapbackFragment.showSaveDialog()
@@ -338,6 +342,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         const val EDIT_VIDEO_TAG       = "edit_frag"
         const val QUICK_EDIT_TAG       = "quick_edit_frag"
         const val SNAPBACK_VIDEO_TAG   = "snapback_frag"
+
+        private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
         fun hasPermissions(context: Context?, vararg permissions: String?): Boolean {
             if (context != null) {
