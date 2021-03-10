@@ -292,7 +292,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var appRepository               : AppRepository?   = null
     private var animBlink                   : Animation?       = null
     private var thumbnailProcessingCompleted: OnTaskCompleted? = null
-    private var sloMOClicked = false
+    private var sloMoClicked = false
 
 
     //Views
@@ -316,11 +316,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var recStartLayout  : ConstraintLayout
     private lateinit var bottomContainer : ConstraintLayout
     private lateinit var seekBar         : SeekBar
-    private lateinit var sloMO           : ImageButton
-    private lateinit var sloMOQuickback  : TextView
-    private lateinit var sloMOSpeed      : TextView
-    private lateinit var sloMOPreview    : TextView
-    private lateinit var sloMOContainer  : ConstraintLayout
+    private lateinit var sloMo           : ImageButton
+    private lateinit var sloMoQuickback  : TextView
+    private lateinit var sloMoSpeed      : TextView
+    private lateinit var sloMoPreview    : TextView
+    private lateinit var sloMoContainer  : ConstraintLayout
 
     private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(
             SettingsDialog.SETTINGS_PREFERENCES,
@@ -497,11 +497,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         zoomFactor       = rootView.findViewById(R.id.zoom_factor)
         swipeDetection   = rootView.findViewById(R.id.swipeDetection)
         focusOverlay     = rootView.findViewById(R.id.focus_overlay)
-        sloMOContainer   = rootView.findViewById(R.id.slo_mo_container)
-        sloMO            = rootView.findViewById(R.id.sloMO_120)
-        sloMOQuickback   = rootView.findViewById(R.id.slo_mo_quick_back)
-        sloMOSpeed       = rootView.findViewById(R.id.slo_mo_speed)
-        sloMOPreview     = rootView.findViewById(R.id.slo_mo_preview_option)
+        sloMoContainer   = rootView.findViewById(R.id.slo_mo_container)
+        sloMo            = rootView.findViewById(R.id.slo_mo_120)
+        sloMoQuickback   = rootView.findViewById(R.id.slo_mo_quick_back)
+        sloMoSpeed       = rootView.findViewById(R.id.slo_mo_speed)
+        sloMoPreview     = rootView.findViewById(R.id.slo_mo_preview_option)
     }
 
     /**
@@ -521,9 +521,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         rlVideo.setOnTouchListener(this)
         mTextureView.setOnTouchListener(this)
         swipeDetection.setOnTouchListener(this)
-        sloMOContainer.setOnTouchListener(this)
-        sloMO.setOnClickListener(this)
-        sloMOSpeed.setOnClickListener(this)
+        sloMoContainer.setOnTouchListener(this)
+        sloMo.setOnClickListener(this)
+        sloMoSpeed.setOnClickListener(this)
         gallery.setOnClickListener {
             Log.d(TAG, "bindListeners: gallery btn clicked")
             (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance()!!,
@@ -771,21 +771,21 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.texture -> saveSnipTimeToLocal()
             R.id.back_video_btn -> handleLeftSwipe()
             R.id.back_photo_btn -> handleRightSwipe()
-            R.id.sloMO_120 -> {
-                if (!sloMOClicked) {
-                    sloMOClicked=true
-                    sloMO.setImageResource(R.drawable.ic_speed_red)
-                    sloMOContainer.visibility=View.VISIBLE
+            R.id.slo_mo_120 -> {
+                if (!sloMoClicked) {
+                    sloMoClicked=true
+                    sloMo.setImageResource(R.drawable.ic_speed_red)
+                    sloMoContainer.visibility=View.VISIBLE
 
                 } else {
-                    sloMOClicked=false
-                    sloMO.setImageResource(R.drawable.ic_speed)
-                    sloMOContainer.visibility=View.GONE
+                    sloMoClicked=false
+                    sloMo.setImageResource(R.drawable.ic_speed)
+                    sloMoContainer.visibility=View.GONE
                 }
             }
             R.id.slo_mo_speed -> {
-                (requireActivity() as AppMainActivity).loadFragment(FragmentSloMo.newInstance()!!,
-                        true)
+//                (requireActivity() as AppMainActivity).loadFragment(FragmentSloMo.newInstance()!!,
+//                        true)
             }
         }
     }
