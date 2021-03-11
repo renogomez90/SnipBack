@@ -605,6 +605,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             requestVideoPermissions()
         }
 
+        slowMoClicked = false
         showSlowMoUi(slowMoClicked)
 
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(uiUpdateReceiver,
