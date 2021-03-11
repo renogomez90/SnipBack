@@ -22,6 +22,7 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.Utils.AutoFitTextureView
+import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IRecordUIListener
 import kotlinx.coroutines.*
@@ -95,6 +96,10 @@ class CameraControl(val activity: FragmentActivity) {
 
     private var zoom: Rect? = null
 
+    // slow mo recording
+    private val highSpeedOptions = arrayListOf<Int>()
+    private var highSpeedProfile: CamcorderProfile? = null
+    private var isSlowMotionEnabled: Boolean = false
 
     /**
      * The [android.util.Size] of camera preview.
@@ -397,7 +402,6 @@ class CameraControl(val activity: FragmentActivity) {
      */
     internal fun closeToSwitchCamera() {
         isBackFacingRequired = !isBackFacingRequired
-//        chosenCProfile = null
         closeCamera()
     }
 
@@ -591,8 +595,10 @@ class CameraControl(val activity: FragmentActivity) {
             } else {
                 setMaxDuration(0)
             }
-            val profile = /*CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH_SPEED_HIGH)*/ chooseCamcorderProfile()
+            val profile = if(!isSlowMotionEnabled) chooseCamcorderProfile() else {highSpeedProfile ?: chooseCamcorderProfile()}
             setProfile(profile)
+            setCaptureRate(profile.videoFrameRate.toDouble())
+            Log.d(TAG, "setUpMediaRecorder: profile frame rate = ${profile.videoFrameRate}")
             setInputSurface(persistentSurface)
             setOutputFile(outputFilePath)
 
@@ -1173,5 +1179,48 @@ class CameraControl(val activity: FragmentActivity) {
         } catch (e: CameraAccessException) {
             e.printStackTrace()
         }
+    }
+
+    /**
+     * Iterates and finds the highest frame rate mode and the details.
+     * @return list of available high speed options
+     */
+    fun getSupportedHFRMode(): ArrayList<CamcorderProfile> {
+        highSpeedOptions.apply {
+            clear()
+            add(CamcorderProfile.QUALITY_HIGH_SPEED_2160P)
+            add(CamcorderProfile.QUALITY_HIGH_SPEED_1080P)
+            add(CamcorderProfile.QUALITY_HIGH_SPEED_720P)
+            add(CamcorderProfile.QUALITY_HIGH_SPEED_480P)
+        }
+
+        val availableOptions = arrayListOf<CamcorderProfile>()
+        highSpeedOptions.forEach{
+            if(CamcorderProfile.hasProfile(it)){
+                availableOptions.add(CamcorderProfile.get(it))
+            }
+        }
+        availableOptions.sortedWith(Comparator { o1: CamcorderProfile, o2: CamcorderProfile ->
+            return@Comparator o1.videoFrameRate - o2.videoFrameRate
+        })
+        return availableOptions
+    }
+
+    /**
+     * changes the current profile to chosen high speed profile and re-starts recording
+     */
+    fun setHighSpeedMode(camcorderProfile: CamcorderProfile) {
+            isSlowMotionEnabled = true
+            highSpeedProfile = camcorderProfile
+            /*CoroutineScope(Default).launch { restartRecording() }*/
+
+    }
+
+    /**
+     * disables the high speed profile and re-starts recording with normal settings
+     */
+    fun disableHighSpeedMode(){
+        isSlowMotionEnabled = false
+        CoroutineScope(Default).launch { restartRecording() }
     }
 }

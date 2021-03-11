@@ -32,10 +32,16 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      */
     suspend fun mergeRecordedFiles(clip1: File, clip2: File, outputPath: String, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
         val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(clip1.absolutePath)
+        retriever.setDataSource(clip2.absolutePath)
         val width = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH).toInt()
         val height = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT).toInt()
+        var clipFrameRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_CAPTURE_FRAMERATE)
+        val clipRotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION).toInt()
+        val clipBitRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE).toLong()
         retriever.release()
+
+        clipFrameRate = (if(clipFrameRate == null) "120" else clipFrameRate.split(".")[0])
+
         val epVideos = arrayListOf<EpVideo>()
         epVideos.apply {
             add(EpVideo(clip1.absolutePath))
@@ -43,11 +49,19 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }
 
         val options = OutputOption(outputPath)
+        val landscape = intArrayOf(0, 180)
         options.apply {
-            setHeight(height)
-            setWidth(width)
-            frameRate = 30
-            bitRate = 10 // default
+            if(clipRotation in landscape) {
+                setHeight(height)
+                setWidth(width)
+            }else {
+                setHeight(width)
+                setWidth(height)
+            }
+
+            frameRate = clipFrameRate.toInt()
+//            bitRate = 10 // default
+            bitRate = (clipBitRate/1_048_576).toInt()
         }
 
         EpEditor.merge(epVideos, options, object : OnEditorListener {

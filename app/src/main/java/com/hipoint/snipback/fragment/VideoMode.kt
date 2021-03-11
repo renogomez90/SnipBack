@@ -604,12 +604,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }else{
             requestVideoPermissions()
         }
+
+        showSlowMoUi(sloMOClicked)
+
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(uiUpdateReceiver,
-                IntentFilter(
-                        UI_UPDATE_ACTION))
+                IntentFilter(UI_UPDATE_ACTION))
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(processSwipeReceiver,
-                IntentFilter(
-                        PENDING_SWIPE_ACTION))
+                IntentFilter(PENDING_SWIPE_ACTION))
 //        videoProcessing(false)
 
     }
@@ -675,6 +676,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 bottomContainer.visibility = View.VISIBLE
                 recStartLayout.visibility = View.INVISIBLE
                 AppClass.showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
+                Log.d(TAG,
+                    "onClick: showInGallery added with = ${File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension}")
                 parentSnip = null   //  resetting the session parent Snip
                 CoroutineScope(Default).launch {
                     cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
@@ -682,8 +685,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     // we can restart recoding clips if it is required at this point
                     recordClips = true
                     updateFlags(recordClips = recordClips,
-                            recordPressed = false,
-                            stopPressed = true)
+                        recordPressed = false,
+                        stopPressed = true)
                     ensureRecordingRestart()
                 }
             }
@@ -772,21 +775,55 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.back_video_btn -> handleLeftSwipe()
             R.id.back_photo_btn -> handleRightSwipe()
             R.id.sloMO_120 -> {
-                if (!sloMOClicked) {
-                    sloMOClicked=true
-                    sloMO.setImageResource(R.drawable.ic_speed_red)
-                    sloMOContainer.visibility=View.VISIBLE
+                if (!sloMOClicked) {    //todo: check if we need to stop the current manual recording if slow mo clicked when manual recording is on going? is that even possible?
+                    showSlowMoUi(true)
 
+                    cameraControl!!.closeCamera()
+                    cameraControl!!.stopBackgroundThread()
+                    cameraControl = null
+
+                    updateFlags(recordClips = true, recordPressed = false, stopPressed = false) //  so the camera will continue recording clips with the new camera
+                    setupCameraControl()
+                    applyAvailableSlowMoMode()
+                    cameraControl!!.startBackgroundThread()
+                    if (mTextureView.isAvailable) {
+                        cameraControl?.openCamera(mTextureView.width, mTextureView.height)
+                    } else {
+                        mTextureView.surfaceTextureListener = mSurfaceTextureListener
+                    }
                 } else {
-                    sloMOClicked=false
-                    sloMO.setImageResource(R.drawable.ic_speed)
-                    sloMOContainer.visibility=View.GONE
+                    showSlowMoUi(false)
+                    cameraControl?.disableHighSpeedMode()
                 }
             }
             R.id.slo_mo_speed -> {
                 (requireActivity() as AppMainActivity).loadFragment(FragmentSloMo.newInstance()!!,
                         true)
             }
+        }
+    }
+
+    private fun showSlowMoUi(b: Boolean) {
+        sloMOClicked = b
+
+        if(b) {
+            sloMO.setImageResource(R.drawable.ic_speed_red)
+            sloMOContainer.visibility = View.VISIBLE
+            currentOperation = CurrentOperation.CLIP_RECORDING_SLOW_MO
+        }else {
+            sloMO.setImageResource(R.drawable.ic_speed)
+            sloMOContainer.visibility = View.GONE
+            currentOperation = CurrentOperation.CLIP_RECORDING
+        }
+    }
+
+    /**
+     * gets the list of supported slow motion modes and starts recording in them
+     */
+    private fun applyAvailableSlowMoMode() {
+        val hFPSOptions = cameraControl?.getSupportedHFRMode()
+        if(!hFPSOptions.isNullOrEmpty()){
+            cameraControl?.setHighSpeedMode(hFPSOptions[0])
         }
     }
 
@@ -860,6 +897,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     val outputFileName = "$parentPath/${File(originalVideo).nameWithoutExtension}-$index.mp4"
 
                     AppClass.showInGallery.add(File(outputFileName).nameWithoutExtension)
+                    Log.d(TAG,
+                        "processPendingSwipes: showInGallery = ${File(outputFileName).nameWithoutExtension}")
                     Log.d(TAG,
                             "processPendingSwipes: \n Output = $outputFileName, \n start = ${(timeStamp - (swipeValue / 1000)).toInt()} \n end = $timeStamp")
 
@@ -947,7 +986,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             0).toFloat(),
                     endTime = (totalDuration - videoDuration).toFloat(),
                     outputPath = bufferFilePath,
-                    comingFrom = CurrentOperation.VIDEO_RECORDING)
+                    comingFrom = if(sloMOClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING)
 
             bufferDetails.add(BufferDataDetails(bufferFilePath, videoFilePath))
 
@@ -957,7 +996,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     startTime = (totalDuration - videoDuration).toFloat(),
                     endTime = totalDuration.toFloat(),
                     outputPath = videoFilePath,
-                    comingFrom = CurrentOperation.VIDEO_RECORDING)
+                    comingFrom = if(sloMOClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING)
 
             taskList.add(bufferFile)
             taskList.add(videoFile)
@@ -966,6 +1005,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             VideoService.enqueueWork(requireContext(), intentService)
 
             AppClass.showInGallery.add(File(videoFilePath).nameWithoutExtension)
+            Log.d(TAG, "processPendingSwipes: showInGallery added ${File(videoFilePath).nameWithoutExtension}")
         }
     }
 
@@ -975,7 +1015,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun handleLeftSwipe() {
         //  button move animation
         triggerLeftActionAnimation()
-        if (cameraControl!!.isRecordingClips() && currentOperation == CurrentOperation.CLIP_RECORDING) {    //  if clips are being recorded
+        if (cameraControl!!.isRecordingClips() && (currentOperation == CurrentOperation.CLIP_RECORDING || currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)) {    //  if clips are being recorded
             gallery.disable()
             if (cameraControl!!.clipQueueSize() > 1) { // there is more than 1 items in the queue
                 if (concatOnSwipeDuringClipRecording(SwipeAction.SWIPE_LEFT))
@@ -1017,7 +1057,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         //  button move animation
         triggerRightSwipeAnimation()
 
-        if(currentOperation == CurrentOperation.CLIP_RECORDING) {
+        if(currentOperation == CurrentOperation.CLIP_RECORDING ||
+                currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO) {
             gallery.disable()
 //            videoProcessing(true)
             takePhoto.isEnabled = false
@@ -1100,14 +1141,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val mergeFilePath = "${File(clips[0]).parent!!}/merged-$timeStamp.mp4"
             swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
             AppClass.showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
-
+            Log.d(TAG, "concatOnSwipeDuringClipRecording: showInGallery added merged-$timeStamp-1")
             val intentService = Intent(requireContext(), VideoService::class.java)
             val task = arrayListOf(
                     VideoOpItem(
-                            operation = VideoOp.CONCAT,
+                            operation = /*if(sloMOClicked) VideoOp.MERGED else*/ VideoOp.CONCAT,
                             clips = clips,
                             outputPath = mergeFilePath,
-                            comingFrom = CurrentOperation.CLIP_RECORDING,
+                            comingFrom = if(sloMOClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
                             swipeAction = swipeAction
                     )
             )
@@ -1153,6 +1194,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
             swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
             AppClass.showInGallery.add("trimmed-${clip.nameWithoutExtension}")
+            Log.d(TAG,
+                "trimOnSwipeDuringClipRecording: showInGallery added trimmed-${clip.nameWithoutExtension}")
 
             val bufferFile = "${clip.parent}/buff-${clip.name}"
             val videoFile = "${clip.parent}/trimmed-${clip.name}"
@@ -1173,7 +1216,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         startTime = 0F,
                         endTime = (actualClipTime - swipeClipDuration).toFloat(),
                         outputPath = bufferFile,
-                        comingFrom = CurrentOperation.CLIP_RECORDING,
+                        comingFrom = if(sloMOClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
                         swipeAction = swipeAction,
                         orientationPreference = orientationPref)
 
@@ -1186,7 +1229,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     startTime = max((actualClipTime - swipeClipDuration), 0).toFloat(),
                     endTime = actualClipTime.toFloat(),
                     outputPath = videoFile,
-                    comingFrom = CurrentOperation.CLIP_RECORDING,
+                    comingFrom = if(sloMOClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
                     swipeAction = swipeAction,
                     orientationPreference = orientationPref)
 
@@ -1208,6 +1251,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         } else { //  save what we have
             swipedFileNames.add(clip.nameWithoutExtension)
             AppClass.showInGallery.add(clip.nameWithoutExtension)
+            Log.d(TAG,
+                "trimOnSwipeDuringClipRecording: showInGallery added ${clip.nameWithoutExtension}")
             if(swipeAction == SwipeAction.SWIPE_LEFT) {  //  we only need to save the snip in DB for left swipe
                 (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
                         actualClipTime,
@@ -1245,7 +1290,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         withContext(Main) {
                             openCamera(mTextureView.width, mTextureView.height)
                             startRecordingVideo()
-                            currentOperation = CurrentOperation.CLIP_RECORDING
+                            currentOperation = if(sloMOClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING
                         }
                     }
                 }
@@ -1283,14 +1328,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val task = arrayListOf(VideoOpItem(
-                    operation = VideoOp.CONCAT,
+                    operation = /*if(sloMOClicked) VideoOp.MERGED else*/VideoOp.CONCAT,
                     clips = clips,
                     outputPath = mergeFilePath,
-                    comingFrom = CurrentOperation.VIDEO_RECORDING))
+                    comingFrom = if(sloMOClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING))
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             VideoService.enqueueWork(requireContext(), intentService)
         } else {
-            processPendingSwipes(currentOperation = CurrentOperation.VIDEO_RECORDING)
+            processPendingSwipes(currentOperation = if(sloMOClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING)
         }
     }
 

@@ -118,6 +118,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         return when (fromOperation) {
             CurrentOperation.VIDEO_RECORDING.name -> CurrentOperation.VIDEO_RECORDING
             CurrentOperation.CLIP_RECORDING.name -> CurrentOperation.CLIP_RECORDING
+            CurrentOperation.CLIP_RECORDING_SLOW_MO.name -> CurrentOperation.CLIP_RECORDING_SLOW_MO
+            CurrentOperation.VIDEO_RECORDING_SLOW_MO.name -> CurrentOperation.VIDEO_RECORDING_SLOW_MO
             CurrentOperation.VIDEO_EDITING.name -> CurrentOperation.VIDEO_EDITING
             else -> {
                 CurrentOperation.CLIP_RECORDING
@@ -172,7 +174,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         val swipeClipDuration = (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong() / 1000
         val bufferDuration = (pref.getInt(SettingsDialog.BUFFER_DURATION, 1) * 60 * 1000).toLong() / 1000
 
-        if (comingFrom == CurrentOperation.CLIP_RECORDING) {  //  concat was triggered when automatic capture was ongoing
+        if (comingFrom == CurrentOperation.CLIP_RECORDING || comingFrom == CurrentOperation.CLIP_RECORDING_SLOW_MO) {  //  concat was triggered when automatic capture was ongoing
             //  merged clips to be trimmed to size
             val intentService = Intent(receivedContext, VideoService::class.java)
             val buffFile =
@@ -211,7 +213,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
             VideoService.enqueueWork(receivedContext!!, intentService)
-        } else if (!swipeProcessed && comingFrom == CurrentOperation.VIDEO_RECORDING) {
+        } else if (!swipeProcessed && (comingFrom == CurrentOperation.VIDEO_RECORDING ||
+                    comingFrom == CurrentOperation.VIDEO_RECORDING_SLOW_MO)) {
 
             val startPendingProcessIntent = Intent(VideoMode.PENDING_SWIPE_ACTION)
             startPendingProcessIntent.putExtra("processedVideoPath", processedVideoPath)
@@ -239,7 +242,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                     trimCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
                     trimCompleteReceiver.putExtra("fileName", processedVideoPath)
                     receivedContext?.sendBroadcast(trimCompleteReceiver)
-                }else if(fromOperation == CurrentOperation.CLIP_RECORDING && swipeAction == SwipeAction.SWIPE_RIGHT){
+                }else if((fromOperation == CurrentOperation.CLIP_RECORDING || fromOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO) &&
+                    swipeAction == SwipeAction.SWIPE_RIGHT){
                     val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
                     snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.TRIMMED.name)
                     snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
@@ -263,7 +267,9 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                 addSnip(processedVideoPath, duration, duration, fromOperation)
             }
-            if (!swipeProcessed && fromOperation == CurrentOperation.VIDEO_RECORDING) {
+            if (!swipeProcessed &&
+                (fromOperation == CurrentOperation.VIDEO_RECORDING ||
+                        fromOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO)) {
                 val startPendingProcessIntent = Intent(VideoMode.PENDING_SWIPE_ACTION)
                 startPendingProcessIntent.putExtra("processedVideoPath", processedVideoPath)
                 startPendingProcessIntent.putExtra("comingFrom", fromOperation)
@@ -413,7 +419,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             Log.d(TAG, "addSnip: parentSnip = $parentSnip, $parentChanged")
             parent_snip_id = if (parentSnip != null) {
                 if (File(snipFilePath).nameWithoutExtension.contains(File(parentSnip!!.videoFilePath).nameWithoutExtension) &&
-                    (fromOperation == CurrentOperation.VIDEO_RECORDING || fromOperation == CurrentOperation.CLIP_RECORDING) ||    //  while in videoMode check with file names for parent
+                    isFromVideoMode(fromOperation) ||    //  while in videoMode check with file names for parent
                     fromOperation == CurrentOperation.VIDEO_EDITING ||
                     parentChanged
                 ) {    //  while in editMode check is parentSnip was already set
@@ -448,6 +454,13 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         }
     }
 
+    private fun isFromVideoMode(fromOperation: CurrentOperation) =
+        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING,
+            CurrentOperation.VIDEO_RECORDING_SLOW_MO,
+            CurrentOperation.CLIP_RECORDING,
+            CurrentOperation.CLIP_RECORDING_SLOW_MO)
+
+
     /**
      * Triggered after the snip has been added,
      * Items to be displayed in the gallery are to be inserted in HR snips
@@ -469,7 +482,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 parentSnip = snip
             }
             Log.d(TAG, "onTaskCompleted: ${parentSnip?.snip_id}")
-
+            Log.d(TAG,
+                "onTaskCompleted: showInGallery at DB entry = ${showInGallery.toString()}")
             if (showInGallery.isPathInList(snip.videoFilePath)) {
                 appRepository.insertHd_snips(hdSnips)
                 saveSnipToDB(parentSnip, hdSnips.video_path_processed)
