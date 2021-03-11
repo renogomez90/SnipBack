@@ -292,7 +292,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var appRepository               : AppRepository?   = null
     private var animBlink                   : Animation?       = null
     private var thumbnailProcessingCompleted: OnTaskCompleted? = null
-    private var sloMOClicked = false
+    private var sloMoClicked = false
 
 
     //Views
@@ -316,11 +316,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var recStartLayout  : ConstraintLayout
     private lateinit var bottomContainer : ConstraintLayout
     private lateinit var seekBar         : SeekBar
-    private lateinit var sloMO           : ImageButton
-    private lateinit var sloMOQuickback  : TextView
-    private lateinit var sloMOSpeed      : TextView
-    private lateinit var sloMOPreview    : TextView
-    private lateinit var sloMOContainer  : ConstraintLayout
+    private lateinit var sloMo           : ImageButton
+    private lateinit var sloMoQuickback  : TextView
+    private lateinit var sloMoSpeed      : TextView
+    private lateinit var sloMoPreview    : TextView
+    private lateinit var sloMoContainer  : ConstraintLayout
 
     private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(
             SettingsDialog.SETTINGS_PREFERENCES,
@@ -676,8 +676,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 bottomContainer.visibility = View.VISIBLE
                 recStartLayout.visibility = View.INVISIBLE
                 AppClass.showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
-                Log.d(TAG,
-                    "onClick: showInGallery added with = ${File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension}")
                 parentSnip = null   //  resetting the session parent Snip
                 CoroutineScope(Default).launch {
                     cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
@@ -898,8 +896,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
                     AppClass.showInGallery.add(File(outputFileName).nameWithoutExtension)
                     Log.d(TAG,
-                        "processPendingSwipes: showInGallery = ${File(outputFileName).nameWithoutExtension}")
-                    Log.d(TAG,
                             "processPendingSwipes: \n Output = $outputFileName, \n start = ${(timeStamp - (swipeValue / 1000)).toInt()} \n end = $timeStamp")
 
                     //  if the merged video is passed in, then trim from the merged video to create the parts that were swiped
@@ -1005,7 +1001,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             VideoService.enqueueWork(requireContext(), intentService)
 
             AppClass.showInGallery.add(File(videoFilePath).nameWithoutExtension)
-            Log.d(TAG, "processPendingSwipes: showInGallery added ${File(videoFilePath).nameWithoutExtension}")
         }
     }
 
@@ -1141,7 +1136,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val mergeFilePath = "${File(clips[0]).parent!!}/merged-$timeStamp.mp4"
             swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
             AppClass.showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
-            Log.d(TAG, "concatOnSwipeDuringClipRecording: showInGallery added merged-$timeStamp-1")
+
             val intentService = Intent(requireContext(), VideoService::class.java)
             val task = arrayListOf(
                     VideoOpItem(
@@ -1194,8 +1189,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
             swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
             AppClass.showInGallery.add("trimmed-${clip.nameWithoutExtension}")
-            Log.d(TAG,
-                "trimOnSwipeDuringClipRecording: showInGallery added trimmed-${clip.nameWithoutExtension}")
 
             val bufferFile = "${clip.parent}/buff-${clip.name}"
             val videoFile = "${clip.parent}/trimmed-${clip.name}"
@@ -1251,8 +1244,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         } else { //  save what we have
             swipedFileNames.add(clip.nameWithoutExtension)
             AppClass.showInGallery.add(clip.nameWithoutExtension)
-            Log.d(TAG,
-                "trimOnSwipeDuringClipRecording: showInGallery added ${clip.nameWithoutExtension}")
             if(swipeAction == SwipeAction.SWIPE_LEFT) {  //  we only need to save the snip in DB for left swipe
                 (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
                         actualClipTime,

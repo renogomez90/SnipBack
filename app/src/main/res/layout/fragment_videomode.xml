@@ -305,14 +305,14 @@
             android:background="@drawable/round_transparent"
             android:contentDescription="@string/no_desc"
             app:layout_constraintBottom_toBottomOf="@id/bottom_cont"
-            app:layout_constraintEnd_toStartOf="@id/sloMO_120"
+            app:layout_constraintEnd_toStartOf="@id/slo_mo_120"
             app:layout_constraintStart_toEndOf="@id/con"
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
             app:srcCompat="@drawable/ic_camera_diaphram"
             tools:ignore="VectorDrawableCompat" />
 
         <ImageButton
-            android:id="@+id/sloMO_120"
+            android:id="@+id/slo_mo_120"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_toEndOf="@id/shutter_btn"
