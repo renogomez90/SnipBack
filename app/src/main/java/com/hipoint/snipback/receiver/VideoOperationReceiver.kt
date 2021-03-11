@@ -34,6 +34,7 @@ import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.service.VideoService
+import com.hipoint.snipback.videoControl.SpeedDetails
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -42,6 +43,7 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.Buffer
 import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 
@@ -263,10 +265,13 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             if (fromOperation == CurrentOperation.VIDEO_EDITING)
                 return
 
-            CoroutineScope(Dispatchers.IO).launch {
-                val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-                addSnip(processedVideoPath, duration, duration, fromOperation)
+            if(!isFromSlowNo(fromOperation)) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+                    addSnip(processedVideoPath, duration, duration, fromOperation)
+                }
             }
+
             if (!swipeProcessed &&
                 (fromOperation == CurrentOperation.VIDEO_RECORDING ||
                         fromOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO)) {
@@ -275,6 +280,49 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 startPendingProcessIntent.putExtra("comingFrom", fromOperation)
                 LocalBroadcastManager.getInstance(receivedContext!!).sendBroadcast(startPendingProcessIntent)
 //                videoModeFragment.processPendingSwipes()
+            } else if(isFromSlowNo(fromOperation)){
+                //  slow the video down
+                val outputName = "${File(processedVideoPath).nameWithoutExtension}_slow_mo"
+                val outputPath = "${File(processedVideoPath).parent}/$outputName.mp4"
+                val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+                val speedDetails = SpeedDetails(
+                    isFast = false,
+                    multiplier = 3,
+                    timeDuration = Pair(0L, duration * 1000L)   //  since the duration we get here is in seconds
+                )
+
+                val videoFile = VideoOpItem(
+                    operation = IVideoOpListener.VideoOp.SPEED,
+                    clips = arrayListOf(processedVideoPath),
+                    speedDetailsList = arrayListOf(speedDetails),
+                    outputPath = outputPath,
+                    comingFrom = fromOperation,
+                    swipeAction = swipeAction
+                )
+
+                if(processedVideoPath.contains("buff-")){  // if the video being processed is a buffer... then make sure it shows up as the buffer
+                    var tmp: BufferDataDetails? = null
+                    VideoService.bufferDetails.forEach {
+                        if(it.bufferPath == processedVideoPath){
+                            tmp = it
+                        }
+                    }
+                    if(tmp != null){
+                        VideoService.bufferDetails.remove(tmp)
+                        val newBufferDetail = BufferDataDetails(outputPath,
+                            "${File(tmp!!.videoPath).parent}/${File(tmp!!.videoPath).nameWithoutExtension}_slow_mo.mp4")
+                        VideoService.bufferDetails.add(newBufferDetail)
+                    }
+
+                } else {
+                    showInGallery.add(outputName)
+                }
+
+                val taskList = arrayListOf<VideoOpItem>()
+                taskList.add(videoFile)
+                val intentService = Intent(receivedContext, VideoService::class.java)
+                intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+                VideoService.enqueueWork(receivedContext!!, intentService)
             }
         }
     }
@@ -460,6 +508,9 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             CurrentOperation.CLIP_RECORDING,
             CurrentOperation.CLIP_RECORDING_SLOW_MO)
 
+    private fun isFromSlowNo(fromOperation: CurrentOperation) =
+        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING_SLOW_MO,
+            CurrentOperation.CLIP_RECORDING_SLOW_MO)
 
     /**
      * Triggered after the snip has been added,

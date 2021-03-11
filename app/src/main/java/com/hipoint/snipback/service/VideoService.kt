@@ -64,7 +64,9 @@ class VideoService : JobIntentService(), IVideoOpListener {
     }
 
     private fun processQueue() {
-        isProcessing = true
+        while(isProcessing){    //  this will hopefully wait for the current item to be done processing
+            Thread.sleep(300)
+        }
 
         if (workQueue.isNotEmpty()) {
             val work = workQueue.remove()
@@ -78,6 +80,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
             LocalBroadcastManager.getInstance(this@VideoService).sendBroadcast(updateUiIntent)
             Log.d(TAG, "processQueue: processing operation: ${work.operation} on ${work.clips} to get ${work.outputPath}")
             with(work) {
+                isProcessing = true
                 when (operation) {
                     IVideoOpListener.VideoOp.CONCAT -> {
                         if (clips.isEmpty() || clips.size < 2) {
