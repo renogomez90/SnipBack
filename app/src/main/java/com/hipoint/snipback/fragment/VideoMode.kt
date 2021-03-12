@@ -55,6 +55,7 @@ import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppRepository.Companion.instance
 import com.hipoint.snipback.service.VideoService
 import com.hipoint.snipback.service.VideoService.Companion.bufferDetails
+import com.hipoint.snipback.videoControl.SpeedDetails
 import com.hipoint.snipback.videoControl.VideoOpItem
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
@@ -790,9 +791,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     } else {
                         mTextureView.surfaceTextureListener = mSurfaceTextureListener
                     }
+
+                    currentOperation = CurrentOperation.CLIP_RECORDING_SLOW_MO
                 } else {
                     showSlowMoUi(false)
                     cameraControl?.disableHighSpeedMode()
+
+                    currentOperation = CurrentOperation.CLIP_RECORDING
                 }
             }
             R.id.slo_mo_speed -> {
@@ -808,11 +813,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         if(showUi) {
             slowMo.setImageResource(R.drawable.ic_speed_red)
             slowMoContainer.visibility = View.VISIBLE
-            currentOperation = CurrentOperation.CLIP_RECORDING_SLOW_MO
         }else {
             slowMo.setImageResource(R.drawable.ic_speed)
             slowMoContainer.visibility = View.GONE
-            currentOperation = CurrentOperation.CLIP_RECORDING
         }
     }
 
@@ -1141,7 +1144,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val intentService = Intent(requireContext(), VideoService::class.java)
             val task = arrayListOf(
                     VideoOpItem(
-                            operation = /*if(slowMoClicked) VideoOp.MERGED else*/ VideoOp.CONCAT,
+                            operation = VideoOp.CONCAT,
                             clips = clips,
                             outputPath = mergeFilePath,
                             comingFrom = if(slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
@@ -1246,12 +1249,38 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             swipedFileNames.add(clip.nameWithoutExtension)
             AppClass.showInGallery.add(clip.nameWithoutExtension)
             if(swipeAction == SwipeAction.SWIPE_LEFT) {  //  we only need to save the snip in DB for left swipe
-                (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
-                        actualClipTime,
-                        actualClipTime)
+                    if(currentOperation == CurrentOperation.CLIP_RECORDING) {
+                        (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
+                            actualClipTime,
+                            actualClipTime)
 
-                //  saving the clip itself as buffer since no buffer exists
-                bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
+                        //  saving the clip itself as buffer since no buffer exists
+                        bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
+                    }else if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
+                        val outputName = "${ clip.nameWithoutExtension }_slow_mo"
+                        val outputPath = "${clip.parent}/$outputName.mp4"
+                        val speedDetails = SpeedDetails(
+                            isFast = false,
+                            multiplier = 3,
+                            timeDuration = Pair(0L, actualClipTime * 1000L)
+                        )
+                        val videoTask = VideoOpItem(
+                            operation = VideoOp.SPEED,
+                            clips = arrayListOf(clip.absolutePath),
+                            outputPath = outputPath,
+                            speedDetailsList = arrayListOf(speedDetails),
+                            comingFrom = if(slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
+                            swipeAction = swipeAction)
+                        val taskList = arrayListOf<VideoOpItem>()
+                        taskList.add(videoTask)
+
+                        val intentService = Intent(requireContext(), VideoService::class.java)
+                        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+                        VideoService.enqueueWork(requireContext(), intentService)
+                        AppClass.showInGallery.add(outputName)
+
+//                        bufferDetails.add(BufferDataDetails(outputPath, outputPath))
+                    }
             }
             if(swipeAction == SwipeAction.SWIPE_RIGHT) {
                 CoroutineScope(Main).launch{
@@ -1320,7 +1349,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val task = arrayListOf(VideoOpItem(
-                    operation = /*if(slowMoClicked) VideoOp.MERGED else*/VideoOp.CONCAT,
+                    operation = VideoOp.CONCAT,
                     clips = clips,
                     outputPath = mergeFilePath,
                     comingFrom = if(slowMoClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING))

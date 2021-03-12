@@ -502,16 +502,6 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         }
     }
 
-    private fun isFromVideoMode(fromOperation: CurrentOperation) =
-        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING,
-            CurrentOperation.VIDEO_RECORDING_SLOW_MO,
-            CurrentOperation.CLIP_RECORDING,
-            CurrentOperation.CLIP_RECORDING_SLOW_MO)
-
-    private fun isFromSlowNo(fromOperation: CurrentOperation) =
-        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING_SLOW_MO,
-            CurrentOperation.CLIP_RECORDING_SLOW_MO)
-
     /**
      * Triggered after the snip has been added,
      * Items to be displayed in the gallery are to be inserted in HR snips
@@ -713,5 +703,15 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             e.printStackTrace()
         }
     }
+
+    private fun isFromVideoMode(fromOperation: CurrentOperation) =
+        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING,
+            CurrentOperation.VIDEO_RECORDING_SLOW_MO,
+            CurrentOperation.CLIP_RECORDING,
+            CurrentOperation.CLIP_RECORDING_SLOW_MO)
+
+    private fun isFromSlowNo(fromOperation: CurrentOperation) =
+        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING_SLOW_MO,
+            CurrentOperation.CLIP_RECORDING_SLOW_MO)
 
 }
