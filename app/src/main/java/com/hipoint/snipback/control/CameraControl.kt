@@ -1209,11 +1209,9 @@ class CameraControl(val activity: FragmentActivity) {
     /**
      * changes the current profile to chosen high speed profile and re-starts recording
      */
-    fun setHighSpeedMode(camcorderProfile: CamcorderProfile) {
+    fun setHighSpeedMode(camcorderProfile: CamcorderProfile?) {
             isSlowMotionEnabled = true
             highSpeedProfile = camcorderProfile
-            /*CoroutineScope(Default).launch { restartRecording() }*/
-
     }
 
     /**

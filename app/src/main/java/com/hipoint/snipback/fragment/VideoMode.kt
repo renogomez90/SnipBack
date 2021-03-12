@@ -825,7 +825,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun applyAvailableSlowMoMode() {
         val hFPSOptions = cameraControl?.getSupportedHFRMode()
         if(!hFPSOptions.isNullOrEmpty()){
-            cameraControl?.setHighSpeedMode(hFPSOptions[0])
+            //  if we have an HD high frame rate option use it
+            if(hFPSOptions[0].videoFrameWidth >= 720 || hFPSOptions[0].videoFrameHeight >= 720) {
+                cameraControl?.setHighSpeedMode(hFPSOptions[0])
+            }else { //  since we need an HD high speed mode and we don't have one, use what we have
+                cameraControl?.setHighSpeedMode(null)
+            }
+        } else {    //  high speed mode is not available, so record using the one we have now.
+            cameraControl?.setHighSpeedMode(null)   //  this will use the normal one that we have been using so far
         }
     }
 
