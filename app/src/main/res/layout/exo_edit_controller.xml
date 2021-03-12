@@ -71,8 +71,8 @@
             android:gravity="center"
             android:text="Total Length"
             android:textAllCaps="true"
-            android:textColor="@color/colorPrimaryWhite"
-            android:textSize="15sp"
+            android:textColor="@color/colorDarkGreyDim"
+            android:textSize="13sp"
              />
 
         <TextView

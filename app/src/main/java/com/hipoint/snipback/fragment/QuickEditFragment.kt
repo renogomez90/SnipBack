@@ -45,6 +45,7 @@ import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.service.VideoService
+import com.hipoint.snipback.videoControl.SpeedDetails
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.*
@@ -99,6 +100,10 @@ class QuickEditFragment: Fragment() {
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var seekbar           : SnipbackTimeBar
 
+    private lateinit var playBtn           : ImageButton       //  playback the video
+    private lateinit var pauseBtn          : ImageButton       //  stop video playback
+    private lateinit var toStartBtn        : ImageButton       //  seek back to start of video
+
     private var maxDuration    = 0L
     private var bufferDuration = -1L
     private var videoDuration  = -1L
@@ -106,6 +111,9 @@ class QuickEditFragment: Fragment() {
     private var endWindow      = -1
     private var editedStart    = -1L
     private var editedEnd      = -1L
+
+    //  Seek handling
+    private var paused        = true
 
 
     private val trimSegment  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
@@ -401,12 +409,15 @@ class QuickEditFragment: Fragment() {
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
         maxDuration = bufferDuration + videoDuration
-        seekbar.hideScrubber()
+//        seekbar.showScrubber()
+
+
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.EXACT)
             playWhenReady = false
+//            seekbar.showScrubber()
         }
 
         playerView.apply {
@@ -415,6 +426,8 @@ class QuickEditFragment: Fragment() {
             setBackgroundColor(Color.BLACK)
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
             showController()
+//            seekbar.showScrubber()
+
         }
 
         player.addListener(object : Player.EventListener {
@@ -471,6 +484,8 @@ class QuickEditFragment: Fragment() {
             0,
             TimeUnit.SECONDS.toMicros(clippedVideoDuration)
         )
+
+
         val mediaSource = ConcatenatingMediaSource(true, clip1, clip2)
 
         player.setMediaSource(mediaSource)
@@ -494,6 +509,7 @@ class QuickEditFragment: Fragment() {
 
         if(startWindow == 0) player.seekTo(startWindow, editedStart)
         else player.seekTo(startWindow, editedStart - bufferDuration)
+        seekbar.setDuration(editedStart)
 
         extendRangeMarker(startValue, endValue)
         start.performClick()
@@ -563,6 +579,27 @@ class QuickEditFragment: Fragment() {
 
         editBackBtn.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
+        playBtn.setOnClickListener {
+            if (player.currentWindowIndex == 1 && player.currentPosition >= videoDuration ||
+                    player.currentPosition >= maxDuration)
+                player.seekTo(0, 0)
+
+            playVideo()
+
+            Log.d(TAG, "Start Playback")
+        }
+
+        pauseBtn.setOnClickListener {
+            if (player.isPlaying) {
+                pauseVideo()
+                Log.d(TAG, "Stop Playback")
+            }
+        }
+        toStartBtn.setOnClickListener {
+            pauseVideo()
+            player.seekTo(0, 0)
+        }
+
         rootView.isFocusableInTouchMode = true
         rootView.requestFocus()
         rootView.setOnKeyListener(object : View.OnKeyListener {
@@ -574,6 +611,17 @@ class QuickEditFragment: Fragment() {
                 return false
             }
         })
+    }
+
+    private fun pauseVideo() {
+        player.playWhenReady = false
+        paused = true
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun playVideo() {
+        player.playWhenReady = true
+        paused = false
     }
 
     private fun bindViews(){
@@ -589,6 +637,9 @@ class QuickEditFragment: Fragment() {
         previewTileList    = rootView.findViewById(R.id.previewFrameList)
         previewBarProgress = rootView.findViewById(R.id.previewBarProgress)
         seekbar            = rootView.findViewById(R.id.exo_progress)
+        playBtn            = rootView.findViewById(R.id.exo_play)
+        pauseBtn           = rootView.findViewById(R.id.exo_pause)
+        toStartBtn         = rootView.findViewById(R.id.toStartBtn)
 
     }
 
