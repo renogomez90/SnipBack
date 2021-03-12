@@ -97,19 +97,20 @@
         android:layout_marginStart="35dp"
         android:layout_marginEnd="35dp"
         android:visibility="visible"
-        app:layout_constraintBottom_toTopOf="@id/slo_mo_container"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/slo_mo_container"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/slo_mo_container"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:id="@+id/slo_mo_container"
-        android:fontFamily="@font/barlow_medium"
-        android:visibility="gone"
-        app:layout_constraintBottom_toTopOf="@+id/bottom_cont"
-        >
+        android:gravity="center"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_cont">
 
         <TextView
             android:id="@+id/slo_mo_quick_back"
@@ -119,40 +120,42 @@
             android:background="@drawable/rounded_corners_one"
             android:text="QB 5sec"
             android:textColor="#fff"
-            android:gravity="center"
             android:textSize="14sp"
-            app:layout_constraintTop_toTopOf="parent"
+            android:textAlignment="center"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"/>
-
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/slo_mo_speed"
             android:layout_width="50dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
             android:background="@drawable/rounded_corners_one"
-            android:layout_marginStart="30dp"
             android:text="15X"
+            android:textAlignment="center"
             android:textColor="#fff"
-            android:gravity="center"
             android:textSize="14sp"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/slo_mo_quick_back" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/slo_mo_preview_option"
+            app:layout_constraintStart_toEndOf="@id/slo_mo_quick_back"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/slo_mo_preview_option"
             android:layout_width="120dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
             android:background="@drawable/rounded_corners_one"
-            android:gravity="center"
-            android:layout_marginStart="30dp"
             android:text="AUTO PREVIEW"
             android:textColor="#fff"
             android:textSize="14sp"
-            app:layout_constraintTop_toTopOf="parent"
+            android:textAlignment="center"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/slo_mo_speed" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/slo_mo_speed"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -324,8 +327,6 @@
             app:layout_constraintTop_toTopOf="@id/bottom_cont"
             app:srcCompat="@drawable/ic_speed"
             tools:ignore="VectorDrawableCompat" />
-
-
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
