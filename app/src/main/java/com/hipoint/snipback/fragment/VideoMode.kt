@@ -95,21 +95,24 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     //  orientation previous orientation to decide button rotation animation
     var previousOrientation = SimpleOrientationListener.VideoModeOrientation.PORTRAIT
 
-    //dialogs
+    //  dialogs
     var settingsDialog: SettingsDialog? = null
 
     var zoomFactor: TextView? = null
 
-    //zoom slider controls
+    //  zoom slider controls
     var mProgress       = 0f
     var mMinZoom        = 0f
     var mMaxZoom        = 0f
     var currentProgress = 1f
     val zoomStep        = 1f
 
-    //left swipe
+    //  left swipe
     private var point1 = 0f
     private var point2 = 0f
+
+    //  high frame rate
+    private var showHFPSPreview = true
 
     private val swipeAnimationListener = object : Animator.AnimatorListener {
         override fun onAnimationStart(animation: Animator?) = Unit
@@ -581,6 +584,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     }
                 }
         )
+
+        slowMoPreview.setOnClickListener {
+            if(showHFPSPreview){
+                slowMoPreview.alpha = 0.5F
+            }else {
+                slowMoPreview.alpha = 1F
+            }
+            showHFPSPreview = !showHFPSPreview
+        }
     }
 
     /**
