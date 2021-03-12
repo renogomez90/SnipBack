@@ -16,6 +16,20 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:background="#44AA0000" />
 
+    <TextView
+        android:id="@+id/speed_indicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/app_margin"
+        android:text="15X"
+        android:fontFamily="@font/barlow_medium"
+        android:textColor="@color/colorWhite"
+        android:textSize="20sp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@id/accept_delete_holder"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -27,7 +41,6 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:orientation="vertical"
-            android:layout_marginBottom="7dp"
             android:layout_height="wrap_content">
 
             <TextView
@@ -38,9 +51,10 @@
                 android:fontFamily="@font/barlow_semibold"
                 android:gravity="center"
                 android:text="Total Length"
+                android:layout_marginBottom="3dp"
                 android:textAllCaps="true"
-                android:textColor="@color/colorPrimaryWhite"
-                android:textSize="15sp"
+                android:textColor="@color/colorDarkGreyDim"
+                android:textSize="16sp"
                 />
 
             <TextView
@@ -53,7 +67,7 @@
                 android:gravity="center"
                 android:text="00:00"
                 android:textColor="@color/colorPrimaryWhite"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 />
         </LinearLayout>
 
@@ -66,9 +80,9 @@
             android:layout_gravity="bottom"
             android:fontFamily="@font/barlow_semibold"
             android:text="00:00"
-            android:layout_marginBottom="7dp"
+            android:layout_marginBottom="5dp"
             android:textColor="@color/colorPrimaryWhite"
-            android:textSize="15sp"
+            android:textSize="16sp"
             />
 
     </LinearLayout>
@@ -78,6 +92,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="right"
+        android:layout_marginBottom="5dp"
         android:visibility="visible"
         app:layout_constraintBottom_toTopOf="@+id/separator"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -89,19 +104,23 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginEnd="5dp"
                 android:visibility="visible">
 
                 <ImageView
                     android:id="@+id/reject"
-                    android:layout_width="wrap_content"
-                    android:layout_height="45dp"
+                    android:layout_width="40dp"
+                    android:layout_gravity="center"
+                    android:layout_height="40dp"
                     android:contentDescription="@string/no_desc"
                     android:src="@drawable/ic_delete" />
 
                 <ImageView
                     android:id="@+id/accept"
-                    android:layout_width="wrap_content"
-                    android:layout_height="45dp"
+                    android:layout_width="40dp"
+                    android:layout_gravity="center"
+                    android:layout_height="40dp"
                     android:layout_marginStart="9dp"
                     android:contentDescription="@string/no_desc"
                     android:src="@drawable/ic_tick_done" />
@@ -130,7 +149,7 @@
         <LinearLayout
             android:id="@+id/play_con1"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
             android:background="@color/bottom_menu"
             android:gravity="center"
             android:orientation="horizontal"
@@ -143,17 +162,22 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <ImageView
-                android:id="@+id/back1"
+                android:id="@+id/back_arrow"
                 android:layout_width="0dp"
+                android:layout_marginEnd="10dp"
                 android:layout_height="35dp"
+                android:layout_gravity="center"
                 android:layout_weight="2.5"
                 android:contentDescription="@string/no_desc"
-                android:src="@drawable/ic_back1" />
+                android:src="@drawable/ic_back1"
+                />
             <ImageButton
                 android:id="@+id/toStartBtn"
                 android:layout_width="0dp"
                 android:layout_height="30dp"
                 android:layout_weight="2.5"
+                android:layout_marginStart="10dp"
+                android:layout_gravity="center"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/no_desc"
                 android:scaleType="fitCenter"
@@ -162,6 +186,8 @@
 
             <FrameLayout
                 android:layout_width="0dp"
+                android:layout_gravity="center"
+                android:layout_marginEnd="10dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2.5">
 
@@ -190,17 +216,21 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="2"
+                android:layout_weight="1"
                 android:gravity="center"
-                android:weightSum="5">
+                android:layout_marginTop="5dp"
+                android:weightSum="1">
 
                 <TextView
                     android:id="@+id/start"
-                    android:layout_width="62dp"
+                    android:layout_width="0dp"
                     android:layout_height="32dp"
+                    android:layout_weight="0.5"
                     android:background="@drawable/start_curve"
                     android:fontFamily="@font/barlow_semibold"
                     android:gravity="center"
+                    android:textAlignment="center"
+                    android:layout_gravity="center"
                     android:paddingStart="10dp"
                     android:text="BEGIN"
                     android:textColor="@color/colorPrimaryWhite"
@@ -209,12 +239,16 @@
 
                 <TextView
                     android:id="@+id/end"
-                    android:layout_width="62dp"
+                    android:layout_width="0dp"
+                    android:layout_weight="0.5"
                     android:layout_height="32dp"
                     android:background="@drawable/end_curve"
                     android:fontFamily="@font/barlow_semibold"
                     android:gravity="end|center"
+                    android:paddingStart="10dp"
                     android:paddingEnd="20dp"
+                    android:textAlignment="center"
+                    android:layout_gravity="center"
                     android:text="END  "
                     android:textColor="@color/colorPrimaryWhite"
                     android:textSize="10sp"
