@@ -279,6 +279,7 @@ class QuickEditFragment: Fragment() {
             getVideoPreviewFrames()
         }
     }
+
     /**
      * Populates preview frames in the seekBar area from the video
      */

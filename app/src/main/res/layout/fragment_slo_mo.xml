@@ -13,4 +13,5 @@
         app:controller_layout_id="@layout/slomo_controller"
         app:time_bar_min_update_interval="20"
         app:use_controller="true"/>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
