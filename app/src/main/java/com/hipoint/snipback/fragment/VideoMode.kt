@@ -628,7 +628,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(processSwipeReceiver,
                 IntentFilter(PENDING_SWIPE_ACTION))
 //        videoProcessing(false)
-
+        currentSpeed = 3
     }
 
     /**
