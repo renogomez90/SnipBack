@@ -563,9 +563,6 @@ class QuickEditFragment: Fragment() {
             }
         }
 
-        editBackBtn.setOnClickListener {
-
-        }
         acceptBtn.setOnClickListener {
             Log.d(TAG, "bindListeners: selected start = $editedStart, selected end = $editedEnd")
             if(editedStart >= editedEnd ||

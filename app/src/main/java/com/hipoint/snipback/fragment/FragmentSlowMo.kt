@@ -640,7 +640,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         rejectBtn.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
-        editBackBtn.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
         rootView.isFocusableInTouchMode = true
         rootView.requestFocus()
@@ -970,7 +969,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     fun showSaveDialog(){
         if (saveVideoDialog == null) {
-            saveVideoDialog = KeepVideoDialog(this)
+            saveVideoDialog = KeepVideoDialog(this@FragmentSlowMo)
         }
 
         if(!saveVideoDialog!!.isAdded) {
