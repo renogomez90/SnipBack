@@ -646,7 +646,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         rootView.setOnKeyListener(object : View.OnKeyListener {
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    requireActivity().supportFragmentManager.popBackStack()
+                    showSaveDialog()
                     return true
                 }
                 return false
