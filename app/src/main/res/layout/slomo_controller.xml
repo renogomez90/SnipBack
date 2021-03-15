@@ -297,10 +297,11 @@
                 <com.hipoint.snipback.Utils.SnipbackTimeBar
                     android:id="@id/exo_progress"
                     android:layout_width="match_parent"
+                    android:elevation="8dp"
                     android:layout_height="35dp"
                     android:paddingBottom="3dp"
-                    android:visibility="invisible"
                     app:bar_height="40dp"
+                    android:visibility="visible"
                     app:buffered_color="@android:color/transparent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
