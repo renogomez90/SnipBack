@@ -409,7 +409,6 @@ class QuickEditFragment: Fragment() {
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
         maxDuration = bufferDuration + videoDuration
-//        seekbar.showScrubber()
 
 
 
@@ -417,7 +416,6 @@ class QuickEditFragment: Fragment() {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.EXACT)
             playWhenReady = false
-//            seekbar.showScrubber()
         }
 
         playerView.apply {
@@ -426,7 +424,6 @@ class QuickEditFragment: Fragment() {
             setBackgroundColor(Color.BLACK)
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
             showController()
-//            seekbar.showScrubber()
 
         }
 
@@ -445,6 +442,12 @@ class QuickEditFragment: Fragment() {
                             .attach(frag)
                             .commit()
                     }
+                }
+            }
+            override fun onPlaybackStateChanged(state: Int) {
+                if (state == Player.STATE_ENDED ) {
+                    pauseVideo()
+                    player.seekTo(endWindow, 0)
                 }
             }
         })
@@ -597,7 +600,7 @@ class QuickEditFragment: Fragment() {
         }
         toStartBtn.setOnClickListener {
             pauseVideo()
-            player.seekTo(0, 0)
+            player.seekTo(endWindow, 0)
         }
 
         rootView.isFocusableInTouchMode = true
