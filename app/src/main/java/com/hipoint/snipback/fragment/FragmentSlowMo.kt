@@ -11,6 +11,7 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.util.Range
 import android.view.*
 import android.widget.*
 import androidx.core.content.res.ResourcesCompat
@@ -97,8 +98,6 @@ class FragmentSlowMo : Fragment()  {
     private var endWindow      = -1
     private var editedStart    = -1L
     private var editedEnd      = -1L
-
-    private val trimSegment  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -558,6 +557,7 @@ class FragmentSlowMo : Fragment()  {
     }
 
     private fun extendRangeMarker(startValue: Float, endValue: Float) {
+        val trimSegment = RangeSeekbarCustom(requireContext())
         val colour = resources.getColor(android.R.color.transparent, context?.theme)
         val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
