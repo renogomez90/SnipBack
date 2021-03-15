@@ -1310,7 +1310,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             val outputPath = "${clip.parent}/$outputName.mp4"
                             val speedDetails = SpeedDetails(
                                 isFast = false,
-                                multiplier = 3,
+                                multiplier = currentSpeed,
                                 timeDuration = Pair(0L, actualClipTime * 1000L)
                             )
                             val videoTask = VideoOpItem(

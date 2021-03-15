@@ -59,6 +59,7 @@ class FragmentSlowMo : Fragment()  {
     private lateinit var rootView          : View
     private lateinit var player            : SimpleExoPlayer
     private lateinit var playerView        : PlayerView
+    private lateinit var currentSpeed      : TextView
     private lateinit var start             : TextView
     private lateinit var end               : TextView
     private lateinit var editBackBtn       : ImageView
@@ -274,6 +275,7 @@ class FragmentSlowMo : Fragment()  {
 
     private fun bindViews() {
         playerView         = rootView.findViewById(R.id.player_view)
+        currentSpeed       = rootView.findViewById(R.id.speed_indicator)
         start              = rootView.findViewById(R.id.start)
         end                = rootView.findViewById(R.id.end)
         editBackBtn        = rootView.findViewById(R.id.back_arrow)
@@ -296,6 +298,7 @@ class FragmentSlowMo : Fragment()  {
         seekbar.showScrubber()
 
         player.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
+        currentSpeed.text = "$multiplier X"
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
@@ -378,6 +381,10 @@ class FragmentSlowMo : Fragment()  {
 
         }
 
+        currentSpeed.setOnClickListener {
+            currentSpeed.text = changeSpeedText()
+        }
+
         rejectBtn.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
         editBackBtn.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
@@ -393,6 +400,39 @@ class FragmentSlowMo : Fragment()  {
                 return false
             }
         })
+    }
+
+    /**
+     * changes the speed text on every tap
+     */
+    private fun changeSpeedText(): CharSequence {
+        return when (multiplier) {
+            3 -> {
+                multiplier = 4
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "4X"
+            }
+            4 -> {
+                multiplier = 5
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "5X"
+            }
+            5 -> {
+                multiplier = 10
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "10X"
+            }
+            10 -> {
+                multiplier = 15
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "15X"
+            }
+            else -> {
+                multiplier = 3
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "3X"
+            }
+        }
     }
 
     private fun setupMediaSource() {
