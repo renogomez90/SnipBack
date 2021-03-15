@@ -640,8 +640,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         rejectBtn.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
 
-        editBackBtn.setOnClickListener { requireActivity().supportFragmentManager.popBackStack() }
-
         rootView.isFocusableInTouchMode = true
         rootView.requestFocus()
         rootView.setOnKeyListener(object : View.OnKeyListener {
