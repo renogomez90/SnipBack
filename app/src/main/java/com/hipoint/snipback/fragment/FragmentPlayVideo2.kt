@@ -67,51 +67,51 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     private val VIDEO_DIRECTORY_NAME = "Snipback"
 
-    private val retries = 3
-    private var tries = 0
-    private var seekToPoint: Long = 0
-    private var whenReady: Boolean = false
+    private val retries     = 3
+    private var tries       = 0
+    private var seekToPoint: Long    = 0
+    private var whenReady  : Boolean = false
 
     private var subscriptions: CompositeDisposable? = null
 
-    private lateinit var mediaSource: MediaSource
-    private lateinit var player: SimpleExoPlayer
-    private lateinit var dataSourceFactory: DataSource.Factory
-    private lateinit var defaultBandwidthMeter: DefaultBandwidthMeter
-    private lateinit var appRepository: AppRepository
-    private lateinit var appViewModel: AppViewModel
-    private lateinit var playerView: PlayerView
-    private lateinit var playBtn: ImageButton
-    private lateinit var pauseBtn: ImageButton
+    private lateinit var mediaSource           : MediaSource
+    private lateinit var player                : SimpleExoPlayer
+    private lateinit var dataSourceFactory     : DataSource.Factory
+    private lateinit var defaultBandwidthMeter : DefaultBandwidthMeter
+    private lateinit var appRepository         : AppRepository
+    private lateinit var appViewModel          : AppViewModel
+    private lateinit var playerView            : PlayerView
+    private lateinit var playBtn               : ImageButton
+    private lateinit var pauseBtn              : ImageButton
     private lateinit var progressDurationHolder: LinearLayout
-    private lateinit var playPauseHolder: FrameLayout
-    private lateinit var quickEditBtn: ConstraintLayout
-    private lateinit var quickEditTimeTxt: TextView
-    private lateinit var seekBar: DefaultTimeBar
-    private lateinit var rootView: View
-    private lateinit var editBtn: TextView
-    private lateinit var tag: TextView
-    private lateinit var shutter: TextView
-    private lateinit var share: TextView
-    private lateinit var delete: TextView
-    private lateinit var backArrow: RelativeLayout
-    private lateinit var buttonCamera: RelativeLayout
-    private lateinit var tvConvertToReal: ImageButton
-    private lateinit var swipeDetector: SwipeDistanceView
-    private lateinit var bottomMenu: LinearLayout
+    private lateinit var playPauseHolder       : FrameLayout
+    private lateinit var quickEditBtn          : ConstraintLayout
+    private lateinit var quickEditTimeTxt      : TextView
+    private lateinit var seekBar               : DefaultTimeBar
+    private lateinit var rootView              : View
+    private lateinit var editBtn               : TextView
+    private lateinit var tag                   : TextView
+    private lateinit var shutter               : TextView
+    private lateinit var share                 : TextView
+    private lateinit var delete                : TextView
+    private lateinit var backArrow             : RelativeLayout
+    private lateinit var buttonCamera          : RelativeLayout
+    private lateinit var tvConvertToReal       : ImageButton
+    private lateinit var swipeDetector         : SwipeDistanceView
+    private lateinit var bottomMenu            : LinearLayout
 
     // new
     private var event: Event? = null
 
     // new added
-    private var snip: Snip? = null
+    private var snip        : Snip?     = null
     private var bufferHDSnip: Hd_snips? = null
 
     private var thumbnailExtractionStarted = false
-    private var isInEditMode = false
-    private var bufferDuration = -1L
-    private var videoDuration = -1L
-    private var maxDuration = 0L
+    private var isInEditMode               = false
+    private var bufferDuration             = -1L
+    private var videoDuration              = -1L
+    private var maxDuration                = 0L
 
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive

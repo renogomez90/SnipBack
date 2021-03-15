@@ -91,7 +91,6 @@ class FragmentSlowMo : Fragment()  {
     private var maxDuration   : Long = -1L
 
     private val trimSegment  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
-    private val bufferOverlay: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -217,6 +216,8 @@ class FragmentSlowMo : Fragment()  {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        bufferPath = null
+        videoPath = null
         savedInstanceState?.let {
 
         }
@@ -242,7 +243,7 @@ class FragmentSlowMo : Fragment()  {
         requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(VideoEditingFragment.DISMISS_ACTION))
 
         bufferPath = arguments?.getString("bufferPath")
-        videoPath = arguments?.getString("videoPath")
+        videoPath  = arguments?.getString("videoPath")
 
         if(videoPath.isNullOrEmpty()) {
             showProgress()
@@ -278,7 +279,7 @@ class FragmentSlowMo : Fragment()  {
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
         maxDuration = bufferDuration + videoDuration
-        seekbar.hideScrubber()
+        seekbar.showScrubber()
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
@@ -318,6 +319,9 @@ class FragmentSlowMo : Fragment()  {
             showThumbnailsIfAvailable(previewThumbs!!)
         }
         prepareForEdit()
+
+        if (!VideoService.isProcessing)  //  in case we are coming from video editing there is a chance for crash
+            getVideoPreviewFrames()
     }
 
     private fun prepareForEdit() {
@@ -448,6 +452,7 @@ class FragmentSlowMo : Fragment()  {
      * places a dark overlay to identify the buffer region
      */
     private fun showBufferOverlay() {
+        val bufferOverlay = RangeSeekbarCustom(requireContext())
         val colour = resources.getColor(R.color.blackOverlay, context?.theme)
         val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()

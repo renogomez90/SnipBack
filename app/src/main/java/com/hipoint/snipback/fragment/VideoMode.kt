@@ -1256,7 +1256,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             VideoService.enqueueWork(requireContext(), intentService)
 
             if(slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
-                (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, clip.absolutePath),
+                (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null),
                     true)
             }
 
