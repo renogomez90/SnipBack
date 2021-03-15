@@ -240,9 +240,15 @@ class FragmentSlowMo : Fragment()  {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         bufferPath  = null
         videoPath   = null
         trimSegment = null
+
+        editedStart = -1L
+        editedEnd   = -1L
+        startWindow = -1
+        endWindow =  -1
 
         savedInstanceState?.let {
 
@@ -287,9 +293,7 @@ class FragmentSlowMo : Fragment()  {
         } else {
             setupPlayer()
         }
-
-        Log.e("values23","startval  $editedStart endvAl  $editedEnd")
-
+        
     }
 
     override fun onPause() {
