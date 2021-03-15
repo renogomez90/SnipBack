@@ -12,7 +12,7 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.listener.ISaveListener
 
 
-class KeepSnapbackVideoDialog(private val saveListener: ISaveListener) : DialogFragment() {
+class KeepVideoDialog(private val saveListener: ISaveListener) : DialogFragment() {
 
     private lateinit var saveAs: TextView
     private lateinit var exit: TextView

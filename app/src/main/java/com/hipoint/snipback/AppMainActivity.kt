@@ -226,6 +226,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             is VideoEditingFragment -> EDIT_VIDEO_TAG
             is QuickEditFragment -> QUICK_EDIT_TAG
             is SnapbackFragment -> SNAPBACK_VIDEO_TAG
+            is FragmentSlowMo -> SLOW_MO_TAG
             else -> ""
         }
 
@@ -291,6 +292,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         if (count == 0) {
             super.onBackPressed()
         } else {
+            val slowMoFragment =
+                supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? FragmentSlowMo
             val editFrag =
                 supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
             val snapbackFragment =
@@ -305,7 +308,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 editFrag.confirmExitOnBackPressed()
             } else if (snapbackFragment != null && snapbackFragment.isVisible) {
                 snapbackFragment.showSaveDialog()
-            } else {
+            } else if (slowMoFragment != null && slowMoFragment.isVisible){
+                slowMoFragment.showSaveDialog()
+            }else {
                 supportFragmentManager.popBackStack()
             }
         }
@@ -335,6 +340,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         internal var parentChanged: Boolean = false
         internal var virtualToReal: Boolean = false //  set this to true before trimming, so that additional operations may be applied on the new video eg. speed change
 
+        const val SLOW_MO_TAG          = "slow_mo_frag"
         const val VIDEO_MODE_TAG       = "videoMode"
         const val GALLERY_FRAGMENT_TAG = "gallery_frag"
         const val PLAY_VIDEO_TAG       = "play_frag"

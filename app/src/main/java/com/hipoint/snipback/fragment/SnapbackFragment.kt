@@ -29,7 +29,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
-import com.exozet.android.core.extensions.disable
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.google.android.exoplayer2.*
@@ -40,7 +39,7 @@ import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.application.AppClass.showInGallery
-import com.hipoint.snipback.dialog.KeepSnapbackVideoDialog
+import com.hipoint.snipback.dialog.KeepVideoDialog
 import com.hipoint.snipback.dialog.SnapbackProcessingDialog
 import com.hipoint.snipback.listener.ISaveListener
 import com.karumi.dexter.Dexter
@@ -76,7 +75,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private var tries   = 0
     private var seekToPoint: Long = 0
 
-    private var saveVideoDialog: KeepSnapbackVideoDialog?  = null
+    private var saveVideoDialog: KeepVideoDialog?  = null
     private var subscriptions  : CompositeDisposable?      = null
     private var animBlink      : Animation?                = null
 
@@ -460,7 +459,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         }
 
         if (saveVideoDialog == null) {
-            saveVideoDialog = KeepSnapbackVideoDialog(this@SnapbackFragment)
+            saveVideoDialog = KeepVideoDialog(this@SnapbackFragment)
         }
 
         if(!saveVideoDialog!!.isAdded) {

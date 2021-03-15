@@ -32,15 +32,22 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
+import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.SnipbackTimeBar
+import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
+import com.hipoint.snipback.application.AppClass
+import com.hipoint.snipback.dialog.KeepVideoDialog
 import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.EditSeekControl
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.DISMISS_ACTION
+import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.EXTEND_TRIM_ACTION
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.PREVIEW_ACTION
+import com.hipoint.snipback.listener.ISaveListener
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.service.VideoService
+import com.hipoint.snipback.videoControl.SpeedDetails
 import com.hipoint.snipback.videoControl.VideoOpItem
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -48,15 +55,19 @@ import kotlinx.coroutines.*
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
+import java.nio.Buffer
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 
-class FragmentSlowMo : Fragment()  {
-    private val TAG = FragmentSlowMo::class.java.simpleName
-    private val PROCESSING_DIALOG = "dialog_processing"
+class FragmentSlowMo : Fragment(), ISaveListener {
+    private val TAG                  = FragmentSlowMo::class.java.simpleName
+    private val SAVE_SNAPBACK_DIALOG = "com.hipoint.snipback.dialog_save"
+    private val PROCESSING_DIALOG    = "com.hipoint.snipback.dialog_processing"
 
     private lateinit var rootView          : View
     private lateinit var player            : SimpleExoPlayer
@@ -77,6 +88,8 @@ class FragmentSlowMo : Fragment()  {
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var seekbar           : SnipbackTimeBar
 
+    //  save dialog
+    private var saveVideoDialog: KeepVideoDialog?  = null
     //  progress tracker
     private var progressTracker: ProgressTracker? = null
     //  range marker
@@ -109,6 +122,8 @@ class FragmentSlowMo : Fragment()  {
     private var editedStart    = -1L
     private var editedEnd      = -1L
 
+    private var timeStamp: String? = null
+
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
@@ -131,10 +146,92 @@ class FragmentSlowMo : Fragment()  {
         }
     }
 
+    /**
+     * The first time this is triggered is after the CONCAT is completed.
+     * the received inputFile is then enqueued for trimming as buffer and required video.
+     *
+     * This happens in 2 stages: TRIMMED may be entered twice
+     * step 1
+     * if the buffer is unavailable or the video is being saved with saveAction == SaveActionType.SAVE_AS
+     * we can proceed to just trim the original video.
+     * else we trim the buffered file.
+     *
+     * step 2
+     * replace is set up if it is required
+     * required video is enqueued for trimming
+     *
+     * Once this is completed the speed changes are triggered
+     */
+    private val extendTrimReceiver: BroadcastReceiver = object: BroadcastReceiver() {
+        var concatOutput     = ""
+        var fullExtension    = false
+
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.let {
+                val retriever = MediaMetadataRetriever()
+                val operation = it.getStringExtra("operation")
+                val inputName = it.getStringExtra("fileName")
+                val trimmedOutputPath = "${File(inputName!!).parent}/trimmed-$timeStamp.mp4"
+                val speedChangedPath = "${File(inputName).parent}/VID_$timeStamp.mp4"
+
+                retriever.setDataSource(inputName)
+
+                val taskList = arrayListOf<VideoOpItem>()
+
+                if (operation == IVideoOpListener.VideoOp.CONCAT.name) {  //  concat is completed, trim is triggered
+                    val concatDuration =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                            .toLong()
+                    Log.d(TAG, "onReceive: CONCAT duration = $concatDuration")
+                    concatOutput = inputName
+                    fullExtension = (editedStart == 0L)
+
+                    if (fullExtension) {
+                        editedStart = 100L
+                    }
+                    val trimTask = VideoOpItem(
+                        operation = IVideoOpListener.VideoOp.TRIMMED,
+                        clips = arrayListOf(inputName),
+                        startTime = editedStart.milliToFloatSecond(),
+                        endTime = editedEnd.milliToFloatSecond(),
+                        outputPath = trimmedOutputPath,
+                        comingFrom = CurrentOperation.VIDEO_EDITING)
+
+                    taskList.add(trimTask)
+                } else if (operation == IVideoOpListener.VideoOp.TRIMMED.name) {  //  trim is completed
+                    val trimmedDuration =
+                        retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                            .toLong()
+                    Log.d(TAG, "onReceive: TRIMMED duration = $trimmedDuration")
+                    val speedDetails = SpeedDetails(
+                        isFast = false,
+                        timeDuration = Pair(0, trimmedDuration),
+                        multiplier = multiplier
+                    )
+                    val speedChangeTask = VideoOpItem(
+                        operation = IVideoOpListener.VideoOp.SPEED,
+                        clips = arrayListOf(inputName),
+                        outputPath = speedChangedPath,
+                        speedDetailsList = arrayListOf(speedDetails),
+                        comingFrom = CurrentOperation.VIDEO_EDITING)
+
+                    taskList.add(speedChangeTask)
+                    AppClass.showInGallery.add(File(speedChangedPath).nameWithoutExtension)
+                }
+
+                val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
+                createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM,
+                    taskList)
+                VideoService.enqueueWork(requireContext(), createNewVideoIntent)
+                retriever.release()
+            }
+        }
+    }
+
     private fun showProgress(){
         if(processingDialog == null)
             processingDialog = ProcessingDialog()
-        processingDialog!!.isCancelable = true
+        processingDialog!!.isCancelable = false
         processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
@@ -265,6 +362,7 @@ class FragmentSlowMo : Fragment()  {
 
     override fun onResume() {
         super.onResume()
+        requireActivity().registerReceiver(extendTrimReceiver, IntentFilter(EXTEND_TRIM_ACTION))
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
         requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(DISMISS_ACTION))
 
@@ -282,6 +380,7 @@ class FragmentSlowMo : Fragment()  {
     }
 
     override fun onPause() {
+        requireActivity().unregisterReceiver(extendTrimReceiver)
         requireActivity().unregisterReceiver(previewTileReceiver)
         requireActivity().unregisterReceiver(progressDismissReceiver)
         super.onPause()
@@ -496,10 +595,10 @@ class FragmentSlowMo : Fragment()  {
         }
 
         editBackBtn.setOnClickListener {
-
+            showSaveDialog()
         }
         acceptBtn.setOnClickListener {
-
+            saveAs()
         }
 
         currentSpeed.setOnClickListener {
@@ -836,6 +935,17 @@ class FragmentSlowMo : Fragment()  {
         return bitmap
     }
 
+    fun showSaveDialog(){
+        if (saveVideoDialog == null) {
+            saveVideoDialog = KeepVideoDialog(this)
+        }
+
+        if(!saveVideoDialog!!.isAdded) {
+            saveVideoDialog!!.isCancelable = true
+            saveVideoDialog!!.show(requireActivity().supportFragmentManager, SAVE_SNAPBACK_DIALOG)
+        }
+    }
+
     /**
      * start tracking progress
      */
@@ -892,5 +1002,62 @@ class FragmentSlowMo : Fragment()  {
         fun isCurrentlyTracking(): Boolean {
             return isTrackingProgress && handler != null
         }
+    }
+
+    override fun saveAs() {
+        saveVideoDialog?.dismiss()
+        showProgress()
+        createModifiedVideo()
+    }
+
+    override fun save() = Unit
+
+    override fun cancel() = Unit
+
+    override fun exit() {
+        requireActivity().supportFragmentManager.popBackStack()
+    }
+
+    /**
+     *  prepares the concatenated and trimmed video with any edits
+     *  concatenate buffer and video
+     *  trimmed video to spec
+     *  make edits
+     *  save to db
+     */
+    private fun createModifiedVideo() {
+        timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val concatOutputPath = "${File(videoPath!!).parent}/$timeStamp.mp4"
+        val taskList = arrayListOf<VideoOpItem>()
+
+        if (bufferPath != null) {
+            val concatenateTask = VideoOpItem(
+                operation = IVideoOpListener.VideoOp.CONCAT,
+                clips = arrayListOf(bufferPath!!, videoPath!!),
+                outputPath = concatOutputPath,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
+
+            taskList.apply { add(concatenateTask) }
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
+            if (VideoEditingFragment.saveAction == VideoEditingFragment.SaveActionType.SAVE && bufferPath.isNotNullOrEmpty())
+                VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
+        } else {
+            val trimmedOutputPath = "${File(videoPath!!).parent}/trimmed-$timeStamp.mp4"
+            val trimTask = VideoOpItem(
+                operation = IVideoOpListener.VideoOp.TRIMMED,
+                clips = arrayListOf(videoPath!!),
+                startTime = editedStart.milliToFloatSecond(),
+                endTime = editedEnd.milliToFloatSecond(),
+                outputPath = trimmedOutputPath,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
+
+            taskList.apply { add(trimTask) }
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
+        }
+
+        val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
+        createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+        VideoService.enqueueWork(requireContext(), createNewVideoIntent)
     }
 }
