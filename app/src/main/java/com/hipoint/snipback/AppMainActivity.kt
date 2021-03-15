@@ -19,6 +19,7 @@ import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.transition.Slide
@@ -292,8 +293,10 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         if (count == 0) {
             super.onBackPressed()
         } else {
+            val playVideoFragment =
+                supportFragmentManager.findFragmentByTag(PLAY_VIDEO_TAG) as? FragmentPlayVideo2
             val slowMoFragment =
-                supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? FragmentSlowMo
+                supportFragmentManager.findFragmentByTag(SLOW_MO_TAG) as? FragmentSlowMo
             val editFrag =
                 supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
             val snapbackFragment =
@@ -310,7 +313,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 snapbackFragment.showSaveDialog()
             } else if (slowMoFragment != null && slowMoFragment.isVisible){
                 slowMoFragment.showSaveDialog()
-            }else {
+            } else if (playVideoFragment != null && playVideoFragment.isVisible && slowMoFragment != null){
+                supportFragmentManager.popBackStack(SLOW_MO_TAG, FragmentManager.POP_BACK_STACK_INCLUSIVE)
+            } else {
                 supportFragmentManager.popBackStack()
             }
         }

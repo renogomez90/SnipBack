@@ -46,16 +46,17 @@ import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.EXTEND_TRIM_
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.PREVIEW_ACTION
 import com.hipoint.snipback.listener.ISaveListener
 import com.hipoint.snipback.listener.IVideoOpListener
+import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.service.VideoService
 import com.hipoint.snipback.videoControl.SpeedDetails
 import com.hipoint.snipback.videoControl.VideoOpItem
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.IO
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
-import java.nio.Buffer
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -88,8 +89,11 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var seekbar           : SnipbackTimeBar
 
+    //  App repository
+    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
     //  save dialog
-    private var saveVideoDialog: KeepVideoDialog?  = null
+    private var saveVideoDialog: KeepVideoDialog? = null
+    private var videoSaved     : Boolean          = false
     //  progress tracker
     private var progressTracker: ProgressTracker? = null
     //  range marker
@@ -136,12 +140,24 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private val progressDismissReceiver: BroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
+                if(!videoSaved) {
+                    bufferPath = intent.getStringExtra(EXTRA_BUFFER_PATH)
+                    videoPath = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
 
-                bufferPath = intent.getStringExtra(EXTRA_BUFFER_PATH)
-                videoPath = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
-
-                hideProgress()
-                setupPlayer()
+                    hideProgress()
+                    setupPlayer()
+                } else {
+                    videoPath = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
+                    hideProgress()
+                    if(videoPath != null) {
+                        CoroutineScope(IO).launch {
+                            val snip = appRepository.getSnipByVideoPath(videoPath!!)
+                            (requireActivity() as AppMainActivity).loadFragment(
+                                FragmentPlayVideo2.newInstance(snip),
+                                true)
+                        }
+                    }
+                }
             }
         }
     }
@@ -337,7 +353,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        videoSaved  = false
         bufferPath  = null
         videoPath   = null
         trimSegment = null
@@ -1076,5 +1092,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
         createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
         VideoService.enqueueWork(requireContext(), createNewVideoIntent)
+        videoSaved = true
     }
 }
