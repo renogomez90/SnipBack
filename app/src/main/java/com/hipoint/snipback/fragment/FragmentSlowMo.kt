@@ -92,6 +92,11 @@ class FragmentSlowMo : Fragment()  {
     private var videoDuration : Long = -1L
     private var maxDuration   : Long = -1L
 
+    private var startWindow    = -1
+    private var endWindow      = -1
+    private var editedStart    = -1L
+    private var editedEnd      = -1L
+
     private val trimSegment  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
@@ -336,7 +341,25 @@ class FragmentSlowMo : Fragment()  {
     }
 
     private fun prepareForEdit() {
+        if(startWindow < 0 || endWindow < 0){
+            startWindow = 0
+            endWindow   = 1
+        }
+        if(editedStart < 0 || editedEnd < 0){
+            editedStart = bufferDuration
+            editedEnd   = bufferDuration + videoDuration
+        }
 
+        val startValue: Float = editedStart.toFloat() * 100 / maxDuration
+        val endValue: Float = editedEnd.toFloat() * 100 / maxDuration
+        maxDuration = bufferDuration + videoDuration
+
+        if(startWindow == 0) player.seekTo(startWindow, editedStart)
+        else player.seekTo(startWindow, editedStart - bufferDuration)
+        seekbar.setDuration(editedStart)
+
+        extendRangeMarker(startValue, endValue)
+        start.performClick()
     }
 
     private fun bindListeners() {
