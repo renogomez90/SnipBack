@@ -70,9 +70,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
     private var appViewModel    : AppViewModel?                   = null
     private var addedToSnip     : ArrayList<String>               = arrayListOf()
 
-    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
-    private lateinit var galleryLoader                        : ProgressBar
+    private lateinit var galleryLoader: ProgressBar
 
+    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
 
     /**
      * Registers a listener for receiving service broadcast for video operation status

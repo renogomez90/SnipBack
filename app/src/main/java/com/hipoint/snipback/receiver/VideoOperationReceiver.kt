@@ -24,6 +24,7 @@ import com.hipoint.snipback.application.AppClass.swipeProcessed
 import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
+import com.hipoint.snipback.fragment.FragmentSlowMo
 import com.hipoint.snipback.fragment.SnapbackFragment
 import com.hipoint.snipback.fragment.VideoEditingFragment
 import com.hipoint.snipback.fragment.VideoMode
@@ -281,48 +282,79 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 LocalBroadcastManager.getInstance(receivedContext!!).sendBroadcast(startPendingProcessIntent)
 //                videoModeFragment.processPendingSwipes()
             } else if(isFromSlowNo(fromOperation)){
-                //  slow the video down
-                val outputName = "${File(processedVideoPath).nameWithoutExtension}_slow_mo"
-                val outputPath = "${File(processedVideoPath).parent}/$outputName.mp4"
-                val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
-                val speedDetails = SpeedDetails(
-                    isFast = false,
-                    multiplier = 3,
-                    timeDuration = Pair(0L, duration * 1000L)   //  since the duration we get here is in seconds
-                )
 
-                val videoFile = VideoOpItem(
-                    operation = IVideoOpListener.VideoOp.SPEED,
-                    clips = arrayListOf(processedVideoPath),
-                    speedDetailsList = arrayListOf(speedDetails),
-                    outputPath = outputPath,
-                    comingFrom = fromOperation,
-                    swipeAction = swipeAction
-                )
+                //  we don't have to show the preview and processing has to be done now
+                var outputName = "${File(processedVideoPath).nameWithoutExtension}_slow_mo"
+                var outputPath = "${File(processedVideoPath).parent}/$outputName.mp4"
 
-                if(processedVideoPath.contains("buff-")){  // if the video being processed is a buffer... then make sure it shows up as the buffer
-                    var tmp: BufferDataDetails? = null
-                    VideoService.bufferDetails.forEach {
-                        if(it.bufferPath == processedVideoPath){
-                            tmp = it
+                if(!VideoMode.showHFPSPreview) {
+                    //  slow the video down
+                    val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+                    val speedDetails = SpeedDetails(
+                        isFast = false,
+                        multiplier = 3,
+                        timeDuration = Pair(0L,
+                            duration * 1000L)   //  since the duration we get here is in seconds
+                    )
+
+                    val videoFile = VideoOpItem(
+                        operation = IVideoOpListener.VideoOp.SPEED,
+                        clips = arrayListOf(processedVideoPath),
+                        speedDetailsList = arrayListOf(speedDetails),
+                        outputPath = outputPath,
+                        comingFrom = fromOperation,
+                        swipeAction = swipeAction
+                    )
+
+                    if (processedVideoPath.contains("buff-")) {  // if the video being processed is a buffer... then make sure it shows up as the buffer
+                        var tmp: BufferDataDetails? = null
+                        VideoService.bufferDetails.forEach {
+                            if (it.bufferPath == processedVideoPath) {
+                                tmp = it
+                            }
                         }
-                    }
-                    if(tmp != null){
-                        VideoService.bufferDetails.remove(tmp)
-                        val newBufferDetail = BufferDataDetails(outputPath,
-                            "${File(tmp!!.videoPath).parent}/${File(tmp!!.videoPath).nameWithoutExtension}_slow_mo.mp4")
-                        VideoService.bufferDetails.add(newBufferDetail)
+                        if (tmp != null) {
+                            VideoService.bufferDetails.remove(tmp)
+                            val newBufferDetail = BufferDataDetails(outputPath,
+                                "${File(tmp!!.videoPath).parent}/${File(tmp!!.videoPath).nameWithoutExtension}_slow_mo.mp4")
+                            VideoService.bufferDetails.add(newBufferDetail)
+                        }
+
+                    } else {
+                        showInGallery.add(outputName)
                     }
 
-                } else {
-                    showInGallery.add(outputName)
+                    val taskList = arrayListOf<VideoOpItem>()
+                    taskList.add(videoFile)
+                    val intentService = Intent(receivedContext, VideoService::class.java)
+                    intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+                    VideoService.enqueueWork(receivedContext!!, intentService)
+                } else {    //  trigger the preview and just pass this video on with the buffer
+                    //  capture the buffer file path and add this as the buffer
+                    //  capture the video and add that as the path for the video corresponding to the buffer
+                    //  once we have both send to the preview fragment
+                    outputName = File(processedVideoPath).nameWithoutExtension
+                    outputPath = "${File(processedVideoPath).parent}/$outputName.mp4"
+//                    if(outputName.contains("buff-")){
+//                        val videoName = outputName.substringAfter("buff-")
+//                        val videoPath = "${ File(processedVideoPath).parent }/${videoName}.mp4"
+////                        VideoService.bufferDetails.add(BufferDataDetails(outputPath, videoPath))
+//                    } else {    // this is hopefully the video
+                    if(!outputName.contains("buff-")){
+                        var bufferPath: String? = null
+                        VideoService.bufferDetails.forEach {
+                            if (it.videoPath == outputPath) {
+                                bufferPath = it.bufferPath
+                                return@forEach
+                            }
+                        }
+
+                        val dismissIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
+                        dismissIntent.putExtra("bufferPath", bufferPath)
+                        dismissIntent.putExtra("processedVideoPath", outputPath)
+                        receivedContext?.sendBroadcast(dismissIntent)
+                    }
                 }
-
-                val taskList = arrayListOf<VideoOpItem>()
-                taskList.add(videoFile)
-                val intentService = Intent(receivedContext, VideoService::class.java)
-                intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
-                VideoService.enqueueWork(receivedContext!!, intentService)
             }
         }
     }
@@ -501,16 +533,6 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             appRepository.insertSnip(this@VideoOperationReceiver, pSnip)
         }
     }
-
-    private fun isFromVideoMode(fromOperation: CurrentOperation) =
-        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING,
-            CurrentOperation.VIDEO_RECORDING_SLOW_MO,
-            CurrentOperation.CLIP_RECORDING,
-            CurrentOperation.CLIP_RECORDING_SLOW_MO)
-
-    private fun isFromSlowNo(fromOperation: CurrentOperation) =
-        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING_SLOW_MO,
-            CurrentOperation.CLIP_RECORDING_SLOW_MO)
 
     /**
      * Triggered after the snip has been added,
@@ -713,5 +735,15 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             e.printStackTrace()
         }
     }
+
+    private fun isFromVideoMode(fromOperation: CurrentOperation) =
+        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING,
+            CurrentOperation.VIDEO_RECORDING_SLOW_MO,
+            CurrentOperation.CLIP_RECORDING,
+            CurrentOperation.CLIP_RECORDING_SLOW_MO)
+
+    private fun isFromSlowNo(fromOperation: CurrentOperation) =
+        fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING_SLOW_MO,
+            CurrentOperation.CLIP_RECORDING_SLOW_MO)
 
 }
