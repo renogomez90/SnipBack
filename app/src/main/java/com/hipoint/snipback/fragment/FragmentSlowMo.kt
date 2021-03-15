@@ -337,9 +337,15 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         bufferPath  = null
         videoPath   = null
         trimSegment = null
+
+        editedStart = -1L
+        editedEnd   = -1L
+        startWindow = -1
+        endWindow =  -1
 
         savedInstanceState?.let {
 
@@ -360,6 +366,14 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         return rootView
     }
 
+    /**
+     * Called when the fragment is no longer in use.  This is called
+     * after [.onStop] and before [.onDetach].
+     */
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
     override fun onResume() {
         super.onResume()
         requireActivity().registerReceiver(extendTrimReceiver, IntentFilter(EXTEND_TRIM_ACTION))
@@ -377,6 +391,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         } else {
             setupPlayer()
         }
+        
     }
 
     override fun onPause() {
@@ -423,7 +438,9 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-            controllerShowTimeoutMs = 2000
+            controllerAutoShow = false
+            controllerShowTimeoutMs = -1
+            controllerHideOnTouch = false
             setBackgroundColor(Color.BLACK)
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
             showController()
