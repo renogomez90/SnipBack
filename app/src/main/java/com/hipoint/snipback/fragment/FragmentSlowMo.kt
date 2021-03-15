@@ -73,6 +73,8 @@ class FragmentSlowMo : Fragment()  {
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var seekbar           : SnipbackTimeBar
 
+    //  range marker
+    private var trimSegment: RangeSeekbarCustom? = null
     //  slow down factor
     private var multiplier: Int = 3
     //  preview thumbnail
@@ -227,8 +229,10 @@ class FragmentSlowMo : Fragment()  {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        bufferPath = null
-        videoPath = null
+        bufferPath  = null
+        videoPath   = null
+        trimSegment = null
+
         savedInstanceState?.let {
 
         }
@@ -557,7 +561,7 @@ class FragmentSlowMo : Fragment()  {
     }
 
     private fun extendRangeMarker(startValue: Float, endValue: Float) {
-        val trimSegment = RangeSeekbarCustom(requireContext())
+        trimSegment = RangeSeekbarCustom(requireContext())
         val colour = resources.getColor(android.R.color.transparent, context?.theme)
         val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
@@ -566,7 +570,7 @@ class FragmentSlowMo : Fragment()  {
         val rightThumbImageDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb, context?.theme) as VectorDrawable,
             resources.getColor(android.R.color.holo_red_light, context?.theme))
 
-        trimSegment.apply {
+        trimSegment!!.apply {
             minimumHeight = height
             elevation = 6F
             setPadding(padding, 0, padding, 0)
@@ -583,7 +587,7 @@ class FragmentSlowMo : Fragment()  {
             setOnTouchListener { _, _ -> true }
         }
 
-        if(trimSegment.parent == null)
+        if(trimSegment!!.parent == null)
             timebarHolder.addView(trimSegment)
     }
 
