@@ -12,14 +12,12 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.util.Log
-import android.util.Range
 import android.view.*
 import android.widget.*
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.exozet.android.core.extensions.hide
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.exozet.android.core.utils.MathExtensions
@@ -42,9 +40,7 @@ import com.hipoint.snipback.enums.EditSeekControl
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.DISMISS_ACTION
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.PREVIEW_ACTION
 import com.hipoint.snipback.listener.IVideoOpListener
-import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.service.VideoService
-import com.hipoint.snipback.videoControl.SpeedDetails
 import com.hipoint.snipback.videoControl.VideoOpItem
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -52,9 +48,7 @@ import kotlinx.coroutines.*
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
-import java.util.ArrayList
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -75,6 +69,7 @@ class FragmentSlowMo : Fragment()  {
     private lateinit var rejectBtn         : ImageView
     private lateinit var playBtn           : ImageView
     private lateinit var pauseBtn          : ImageView
+    private lateinit var toStartBtn        : ImageButton
     private lateinit var acceptRejectHolder: LinearLayout
     private lateinit var previewBarProgress: ProgressBar
     private lateinit var previewTileList   : RecyclerView
@@ -302,6 +297,7 @@ class FragmentSlowMo : Fragment()  {
         rejectBtn          = rootView.findViewById(R.id.reject)
         playBtn            = rootView.findViewById(R.id.exo_play)
         pauseBtn           = rootView.findViewById(R.id.exo_pause)
+        toStartBtn         = rootView.findViewById(R.id.toStartBtn)
         acceptRejectHolder = rootView.findViewById(R.id.accept_reject_holder)
         swipeDetector      = rootView.findViewById(R.id.swipe_detector)
         timebarHolder      = rootView.findViewById(R.id.timebar_holder)
@@ -397,6 +393,39 @@ class FragmentSlowMo : Fragment()  {
         start.performClick()
     }
 
+    /**
+     * changes the speed text on every tap
+     */
+    private fun changeSpeedText(): CharSequence {
+        return when (multiplier) {
+            3 -> {
+                multiplier = 4
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "4X"
+            }
+            4 -> {
+                multiplier = 5
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "5X"
+            }
+            5 -> {
+                multiplier = 10
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "10X"
+            }
+            10 -> {
+                multiplier = 15
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "15X"
+            }
+            else -> {
+                multiplier = 3
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                "3X"
+            }
+        }
+    }
+
     private fun bindListeners() {
         playBtn.setOnClickListener {
             if(startWindow < 0)
@@ -416,7 +445,7 @@ class FragmentSlowMo : Fragment()  {
         }
 
         pauseBtn.setOnClickListener {
-           seekbar.hideScrubber()
+            seekbar.hideScrubber()
             progressTracker?.stopTracking()
             progressTracker = null
 
@@ -492,38 +521,12 @@ class FragmentSlowMo : Fragment()  {
                 return false
             }
         })
-    }
 
-    /**
-     * changes the speed text on every tap
-     */
-    private fun changeSpeedText(): CharSequence {
-        return when (multiplier) {
-            3 -> {
-                multiplier = 4
-                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
-                "4X"
-            }
-            4 -> {
-                multiplier = 5
-                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
-                "5X"
-            }
-            5 -> {
-                multiplier = 10
-                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
-                "10X"
-            }
-            10 -> {
-                multiplier = 15
-                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
-                "15X"
-            }
-            else -> {
-                multiplier = 3
-                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
-                "3X"
-            }
+        toStartBtn.setOnClickListener {
+            if(startWindow == 0)
+                player.seekTo(startWindow, editedStart)
+            else
+                player.seekTo(startWindow, editedStart - bufferDuration)
         }
     }
 
