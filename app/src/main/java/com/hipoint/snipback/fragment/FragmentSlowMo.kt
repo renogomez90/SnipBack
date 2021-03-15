@@ -263,6 +263,14 @@ class FragmentSlowMo : Fragment()  {
         return rootView
     }
 
+    /**
+     * Called when the fragment is no longer in use.  This is called
+     * after [.onStop] and before [.onDetach].
+     */
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
     override fun onResume() {
         super.onResume()
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
@@ -279,6 +287,9 @@ class FragmentSlowMo : Fragment()  {
         } else {
             setupPlayer()
         }
+
+        Log.e("values23","startval  $editedStart endvAl  $editedEnd")
+
     }
 
     override fun onPause() {
@@ -324,7 +335,9 @@ class FragmentSlowMo : Fragment()  {
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-            controllerShowTimeoutMs = 2000
+            controllerAutoShow = false
+            controllerShowTimeoutMs = -1
+            controllerHideOnTouch = false
             setBackgroundColor(Color.BLACK)
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
             showController()
