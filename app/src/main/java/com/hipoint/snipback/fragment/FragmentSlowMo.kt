@@ -10,6 +10,7 @@ import android.graphics.drawable.VectorDrawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.util.Range
 import android.view.*
@@ -18,6 +19,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.exozet.android.core.extensions.hide
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.exozet.android.core.utils.MathExtensions
@@ -37,9 +39,12 @@ import com.hipoint.snipback.adapter.TimelinePreviewAdapter
 import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.EditSeekControl
+import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.DISMISS_ACTION
+import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.PREVIEW_ACTION
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.service.VideoService
+import com.hipoint.snipback.videoControl.SpeedDetails
 import com.hipoint.snipback.videoControl.VideoOpItem
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
@@ -47,7 +52,9 @@ import kotlinx.coroutines.*
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
+import java.util.ArrayList
 import java.util.concurrent.TimeUnit
+import kotlin.math.abs
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -66,6 +73,8 @@ class FragmentSlowMo : Fragment()  {
     private lateinit var editBackBtn       : ImageView
     private lateinit var acceptBtn         : ImageView
     private lateinit var rejectBtn         : ImageView
+    private lateinit var playBtn           : ImageView
+    private lateinit var pauseBtn          : ImageView
     private lateinit var acceptRejectHolder: LinearLayout
     private lateinit var previewBarProgress: ProgressBar
     private lateinit var previewTileList   : RecyclerView
@@ -73,6 +82,8 @@ class FragmentSlowMo : Fragment()  {
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var seekbar           : SnipbackTimeBar
 
+    //  progress tracker
+    private var progressTracker: ProgressTracker? = null
     //  range marker
     private var trimSegment: RangeSeekbarCustom? = null
     //  slow down factor
@@ -91,6 +102,8 @@ class FragmentSlowMo : Fragment()  {
     //  retires on failure
     private val retries = 3
     private var tries   = 0
+    //  seek actions
+    private var seekAction = EditSeekControl.MOVE_START
 
     private var bufferDuration: Long = -1L
     private var videoDuration : Long = -1L
@@ -114,8 +127,8 @@ class FragmentSlowMo : Fragment()  {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
 
-                bufferPath = intent.getStringExtra("bufferPath")
-                videoPath = intent.getStringExtra("processedVideoPath")
+                bufferPath = intent.getStringExtra(EXTRA_BUFFER_PATH)
+                videoPath = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
 
                 hideProgress()
                 setupPlayer()
@@ -174,7 +187,9 @@ class FragmentSlowMo : Fragment()  {
                         }
                     } else { //  fast
                         if (player.seekParameters != SeekParameters.CLOSEST_SYNC) {
-                            player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+//                            player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+
+                            player.setSeekParameters(SeekParameters.EXACT)
                         }
                     }
                 }
@@ -203,9 +218,10 @@ class FragmentSlowMo : Fragment()  {
     }
 
     companion object {
-        const val  EXTRA_BUFFER_PATH       : String = "bufferPath"
-        const val  EXTRA_VIDEO_PATH        : String = "videoPath"
-        const val  EXTRA_INITIAL_MULTIPLIER: String = "multiplier"
+        const val EXTRA_BUFFER_PATH        : String = "bufferPath"
+        const val EXTRA_VIDEO_PATH         : String = "videoPath"
+        const val EXTRA_RECEIVER_VIDEO_PATH: String = "processedVideoPath"
+        const val EXTRA_INITIAL_MULTIPLIER : String = "multiplier"
 
         private var fragment  : FragmentSlowMo? = null
         private var bufferPath: String?         = null
@@ -254,8 +270,8 @@ class FragmentSlowMo : Fragment()  {
 
     override fun onResume() {
         super.onResume()
-        requireActivity().registerReceiver(previewTileReceiver, IntentFilter(VideoEditingFragment.PREVIEW_ACTION))
-        requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(VideoEditingFragment.DISMISS_ACTION))
+        requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
+        requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(DISMISS_ACTION))
 
         bufferPath = arguments?.getString(EXTRA_BUFFER_PATH)
         videoPath  = arguments?.getString(EXTRA_VIDEO_PATH)
@@ -284,6 +300,8 @@ class FragmentSlowMo : Fragment()  {
         editBackBtn        = rootView.findViewById(R.id.back_arrow)
         acceptBtn          = rootView.findViewById(R.id.accept)
         rejectBtn          = rootView.findViewById(R.id.reject)
+        playBtn            = rootView.findViewById(R.id.exo_play)
+        pauseBtn           = rootView.findViewById(R.id.exo_pause)
         acceptRejectHolder = rootView.findViewById(R.id.accept_reject_holder)
         swipeDetector      = rootView.findViewById(R.id.swipe_detector)
         timebarHolder      = rootView.findViewById(R.id.timebar_holder)
@@ -297,8 +315,7 @@ class FragmentSlowMo : Fragment()  {
         playerView.player = player
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
-        maxDuration = bufferDuration + videoDuration
-        seekbar.showScrubber()
+        seekbar.hideScrubber()
 
         player.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
         currentSpeed.text = "$multiplier X"
@@ -342,18 +359,30 @@ class FragmentSlowMo : Fragment()  {
         }
         prepareForEdit()
 
+        if(bufferPath != null){
+            player.seekTo(0, bufferDuration)
+        }else {
+            player.seekTo(0)
+        }
+
         if (!VideoService.isProcessing)  //  in case we are coming from video editing there is a chance for crash
             getVideoPreviewFrames()
     }
 
     private fun prepareForEdit() {
-        if(startWindow < 0 || endWindow < 0){
+        if (startWindow < 0 || endWindow < 0) {
             startWindow = 0
-            endWindow   = 1
+            endWindow = 1
         }
-        if(editedStart < 0 || editedEnd < 0){
+
+        if(bufferPath == null){ //  in case there is no buffer
+            bufferDuration = 0
+            endWindow = 0
+        }
+
+        if (editedStart < 0 || editedEnd < 0) {
             editedStart = bufferDuration
-            editedEnd   = bufferDuration + videoDuration
+            editedEnd = bufferDuration + videoDuration
         }
 
         val startValue: Float = editedStart.toFloat() * 100 / maxDuration
@@ -369,12 +398,72 @@ class FragmentSlowMo : Fragment()  {
     }
 
     private fun bindListeners() {
-        start.setOnClickListener {
+        playBtn.setOnClickListener {
+            if(startWindow < 0)
+                startWindow = 0
 
+            player.setSeekParameters(SeekParameters.EXACT)
+            if (startWindow == 0) {
+                player.seekTo(startWindow, editedStart)
+            }else {
+                player.seekTo(startWindow,editedStart - bufferDuration)
+            }
+
+            seekbar.showScrubber()
+            player.playWhenReady = true
+
+            setupProgressTracker()
+        }
+
+        pauseBtn.setOnClickListener {
+           seekbar.hideScrubber()
+            progressTracker?.stopTracking()
+            progressTracker = null
+
+            player.playWhenReady = false
+        }
+
+        start.setOnClickListener {
+            // saves the current end point if available
+            if(editedEnd != maxDuration){
+                endWindow = player.currentWindowIndex
+                editedEnd = getCorrectedTimebarPosition()
+            }
+
+            // update button UI and flags
+            startRangeUI()
+            seekAction = EditSeekControl.MOVE_START
+
+            if(editedStart < 0) {
+                player.setSeekParameters(SeekParameters.EXACT)
+                player.seekTo(0, bufferDuration)
+            }else {
+                player.setSeekParameters(SeekParameters.EXACT)
+                player.seekTo(startWindow, editedStart)
+            }
         }
 
         end.setOnClickListener {
+            // saves the current start point
+            startWindow = player.currentWindowIndex
+            editedStart = getCorrectedTimebarPosition()
 
+            // update button UI and flags
+            endRangeUI()
+            seekAction = EditSeekControl.MOVE_END
+
+            //  moves the cursor to required point
+            if(editedEnd < 0) {
+                player.setSeekParameters(SeekParameters.EXACT)
+                player.seekTo(1, videoDuration)
+            }
+            else {
+                player.setSeekParameters(SeekParameters.EXACT)
+                if (endWindow == 0)
+                    player.seekTo(endWindow, editedEnd)
+                else
+                    player.seekTo(endWindow, editedEnd - bufferDuration)
+            }
         }
 
         editBackBtn.setOnClickListener {
@@ -485,6 +574,7 @@ class FragmentSlowMo : Fragment()  {
         clips.add(clip2)
         val mediaSource = ConcatenatingMediaSource(true, *clips.toTypedArray())
 
+        maxDuration = bufferDuration + videoDuration
         player.setMediaSource(mediaSource)
         player.prepare()
         showBufferOverlay()
@@ -494,8 +584,11 @@ class FragmentSlowMo : Fragment()  {
         var startScrollingSeekPosition = 0L
 
         swipeDetector.onIsScrollingChanged {
-            if (it)
+            if (it) {
                 startScrollingSeekPosition = player.currentPosition
+                player.playWhenReady = false
+                seekbar.hideScrubber()
+            }
         }
 
         val emitter = SeekPositionEmitter()
@@ -516,9 +609,103 @@ class FragmentSlowMo : Fragment()  {
             val maxPercent = 0.75f
             val scaledPercent = percentX * maxPercent
             val percentOfDuration = scaledPercent * -1 * maxDuration + startScrollingSeekPosition
-            // shift in position domain and ensure circularity
-            /*val newSeekPosition = ((percentOfDuration + duration) % duration).roundToLong().absoluteValue*/
             var newSeekPosition = percentOfDuration.roundToLong()
+
+            if (newSeekPosition >= player.contentDuration && player.currentWindowIndex == 0) {
+                if (player.hasNext()) {
+                    player.next()
+                    startScrollingSeekPosition = 0
+                    player.setSeekParameters(SeekParameters.EXACT)
+                    player.seekTo(startScrollingSeekPosition)
+                }
+            }
+            if (newSeekPosition <= 0L && player.currentWindowIndex == 1) {
+                if (player.hasPrevious()) {
+                    player.previous()
+                    startScrollingSeekPosition = bufferDuration
+                    player.setSeekParameters(SeekParameters.EXACT)
+                    player.seekTo(startScrollingSeekPosition)
+                }
+            }
+
+            if(player.currentPosition > (player.duration - 1500) ||
+            player.currentPosition < 1500){
+                player.setSeekParameters(SeekParameters.EXACT)
+            }else {
+//                player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                player.setSeekParameters(SeekParameters.EXACT)
+            }
+
+            when (seekAction) {
+                EditSeekControl.MOVE_START -> {
+                    editedStart = getCorrectedSeek(newSeekPosition)
+                    if (player.currentWindowIndex == 1) {
+                        if (newSeekPosition + bufferDuration > editedEnd) {
+                            editedStart = editedEnd - 50
+                            newSeekPosition = editedStart - bufferDuration
+                        }
+                        startWindow = 1
+                    } else {
+                        if (newSeekPosition > editedEnd) {
+                            editedStart = editedEnd - 50
+                            newSeekPosition = editedStart
+                        }
+                        startWindow = 0
+                    }
+                    trimSegment?.setMinStartValue(MathExtensions.floor(editedStart.toFloat() * 100 / maxDuration)
+                        .toFloat())?.apply()
+                    trimSegment?.setMaxStartValue((editedEnd.toFloat() * 100 / maxDuration).roundToInt().toFloat())?.apply()
+                }
+                EditSeekControl.MOVE_END -> {
+                    editedEnd = getCorrectedSeek(newSeekPosition)
+                    if (player.currentWindowIndex == 1) {
+                        if (newSeekPosition + bufferDuration < editedStart) {
+                            editedEnd = editedStart + 50
+                            newSeekPosition = editedEnd - bufferDuration
+                        }
+                        endWindow = 1
+                    } else {
+                        if (newSeekPosition < editedStart) {
+                            editedEnd = editedStart + 50
+                            newSeekPosition = editedEnd
+                        }
+                        endWindow = 0
+                    }
+                    //  if endingTimestamps are near max duration we probably need to make that max duration
+                    if (editedEnd > (maxDuration - 50))
+                        editedEnd = maxDuration
+                    trimSegment?.setMaxStartValue((editedEnd.toFloat() * 100 / maxDuration).roundToInt().toFloat())?.apply()
+                    Log.d(TAG, "initSwipeControls: edited end = $editedEnd")
+                }
+                else -> {}
+            }
+
+            if(player.currentWindowIndex == 0) {
+                if (newSeekPosition < 0) {
+                    newSeekPosition = 0
+                }else if (newSeekPosition > maxDuration) {
+                    newSeekPosition = maxDuration
+                }
+            }else {
+                if (newSeekPosition < 0) {
+                    newSeekPosition = 0
+                }else if (newSeekPosition > maxDuration - bufferDuration) {
+                    newSeekPosition = maxDuration - bufferDuration
+                }
+            }
+
+            //  if we are scrolling to the beginning of the video or to the end, seek exactly
+            if(player.currentWindowIndex == 0) {
+                if (newSeekPosition < 1500 ||
+                    newSeekPosition > (maxDuration - 1500)) {
+                    player.setSeekParameters(SeekParameters.EXACT)
+                }
+            } else {
+                if(newSeekPosition < 1500 ||
+                    newSeekPosition > (maxDuration - bufferDuration - 1500)){
+                    player.setSeekParameters(SeekParameters.EXACT)
+                }
+            }
 
             Log.d("seekPos2","$newSeekPosition")
             emitter.seekFast(newSeekPosition)
@@ -592,6 +779,45 @@ class FragmentSlowMo : Fragment()  {
     }
 
     /**
+     * sets up the UI component and indicators with the correct colours for editing
+     */
+    private fun startRangeUI() {
+        start.setBackgroundResource(R.drawable.start_curve)
+        end.setBackgroundResource(R.drawable.end_curve)
+    }
+
+    /**
+     * sets up the UI component and indicators with the correct colours for editing
+     */
+    private fun endRangeUI() {
+        start.setBackgroundResource(R.drawable.end_curve)
+        end.setBackgroundResource(R.drawable.end_curve_red)
+    }
+
+    private fun getCorrectedTimebarPosition(): Long {
+        return if(player.currentWindowIndex == 0){
+            player.currentPosition
+        }else{  //  exoplayer can be messed up
+            player.setSeekParameters(SeekParameters.EXACT)
+            if (player.currentPosition + bufferDuration > maxDuration)
+                maxDuration
+            else
+                player.currentPosition + bufferDuration
+        }
+    }
+
+    private fun getCorrectedSeek(newPos: Long): Long {
+        return if(player.currentWindowIndex == 0){
+            newPos
+        }else{  //  exoplayer can be messed up
+            if (newPos + bufferDuration >= maxDuration)
+                maxDuration
+            else
+                newPos + bufferDuration
+        }
+    }
+
+    /**
      *  Converts vector drawable to bitmap image
      *
      *  @param vectorDrawable
@@ -605,5 +831,63 @@ class FragmentSlowMo : Fragment()  {
         vectorDrawable.setBounds(0, 0, canvas.width, canvas.height)
         vectorDrawable.draw(canvas)
         return bitmap
+    }
+
+    /**
+     * start tracking progress
+     */
+    private fun setupProgressTracker() {
+        progressTracker?.stopTracking()
+        progressTracker = null
+
+        progressTracker = ProgressTracker(player)
+        progressTracker!!.run()
+    }
+    
+    inner class ProgressTracker(private val player: Player) : Runnable {
+
+        private var handler: Handler? = null
+        private var isChangeAccepted: Boolean = false
+        private var isTrackingProgress = false
+
+        override fun run() {
+            if (context != null) {
+                var currentPosition = player.currentPosition
+                if(player.currentWindowIndex == 1)
+                    currentPosition += bufferDuration
+
+                if(currentPosition >= editedEnd){
+                    player.playWhenReady = false
+                    stopTracking()
+                    seekbar.hideScrubber()
+                } else {
+                    handler?.postDelayed(this, 20 /* ms */)
+                }
+            }
+        }
+
+        init {
+            handler = Handler()
+            handler?.post(this)
+        }
+
+        fun setChangeAccepted(isAccepted: Boolean) {
+            isChangeAccepted = isAccepted
+            isTrackingProgress = isAccepted
+            if (handler == null && isAccepted) {
+                handler = Handler()
+                handler!!.post(this)
+            }
+        }
+
+        fun stopTracking() {
+            handler?.removeCallbacksAndMessages(null)
+            handler = null
+            isTrackingProgress = false
+        }
+
+        fun isCurrentlyTracking(): Boolean {
+            return isTrackingProgress && handler != null
+        }
     }
 }
