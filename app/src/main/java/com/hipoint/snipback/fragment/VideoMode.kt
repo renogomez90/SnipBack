@@ -297,8 +297,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var appRepository               : AppRepository?   = null
     private var animBlink                   : Animation?       = null
     private var thumbnailProcessingCompleted: OnTaskCompleted? = null
-    private var slowMoClicked = false
-
+    private var slowMoClicked               : Boolean          = false
+    private var currentSpeed                : Int              = 3
 
     //Views
     private lateinit var rootView        : View
@@ -815,7 +815,30 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
             }
             R.id.slo_mo_speed -> {
+                slowMoSpeed.text = changeSpeedText()
+            }
+        }
+    }
 
+    /**
+     * changes the speed text on every tap
+     */
+    private fun changeSpeedText(): CharSequence? {
+        return when (currentSpeed) {
+            3 -> {
+                currentSpeed = 4; "4X"
+            }
+            4 -> {
+                currentSpeed = 5; "5X"
+            }
+            5 -> {
+                currentSpeed = 10; "10X"
+            }
+            10 -> {
+                currentSpeed = 15; "15X"
+            }
+            else -> {
+                currentSpeed = 3; "3X"
             }
         }
     }
@@ -1256,7 +1279,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             VideoService.enqueueWork(requireContext(), intentService)
 
             if(slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
-                (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null),
+                (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null, currentSpeed),
                     true)
             }
 
@@ -1306,7 +1329,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             VideoService.enqueueWork(requireContext(), intentService)
                             AppClass.showInGallery.add(outputName)
                         } else {
-                            (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, clip.absolutePath),
+                            (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, clip.absolutePath, currentSpeed),
                                 true)
                         }
 //                        bufferDetails.add(BufferDataDetails(outputPath, outputPath))

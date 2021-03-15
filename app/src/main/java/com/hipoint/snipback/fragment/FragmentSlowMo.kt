@@ -71,6 +71,8 @@ class FragmentSlowMo : Fragment()  {
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var seekbar           : SnipbackTimeBar
 
+    //  slow down factor
+    private var multiplier: Int = 3
     //  preview thumbnail
     private var previewThumbs: File?   = null
     //  dialogs
@@ -194,20 +196,24 @@ class FragmentSlowMo : Fragment()  {
     }
 
     companion object {
-        private var fragment: FragmentSlowMo? = null
+        const val  EXTRA_BUFFER_PATH       : String = "bufferPath"
+        const val  EXTRA_VIDEO_PATH        : String = "videoPath"
+        const val  EXTRA_INITIAL_MULTIPLIER: String = "multiplier"
 
-        private var bufferPath    : String? = null
-        private var videoPath     : String? = null
+        private var fragment  : FragmentSlowMo? = null
+        private var bufferPath: String?         = null
+        private var videoPath : String?         = null
 
         @JvmStatic
-        fun newInstance(buffer: String?, video: String?): FragmentSlowMo {
+        fun newInstance(buffer: String?, video: String?, multiplier: Int = 3): FragmentSlowMo {
             if (fragment == null) {
                 fragment = FragmentSlowMo()
             }
 
             val bundle = Bundle()
-            bundle.putString("bufferPath", buffer)
-            bundle.putString("videoPath", video)
+            bundle.putString(EXTRA_BUFFER_PATH, buffer)
+            bundle.putString(EXTRA_VIDEO_PATH, video)
+            bundle.putInt(EXTRA_INITIAL_MULTIPLIER, multiplier)
             fragment!!.arguments = bundle
 
             return fragment!!
@@ -242,8 +248,11 @@ class FragmentSlowMo : Fragment()  {
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(VideoEditingFragment.PREVIEW_ACTION))
         requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(VideoEditingFragment.DISMISS_ACTION))
 
-        bufferPath = arguments?.getString("bufferPath")
-        videoPath  = arguments?.getString("videoPath")
+        bufferPath = arguments?.getString(EXTRA_BUFFER_PATH)
+        videoPath  = arguments?.getString(EXTRA_VIDEO_PATH)
+        arguments?.let {
+            multiplier  = it.getInt(EXTRA_INITIAL_MULTIPLIER, 3)
+        }
 
         if(videoPath.isNullOrEmpty()) {
             showProgress()
@@ -280,6 +289,8 @@ class FragmentSlowMo : Fragment()  {
         playerView.setShowMultiWindowTimeBar(true)
         maxDuration = bufferDuration + videoDuration
         seekbar.showScrubber()
+
+        player.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
 
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF

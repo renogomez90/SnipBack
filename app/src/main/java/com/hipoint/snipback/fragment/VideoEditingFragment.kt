@@ -2131,8 +2131,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     }
 
     private fun getCurrentEditSpeed(): Int = Integer.parseInt(speedIndicator.text.toString()
-            .substringBefore(
-                    'X'))
+            .substringBefore('X'))
 
     /**
      * Setting up the player to play the require snip for editing
