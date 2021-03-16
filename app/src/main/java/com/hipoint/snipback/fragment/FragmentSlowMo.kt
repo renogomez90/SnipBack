@@ -370,7 +370,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             container: ViewGroup?,
             savedInstanceState: Bundle?,
     ): View? {
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         rootView = inflater.inflate(R.layout.fragment_slo_mo, container, false)
 
         bindViews()
