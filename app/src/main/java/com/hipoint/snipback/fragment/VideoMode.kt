@@ -150,6 +150,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         }
                     }
                 MotionEvent.ACTION_UP -> {
+                    if(slowMoClicked && currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO)
+                        return false
+
                     point2 = when (previousOrientation) {
                         SimpleOrientationListener.VideoModeOrientation.PORTRAIT -> {
                             event.x
@@ -917,10 +920,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             setRecordPressed(recordPressed)
             setStopPressed(stopPressed)
 
-            currentOperation = if(recordClips)
-                CurrentOperation.CLIP_RECORDING
+            currentOperation = if (recordClips)
+                if (slowMoClicked)
+                    CurrentOperation.CLIP_RECORDING_SLOW_MO
+                else CurrentOperation.CLIP_RECORDING
             else
-                CurrentOperation.VIDEO_RECORDING
+                if (slowMoClicked)
+                    CurrentOperation.VIDEO_RECORDING_SLOW_MO
+                else
+                    CurrentOperation.VIDEO_RECORDING
         }
     }
 
