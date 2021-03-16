@@ -573,6 +573,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 timerSecond = TimeUnit.MILLISECONDS.toSeconds(elapsedMillis.toLong()).toInt()
                 //                    elapsedTime = SystemClock.elapsedRealtime();
                 Log.d(TAG, "onChronometerTick: $minutes : $seconds")
+
+                if(slowMoClicked && s >= 10){
+                    endManualRecording()
+                }
             }
         }
         mMinZoom = cameraControl!!.getMinZoom()
@@ -706,20 +710,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 }
             }
             R.id.rec_stop -> {  // sets up UI and stops user triggered recording
-                bottomContainer.visibility = View.VISIBLE
-                recStartLayout.visibility = View.INVISIBLE
-                AppClass.showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
-                parentSnip = null   //  resetting the session parent Snip
-                CoroutineScope(Default).launch {
-                    cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
-                    attemptClipConcat() //  merge what is in the buffer with the recording
-                    // we can restart recoding clips if it is required at this point
-                    recordClips = true
-                    updateFlags(recordClips = recordClips,
-                        recordPressed = false,
-                        stopPressed = true)
-                    ensureRecordingRestart()
-                }
+                endManualRecording()
             }
             R.id.r_3_bookmark -> {
                 saveSnipTimeToLocal()
@@ -829,6 +820,23 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.slo_mo_quick_back -> {
                 slowMoQuickback.text = changeQBText()
             }
+        }
+    }
+
+    private fun endManualRecording() {
+        bottomContainer.visibility = View.VISIBLE
+        recStartLayout.visibility = View.INVISIBLE
+        AppClass.showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
+        parentSnip = null   //  resetting the session parent Snip
+        CoroutineScope(Default).launch {
+            cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
+            attemptClipConcat() //  merge what is in the buffer with the recording
+            // we can restart recoding clips if it is required at this point
+            recordClips = true
+            updateFlags(recordClips = recordClips,
+                recordPressed = false,
+                stopPressed = true)
+            ensureRecordingRestart()
         }
     }
 
