@@ -168,13 +168,13 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         if (sec < end)
             end = sec
 
-        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT) {
+        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT || isFromSlowMo(comingFrom)) {
             "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -y $outputPath"   // with re-encoding
         }else {
             if(swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1) {
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -metadata:s:v rotate=$orientationPref -c copy -shortest -y $outputPath"
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -c copy -shortest -y $outputPath"
             }else {
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -c copy -shortest -y $outputPath"   // without re-encoding
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -x264-params keyint=2:min-keyint=1 -c copy -shortest -y $outputPath"   // without re-encoding
             }
         }
 
@@ -441,4 +441,8 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }
         return f.absolutePath
     }
+
+    private fun isFromSlowMo(currentOperation: CurrentOperation): Boolean =
+        currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO ||
+                currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO
 }
