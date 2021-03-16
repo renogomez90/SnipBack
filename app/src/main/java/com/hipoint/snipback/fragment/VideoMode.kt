@@ -618,6 +618,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
 
 //        slowMoClicked = false
+        currentSpeed = 3
         showHFPSPreview = true
         showSlowMoUi(slowMoClicked)
 
@@ -626,7 +627,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(processSwipeReceiver,
                 IntentFilter(PENDING_SWIPE_ACTION))
 //        videoProcessing(false)
-        currentSpeed = 3
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -802,23 +802,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.back_photo_btn -> handleRightSwipe()
             R.id.slo_mo_120 -> {
                 if (!slowMoClicked) {
-                    showSlowMoUi(true)
-
-                    cameraControl!!.closeCamera()
-                    cameraControl!!.stopBackgroundThread()
-                    cameraControl = null
-
-                    updateFlags(recordClips = true, recordPressed = false, stopPressed = false) //  so the camera will continue recording clips with the new camera
-                    setupCameraControl()
-                    applyAvailableSlowMoMode()
-                    cameraControl!!.startBackgroundThread()
-                    if (mTextureView.isAvailable) {
-                        cameraControl?.openCamera(mTextureView.width, mTextureView.height)
-                    } else {
-                        mTextureView.surfaceTextureListener = mSurfaceTextureListener
-                    }
-
-                    currentOperation = CurrentOperation.CLIP_RECORDING_SLOW_MO
+                    enableHighSpeedMode()
                 } else {
                     showSlowMoUi(false)
                     cameraControl?.disableHighSpeedMode()
@@ -841,6 +825,28 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 slowMoQuickback.text = changeQBText()
             }
         }
+    }
+
+    private fun enableHighSpeedMode() {
+        showSlowMoUi(true)
+
+        cameraControl!!.closeCamera()
+        cameraControl!!.stopBackgroundThread()
+        cameraControl = null
+
+        updateFlags(recordClips = true,
+            recordPressed = false,
+            stopPressed = false) //  so the camera will continue recording clips with the new camera
+        setupCameraControl()
+        applyAvailableSlowMoMode()
+        cameraControl!!.startBackgroundThread()
+        if (mTextureView.isAvailable) {
+            cameraControl?.openCamera(mTextureView.width, mTextureView.height)
+        } else {
+            mTextureView.surfaceTextureListener = mSurfaceTextureListener
+        }
+
+        currentOperation = CurrentOperation.CLIP_RECORDING_SLOW_MO
     }
 
     /**
