@@ -442,7 +442,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     }
 
     private fun setupPlayer(){
-        if(videoPath.isNotNullOrEmpty()) return
+        if(videoPath.isNullOrEmpty()) return
 
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
