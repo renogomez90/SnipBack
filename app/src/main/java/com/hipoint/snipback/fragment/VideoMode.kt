@@ -597,6 +597,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     /**
      * Sets up background thread and camera when the fragment is in the foreground
      * */
+    @SuppressLint("SetTextI18n")
     override fun onResume() {
         super.onResume()
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = true)
@@ -608,17 +609,23 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         cameraControl?.startBackgroundThread()
         if(hasPermissionsGranted(VIDEO_PERMISSIONS)) {
-            if (mTextureView.isAvailable) {
-                cameraControl?.openCamera(mTextureView.width, mTextureView.height)
-            } else if(mTextureView.surfaceTextureListener == null){
-                mTextureView.surfaceTextureListener = mSurfaceTextureListener
+            if (slowMoClicked){
+                enableHighSpeedMode()
+            } else {
+                if (mTextureView.isAvailable) {
+                    cameraControl?.openCamera(mTextureView.width, mTextureView.height)
+                } else if (mTextureView.surfaceTextureListener == null) {
+                    mTextureView.surfaceTextureListener = mSurfaceTextureListener
+                }
             }
         }else{
             requestVideoPermissions()
         }
+        slowMoQbValue= pref.getLong(SettingsDialog.SLOW_MO_QB_DURATION,5000L)
 
-//        slowMoClicked = false
-        currentSpeed = 3
+        slowMoSpeed.text      = currentSpeed.toString()+"X"
+        slowMoQuickback.text  = "QB "+(pref.getLong(SettingsDialog.SLOW_MO_QB_DURATION, 5000L) / 1000).toString()+" Sec"
+
         showHFPSPreview = true
         showSlowMoUi(slowMoClicked)
 
@@ -633,9 +640,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         super.onCreate(savedInstanceState)
         savedInstanceState?.let {
 //            slowMoClicked = it.getBoolean("SLO_MO_ON")
-
         }
-
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
