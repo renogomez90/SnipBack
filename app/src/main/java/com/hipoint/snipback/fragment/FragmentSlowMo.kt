@@ -360,9 +360,9 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         editedStart = -1L
         editedEnd   = -1L
-        startWindow = -1
+        startWindow = 0
         endWindow =  -1
-
+        Log.e("valonCreate","$editedStart $editedEnd $startWindow $endWindow ")
         savedInstanceState?.let {
 
         }
@@ -387,6 +387,11 @@ class FragmentSlowMo : Fragment(), ISaveListener {
      * after [.onStop] and before [.onDetach].
      */
     override fun onDestroy() {
+        editedStart = -1L
+        editedEnd   = -1L
+        startWindow = 0
+        endWindow =  -1
+        Log.e("valonDes","$editedStart $editedEnd $startWindow $endWindow ")
         super.onDestroy()
     }
 
@@ -407,13 +412,16 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         } else {
             setupPlayer()
         }
-        
+        Log.e("valonRes","$editedStart $editedEnd $startWindow $endWindow ")
+
     }
 
     override fun onPause() {
         requireActivity().unregisterReceiver(extendTrimReceiver)
         requireActivity().unregisterReceiver(previewTileReceiver)
         requireActivity().unregisterReceiver(progressDismissReceiver)
+        Log.e("valonPause","$editedStart $editedEnd $startWindow $endWindow ")
+
         super.onPause()
     }
 
