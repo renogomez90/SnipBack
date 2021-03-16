@@ -617,7 +617,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             requestVideoPermissions()
         }
 
-        slowMoClicked = false
+//        slowMoClicked = false
         showHFPSPreview = true
         showSlowMoUi(slowMoClicked)
 
@@ -627,6 +627,20 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 IntentFilter(PENDING_SWIPE_ACTION))
 //        videoProcessing(false)
         currentSpeed = 3
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        savedInstanceState?.let {
+//            slowMoClicked = it.getBoolean("SLO_MO_ON")
+
+        }
+
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+//        outState.putBoolean("SLO_MO_ON", slowMoClicked)
     }
 
     /**
