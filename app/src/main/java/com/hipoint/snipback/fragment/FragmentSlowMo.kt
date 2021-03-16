@@ -644,9 +644,13 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         rootView.requestFocus()
         rootView.setOnKeyListener(object : View.OnKeyListener {
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    showSaveDialog()
-                    return true
+                event?.let {
+                    if (it.action == KeyEvent.ACTION_UP) {
+                        if (keyCode == KeyEvent.KEYCODE_BACK) {
+                            showSaveDialog()
+                            return true
+                        }
+                    }
                 }
                 return false
             }
@@ -665,21 +669,26 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         val clips = arrayListOf<MediaSource>()
 
         if(bufferPath.isNotNullOrEmpty()) {
-            retriever.setDataSource(bufferPath)
-            bufferDuration =
-                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+            try {
+                retriever.setDataSource(bufferPath)
+                bufferDuration =
+                    retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
 
-            val bufferSource =
-                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
-                    .createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
+                val bufferSource =
+                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
+                        .createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
 
-            val clip1 = ClippingMediaSource(
-                bufferSource,
-                0,
-                TimeUnit.MILLISECONDS.toMicros(bufferDuration)
-            )
+                val clip1 = ClippingMediaSource(
+                    bufferSource,
+                    0,
+                    TimeUnit.MILLISECONDS.toMicros(bufferDuration)
+                )
 
-            clips.add(clip1)
+                clips.add(clip1)
+            }catch (e: IllegalArgumentException){
+                Log.e(TAG, "setupMediaSource: error loading buffer")
+                e.printStackTrace()
+            }
         }
 
         if(videoPath.isNullOrEmpty())

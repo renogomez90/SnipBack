@@ -174,7 +174,11 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             )     //  merged file is saved to DB
         }*/
 
-        val swipeClipDuration = (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong() / 1000
+        val swipeClipDuration = if (isFromSlowNo(comingFrom))
+            (pref.getLong(SettingsDialog.SLOW_MO_QB_DURATION, 5000L) / 1000)
+        else
+            (pref.getInt(SettingsDialog.QB_DURATION, 5) * 1000).toLong() / 1000
+
         val bufferDuration = (pref.getInt(SettingsDialog.BUFFER_DURATION, 1) * 60 * 1000).toLong() / 1000
 
         if (comingFrom == CurrentOperation.CLIP_RECORDING || comingFrom == CurrentOperation.CLIP_RECORDING_SLOW_MO) {  //  concat was triggered when automatic capture was ongoing

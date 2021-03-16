@@ -85,6 +85,7 @@ import kotlin.math.roundToInt
 class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, IRecordUIListener, ISettingsClosedListener {
 
     var swipeValue         = 5 * 1000L  //  swipeBack duration
+    var slowMoQbValue      = 5 * 1000L  //  swipeBack duration
     var clipDuration       = 30 * 1000L
     var userRecordDuration = 0          //  duration of user recorded time
 
@@ -529,6 +530,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         slowMoContainer.setOnTouchListener(this)
         slowMo.setOnClickListener(this)
         slowMoSpeed.setOnClickListener(this)
+        slowMoPreview.setOnClickListener(this)
+        slowMoQuickback.setOnClickListener (this)
+
         gallery.setOnClickListener {
             Log.d(TAG, "bindListeners: gallery btn clicked")
             (requireActivity() as AppMainActivity).loadFragment(FragmentGalleryNew.newInstance()!!,
@@ -585,15 +589,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     }
                 }
         )
-
-        slowMoPreview.setOnClickListener {
-            if(showHFPSPreview){
-                slowMoPreview.alpha = 0.5F
-            }else {
-                slowMoPreview.alpha = 1F
-            }
-            showHFPSPreview = !showHFPSPreview
-        }
     }
 
     /**
@@ -789,7 +784,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             R.id.back_video_btn -> handleLeftSwipe()
             R.id.back_photo_btn -> handleRightSwipe()
             R.id.slo_mo_120 -> {
-                if (!slowMoClicked) {    //todo: check if we need to stop the current manual recording if slow mo clicked when manual recording is on going? is that even possible?
+                if (!slowMoClicked) {
                     showSlowMoUi(true)
 
                     cameraControl!!.closeCamera()
@@ -816,6 +811,50 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
             R.id.slo_mo_speed -> {
                 slowMoSpeed.text = changeSpeedText()
+            }
+            R.id.slo_mo_preview_option -> {
+                if (showHFPSPreview) {
+                    slowMoPreview.alpha = 0.5F
+                } else {
+                    slowMoPreview.alpha = 1F
+                }
+                showHFPSPreview = !showHFPSPreview
+            }
+            R.id.slo_mo_quick_back -> {
+                slowMoQuickback.text = changeQBText()
+            }
+        }
+    }
+
+    /**
+     * changes the QB text on every tap
+     */
+    private fun changeQBText(): CharSequence? {
+        return when (slowMoQbValue) {
+            1000L -> {
+                slowMoQbValue = 2000L
+                pref.edit().putLong(SettingsDialog.SLOW_MO_QB_DURATION, slowMoQbValue).apply()
+                "QB 2 Sec"
+            }
+            2000L -> {
+                slowMoQbValue = 3000L
+                pref.edit().putLong(SettingsDialog.SLOW_MO_QB_DURATION, slowMoQbValue).apply()
+                "QB 3 Sec"
+            }
+            3000L -> {
+                slowMoQbValue = 4000L
+                pref.edit().putLong(SettingsDialog.SLOW_MO_QB_DURATION, slowMoQbValue).apply()
+                "QB 4 Sec"
+            }
+            4000L -> {
+                slowMoQbValue = 5000L
+                pref.edit().putLong(SettingsDialog.SLOW_MO_QB_DURATION, slowMoQbValue).apply()
+                "QB 5 Sec"
+            }
+            else -> {
+                slowMoQbValue = 1000L
+                pref.edit().putLong(SettingsDialog.SLOW_MO_QB_DURATION, slowMoQbValue).apply()
+                "QB 1 Sec"
             }
         }
     }
@@ -1049,6 +1088,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             AppClass.showInGallery.add(File(videoFilePath).nameWithoutExtension)
         }
+
+        if(slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
+            (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null, currentSpeed),
+                true)
+        }
     }
 
     /**
@@ -1229,7 +1273,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             return
         }
 
-        val swipeClipDuration = (swipeValue / 1000).toInt()
+        val swipeClipDuration = if (currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)
+            (pref.getLong(SettingsDialog.SLOW_MO_QB_DURATION, 5000L) / 1000).toInt()
+        else
+            (swipeValue / 1000).toInt()
+
         if (actualClipTime > swipeClipDuration) {
             //  splitting may not work for this so we opt for trim
             Log.d(TAG,

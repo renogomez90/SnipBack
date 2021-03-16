@@ -116,9 +116,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -y -b:v 2M $outputPath"
         } else {
             if(rotation == 0)
-                "-f concat -safe 0 -i $tmpFile -metadata:s:v rotate=$rotation -x264opts -keyint_min=1 -c copy -y -map_metadata 1 -map_metadata:s:v 1:s:v -map_metadata:s:a 1:s:a -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -metadata:s:v rotate=$rotation -x264opts -keyint_min=1 -c copy -y -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a -b:v 2M $outputPath"
             else
-                "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -c copy -y -map_metadata 1 -map_metadata:s:v 1:s:v -map_metadata:s:a 1:s:a -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -c copy -y -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a -b:v 2M $outputPath"
         }
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
