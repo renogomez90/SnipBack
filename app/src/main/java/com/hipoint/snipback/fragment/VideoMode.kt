@@ -24,6 +24,7 @@ import android.view.*
 import android.view.View.OnTouchListener
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
+import android.view.animation.LinearInterpolator
 import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.SeekBar.OnSeekBarChangeListener
@@ -417,12 +418,34 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         super.onDestroy()
     }
 
+    private fun portraitMode(view: View?) {
+        if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.LANDSCAPE){
+            val rotate = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
+            rotate.duration = 800
+            rotate.start()
+            moveConToPortrait(slowMoContainer)
+            
+        } else if(previousOrientation == SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE){
+            val rotate = ObjectAnimator.ofFloat(view, "rotation", -90F, 0F)
+            rotate.duration = 800
+            rotate.start()
+            moveConToPortraitFromRevLandscape(slowMoContainer)
+        }
+    }
+
     private fun landScapeMode(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, 90F)
         rotate.duration = 800
         rotate.start()
-  }
-    private fun moveContainerInLandscape(view: View?) {
+    }
+
+    private fun revLandScapeMode(view: View?) {
+        val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, -90F)
+        rotate.duration = 800
+        rotate.start()
+    }
+
+    private fun moveConToLandscape(view: View?) {
         val translateY = ObjectAnimator.ofFloat(view, "translationY", -700f)
         val rotate90Deg = ObjectAnimator.ofFloat(view, "rotation", 0F, 90F)
         val translateX = ObjectAnimator.ofFloat(view, "translationX", -480f)
@@ -433,33 +456,36 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         togetherSet.start()
     }
 
-    private fun moveContainerBackToPortrait(view: View?) {
-        val translateX = ObjectAnimator.ofFloat(view, "translationX", 30f)
+    private fun moveConToPortrait(view: View?) {
+        val translateX = ObjectAnimator.ofFloat(view, "translationX", 10f)
         val rotate0Deg = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
-        val translateY = ObjectAnimator.ofFloat(view, "translationY", 60f)
+        val translateY = ObjectAnimator.ofFloat(view, "translationY", 30f)
 
         val togetherSet = AnimatorSet()
         togetherSet.playTogether(translateX, rotate0Deg, translateY)
         togetherSet.duration = 700
         togetherSet.start()
     }
+    private fun moveConToRevLandscape(view: View?) {
+        val translateY = ObjectAnimator.ofFloat(view, "translationY", -700f)
+        val rotate270Deg = ObjectAnimator.ofFloat(view, "rotation", 0F, -90F)
+        val translateX = ObjectAnimator.ofFloat(view, "translationX", 480f)
 
-    private fun portraitMode(view: View?) {
-        if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.LANDSCAPE){
-            val rotate = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
-            rotate.duration = 800
-            rotate.start()
-        } else if(previousOrientation == SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE){
-            val rotate = ObjectAnimator.ofFloat(view, "rotation", -90F, 0F)
-            rotate.duration = 800
-            rotate.start()
-        }
+        val togetherSet = AnimatorSet()
+        togetherSet.playTogether(translateX, rotate270Deg, translateY)
+        togetherSet.duration = 700
+        togetherSet.start()
     }
 
-    private fun revLandScapeMode(view: View?) {
-        val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, -90F)
-        rotate.duration = 800
-        rotate.start()
+    private fun moveConToPortraitFromRevLandscape(view: View?) {
+        val translateX = ObjectAnimator.ofFloat(view, "translationX", 10f)
+        val rotate0Deg = ObjectAnimator.ofFloat(view, "rotation", -90F, 0F)
+        val translateY = ObjectAnimator.ofFloat(view, "translationY", 30f)
+
+        val togetherSet = AnimatorSet()
+        togetherSet.playTogether(translateX, rotate0Deg, translateY)
+        togetherSet.duration = 700
+        togetherSet.start()
     }
 
     fun doRotation0F() {
@@ -468,7 +494,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         portraitMode(changeCamera)
         portraitMode(settings)
         portraitMode(con)
-        moveContainerBackToPortrait(slowMoContainer)
     }
 
     fun doRotation90F() {
@@ -477,7 +502,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         landScapeMode(changeCamera)
         landScapeMode(settings)
         landScapeMode(con)
-        moveContainerInLandscape(slowMoContainer)
+        moveConToLandscape(slowMoContainer)
     }
 
     fun doRotation270F(){
@@ -486,6 +511,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         revLandScapeMode(changeCamera)
         revLandScapeMode(settings)
         revLandScapeMode(con)
+        moveConToRevLandscape(slowMoContainer)
     }
 
     private fun setupCameraControl() {
