@@ -68,7 +68,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private val VIDEO_DIRECTORY_NAME = "Snipback"
 
     private val retries     = 3
-    private var tries       = 0
     private var seekToPoint: Long    = 0
     private var whenReady  : Boolean = false
 
@@ -594,8 +593,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     companion object {
         var fragment: FragmentPlayVideo2? = null
 
-        private var currentPos = 0L
-        private var bufferPath = ""
+        private var tries           = 0
+        private var currentPos      = 0L
+        private var bufferPath      = ""
         private var bufferAvailable = false
 
         @JvmStatic

@@ -4,11 +4,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.ActivityInfo
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
 import android.media.MediaMetadataRetriever
-import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -60,8 +58,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
-import kotlin.math.floor
-import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 
@@ -89,8 +85,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var seekbar           : SnipbackTimeBar
 
-    //  App repository
-    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
+    //  retires on failure
+    private val retries = 3
     //  save dialog
     private var saveVideoDialog: KeepVideoDialog? = null
     private var videoSaved     : Boolean          = false
@@ -108,9 +104,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private var timelinePreviewAdapter: TimelinePreviewAdapter? = null
     // fast seeking
     private var subscriptions: CompositeDisposable? = null
-    //  retires on failure
-    private val retries = 3
-    private var tries   = 0
     //  seek actions
     private var seekAction        = EditSeekControl.MOVE_START
     private var onGoingSeekAction = EditSeekControl.MOVE_START
@@ -125,6 +118,9 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private var editedEnd      = -1L
 
     private var timeStamp: String? = null
+
+    //  App repository
+    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
 
     private val previewTileReceiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -320,6 +316,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
+        Log.d(TAG, "TEST getVideoPreviewFrames: started")
     }
 
     companion object {
@@ -331,6 +328,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         private var fragment  : FragmentSlowMo? = null
         private var bufferPath: String?         = null
         private var videoPath : String?         = null
+        private var tries     : Int             = 0
 
         @JvmStatic
         fun newInstance(buffer: String?, video: String?, multiplier: Int = 3): FragmentSlowMo {
@@ -350,10 +348,10 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        videoSaved               = false
-        bufferPath               = null
-        videoPath                = null
-        trimSegment              = null
+        videoSaved  = false
+        bufferPath  = null
+        videoPath   = null
+        trimSegment = null
 
         editedStart = -1L
         editedEnd   = -1L
@@ -375,7 +373,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         bindViews()
         bindListeners()
-
+        Log.d(TAG, "TEST onCreateView: views and listener's bound")
         return rootView
     }
 
@@ -389,6 +387,17 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         startWindow = 0
         endWindow =  -1
         Log.e("valonDes","$editedStart $editedEnd $startWindow $endWindow ")
+
+        if (this::player.isInitialized) {
+            player.apply {
+                playWhenReady = false
+                stop(true)
+                setVideoSurface(null)
+                release()
+            }
+            subscriptions?.dispose()
+        }
+        Log.d(TAG, "TEST onDestroy")
         super.onDestroy()
     }
 
@@ -412,8 +421,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         } else if (!this::player.isInitialized) {
             setupPlayer()
         }
-        Log.e("valonRes","$editedStart $editedEnd $startWindow $endWindow ")
-
+        Log.d(TAG, "TEST onResume: $videoPath")
     }
 
     override fun onPause() {
@@ -474,11 +482,12 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         player.addListener(object : Player.EventListener {
             override fun onPlayerError(error: ExoPlaybackException) {
-                Log.e(TAG, "onPlayerError: ${error.message}")
+                Log.e(TAG, "TEST onPlayerError: ${error.message}")
                 error.printStackTrace()
                 tries++
                 if (videoPath.isNotNullOrEmpty() && tries < retries) {  //  retry in case of errors
                     CoroutineScope(Dispatchers.Main).launch {
+                        Log.d(TAG, "TEST onPlayerError: retrying = $tries")
                         delay(500)
                         val frag = requireActivity().supportFragmentManager.findFragmentByTag(
                             AppMainActivity.SLOW_MO_TAG)
@@ -491,7 +500,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             }
 
             override fun onPlaybackStateChanged(state: Int) {
-                if(state == Player.STATE_ENDED){
+                if (state == Player.STATE_ENDED) {
                     progressTracker?.stopTracking()
                 }
             }
