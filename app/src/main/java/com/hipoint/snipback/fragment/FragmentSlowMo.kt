@@ -489,6 +489,12 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                     }
                 }
             }
+
+            override fun onPlaybackStateChanged(state: Int) {
+                if(state == Player.STATE_ENDED){
+                    progressTracker?.stopTracking()
+                }
+            }
         })
         initSwipeControls()
         previewThumbs = File("${ File(videoPath!!).parent}/previewThumbs")
@@ -1090,7 +1096,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 var currentPosition = player.currentPosition
                 if(player.currentWindowIndex == 1)
                     currentPosition += bufferDuration
-                Log.d(TAG, "run: current tracked position = $currentPosition, edited end = $editedEnd")
 
                 if(currentPosition >= editedEnd || currentPosition >= maxDuration - 50){
                     player.playWhenReady = false
