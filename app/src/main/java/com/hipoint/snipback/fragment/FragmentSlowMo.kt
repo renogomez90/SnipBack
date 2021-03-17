@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ActivityInfo
 import android.graphics.*
 import android.graphics.drawable.VectorDrawable
 import android.media.MediaMetadataRetriever
@@ -368,7 +369,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             container: ViewGroup?,
             savedInstanceState: Bundle?,
     ): View? {
-//        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         rootView = inflater.inflate(R.layout.fragment_slo_mo, container, false)
 
         bindViews()

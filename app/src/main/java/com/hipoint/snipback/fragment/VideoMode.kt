@@ -422,13 +422,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun portraitMode(view: View?) {
         if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.LANDSCAPE){
             val rotate = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
-            rotate.duration = 800
+            rotate.duration   = 800
             rotate.start()
             moveConToPortrait(slowMoContainer)
             
         } else if(previousOrientation == SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE){
             val rotate = ObjectAnimator.ofFloat(view, "rotation", -90F, 0F)
-            rotate.duration = 800
+            rotate.duration   = 800
             rotate.start()
             moveConToPortraitFromRevLandscape(slowMoContainer)
         }
@@ -436,13 +436,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     private fun landScapeMode(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, 90F)
-        rotate.duration = 800
+        rotate.duration   = 800
         rotate.start()
     }
 
     private fun revLandScapeMode(view: View?) {
         val rotate = ObjectAnimator.ofFloat(view, "rotation", 0F, -90F)
-        rotate.duration = 800
+        rotate.duration   = 800
         rotate.start()
     }
 
@@ -453,7 +453,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         val togetherSet = AnimatorSet()
         togetherSet.playTogether(translateY, rotate90Deg, translateX)
-        togetherSet.duration = 700
+        togetherSet.duration   = 800
         togetherSet.start()
     }
 
@@ -464,7 +464,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         val togetherSet = AnimatorSet()
         togetherSet.playTogether(translateX, rotate0Deg, translateY)
-        togetherSet.duration = 700
+        togetherSet.duration   = 800
         togetherSet.start()
     }
     private fun moveConToRevLandscape(view: View?) {
@@ -474,7 +474,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         val togetherSet = AnimatorSet()
         togetherSet.playTogether(translateX, rotate270Deg, translateY)
-        togetherSet.duration = 700
+        togetherSet.duration   = 800
         togetherSet.start()
     }
 
@@ -485,7 +485,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         val togetherSet = AnimatorSet()
         togetherSet.playTogether(translateX, rotate0Deg, translateY)
-        togetherSet.duration = 700
+        togetherSet.duration   = 800
         togetherSet.start()
     }
 
@@ -681,9 +681,19 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         slowMoSpeed.text      = currentSpeed.toString()+"X"
         slowMoQuickback.text  = "QB "+(pref.getLong(SettingsDialog.SLOW_MO_QB_DURATION, 5000L) / 1000).toString()+" Sec"
 
-        showHFPSPreview = true
+//        showHFPSPreview = true
         showSlowMoUi(slowMoClicked)
-
+//        if (showHFPSPreview) {
+//            slowMoPreview.alpha = 1F
+//        } else {
+//            slowMoPreview.alpha = 0.5F
+//        }
+//        showHFPSPreview = !showHFPSPreview
+        if (!showHFPSPreview) {
+            slowMoPreview.alpha = 0.5F
+        } else {
+            slowMoPreview.alpha = 1F
+        }
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(uiUpdateReceiver,
                 IntentFilter(UI_UPDATE_ACTION))
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(processSwipeReceiver,
