@@ -228,6 +228,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         const val UI_UPDATE_ACTION     = "com.hipoint.snipback.UPDATE_UI"
         const val MIN_DISTANCE         = 150
 
+        var currentSpeed: Int = 3
+
         private var videoMode       : VideoMode?       = null
         private var cameraControl   : CameraControl?   = null
         internal var swipedRecording: SwipedRecording? = null
@@ -302,7 +304,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private var animBlink                   : Animation?       = null
     private var thumbnailProcessingCompleted: OnTaskCompleted? = null
     private var slowMoClicked               : Boolean          = false
-    private var currentSpeed                : Int              = 3
 
     //Views
     private lateinit var rootView        : View
@@ -1389,43 +1390,71 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             swipedFileNames.add(clip.nameWithoutExtension)
             AppClass.showInGallery.add(clip.nameWithoutExtension)
             if(swipeAction == SwipeAction.SWIPE_LEFT) {  //  we only need to save the snip in DB for left swipe
-                    if(currentOperation == CurrentOperation.CLIP_RECORDING) {
-                        (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
-                            actualClipTime,
-                            actualClipTime)
+                if(currentOperation == CurrentOperation.CLIP_RECORDING) {
+                    (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
+                        actualClipTime,
+                        actualClipTime)
 
-                        //  saving the clip itself as buffer since no buffer exists
-                        bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
-                    } else if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
-                        if(!showHFPSPreview) {
-                            val outputName = "${clip.nameWithoutExtension}_slow_mo"
-                            val outputPath = "${clip.parent}/$outputName.mp4"
-                            val speedDetails = SpeedDetails(
-                                isFast = false,
-                                multiplier = currentSpeed,
-                                timeDuration = Pair(0L, actualClipTime * 1000L)
-                            )
-                            val videoTask = VideoOpItem(
-                                operation = VideoOp.SPEED,
-                                clips = arrayListOf(clip.absolutePath),
-                                outputPath = outputPath,
-                                speedDetailsList = arrayListOf(speedDetails),
-                                comingFrom = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
-                                swipeAction = swipeAction)
-                            val taskList = arrayListOf<VideoOpItem>()
-                            taskList.add(videoTask)
+                    val videoTask = VideoOpItem(
+                        operation = VideoOp.KEY_FRAMES,
+                        clips = arrayListOf(clip.absolutePath),
+                        outputPath = clip.parent!!,
+                        comingFrom = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
+                        swipeAction = swipeAction)
+                    val taskList = arrayListOf<VideoOpItem>()
+                    taskList.add(videoTask)
 
-                            val intentService = Intent(requireContext(), VideoService::class.java)
-                            intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM,
-                                taskList)
-                            VideoService.enqueueWork(requireContext(), intentService)
-                            AppClass.showInGallery.add(outputName)
-                        } else {
-                            (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, clip.absolutePath, currentSpeed),
-                                true)
-                        }
-//                        bufferDetails.add(BufferDataDetails(outputPath, outputPath))
+                    val intentService = Intent(requireContext(), VideoService::class.java)
+                    intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM,
+                        taskList)
+                    VideoService.enqueueWork(requireContext(), intentService)
+
+                    //  saving the clip itself as buffer since no buffer exists
+                    bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
+                } else if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
+                    if(!showHFPSPreview) {
+                        val outputName = "${clip.nameWithoutExtension}_slow_mo"
+                        val outputPath = "${clip.parent}/$outputName.mp4"
+                        val speedDetails = SpeedDetails(
+                            isFast = false,
+                            multiplier = currentSpeed,
+                            timeDuration = Pair(0L, actualClipTime * 1000L)
+                        )
+                        val videoTask = VideoOpItem(
+                            operation = VideoOp.SPEED,
+                            clips = arrayListOf(clip.absolutePath),
+                            outputPath = outputPath,
+                            speedDetailsList = arrayListOf(speedDetails),
+                            comingFrom = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
+                            swipeAction = swipeAction)
+                        val taskList = arrayListOf<VideoOpItem>()
+                        taskList.add(videoTask)
+
+                        val intentService = Intent(requireContext(), VideoService::class.java)
+                        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM,
+                            taskList)
+                        VideoService.enqueueWork(requireContext(), intentService)
+                        AppClass.showInGallery.add(outputName)
+                    } else {
+                        val videoTask = VideoOpItem(
+                            operation = VideoOp.KEY_FRAMES,
+                            clips = arrayListOf(clip.absolutePath),
+                            outputPath = clip.parent!!,
+                            comingFrom = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
+                            swipeAction = swipeAction)
+                        val taskList = arrayListOf<VideoOpItem>()
+                        taskList.add(videoTask)
+
+                        val intentService = Intent(requireContext(), VideoService::class.java)
+                        intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM,
+                            taskList)
+                        VideoService.enqueueWork(requireContext(), intentService)
+
+                        (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null),
+                            true)
                     }
+//                        bufferDetails.add(BufferDataDetails(outputPath, outputPath))
+                }
             }
             if(swipeAction == SwipeAction.SWIPE_RIGHT) {
                 CoroutineScope(Main).launch{
