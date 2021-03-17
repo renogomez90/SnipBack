@@ -111,14 +111,14 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val tmpFile = createFileList(fileList)
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING){
             if(filter.isNotBlank())
-                "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -y -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y -b:v 2M $outputPath"
             else
-                "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -y -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y -b:v 2M $outputPath"
         } else {
             if(rotation == 0)
-                "-f concat -safe 0 -i $tmpFile -metadata:s:v rotate=$rotation -x264opts -keyint_min=1 -c copy -y -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -metadata:s:v rotate=$rotation -x264opts -keyint_min=1 -crf 0 -c copy -y -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a -b:v 2M $outputPath"
             else
-                "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -c copy -y -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a -b:v 2M $outputPath"
+                "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -crf 0 -c copy -y -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a -b:v 2M $outputPath"
         }
 
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
@@ -169,12 +169,12 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             end = sec
 
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT || isFromSlowMo(comingFrom)) {
-            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -y $outputPath"   // with re-encoding
+            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -shortest -y $outputPath"   // with re-encoding
         }else {
             if(swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1) {
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -c copy -shortest -y $outputPath"
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -avoid_negative_ts make_zero -crf 0 -c copy -shortest -y $outputPath"
             }else {
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -x264-params keyint=2:min-keyint=1 -c copy -shortest -y $outputPath"   // without re-encoding
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -x264-params keyint=2:min-keyint=1 -avoid_negative_ts make_zero -crf 0 -c copy -shortest -y $outputPath"   // without re-encoding
             }
         }
 
@@ -277,7 +277,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }else {
             val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
             Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
-            "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -r 30 -y $outputPath"
+            "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -shortest -y $outputPath"
         }
 
         Log.d(TAG, "changeSpeed: cmd = $cmd")

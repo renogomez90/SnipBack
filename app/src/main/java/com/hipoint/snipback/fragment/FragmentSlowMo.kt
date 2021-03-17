@@ -350,16 +350,16 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        videoSaved  = false
-        bufferPath  = null
-        videoPath   = null
-        trimSegment = null
+        videoSaved               = false
+        bufferPath               = null
+        videoPath                = null
+        trimSegment              = null
 
         editedStart = -1L
         editedEnd   = -1L
         startWindow = 0
-        endWindow =  -1
-        Log.e("valonCreate","$editedStart $editedEnd $startWindow $endWindow ")
+        endWindow   = -1
+
         savedInstanceState?.let {
 
         }
@@ -370,7 +370,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             container: ViewGroup?,
             savedInstanceState: Bundle?,
     ): View? {
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+//        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         rootView = inflater.inflate(R.layout.fragment_slo_mo, container, false)
 
         bindViews()
@@ -398,15 +398,18 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(PREVIEW_ACTION))
         requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(DISMISS_ACTION))
 
-        bufferPath = arguments?.getString(EXTRA_BUFFER_PATH)
-        videoPath  = arguments?.getString(EXTRA_VIDEO_PATH)
         arguments?.let {
             multiplier  = it.getInt(EXTRA_INITIAL_MULTIPLIER, 3)
+
+            if(videoPath.isNullOrEmpty()) {
+                bufferPath = it.getString(EXTRA_BUFFER_PATH)
+                videoPath = it.getString(EXTRA_VIDEO_PATH)
+            }
         }
 
-        if(videoPath.isNullOrEmpty()) {
+        if (videoPath.isNullOrEmpty()) {
             showProgress()
-        } else {
+        } else if (!this::player.isInitialized) {
             setupPlayer()
         }
         Log.e("valonRes","$editedStart $editedEnd $startWindow $endWindow ")
