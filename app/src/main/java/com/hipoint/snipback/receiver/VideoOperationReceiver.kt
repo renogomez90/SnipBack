@@ -477,7 +477,9 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             }
         }
 
-        val intent = Intent("frames_added")
+        val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
+        intent.putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
+        intent.putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, VideoMode.currentSpeed)
         receivedContext?.sendBroadcast(intent)
     }
 

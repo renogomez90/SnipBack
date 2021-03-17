@@ -489,9 +489,15 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                     }
                 }
             }
+
+            override fun onPlaybackStateChanged(state: Int) {
+                if(state == Player.STATE_ENDED){
+                    progressTracker?.stopTracking()
+                }
+            }
         })
         initSwipeControls()
-        previewThumbs = File("${ File(videoPath).parent}/previewThumbs")
+        previewThumbs = File("${ File(videoPath!!).parent}/previewThumbs")
         if (previewThumbs != null) {
             showThumbnailsIfAvailable(previewThumbs!!)
         }
@@ -1010,72 +1016,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         }
     }
 
-    /**
-     * start tracking progress
-     */
-    private fun setupProgressTracker() {
-        progressTracker?.stopTracking()
-        progressTracker = null
-
-        progressTracker = ProgressTracker(player)
-        progressTracker!!.run()
-    }
-    
-    inner class ProgressTracker(private val player: Player) : Runnable {
-
-        private var handler: Handler? = null
-        private var isChangeAccepted: Boolean = false
-        private var isTrackingProgress = false
-
-        override fun run() {
-            if (context != null) {
-                var currentPosition = player.currentPosition
-                if(player.currentWindowIndex == 1)
-                    currentPosition += bufferDuration
-                Log.d(TAG, "run: current tracked position = $currentPosition, edited end = $editedEnd")
-
-                if(currentPosition >= editedEnd || currentPosition >= maxDuration){
-                    player.playWhenReady = false
-                    stopTracking()
-
-                    seekbar.hideScrubber()
-                    seekAction = onGoingSeekAction
-                    if(onGoingSeekAction == EditSeekControl.MOVE_START) {
-                        player.seekTo(startWindow, if(startWindow == 0) editedStart else (editedStart - bufferDuration))
-                    }else
-                        player.seekTo(endWindow, if(endWindow == 0) editedEnd else (editedEnd - bufferDuration))
-
-                } else {
-                    handler?.postDelayed(this, 20 /* ms */)
-                }
-            }
-        }
-
-        init {
-            handler = Handler()
-            handler?.post(this)
-        }
-
-        fun setChangeAccepted(isAccepted: Boolean) {
-            isChangeAccepted = isAccepted
-            isTrackingProgress = isAccepted
-            if (handler == null && isAccepted) {
-                handler = Handler()
-                handler!!.post(this)
-            }
-        }
-
-        fun stopTracking() {
-            handler?.removeCallbacksAndMessages(null)
-            handler = null
-            isTrackingProgress = false
-        }
-
-        fun isCurrentlyTracking(): Boolean {
-            return isTrackingProgress && handler != null
-        }
-    }
-
     override fun saveAs() {
         saveVideoDialog?.dismiss()
         showProgress()
@@ -1132,5 +1072,70 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
         VideoService.enqueueWork(requireContext(), createNewVideoIntent)
         videoSaved = true
+    }
+
+    /**
+     * start tracking progress
+     */
+    private fun setupProgressTracker() {
+        progressTracker?.stopTracking()
+        progressTracker = null
+
+        progressTracker = ProgressTracker(player)
+        progressTracker!!.run()
+    }
+
+    inner class ProgressTracker(private val player: Player) : Runnable {
+
+        private var handler: Handler? = null
+        private var isChangeAccepted: Boolean = false
+        private var isTrackingProgress = false
+
+        override fun run() {
+            if (context != null) {
+                var currentPosition = player.currentPosition
+                if(player.currentWindowIndex == 1)
+                    currentPosition += bufferDuration
+
+                if(currentPosition >= editedEnd || currentPosition >= maxDuration - 50){
+                    player.playWhenReady = false
+                    stopTracking()
+
+                    seekbar.hideScrubber()
+                    seekAction = onGoingSeekAction
+                    if(onGoingSeekAction == EditSeekControl.MOVE_START) {
+                        player.seekTo(startWindow, if(startWindow == 0) editedStart else (editedStart - bufferDuration))
+                    }else
+                        player.seekTo(endWindow, if(endWindow == 0) editedEnd else (editedEnd - bufferDuration))
+
+                } else {
+                    handler?.postDelayed(this, 20 /* ms */)
+                }
+            }
+        }
+
+        init {
+            handler = Handler()
+            handler?.post(this)
+        }
+
+        fun setChangeAccepted(isAccepted: Boolean) {
+            isChangeAccepted = isAccepted
+            isTrackingProgress = isAccepted
+            if (handler == null && isAccepted) {
+                handler = Handler()
+                handler!!.post(this)
+            }
+        }
+
+        fun stopTracking() {
+            handler?.removeCallbacksAndMessages(null)
+            handler = null
+            isTrackingProgress = false
+        }
+
+        fun isCurrentlyTracking(): Boolean {
+            return isTrackingProgress && handler != null
+        }
     }
 }
