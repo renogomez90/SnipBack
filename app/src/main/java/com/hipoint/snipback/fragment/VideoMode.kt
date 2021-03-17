@@ -3,6 +3,7 @@ package com.hipoint.snipback.fragment
 import android.Manifest
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
+import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.app.AlertDialog
@@ -421,6 +422,27 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         rotate.duration = 800
         rotate.start()
   }
+    private fun moveContainerInLandscape(view: View?) {
+        val translateY = ObjectAnimator.ofFloat(view, "translationY", -700f)
+        val rotate90Deg = ObjectAnimator.ofFloat(view, "rotation", 0F, 90F)
+        val translateX = ObjectAnimator.ofFloat(view, "translationX", -480f)
+
+        val togetherSet = AnimatorSet()
+        togetherSet.playTogether(translateY, rotate90Deg, translateX)
+        togetherSet.duration = 700
+        togetherSet.start()
+    }
+
+    private fun moveContainerBackToPortrait(view: View?) {
+        val translateX = ObjectAnimator.ofFloat(view, "translationX", 30f)
+        val rotate0Deg = ObjectAnimator.ofFloat(view, "rotation", 90F, 0F)
+        val translateY = ObjectAnimator.ofFloat(view, "translationY", 60f)
+
+        val togetherSet = AnimatorSet()
+        togetherSet.playTogether(translateX, rotate0Deg, translateY)
+        togetherSet.duration = 700
+        togetherSet.start()
+    }
 
     private fun portraitMode(view: View?) {
         if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.LANDSCAPE){
@@ -446,6 +468,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         portraitMode(changeCamera)
         portraitMode(settings)
         portraitMode(con)
+        moveContainerBackToPortrait(slowMoContainer)
     }
 
     fun doRotation90F() {
@@ -454,6 +477,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         landScapeMode(changeCamera)
         landScapeMode(settings)
         landScapeMode(con)
+        moveContainerInLandscape(slowMoContainer)
     }
 
     fun doRotation270F(){

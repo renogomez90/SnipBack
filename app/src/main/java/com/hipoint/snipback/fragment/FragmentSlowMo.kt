@@ -481,7 +481,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                     CoroutineScope(Dispatchers.Main).launch {
                         delay(500)
                         val frag = requireActivity().supportFragmentManager.findFragmentByTag(
-                            AppMainActivity.PLAY_VIDEO_TAG)
+                            AppMainActivity.SLOW_MO_TAG)
                         requireActivity().supportFragmentManager.beginTransaction()
                             .detach(frag!!)
                             .attach(frag)
