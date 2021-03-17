@@ -149,7 +149,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
      *
      * @param processedVideoPath
      */
-    fun videoConcatCompleted(
+    private fun videoConcatCompleted(
         processedVideoPath: String,
         comingFrom: CurrentOperation,
         swipeAction: SwipeAction
@@ -190,7 +190,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 "${File(processedVideoPath).parent}/${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
             val taskList = arrayListOf<VideoOpItem>()
 
-            if(swipeAction == SwipeAction.SWIPE_LEFT) {
+            if((swipeAction == SwipeAction.SWIPE_LEFT && !isFromSlowNo(comingFrom)) ||  //  left swipe on normal recording
+                    (swipeAction == SwipeAction.SWIPE_LEFT && isFromSlowNo(comingFrom) && VideoMode.showHFPSPreview)) { //  left swipe on slow mo with preview
                 val bufferFile = VideoOpItem(
                     operation = IVideoOpListener.VideoOp.TRIMMED,
                     clips = arrayListOf(processedVideoPath),

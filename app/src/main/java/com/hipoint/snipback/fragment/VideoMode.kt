@@ -1102,16 +1102,19 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val videoFilePath = "${File(newVideoPath).parent}/${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
             val taskList = arrayListOf<VideoOpItem>()
 
-            val bufferFile = VideoOpItem(
+            if(showHFPSPreview) {
+                val bufferFile = VideoOpItem(
                     operation = VideoOp.TRIMMED,
                     clips = arrayListOf(newVideoPath),
                     startTime = max((totalDuration - videoDuration - (clipDuration / 1000)).toInt(),
-                            0).toFloat(),
+                        0).toFloat(),
                     endTime = (totalDuration - videoDuration).toFloat(),
                     outputPath = bufferFilePath,
-                    comingFrom = if(slowMoClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING)
+                    comingFrom = if (slowMoClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING)
 
-            bufferDetails.add(BufferDataDetails(bufferFilePath, videoFilePath))
+                bufferDetails.add(BufferDataDetails(bufferFilePath, videoFilePath))
+                taskList.add(bufferFile)
+            }
 
             val videoFile = VideoOpItem(
                     operation = VideoOp.TRIMMED,
@@ -1121,7 +1124,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     outputPath = videoFilePath,
                     comingFrom = if(slowMoClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING)
 
-            taskList.add(bufferFile)
             taskList.add(videoFile)
 
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
@@ -1338,7 +1340,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 else -> 0 - 90
             }
 
-            if (swipeAction == SwipeAction.SWIPE_LEFT) {   //  since we don't need the buffer for right swipe
+            if ((swipeAction == SwipeAction.SWIPE_LEFT && !slowMoClicked) ||    //  since we don't need the buffer for right swipe
+                (slowMoClicked && showHFPSPreview)) {   //  if we are in slow mo mode and we need to see the preview, then buffer is required
                 val bufferTask = VideoOpItem(
                         operation = VideoOp.TRIMMED,
                         clips = arrayListOf(clip.absolutePath),
@@ -1393,7 +1396,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
                         //  saving the clip itself as buffer since no buffer exists
                         bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
-                    }else if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
+                    } else if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
                         if(!showHFPSPreview) {
                             val outputName = "${clip.nameWithoutExtension}_slow_mo"
                             val outputPath = "${clip.parent}/$outputName.mp4"
