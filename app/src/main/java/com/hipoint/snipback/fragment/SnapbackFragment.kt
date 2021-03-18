@@ -54,6 +54,7 @@ import kotlinx.android.synthetic.main.activity_main2.*
 import kotlinx.android.synthetic.main.warningdialog_savevideo.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.Main
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
@@ -349,7 +350,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
             storageFile.mkdir()
         }
 
-        CoroutineScope(Default).launch { saveFrame() }
+        CoroutineScope(Main).launch { saveFrame() }
 
         blinkAnimation()
     }
