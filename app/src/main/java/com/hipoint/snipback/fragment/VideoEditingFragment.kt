@@ -562,7 +562,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 }
 
                 if (isSeekbarShown && !isEditExisting) {
-                    seekBar.hideScrubber()
+                    seekBar.hideScrubber(0)
                     isSeekbarShown = false
                 }
 
@@ -572,7 +572,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 playCon1.visibility = View.VISIBLE
                 playCon2.visibility = View.GONE
                 acceptRejectHolder.visibility = View.VISIBLE
-                seekBar.hideScrubber()
+                seekBar.hideScrubber(0)
                 setIconActive()
                 trimSegment = RangeSeekbarCustom(requireContext())
                 //rounded to int
@@ -889,7 +889,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             }
 
             if (isSeekbarShown && !isEditExisting) {
-                seekBar.hideScrubber()
+                seekBar.hideScrubber(0)
                 isSeekbarShown = false
             }
 
@@ -1006,7 +1006,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             acceptRejectHolder.visibility = View.VISIBLE
 
             if (isSeekbarShown && !isEditExisting) {
-                seekBar.hideScrubber()
+                seekBar.hideScrubber(0)
                 isSeekbarShown = false
             }
         }
@@ -1747,7 +1747,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 player.setSeekParameters(SeekParameters.EXACT)
 
                 if (isSeekbarShown) {
-                    seekBar.hideScrubber()
+                    seekBar.hideScrubber(0)
                     isSeekbarShown = false
                 }
             }
@@ -1827,7 +1827,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         speedDetailSet.add(tmpSpeedDetails!!)
 
         setupRangeMarker(startValue, startValue + 1)
-        seekBar.hideScrubber()
+        seekBar.hideScrubber(0)
 
         if (timebarHolder.indexOfChild(uiRangeSegments!![currentEditSegment]) < 0) { //  View doesn't exist and can be added
             try {
@@ -2627,7 +2627,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         private var progressTracker: ProgressTracker? = null
 
         var saveAction: SaveActionType = SaveActionType.CANCEL
-        var fragment: VideoEditingFragment? = null
+        private var fragment: VideoEditingFragment? = null
 
         @JvmStatic
         fun newInstance(aSnip: Snip?, thumbnailExtractionStarted: Boolean): VideoEditingFragment {
@@ -3081,7 +3081,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         acceptRejectHolder.visibility = View.VISIBLE
 
         if (isSeekbarShown) {  //  otherwise we won't have a clue as to where it is
-            seekBar.hideScrubber()
+            seekBar.hideScrubber(0)
             isSeekbarShown = false
         }
     }

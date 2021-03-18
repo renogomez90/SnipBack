@@ -135,6 +135,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private val progressDismissReceiver: BroadcastReceiver = object : BroadcastReceiver(){
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
+                val msg  = intent.getStringExtra("log")
+                msg?.let { Log.d(TAG, "onReceive: $msg") }
                 if(!videoSaved) {
                     bufferPath = intent.getStringExtra(EXTRA_BUFFER_PATH)
                     videoPath = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
@@ -159,17 +161,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     /**
      * The first time this is triggered is after the CONCAT is completed.
-     * the received inputFile is then enqueued for trimming as buffer and required video.
-     *
-     * This happens in 2 stages: TRIMMED may be entered twice
-     * step 1
-     * if the buffer is unavailable or the video is being saved with saveAction == SaveActionType.SAVE_AS
-     * we can proceed to just trim the original video.
-     * else we trim the buffered file.
-     *
-     * step 2
-     * replace is set up if it is required
-     * required video is enqueued for trimming
+     * the received inputFile is then enqueued for trimming the required video.
      *
      * Once this is completed the speed changes are triggered
      */
@@ -317,7 +309,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
-        Log.d(TAG, "TEST getVideoPreviewFrames: started")
+        Log.d(TAG, "getVideoPreviewFrames: started")
     }
 
     companion object {
@@ -326,24 +318,24 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         const val EXTRA_RECEIVER_VIDEO_PATH: String = "processedVideoPath"
         const val EXTRA_INITIAL_MULTIPLIER : String = "multiplier"
 
+        @Volatile
         private var fragment  : FragmentSlowMo? = null
+
         private var bufferPath: String?         = null
         private var videoPath : String?         = null
         private var tries     : Int             = 0
 
         @JvmStatic
         fun newInstance(buffer: String?, video: String?, multiplier: Int = 3): FragmentSlowMo {
-            if (fragment == null) {
-                fragment = FragmentSlowMo()
-            }
+            return (fragment ?: FragmentSlowMo().also {
+                val bundle = Bundle()
+                bundle.putString(EXTRA_BUFFER_PATH, buffer)
+                bundle.putString(EXTRA_VIDEO_PATH, video)
+                bundle.putInt(EXTRA_INITIAL_MULTIPLIER, multiplier)
+                it.arguments = bundle
 
-            val bundle = Bundle()
-            bundle.putString(EXTRA_BUFFER_PATH, buffer)
-            bundle.putString(EXTRA_VIDEO_PATH, video)
-            bundle.putInt(EXTRA_INITIAL_MULTIPLIER, multiplier)
-            fragment!!.arguments = bundle
-
-            return fragment!!
+                fragment = it
+            })
         }
     }
 
@@ -374,7 +366,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         bindViews()
         bindListeners()
-        Log.d(TAG, "TEST onCreateView: views and listener's bound")
+        Log.d(TAG, "onCreateView: views and listener's bound")
         return rootView
     }
 
@@ -398,7 +390,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             }
             subscriptions?.dispose()
         }
-        Log.d(TAG, "TEST onDestroy")
+        Log.d(TAG, "onDestroy")
         super.onDestroy()
     }
 
@@ -422,7 +414,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         } else if (!this::player.isInitialized) {
             setupPlayer()
         }
-        Log.d(TAG, "TEST onResume: $videoPath")
+        Log.d(TAG, "onResume: $videoPath")
     }
 
     override fun onPause() {
@@ -460,7 +452,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         playerView.player = player
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
-        seekbar.hideScrubber()
+        seekbar.hideScrubber(0)
 
         player.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
         currentSpeed.text = "$multiplier X"
@@ -483,13 +475,13 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         player.addListener(object : Player.EventListener {
             override fun onPlayerError(error: ExoPlaybackException) {
-                Log.e(TAG, "TEST onPlayerError: ${error.message}")
+                Log.e(TAG, "onPlayerError: ${error.message}")
                 error.printStackTrace()
                 tries++
                 if (videoPath.isNotNullOrEmpty() && tries < retries) {  //  retry in case of errors
                     CoroutineScope(Dispatchers.Main).launch {
-                        Log.d(TAG, "TEST onPlayerError: retrying = $tries")
-                        delay(500)
+                        Log.d(TAG, "onPlayerError: retrying = $tries")
+                        delay(700)
                         val frag = requireActivity().supportFragmentManager.findFragmentByTag(
                             AppMainActivity.SLOW_MO_TAG)
                         requireActivity().supportFragmentManager.beginTransaction()
@@ -610,7 +602,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         }
 
         pauseBtn.setOnClickListener {
-            seekbar.hideScrubber()
+            seekbar.hideScrubber(0)
             progressTracker?.stopTracking()
             progressTracker = null
 
@@ -771,7 +763,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             if (it) {
                 startScrollingSeekPosition = player.currentPosition
                 player.playWhenReady = false
-                seekbar.hideScrubber()
+                seekbar.hideScrubber(0)
             }
         }
 
@@ -1111,7 +1103,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                     player.playWhenReady = false
                     stopTracking()
 
-                    seekbar.hideScrubber()
+                    seekbar.hideScrubber(0)
                     seekAction = onGoingSeekAction
                     if(onGoingSeekAction == EditSeekControl.MOVE_START) {
                         player.seekTo(startWindow, if(startWindow == 0) editedStart else (editedStart - bufferDuration))

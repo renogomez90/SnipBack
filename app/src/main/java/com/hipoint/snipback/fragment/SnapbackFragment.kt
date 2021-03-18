@@ -79,17 +79,17 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private var subscriptions  : CompositeDisposable?      = null
     private var animBlink      : Animation?                = null
 
-    private lateinit var playerView   : PlayerView
-    private lateinit var rootView     : View
-    private lateinit var blinkEffect  : View
-    private lateinit var player       : SimpleExoPlayer
-    private lateinit var backBtn      : RelativeLayout
-    private lateinit var captureBtn   : RelativeLayout
-    private lateinit var galleryBtn   : RelativeLayout
-    private lateinit var playerHolder : ConstraintLayout
-    private lateinit var seekBar      : SnipbackTimeBar
-    private lateinit var swipeDetector: SwipeDistanceView
-    private lateinit var switchHolder: LinearLayout
+    private lateinit var playerView     : PlayerView
+    private lateinit var rootView       : View
+    private lateinit var blinkEffect    : View
+    private lateinit var player         : SimpleExoPlayer
+    private lateinit var backBtn        : RelativeLayout
+    private lateinit var captureBtn     : RelativeLayout
+    private lateinit var galleryBtn     : RelativeLayout
+    private lateinit var playerHolder   : ConstraintLayout
+    private lateinit var seekBar        : SnipbackTimeBar
+    private lateinit var swipeDetector  : SwipeDistanceView
+    private lateinit var switchHolder   : LinearLayout
     private lateinit var keepVideoSwitch: SwitchCompat
 
     private val videoPathReceiver: BroadcastReceiver = object : BroadcastReceiver() {

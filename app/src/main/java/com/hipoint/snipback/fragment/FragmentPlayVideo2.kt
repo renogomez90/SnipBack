@@ -591,7 +591,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     }
 
     companion object {
-        var fragment: FragmentPlayVideo2? = null
+        private var fragment: FragmentPlayVideo2? = null
 
         private var tries           = 0
         private var currentPos      = 0L

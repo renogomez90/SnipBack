@@ -1401,8 +1401,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 else -> 0 - 90
             }
 
-            if ((swipeAction == SwipeAction.SWIPE_LEFT && !slowMoClicked) ||    //  since we don't need the buffer for right swipe
-                (slowMoClicked && showHFPSPreview)) {   //  if we are in slow mo mode and we need to see the preview, then buffer is required
+            if (swipeAction == SwipeAction.SWIPE_LEFT && (!slowMoClicked ||    //  since we don't need the buffer for right swipe
+                (slowMoClicked && showHFPSPreview))) {   //  if we are in slow mo mode and we need to see the preview, then buffer is required
                 val bufferTask = VideoOpItem(
                         operation = VideoOp.TRIMMED,
                         clips = arrayListOf(clip.absolutePath),
@@ -1431,7 +1431,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
             VideoService.enqueueWork(requireContext(), intentService)
 
-            if(slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
+            if(swipeAction == SwipeAction.SWIPE_LEFT && slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
                 (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null, currentSpeed),
                     true)
             }

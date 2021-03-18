@@ -103,6 +103,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 VideoService.STATUS_OP_FAILED -> {
                     Log.e(TAG, "onReceive: $operation failed")
                     val dismissIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
+                    dismissIntent.putExtra("log", "failed")
                     receivedContext?.sendBroadcast(dismissIntent)
 
 //                    dismissEditFragmentProcessingDialog(null)
@@ -357,6 +358,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                         val dismissIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
                         dismissIntent.putExtra("bufferPath", bufferPath)
                         dismissIntent.putExtra("processedVideoPath", outputPath)
+                        dismissIntent.putExtra("log", "on trim complete")
                         receivedContext?.sendBroadcast(dismissIntent)
                     }
                 }
@@ -441,6 +443,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
                     val dismissIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
                     dismissIntent.putExtra("processedVideoPath", parentSnip!!.videoFilePath!!)
+                    dismissIntent.putExtra("log", "speed changed")
                     receivedContext?.sendBroadcast(dismissIntent)
 //                    dismissEditFragmentProcessingDialog(parentSnip!!.videoFilePath!!)
                 }
@@ -480,6 +483,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
         intent.putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
         intent.putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, VideoMode.currentSpeed)
+        intent.putExtra("log", "frames added")
         receivedContext?.sendBroadcast(intent)
     }
 
@@ -576,6 +580,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
             val dismissIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
             dismissIntent.putExtra("processedVideoPath", snip.videoFilePath)
+            dismissIntent.putExtra("log", "onTaskCompleted")
             receivedContext?.sendBroadcast(dismissIntent)
 
             //  adding the buffer video into the DB
