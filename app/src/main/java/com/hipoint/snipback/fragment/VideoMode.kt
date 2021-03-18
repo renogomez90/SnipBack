@@ -899,6 +899,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 stopPressed = true)
             ensureRecordingRestart()
         }
+        if(slowMoClicked && showHFPSPreview){
+            videoProcessing(true)
+        }
     }
 
     private fun enableHighSpeedMode() {
@@ -1196,6 +1199,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         if(slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
             (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null, currentSpeed),
                 true)
+        }
+        if(slowMoClicked){
+            videoProcessing(false)
         }
     }
 
