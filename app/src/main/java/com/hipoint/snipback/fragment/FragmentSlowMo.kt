@@ -85,8 +85,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private lateinit var timebarHolder     : FrameLayout
     private lateinit var seekbar           : SnipbackTimeBar
 
-
-    private var player: SimpleExoPlayer? = null
+    private lateinit var player: SimpleExoPlayer
 
     private var gotFrames = false
     //  retires on failure
@@ -281,13 +280,13 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 if (e1 != null && e2 != null) {
                     val speed = (distanceX / (e2.eventTime - e1.eventTime)).absoluteValue
                     if ((speed * 100) < 1.0F) {  // slow
-                        if (player!!.seekParameters != SeekParameters.EXACT) {
-                            player!!.setSeekParameters(SeekParameters.EXACT)
+                        if (player.seekParameters != SeekParameters.EXACT) {
+                            player.setSeekParameters(SeekParameters.EXACT)
                         }
                     } else { //  fast
-                        if (player!!.seekParameters != SeekParameters.CLOSEST_SYNC) {
+                        if (player.seekParameters != SeekParameters.CLOSEST_SYNC) {
 //                            player!!.setSeekParameters(SeekParameters.CLOSEST_SYNC)
-                            player!!.setSeekParameters(SeekParameters.EXACT)
+                            player.setSeekParameters(SeekParameters.EXACT)
                         }
                     }
                 }
@@ -381,6 +380,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
      * after [.onStop] and before [.onDetach].
      */
     override fun onDestroy() {
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         editedStart = -1L
         editedEnd   = -1L
         startWindow = 0
@@ -388,7 +388,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         Log.e("valonDes","$editedStart $editedEnd $startWindow $endWindow ")
 
         if (player != null) {
-            player!!.apply {
+            player.apply {
                 playWhenReady = false
                 stop(true)
                 setVideoSurface(null)
@@ -417,7 +417,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         if (videoPath.isNullOrEmpty()) {
             showProgress()
-        } else if (player == null) {
+        } else if (!this::player.isInitialized) {
             setupPlayer()
         }
         Log.d(TAG, "TEST123onResume: $videoPath")
@@ -428,6 +428,17 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         requireActivity().unregisterReceiver(previewTileReceiver)
         requireActivity().unregisterReceiver(progressDismissReceiver)
         Log.e("valonPause","$editedStart $editedEnd $startWindow $endWindow ")
+
+        if (this::player.isInitialized) {
+            player.apply {
+                stop()
+                setVideoSurface(null)
+                release()
+            }
+            subscriptions?.dispose()
+        }
+
+        timebarHolder.removeView(trimSegment)
 
         super.onPause()
     }
@@ -458,16 +469,17 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         playerView.player = player
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
-        seekbar.hideScrubber(0)
+        maxDuration = bufferDuration + videoDuration
 
-        player!!.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
-        currentSpeed.text = "$multiplier X"
 
-        player!!.apply {
+
+        player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.EXACT)
+            setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
             playWhenReady = false
         }
+        currentSpeed.text = "$multiplier X"
 
         playerView.apply {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -479,15 +491,16 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             showController()
         }
 
-        player!!.addListener(object : Player.EventListener {
+        seekbar.hideScrubber(0)
+
+        player.addListener(object : Player.EventListener {
             override fun onPlayerError(error: ExoPlaybackException) {
                 Log.e(TAG, "onPlayerError: ${error.message}")
                 error.printStackTrace()
                 tries++
                 if (videoPath.isNotNullOrEmpty() && tries < retries) {  //  retry in case of errors
                     CoroutineScope(Dispatchers.Main).launch {
-                        player!!.release()
-                        player = null
+                        player.release()
                         Log.d(TAG, "TEST123onPlayerError: retrying = $tries")
                         delay(2000)
 
@@ -515,9 +528,9 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         prepareForEdit()
 
         if(bufferPath != null){
-            player!!.seekTo(0, bufferDuration)
+            player.seekTo(0, bufferDuration)
         }else {
-            player!!.seekTo(0)
+            player.seekTo(0)
         }
 
         if (!VideoService.isProcessing && !gotFrames)  //  in case we are coming from video editing there is a chance for crash
@@ -546,8 +559,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         val endValue: Float = editedEnd.toFloat() * 100 / maxDuration
         maxDuration = bufferDuration + videoDuration
 
-        if(startWindow == 0) player!!.seekTo(startWindow, editedStart)
-        else player!!.seekTo(startWindow, editedStart - bufferDuration)
+        if(startWindow == 0) player.seekTo(startWindow, editedStart)
+        else player.seekTo(startWindow, editedStart - bufferDuration)
         seekbar.setDuration(editedStart)
 
         extendRangeMarker(startValue, endValue)
@@ -566,27 +579,27 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         return when (multiplier) {
             3 -> {
                 multiplier = 4
-                player!!.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
                 "4X"
             }
             4 -> {
                 multiplier = 5
-                player!!.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
                 "5X"
             }
             5 -> {
                 multiplier = 10
-                player!!.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
                 "10X"
             }
             10 -> {
                 multiplier = 15
-                player!!.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
                 "15X"
             }
             else -> {
                 multiplier = 3
-                player!!.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
                 "3X"
             }
         }
@@ -597,17 +610,17 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             if(startWindow < 0)
                 startWindow = 0
 
-            player?.setSeekParameters(SeekParameters.EXACT)
+            player.setSeekParameters(SeekParameters.EXACT)
             seekAction = EditSeekControl.MOVE_NORMAL
 
             if (startWindow == 0) {
-                player?.seekTo(startWindow, editedStart)
+                player.seekTo(startWindow, editedStart)
             }else {
-                player?.seekTo(startWindow,editedStart - bufferDuration)
+                player.seekTo(startWindow,editedStart - bufferDuration)
             }
 
             seekbar.showScrubber()
-            player?.playWhenReady = true
+            player.playWhenReady = true
 
             setupProgressTracker()
         }
@@ -617,23 +630,23 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             progressTracker?.stopTracking()
             progressTracker = null
 
-            player?.playWhenReady = false
+            player.playWhenReady = false
 
             //  resetting to start of end point
             seekAction = onGoingSeekAction
             if(seekAction == EditSeekControl.MOVE_START) {
-                player?.seekTo(startWindow, if(startWindow == 0) editedStart else (editedStart - bufferDuration))
+                player.seekTo(startWindow, if(startWindow == 0) editedStart else (editedStart - bufferDuration))
             }else {
-                player?.seekTo(endWindow,
+                player.seekTo(endWindow,
                     if (endWindow == 0) editedEnd else (editedEnd - bufferDuration))
             }
         }
 
         start.setOnClickListener {
             // saves the current end point if available
-            player?.setSeekParameters(SeekParameters.EXACT)
+            player.setSeekParameters(SeekParameters.EXACT)
             if(editedEnd != maxDuration){
-                endWindow = player?.currentWindowIndex ?: 0
+                endWindow = player.currentWindowIndex
                 editedEnd = getCorrectedTimebarPosition()
             }
 
@@ -643,16 +656,16 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             onGoingSeekAction = seekAction
 
             if(editedStart < 0) {
-                player?.seekTo(0, bufferDuration)
+                player.seekTo(0, bufferDuration)
             }else {
-                player?.seekTo(startWindow, editedStart)
+                player.seekTo(startWindow, editedStart)
             }
         }
 
         end.setOnClickListener {
             // saves the current start point
-            player?.setSeekParameters(SeekParameters.EXACT)
-            startWindow = player?.currentWindowIndex ?: 0
+            player.setSeekParameters(SeekParameters.EXACT)
+            startWindow = player.currentWindowIndex
             editedStart = getCorrectedTimebarPosition()
 
             // update button UI and flags
@@ -662,13 +675,13 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
             //  moves the cursor to required point
             if(editedEnd < 0) {
-                player?.seekTo(1, videoDuration)
+                player.seekTo(1, videoDuration)
             }
             else {
                 if (endWindow == 0)
-                    player?.seekTo(endWindow, editedEnd)
+                    player.seekTo(endWindow, editedEnd)
                 else
-                    player?.seekTo(endWindow, editedEnd - bufferDuration)
+                    player.seekTo(endWindow, editedEnd - bufferDuration)
             }
         }
 
@@ -703,12 +716,15 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         toStartBtn.setOnClickListener {
             if(startWindow == 0)
-                player?.seekTo(startWindow, editedStart)
+                player.seekTo(startWindow, editedStart)
             else
-                player?.seekTo(startWindow, editedStart - bufferDuration)
+                player.seekTo(startWindow, editedStart - bufferDuration)
         }
     }
 
+    /**
+     * sets up the video files for playback
+     */
     private fun setupMediaSource() {
         val retriever = MediaMetadataRetriever()
         val clips = arrayListOf<MediaSource>()
@@ -761,9 +777,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         clips.add(clip2)
         val mediaSource = ConcatenatingMediaSource(true, *clips.toTypedArray())
 
-        maxDuration = bufferDuration + videoDuration
-        player?.setMediaSource(mediaSource)
-        player?.prepare()
+        player.setMediaSource(mediaSource)
+        player.prepare()
         showBufferOverlay()
     }
 
@@ -772,8 +787,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         swipeDetector.onIsScrollingChanged {
             if (it) {
-                startScrollingSeekPosition = player?.currentPosition ?: 0
-                player?.playWhenReady = false
+                startScrollingSeekPosition = player.currentPosition
+                player.playWhenReady = false
                 seekbar.hideScrubber(0)
             }
         }
@@ -781,7 +796,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         val emitter = SeekPositionEmitter()
         subscriptions = CompositeDisposable()
 
-        player?.seekWhenReady(emitter)
+        player.seekWhenReady(emitter)
             ?.subscribe({
                 Log.v(TAG, "seekTo=${it.first} isSeeking=${it.second}")
             }, { Log.e(TAG, "${it.message}") })
@@ -798,35 +813,35 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             val percentOfDuration = scaledPercent * -1 * maxDuration + startScrollingSeekPosition
             var newSeekPosition = percentOfDuration.roundToLong()
 
-            if (newSeekPosition >= player!!.contentDuration && player!!.currentWindowIndex == 0) {
-                if (player!!.hasNext()) {
-                    player!!.next()
+            if (newSeekPosition >= player.contentDuration && player.currentWindowIndex == 0) {
+                if (player.hasNext()) {
+                    player.next()
                     startScrollingSeekPosition = 0
-                    player!!.setSeekParameters(SeekParameters.EXACT)
-                    player!!.seekTo(startScrollingSeekPosition)
+                    player.setSeekParameters(SeekParameters.EXACT)
+                    player.seekTo(startScrollingSeekPosition)
                 }
             }
-            if (newSeekPosition <= 0L && player!!.currentWindowIndex == 1) {
-                if (player!!.hasPrevious()) {
-                    player!!.previous()
+            if (newSeekPosition <= 0L && player.currentWindowIndex == 1) {
+                if (player.hasPrevious()) {
+                    player.previous()
                     startScrollingSeekPosition = bufferDuration
-                    player!!.setSeekParameters(SeekParameters.EXACT)
-                    player!!.seekTo(startScrollingSeekPosition)
+                    player.setSeekParameters(SeekParameters.EXACT)
+                    player.seekTo(startScrollingSeekPosition)
                 }
             }
 
-            if(player!!.currentPosition > (player!!.duration - 1500) ||
-            player!!.currentPosition < 1500){
-                player!!.setSeekParameters(SeekParameters.EXACT)
+            if(player.currentPosition > (player.duration - 1500) ||
+            player.currentPosition < 1500){
+                player.setSeekParameters(SeekParameters.EXACT)
             }else {
-                player!!.setSeekParameters(SeekParameters.CLOSEST_SYNC)
+                player.setSeekParameters(SeekParameters.CLOSEST_SYNC)
 //                player!!.setSeekParameters(SeekParameters.EXACT)
             }
 
             when (seekAction) {
                 EditSeekControl.MOVE_START -> {
                     editedStart = getCorrectedSeek(newSeekPosition)
-                    if (player!!.currentWindowIndex == 1) {
+                    if (player.currentWindowIndex == 1) {
                         if (newSeekPosition + bufferDuration > editedEnd) {
                             editedStart = editedEnd - 50
                             newSeekPosition = editedStart - bufferDuration
@@ -844,7 +859,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 }
                 EditSeekControl.MOVE_END -> {
                     editedEnd = getCorrectedSeek(newSeekPosition)
-                    if (player!!.currentWindowIndex == 1) {
+                    if (player.currentWindowIndex == 1) {
                         if (newSeekPosition + bufferDuration < editedStart) {
                             editedEnd = editedStart + 50
                             newSeekPosition = editedEnd - bufferDuration
@@ -866,7 +881,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 else -> {}
             }
 
-            if(player!!.currentWindowIndex == 0) {
+            if(player.currentWindowIndex == 0) {
                 if (newSeekPosition < 0) {
                     newSeekPosition = 0
                 }else if (newSeekPosition > maxDuration) {
@@ -881,15 +896,15 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             }
 
             //  if we are scrolling to the beginning of the video or to the end, seek exactly
-            if(player!!.currentWindowIndex == 0) {
+            if(player.currentWindowIndex == 0) {
                 if (newSeekPosition < 1500 ||
                     newSeekPosition > (maxDuration - 1500)) {
-                    player!!.setSeekParameters(SeekParameters.EXACT)
+                    player.setSeekParameters(SeekParameters.EXACT)
                 }
             } else {
                 if(newSeekPosition < 1500 ||
                     newSeekPosition > (maxDuration - bufferDuration - 1500)){
-                    player!!.setSeekParameters(SeekParameters.EXACT)
+                    player.setSeekParameters(SeekParameters.EXACT)
                 }
             }
 
@@ -980,19 +995,19 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     }
 
     private fun getCorrectedTimebarPosition(): Long {
-        return if(player!!.currentWindowIndex == 0){
-            player!!.currentPosition
+        return if(player.currentWindowIndex == 0){
+            player.currentPosition
         }else{  //  exoplayer can be messed up
-            player!!.setSeekParameters(SeekParameters.EXACT)
-            if (player!!.currentPosition + bufferDuration > maxDuration)
+            player.setSeekParameters(SeekParameters.EXACT)
+            if (player.currentPosition + bufferDuration > maxDuration)
                 maxDuration
             else
-                player!!.currentPosition + bufferDuration
+                player.currentPosition + bufferDuration
         }
     }
 
     private fun getCorrectedSeek(newPos: Long): Long {
-        return if(player!!.currentWindowIndex == 0){
+        return if(player.currentWindowIndex == 0){
             newPos
         }else{  //  exoplayer can be messed up
             if (newPos + bufferDuration >= maxDuration)
@@ -1094,7 +1109,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         progressTracker?.stopTracking()
         progressTracker = null
 
-        progressTracker = ProgressTracker(player!!)
+        progressTracker = ProgressTracker(player)
         progressTracker!!.run()
     }
 
@@ -1106,20 +1121,20 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         override fun run() {
             if (context != null) {
-                var currentPosition = player?.currentPosition ?: 0
-                if(player?.currentWindowIndex == 1)
+                var currentPosition = player.currentPosition
+                if(player.currentWindowIndex == 1)
                     currentPosition += bufferDuration
 
                 if(currentPosition >= editedEnd || currentPosition >= maxDuration - 50){
-                    player?.playWhenReady = false
+                    player.playWhenReady = false
                     stopTracking()
 
                     seekbar.hideScrubber(0)
                     seekAction = onGoingSeekAction
                     if(onGoingSeekAction == EditSeekControl.MOVE_START) {
-                        player?.seekTo(startWindow, if(startWindow == 0) editedStart else (editedStart - bufferDuration))
+                        player.seekTo(startWindow, if(startWindow == 0) editedStart else (editedStart - bufferDuration))
                     }else
-                        player?.seekTo(endWindow, if(endWindow == 0) editedEnd else (editedEnd - bufferDuration))
+                        player.seekTo(endWindow, if(endWindow == 0) editedEnd else (editedEnd - bufferDuration))
 
                 } else {
                     handler?.postDelayed(this, 20 /* ms */)
