@@ -46,6 +46,7 @@ import com.hipoint.snipback.Utils.SimpleOrientationListener
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.application.AppClass.swipeProcessed
 import com.hipoint.snipback.control.CameraControl
+import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
@@ -92,11 +93,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     var userRecordDuration = 0          //  duration of user recorded time
 
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
+    private val PROCESSING_DIALOG    = "dialog_processing"
     private val swipedFileNames : ArrayList<String> = arrayListOf()                   //  names of files generated from swiping left
     private var parentSnip      : Snip?             = null
     private var currentOperation: CurrentOperation  = CurrentOperation.CLIP_RECORDING
     //  orientation previous orientation to decide button rotation animation
     var previousOrientation = SimpleOrientationListener.VideoModeOrientation.PORTRAIT
+
+    //  dialogs
+    private var processingDialog: ProcessingDialog? = null
 
     //  dialogs
     var settingsDialog: SettingsDialog? = null
@@ -900,8 +905,20 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             ensureRecordingRestart()
         }
         if(slowMoClicked && showHFPSPreview){
-            videoProcessing(true)
+            showProgress()
         }
+    }
+
+    private fun showProgress(){
+        if(processingDialog == null)
+            processingDialog = ProcessingDialog()
+        processingDialog!!.isCancelable = false
+        processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun hideProgress(){
+        processingDialog?.dismiss()
     }
 
     private fun enableHighSpeedMode() {
@@ -1201,7 +1218,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 true)
         }
         if(slowMoClicked){
-            videoProcessing(false)
+        hideProgress()
         }
     }
 
