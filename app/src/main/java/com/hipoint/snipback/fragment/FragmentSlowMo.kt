@@ -388,17 +388,22 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         endWindow =  -1
         Log.e("valonDes","$editedStart $editedEnd $startWindow $endWindow ")
 
+        Log.d(TAG, "onDestroy")
+        super.onDestroy()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        playerView.onPause()
         if (player != null) {
             player!!.apply {
-                playWhenReady = false
-                setVideoSurface(null)
+                clearVideoSurface()
+                clearMediaItems()
                 release()
             }
             player = null
             subscriptions?.dispose()
         }
-        Log.d(TAG, "onDestroy")
-        super.onDestroy()
     }
 
     override fun onResume() {
@@ -429,15 +434,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         requireActivity().unregisterReceiver(previewTileReceiver)
         requireActivity().unregisterReceiver(progressDismissReceiver)
         Log.e("valonPause","$editedStart $editedEnd $startWindow $endWindow ")
-
-        if (player != null) {
-            player!!.apply {
-                setVideoSurface(null)
-                release()
-            }
-            player = null
-            subscriptions?.dispose()
-        }
 
         timebarHolder.removeView(trimSegment)
 
@@ -501,10 +497,11 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 tries++
                 if (videoPath.isNotNullOrEmpty() && tries < retries) {  //  retry in case of errors
                     CoroutineScope(Dispatchers.Main).launch {
+                        player!!.clearMediaItems()
                         player!!.release()
                         player = null
                         Log.d(TAG, "TEST123onPlayerError: retrying = $tries")
-                        delay(2000)
+                        delay(200)
 
                         val frag = requireActivity().supportFragmentManager.findFragmentByTag(
                             AppMainActivity.SLOW_MO_TAG)
