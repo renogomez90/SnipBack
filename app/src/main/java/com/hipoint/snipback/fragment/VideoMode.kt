@@ -1367,6 +1367,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             )
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             VideoService.enqueueWork(requireContext(), intentService)
+
+            if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO && showHFPSPreview)
+                (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null), true)
         }
         if(swipeAction == SwipeAction.SWIPE_RIGHT) {
             CoroutineScope(Main).launch{

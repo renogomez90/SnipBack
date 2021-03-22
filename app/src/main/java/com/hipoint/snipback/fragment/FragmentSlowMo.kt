@@ -350,6 +350,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         videoPath   = null
         trimSegment = null
 
+        maxDuration = 0L
         editedStart = -1L
         editedEnd   = -1L
         startWindow = 0
@@ -387,7 +388,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         endWindow =  -1
         Log.e("valonDes","$editedStart $editedEnd $startWindow $endWindow ")
 
-        if (player != null) {
+        if (this::player.isInitialized) {
             player.apply {
                 playWhenReady = false
                 stop(true)
