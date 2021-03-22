@@ -111,9 +111,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val tmpFile = createFileList(fileList)
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING){
             if(filter.isNotBlank())
-                "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y $outputPath"
+                "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y -map_metadata 0 -map_metadata:s:v 0:s:v -metadata major_brand=mp42:0 $outputPath"
             else
-                "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y $outputPath"
+                "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y -map_metadata 0 -map_metadata:s:v 0:s:v -metadata major_brand=mp42:0 $outputPath"
         } else {
             if(rotation == 0)
                 "-f concat -safe 0 -i $tmpFile -metadata:s:v rotate=$rotation -x264opts -keyint_min=1 -crf 0 -c copy -y -map_metadata 0 -map_metadata:s:v 0:s:v -map_metadata:s:a 0:s:a $outputPath"
@@ -169,7 +169,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             end = sec
 
         val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT || isFromSlowMo(comingFrom)) {
-            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -shortest -y -r 30 $outputPath"   // with re-encoding
+            "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -shortest -y -map_metadata 0 -map_metadata:s:v 0:s:v -metadata major_brand=mp42:0 -r 30 $outputPath"   // with re-encoding
         }else {
             if(swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1) {
                 "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -avoid_negative_ts make_zero -crf 0 -c copy -shortest -y $outputPath"
@@ -202,7 +202,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
     suspend fun addIDRFrame(clip:File, outputFolder: String, comingFrom: CurrentOperation, swipeAction: SwipeAction){
 
 //        val cmd = "-i ${clip.absolutePath} -c:v libx264 -profile:v baseline -level 3.0 -x264opts keyint=5:min-keyint=5 -g 10 -movflags +faststart+rtphint -maxrate:v 4000k -bufsize:v 4500k -preset ultrafast -y $outputFolder/out.mp4"
-        val cmd = "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y $outputFolder/out.mp4"
+        val cmd = "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -map_metadata 0 -map_metadata:s:v 0:s:v -metadata major_brand=mp42:0 $outputFolder/out.mp4"
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
                 //mv $outputFolder/out.mp4 ava_${clip.absolutePath}
@@ -277,7 +277,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }else {
             val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
             Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
-            "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -shortest -y -r 30 $outputPath"
+            "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -metadata major_brand=mp42:0 -shortest -y -r 30 $outputPath"
         }
 
         Log.d(TAG, "changeSpeed: cmd = $cmd")
