@@ -397,6 +397,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         buttonCamera.setOnClickListener {
 //            (AppMainActivity).loadFragment(VideoMode.newInstance(),true);
+            requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
             player.release()
             popToVideoMode()
         }

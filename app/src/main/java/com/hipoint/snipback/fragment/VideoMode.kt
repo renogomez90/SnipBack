@@ -396,8 +396,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         savedInstanceState?.let {
 //            slowMoClicked = it.getBoolean("SLO_MO_ON")
         }

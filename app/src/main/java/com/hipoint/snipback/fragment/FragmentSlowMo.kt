@@ -235,8 +235,12 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     }
 
     private fun showProgress(){
-        if(processingDialog == null)
+        if(processingDialog == null) {
             processingDialog = ProcessingDialog()
+        }
+        else if(processingDialog!!.isAdded||processingDialog!!.isVisible){
+            return
+        }
         processingDialog!!.isCancelable = false
         processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -440,8 +444,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         } else if (player == null) {
             setupPlayer()
         }
-        Log.e("TAG12345", "$videoPath")
-
     }
 
     override fun onPause() {
@@ -450,7 +452,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         requireActivity().unregisterReceiver(progressDismissReceiver)
 
         timebarHolder.removeView(trimSegment)
-
+        hideProgress()
         super.onPause()
     }
 
