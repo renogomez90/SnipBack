@@ -505,6 +505,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         portraitMode(gallery)
         portraitMode(changeCamera)
         portraitMode(settings)
+        portraitMode(slowMo)
         portraitMode(con)
     }
 
@@ -514,6 +515,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         landScapeMode(changeCamera)
         landScapeMode(settings)
         landScapeMode(con)
+        landScapeMode(slowMo)
         moveConToLandscape(slowMoContainer)
     }
 
@@ -523,6 +525,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         revLandScapeMode(changeCamera)
         revLandScapeMode(settings)
         revLandScapeMode(con)
+        revLandScapeMode(slowMo)
         moveConToRevLandscape(slowMoContainer)
     }
 
