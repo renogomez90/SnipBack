@@ -3024,6 +3024,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * exit from this fragment
      * */
     override fun exit() {
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         saveAction = SaveActionType.CANCEL
         isEditExisting = false
         exitConfirmation?.dismiss()

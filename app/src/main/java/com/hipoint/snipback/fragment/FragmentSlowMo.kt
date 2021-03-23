@@ -1068,7 +1068,9 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     override fun cancel() = Unit
 
     override fun exit() {
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         requireActivity().supportFragmentManager.popBackStack()
+
     }
 
     /**

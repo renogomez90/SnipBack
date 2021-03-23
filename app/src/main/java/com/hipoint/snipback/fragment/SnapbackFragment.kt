@@ -538,6 +538,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
     override fun save() {}
 
     override fun exit() {
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         File(videoPath).delete()    //  since we can discard this file
         requireActivity().supportFragmentManager.popBackStack()
     }
