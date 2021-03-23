@@ -392,6 +392,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         backArrow.setOnClickListener {
             player.release()
 //            playerView.hideController()
+            requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
             requireActivity().onBackPressed()
         }
 
