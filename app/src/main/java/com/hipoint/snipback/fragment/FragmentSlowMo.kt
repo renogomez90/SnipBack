@@ -356,10 +356,29 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         startWindow = 0
         endWindow   = -1
         tries       = 0
+        savedInstanceState?.let { restoreState(it) }
 
-        savedInstanceState?.let {
+    }
 
-        }
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong("KEY_START", editedStart)
+        outState.putLong("KEY_END", editedEnd)
+        outState.putInt("KEY_START_WINDOW", startWindow)
+        outState.putInt("KEY_END_WINDOW", endWindow)
+        outState.putString("KEY_VIDEO_PATH", videoPath)
+        outState.putString("KEY_BUFFER_PATH", bufferPath)
+
+    }
+
+    private fun restoreState(savedState: Bundle){
+        editedStart = savedState.getLong("KEY_START")
+        editedEnd   = savedState.getLong("KEY_END")
+        startWindow = savedState.getInt("KEY_START_WINDOW")
+        endWindow   = savedState.getInt("KEY_END_WINDOW")
+        videoPath   = savedState.getString("KEY_VIDEO_PATH")
+        bufferPath   = savedState.getString("KEY_BUFFER_PATH")
+
     }
 
     override fun onCreateView(
@@ -372,7 +391,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         bindViews()
         bindListeners()
-        Log.d(TAG, "TEST123onCreateView: views and listener's bound")
         return rootView
     }
 
@@ -386,9 +404,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         editedEnd   = -1L
         startWindow = 0
         endWindow =  -1
-        Log.e("valonDes","$editedStart $editedEnd $startWindow $endWindow ")
-
-        Log.d(TAG, "onDestroy")
         super.onDestroy()
     }
 
@@ -420,20 +435,19 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 videoPath = it.getString(EXTRA_VIDEO_PATH)
             }
         }
-
         if (videoPath.isNullOrEmpty()) {
             showProgress()
         } else if (player == null) {
             setupPlayer()
         }
-        Log.d(TAG, "TEST123onResume: $videoPath")
+        Log.e("TAG12345", "$videoPath")
+
     }
 
     override fun onPause() {
         requireActivity().unregisterReceiver(extendTrimReceiver)
         requireActivity().unregisterReceiver(previewTileReceiver)
         requireActivity().unregisterReceiver(progressDismissReceiver)
-        Log.e("valonPause","$editedStart $editedEnd $startWindow $endWindow ")
 
         timebarHolder.removeView(trimSegment)
 
@@ -467,8 +481,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
         maxDuration = bufferDuration + videoDuration
-
-
 
         player!!.apply {
             repeatMode = Player.REPEAT_MODE_OFF
@@ -535,7 +547,6 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         if (!VideoService.isProcessing && !gotFrames)  //  in case we are coming from video editing there is a chance for crash
             getVideoPreviewFrames()
 
-        Log.d(TAG, "TEST123setupPlayer: path = $videoPath")
     }
 
     private fun prepareForEdit() {
