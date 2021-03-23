@@ -394,6 +394,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
         }
     }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
+
+        savedInstanceState?.let {
+//            slowMoClicked = it.getBoolean("SLO_MO_ON")
+        }
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreateView(
@@ -403,8 +411,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     ): View? {
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         Log.d(TAG, "onCreateView")
-
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
         previousOrientation = if(resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT)
             SimpleOrientationListener.VideoModeOrientation.PORTRAIT
         else
@@ -706,12 +712,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //        videoProcessing(false)
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        savedInstanceState?.let {
-//            slowMoClicked = it.getBoolean("SLO_MO_ON")
-        }
-    }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)

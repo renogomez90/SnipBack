@@ -39,7 +39,8 @@
         <activity
             android:name="com.hipoint.snipback.AppMainActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:configChanges="keyboardHidden|orientation"
+            android:configChanges="orientation|screenLayout"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"/>
 
 
