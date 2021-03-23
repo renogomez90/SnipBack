@@ -171,7 +171,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
     override fun onDestroy() {
         //  so that clutter is removed
-        if(!isFragmentVisible(SNAPBACK_VIDEO_TAG) || !isFragmentVisible(SLOW_MO_TAG)) {    //  don't trigger video file clean up since it may be in use in snapback fragment
+        if(!isFragmentVisible(SNAPBACK_VIDEO_TAG) && !isFragmentVisible(SLOW_MO_TAG)) {    //  don't trigger video file clean up since it may be in use in snapback fragment
             val cleanupIntent = Intent(this, CleanupService::class.java)
             startService(cleanupIntent)
             Log.d(TAG, "onDestroy: starting clean up service")
