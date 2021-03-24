@@ -158,7 +158,7 @@ class VideoService : JobIntentService(), IVideoOpListener {
                             return@with
                         }else{
                             CoroutineScope(IO).launch {
-                                VideoUtils(this@VideoService).addIDRFrame(File(clips[0]), outputPath, comingFrom, swipeAction)
+                                VideoUtils(this@VideoService).addIDRFrame(File(clips[0]), outputPath, comingFrom, swipeAction, orientationPreference)
                             }
                         }
                     }

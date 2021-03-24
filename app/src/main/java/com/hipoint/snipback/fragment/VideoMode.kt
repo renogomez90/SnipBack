@@ -1405,6 +1405,12 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             return
         }
 
+        val orientationPref = when(previousOrientation){
+            SimpleOrientationListener.VideoModeOrientation.LANDSCAPE -> 90 - 90
+            SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE -> 270 - 90
+            else -> 0 - 90
+        }
+
         val swipeClipDuration = if (currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)
             (pref.getLong(SettingsDialog.SLOW_MO_QB_DURATION, 5000L) / 1000).toInt()
         else
@@ -1422,12 +1428,6 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val taskList = arrayListOf<VideoOpItem>()
-
-            val orientationPref = when(previousOrientation){
-                SimpleOrientationListener.VideoModeOrientation.LANDSCAPE -> 90 - 90
-                SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE -> 270 - 90
-                else -> 0 - 90
-            }
 
             if (swipeAction == SwipeAction.SWIPE_LEFT && (!slowMoClicked ||    //  since we don't need the buffer for right swipe
                 (slowMoClicked && showHFPSPreview))) {   //  if we are in slow mo mode and we need to see the preview, then buffer is required
@@ -1488,7 +1488,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         clips = arrayListOf(clip.absolutePath),
                         outputPath = clip.parent!!,
                         comingFrom = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
-                        swipeAction = swipeAction)
+                        swipeAction = swipeAction,
+                        orientationPreference = orientationPref)
                     val taskList = arrayListOf<VideoOpItem>()
                     taskList.add(videoTask)
 
@@ -1514,7 +1515,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             outputPath = outputPath,
                             speedDetailsList = arrayListOf(speedDetails),
                             comingFrom = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
-                            swipeAction = swipeAction)
+                            swipeAction = swipeAction,
+                            orientationPreference = orientationPref)
                         val taskList = arrayListOf<VideoOpItem>()
                         taskList.add(videoTask)
 

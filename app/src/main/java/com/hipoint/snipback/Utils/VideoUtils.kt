@@ -40,7 +40,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val clipBitRate = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_BITRATE).toLong()
         retriever.release()
 
-        clipFrameRate = (if(clipFrameRate == null) "120" else clipFrameRate.split(".")[0])
+        clipFrameRate = (if (clipFrameRate == null) "120" else clipFrameRate.split(".")[0])
 
         val epVideos = arrayListOf<EpVideo>()
         epVideos.apply {
@@ -51,17 +51,17 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val options = OutputOption(outputPath)
         val landscape = intArrayOf(0, 180)
         options.apply {
-            if(clipRotation in landscape) {
+            if (clipRotation in landscape) {
                 setHeight(height)
                 setWidth(width)
-            }else {
+            } else {
                 setHeight(width)
                 setWidth(height)
             }
 
             frameRate = clipFrameRate.toInt()
 //            bitRate = 10 // default
-            bitRate = (clipBitRate/1_048_576).toInt()
+            bitRate = (clipBitRate / 1_048_576).toInt()
         }
 
         EpEditor.merge(epVideos, options, object : OnEditorListener {
@@ -89,11 +89,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
      * @param clip2      Second clip to be merged
      * @param outputPath Path to save output
      */
-    suspend fun concatenateMultiple(fileList: List<File>, outputPath: String, comingFrom: CurrentOperation, swipeAction: SwipeAction){
+    suspend fun concatenateMultiple(fileList: List<File>, outputPath: String, comingFrom: CurrentOperation, swipeAction: SwipeAction) {
         val retriever = MediaMetadataRetriever()
         var totalDuration = 0L
         fileList.forEach {
-            if(it.exists() && it.length() > 0) {
+            if (it.exists() && it.length() > 0) {
                 retriever.setDataSource(it.absolutePath)
                 totalDuration += retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
             }
@@ -101,21 +101,23 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION).toInt()
         retriever.release()
 
-        val filter = when (rotation){
+        val filter = when (rotation) {
             90 -> "transpose=1"
             180 -> "transpose=1,transpose=1"
             270 -> "transpose=1,transpose=1,transpose=1"
-            else -> {""}
+            else -> {
+                ""
+            }
         }
 
         val tmpFile = createFileList(fileList)
-        val cmd = if(comingFrom == CurrentOperation.VIDEO_EDITING){
+        val cmd = if (comingFrom == CurrentOperation.VIDEO_EDITING) {
             if (filter.isNotBlank())
                 "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y $outputPath"
             else
                 "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y $outputPath"
         } else {
-            if(rotation == 0)
+            if (rotation == 0)
                 "-f concat -safe 0 -i $tmpFile -metadata:s:v rotate=$rotation -x264opts -keyint_min=1 -crf 0 -c copy -y $outputPath"
             else
                 "-f concat -safe 0 -i $tmpFile -x264opts -keyint_min=1 -crf 0 -c copy -y $outputPath"
@@ -138,24 +140,24 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         Log.d(TAG, "concatenateFiles: cmd= $cmd")
         try {
             EpEditor.execCmd(cmd,
-                TimeUnit.MILLISECONDS.toMicros(totalDuration),
-                object : OnEditorListener {
-                    override fun onSuccess() {
-                        File(tmpFile).delete()
-                        Log.d(TAG, "Concat Success")
-                        opListener.changed(IVideoOpListener.VideoOp.CONCAT,
-                            comingFrom,
-                            swipeAction,
-                            outputPath)
-                    }
+                    TimeUnit.MILLISECONDS.toMicros(totalDuration),
+                    object : OnEditorListener {
+                        override fun onSuccess() {
+                            File(tmpFile).delete()
+                            Log.d(TAG, "Concat Success")
+                            opListener.changed(IVideoOpListener.VideoOp.CONCAT,
+                                    comingFrom,
+                                    swipeAction,
+                                    outputPath)
+                        }
 
-                    override fun onFailure() {
-                        Log.d(TAG, "Concat Failed")
-                        opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
-                    }
+                        override fun onFailure() {
+                            Log.d(TAG, "Concat Failed")
+                            opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
+                        }
 
-                    override fun onProgress(progress: Float) {}
-                })
+                        override fun onProgress(progress: Float) {}
+                    })
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -172,6 +174,18 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip.absolutePath)
         val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong() // in miliseconds
+        val rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION).toInt()
+
+        val filter = when (orientationPref) {
+            0 -> "transpose=2"
+            90 -> "transpose=2,transpose=2"
+            180 -> "transpose=2,transpose=2,transpose=2"
+            else -> {
+                ""
+            }
+        }
+
+        Log.d(TAG, "trimToClip: rotation = $rotation, pref = $orientationPref")
         retriever.release()
 
 //        val sec = TimeUnit.MILLISECONDS.toSeconds(duration)
@@ -183,13 +197,16 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             end = sec
 
         val cmd = if (comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT || isFromSlowMo(comingFrom)) {
-            "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -y $outputPath"   // with re-encoding
+            if (filter.isNotBlank())
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -vf $filter -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -y $outputPath"   // with re-encoding
+            else
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -y $outputPath"   // with re-encoding
         } else {
-            if (swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1) {
+            if (swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1)
                 "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -avoid_negative_ts make_zero -crf 0 -c copy -shortest -y $outputPath"
-            } else {
+            else
                 "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -x264-params keyint=2:min-keyint=1 -avoid_negative_ts make_zero -crf 0 -c copy -shortest -y $outputPath"   // without re-encoding
-            }
+
         }
 
         /*
@@ -224,17 +241,20 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }
     }
 
-    suspend fun addIDRFrame(clip:File, outputFolder: String, comingFrom: CurrentOperation, swipeAction: SwipeAction){
+    suspend fun addIDRFrame(clip: File, outputFolder: String, comingFrom: CurrentOperation, swipeAction: SwipeAction, orientationPref: Int) {
 
 //        val cmd = "-i ${clip.absolutePath} -c:v libx264 -profile:v baseline -level 3.0 -x264opts keyint=5:min-keyint=5 -g 10 -movflags +faststart+rtphint -maxrate:v 4000k -bufsize:v 4500k -preset ultrafast -y $outputFolder/out.mp4"
-        val cmd = "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -map_metadata 0 -map_metadata:s:v 0:s:v -vsync 2 -r 120 $outputFolder/out.mp4"
+        val cmd = if(orientationPref != -1)
+                "-i ${clip.absolutePath} -map_metadata 0 -metadata:s:v rotate=$orientationPref -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -map_metadata:s:v 0:s:v -vsync 2 -r 120 $outputFolder/out.mp4"
+            else
+                "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -map_metadata 0 -map_metadata:s:v 0:s:v -vsync 2 -r 120 $outputFolder/out.mp4"
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
                 //mv $outputFolder/out.mp4 ava_${clip.absolutePath}
                 File("$outputFolder/out.mp4").renameTo(clip)
                 opListener.changed(IVideoOpListener.VideoOp.KEY_FRAMES,
-                    comingFrom, swipeAction,
-                    clip.absolutePath)
+                        comingFrom, swipeAction,
+                        clip.absolutePath)
             }
 
             override fun onFailure() {
@@ -265,8 +285,8 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), object : OnEditorListener {
                 override fun onSuccess() {
                     opListener.changed(IVideoOpListener.VideoOp.SPLIT,
-                        comingFrom, swipeAction,
-                        "$outputFolder/${clip.nameWithoutExtension}")
+                            comingFrom, swipeAction,
+                            "$outputFolder/${clip.nameWithoutExtension}")
                 }
 
                 override fun onFailure() {
@@ -299,7 +319,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 //            "[0:v]trim=0:$totalDuration,setpts=PTS-STARTPTS[v1];[0:a]atrim=0:$totalDuration,asetpts=PTS-STARTPTS[a1];[v1][a1]concat=n=1:v=1:a=1[outv][outa]"
 //            opListener.changed(IVideoOpListener.VideoOp.SPEED, comingFrom, swipeAction, clip.absolutePath)
             "-i ${clip.absolutePath} -c copy -y $outputPath"
-        }else {
+        } else {
             val complexFilter = makeComplexFilter(speedDetailsList, totalDuration)
             Log.d(TAG, "changeSpeed: complexFilter = $complexFilter")
             "-i ${clip.absolutePath} -filter_complex " + complexFilter + " -map [outv] -map [outa] -vcodec libx264 -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -y $outputPath"
@@ -385,7 +405,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             i++
 
             //reset inbetween speed changes
-            if(index < speedDetailsList.size - 1) {
+            if (index < speedDetailsList.size - 1) {
                 val nextStart = speedDetailsList[index + 1].timeDuration?.first!!.toFloat() / 1000
 
                 //  video
@@ -447,8 +467,8 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), object : OnEditorListener {
             override fun onSuccess() {
                 opListener.changed(IVideoOpListener.VideoOp.FRAMES,
-                    comingFrom, swipeAction,
-                    outputPath.absolutePath)
+                        comingFrom, swipeAction,
+                        outputPath.absolutePath)
             }
 
             override fun onFailure() {
@@ -478,6 +498,6 @@ class VideoUtils(private val opListener: IVideoOpListener) {
     }
 
     private fun isFromSlowMo(currentOperation: CurrentOperation): Boolean =
-        currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO ||
-                currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO
+            currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO ||
+                    currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO
 }

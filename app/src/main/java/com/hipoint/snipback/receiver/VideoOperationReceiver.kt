@@ -1,5 +1,8 @@
 package com.hipoint.snipback.receiver
 
+import android.app.ActivityManager
+import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+import android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -355,11 +358,16 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                             }
                         }
 
-                        val dismissIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
-                        dismissIntent.putExtra("bufferPath", bufferPath)
-                        dismissIntent.putExtra("processedVideoPath", outputPath)
-                        dismissIntent.putExtra("log", "on trim complete")
-                        receivedContext?.sendBroadcast(dismissIntent)
+                        if(isForegrounded()) {
+                            val dismissIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
+                            dismissIntent.putExtra("bufferPath", bufferPath)
+                            dismissIntent.putExtra("processedVideoPath", outputPath)
+                            dismissIntent.putExtra("log", "on trim complete")
+                            receivedContext?.sendBroadcast(dismissIntent)
+                        } else {    //  if the app was in the back ground for some reason it should still be able to get this
+                            FragmentSlowMo.videoPath = outputPath
+                            FragmentSlowMo.bufferPath = bufferPath
+                        }
                     }
                 }
             }
@@ -758,4 +766,9 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING_SLOW_MO,
             CurrentOperation.CLIP_RECORDING_SLOW_MO)
 
+    public fun isForegrounded(): Boolean {
+        val appProcessInfo = ActivityManager.RunningAppProcessInfo()
+        ActivityManager.getMyMemoryState(appProcessInfo)
+        return (appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE)
+    }
 }

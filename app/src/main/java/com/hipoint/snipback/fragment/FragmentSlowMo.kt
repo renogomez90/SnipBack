@@ -238,7 +238,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         if(processingDialog == null) {
             processingDialog = ProcessingDialog()
         }
-        else if(processingDialog!!.isAdded||processingDialog!!.isVisible){
+        else if (processingDialog!!.isAdded || processingDialog!!.isVisible) {
             return
         }
         processingDialog!!.isCancelable = false
@@ -328,9 +328,10 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         @Volatile
         private var fragment  : FragmentSlowMo? = null
 
-        private var bufferPath: String?         = null
-        private var videoPath : String?         = null
-        private var tries     : Int             = 0
+        var videoPath : String? = null
+        var bufferPath: String? = null
+
+        private var tries     : Int     = 0
 
         @JvmStatic
         fun newInstance(buffer: String?, video: String?, multiplier: Int = 3): FragmentSlowMo {
@@ -440,7 +441,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             }
         }
         if (videoPath.isNullOrEmpty()) {
-            showProgress()
+            if(VideoService.isProcessing)
+                showProgress()
         } else if (player == null) {
             setupPlayer()
         }
