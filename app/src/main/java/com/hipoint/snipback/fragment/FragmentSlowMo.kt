@@ -382,7 +382,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         startWindow = savedState.getInt("KEY_START_WINDOW")
         endWindow   = savedState.getInt("KEY_END_WINDOW")
         videoPath   = savedState.getString("KEY_VIDEO_PATH")
-        bufferPath   = savedState.getString("KEY_BUFFER_PATH")
+        bufferPath  = savedState.getString("KEY_BUFFER_PATH")
 
     }
 
@@ -408,7 +408,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         editedStart = -1L
         editedEnd   = -1L
         startWindow = 0
-        endWindow =  -1
+        endWindow   = -1
         super.onDestroy()
     }
 
@@ -441,8 +441,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             }
         }
         if (videoPath.isNullOrEmpty()) {
-            if(VideoService.isProcessing)
-                showProgress()
+            showProgress()
         } else if (player == null) {
             setupPlayer()
         }
@@ -479,6 +478,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     private fun setupPlayer(){
         if(videoPath.isNullOrEmpty()) return
+        hideProgress()
 
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
