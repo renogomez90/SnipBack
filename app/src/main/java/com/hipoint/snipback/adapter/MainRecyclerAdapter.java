@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -19,6 +20,7 @@ import com.hipoint.snipback.Swipper;
 import com.hipoint.snipback.Utils.GalleryDiffUtlCallback;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
+import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Snip;
 
@@ -30,6 +32,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private Context context;
     private List<EventData> parentSnips;
     private List<EventData> allSnips;
+    private EventData tempData = new EventData();
     private String viewChangeValue;
     private Integer orientationValue;
     private int eventId = -1;
@@ -63,6 +66,18 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         notifyDataSetChanged();
     }
 
+    public void showLoading(boolean show){
+        if(show) {
+            tempData.setEvent(AppClass.getAppInstance().lastCreatedEvent);
+            tempData.addEventParentSnip(new Snip());
+            parentSnips.add(tempData);
+            notifyItemInserted(parentSnips.lastIndexOf(tempData));
+        } else {
+            parentSnips.remove(tempData);
+            notifyItemRangeChanged(0, parentSnips.size() - 1);
+        }
+    }
+
     @NonNull
     @Override
     public MainViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -79,13 +94,16 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 //        }else{
 //            holder.categoryTitle.setVisibility(View.GONE);
 //        }
-        holder.categoryTitle.setVisibility(View.VISIBLE);
+        if(parentSnips.get(position).getParentSnip().get(0).getVideoFilePath() == null){
+            holder.categoryTitle.setVisibility(View.INVISIBLE);
+        } else {
+            holder.categoryTitle.setVisibility(View.VISIBLE);
+        }
         holder.categoryTitle.setText(parentSnips.get(position).getEvent().getEvent_title());
         String viewChange = viewChangeValue;
         eventId = parentSnips.get(position).getEvent().getEvent_id();
         List<Snip> allParentSnip = parentSnips.get(position).getParentSnip();
         setCatItemRecycler(holder.itemRecycler, allParentSnip, viewChange);
-
     }
 
     @Override
@@ -100,7 +118,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         public MainViewHolder(@NonNull View itemView) {
             super(itemView);
             categoryTitle = itemView.findViewById(R.id.cat_title);
-            itemRecycler = itemView.findViewById(R.id.item_recycler);
+            itemRecycler  = itemView.findViewById(R.id.item_recycler);
         }
     }
 

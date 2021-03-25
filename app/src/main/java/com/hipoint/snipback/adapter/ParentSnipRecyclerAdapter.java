@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -44,12 +45,14 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     public void onBindViewHolder(@NonNull ParentItemViewHolder holder, int position) {
 
         if (snipArrayList != null) {
-
-            int parentId = snipArrayList.get(position).getSnip_id();
-            String viewChange = viewChangeValue;
-            List<Snip> childSnip = AppClass.getAppInstance().getChildSnipsByParentSnipId(snipArrayList.get(position).getEvent_id(), parentId);
-            setCatItemRecycler(holder.itemRecycler, childSnip, viewChange);
-
+            if(snipArrayList.get(position).getVideoFilePath() == null){
+                holder.loading.setVisibility(View.VISIBLE);
+            } else {
+                int parentId = snipArrayList.get(position).getSnip_id();
+                String viewChange = viewChangeValue;
+                List<Snip> childSnip = AppClass.getAppInstance().getChildSnipsByParentSnipId(snipArrayList.get(position).getEvent_id(), parentId);
+                setCatItemRecycler(holder.itemRecycler, childSnip, viewChange);
+            }
         }
 
 //        holder.itemImage.setImageResource(categoryItemList.get(position).getImageUrl());
@@ -69,10 +72,11 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
 
     public class ParentItemViewHolder extends RecyclerView.ViewHolder {
         RecyclerView itemRecycler;
-
+        ProgressBar loading;
         public ParentItemViewHolder(@NonNull View itemView) {
             super(itemView);
             itemRecycler = itemView.findViewById(R.id.item_recycler);
+            loading = itemView.findViewById(R.id.gallery_item_loading);
         }
     }
 

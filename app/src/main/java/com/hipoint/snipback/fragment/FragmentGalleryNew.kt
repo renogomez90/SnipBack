@@ -1,7 +1,10 @@
 package com.hipoint.snipback.fragment
 
 import android.app.Dialog
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Bundle
@@ -25,6 +28,7 @@ import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppViewModel
+import com.hipoint.snipback.service.VideoService
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -64,6 +68,17 @@ class FragmentGalleryNew : Fragment() {
     private val allEvents: MutableList<Event> by lazy { ArrayList() }
     private val hdSnips: MutableList<Hd_snips> by lazy { ArrayList() }
     private val snip: MutableList<Snip> by lazy { ArrayList() }
+
+    private val videoProcessingReceiver: BroadcastReceiver by lazy {
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let{
+                    if(mainCategoryRecycler.adapter != null)
+                        (mainCategoryRecycler.adapter as MainRecyclerAdapter).showLoading(false)
+                }
+            }
+        }
+    }
 
     enum class ViewType {
         NORMAL, ENLARGED
@@ -241,7 +256,7 @@ class FragmentGalleryNew : Fragment() {
         mainCategoryRecycler = rootView.findViewById(R.id.main_recycler)
 
 //        AppViewModel appViewModel = ViewModelProviders.ofrequireActivity().get(AppViewModel.class);
-        pulltoRefresh()
+        pullToRefresh()
         pullToRefresh.isRefreshing = false
         return rootView
     }
@@ -270,7 +285,7 @@ class FragmentGalleryNew : Fragment() {
         mainRecyclerAdapter?.notifyDataSetChanged()
     }
 
-    private fun pulltoRefresh() {
+    private fun pullToRefresh() {
         pullToRefresh.setOnRefreshListener {
             pullToRefresh.isRefreshing = false
 //            loadGalleryDataFromDB()
@@ -282,7 +297,7 @@ class FragmentGalleryNew : Fragment() {
     override fun onResume() {
         super.onResume()
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = false)
-
+        requireActivity().registerReceiver(videoProcessingReceiver, IntentFilter(VideoService.ACTION))
         startPostponedEnterTransition()
 //        loadGalleryDataFromDB()
         loadData()
@@ -299,6 +314,11 @@ class FragmentGalleryNew : Fragment() {
 //            mainRecyclerAdapter=new MainRecyclerAdapter(requireActivity(),allParentSnipEvent,allSnipEvent);
 //            mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
 //        }
+    }
+
+    override fun onPause() {
+        requireActivity().unregisterReceiver(videoProcessingReceiver)
+        super.onPause()
     }
 
     private fun loadData(){
@@ -370,6 +390,8 @@ class FragmentGalleryNew : Fragment() {
             } else {
                 (mainCategoryRecycler.adapter as MainRecyclerAdapter).updateData(allParentSnip, allSnips, viewChange)
             }
+            if(VideoService.isProcessing)
+                (mainCategoryRecycler.adapter as MainRecyclerAdapter).showLoading(true)
 //            mainCategoryRecycler.adapter!!.notifyDataSetChanged()
         }
     }
