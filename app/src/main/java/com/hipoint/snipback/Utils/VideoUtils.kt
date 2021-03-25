@@ -203,9 +203,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -y $outputPath"   // with re-encoding
         } else {
             if (swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1)
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -shortest -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -crf 0 -c:v copy -y $outputPath"
+                "-ss $start -to $end -i ${clip.absolutePath} -shortest -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -crf 0 -c:v copy -y $outputPath"
             else
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -shortest -x264-params keyint=2:min-keyint=1 -crf 0 -c:v copy -y $outputPath"   // without re-encoding
+                "-ss $start -to $end -i ${clip.absolutePath} -shortest -x264-params keyint=2:min-keyint=1 -crf 0 -c:v copy -y $outputPath"   // without re-encoding
 
         }
 
