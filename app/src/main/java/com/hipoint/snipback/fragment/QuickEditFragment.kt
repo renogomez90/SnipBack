@@ -11,6 +11,7 @@ import android.graphics.drawable.VectorDrawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
 import android.os.PowerManager
 import android.util.Log
 import android.view.*
@@ -84,6 +85,8 @@ class QuickEditFragment: Fragment() {
     //  retires on failure
     private val retries = 3
     private var tries   = 0
+    //  progress tracker
+    private var progressTracker: ProgressTracker? = null
     
     private lateinit var rootView          : View
     private lateinit var appRepository     : AppRepository
@@ -451,6 +454,7 @@ class QuickEditFragment: Fragment() {
                 if (state == Player.STATE_ENDED ) {
                     pauseVideo()
                     player.seekTo(endWindow, 0)
+                    progressTracker?.stopTracking()
                 }
             }
         })
@@ -513,8 +517,7 @@ class QuickEditFragment: Fragment() {
         val endValue: Float = editedEnd.toFloat() * 100 / maxDuration
         maxDuration = bufferDuration + videoDuration
 
-        if(startWindow == 0) player.seekTo(startWindow, editedStart)
-        else player.seekTo(startWindow, editedStart - bufferDuration)
+        gotoStartMarker()
         seekbar.setDuration(editedStart)
 
         extendRangeMarker(startValue, endValue)
@@ -560,10 +563,7 @@ class QuickEditFragment: Fragment() {
             }
             else {
                 player.setSeekParameters(SeekParameters.EXACT)
-                if (endWindow == 0)
-                    player.seekTo(endWindow, editedEnd)
-                else
-                    player.seekTo(endWindow, editedEnd - bufferDuration)
+                gotoEndMarker()
             }
         }
 
@@ -626,24 +626,40 @@ class QuickEditFragment: Fragment() {
         seekbar.hideScrubber(0)
         seekAction = onGoingSeekAction
         if(seekAction == EditSeekControl.MOVE_START){
-            if(startWindow == 0)
-                player.seekTo(startWindow, editedStart)
-            else
-                player.seekTo(startWindow, editedStart - bufferDuration)
+            gotoStartMarker()
         } else if(seekAction == EditSeekControl.MOVE_END){
-            if(endWindow == 0)
-                player.seekTo(endWindow, editedEnd)
-            else
-                player.seekTo(endWindow, editedEnd - bufferDuration)
+            gotoEndMarker()
         }
+        progressTracker?.stopTracking()
+        progressTracker = null
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
+    private fun gotoEndMarker() {
+        player.setSeekParameters(SeekParameters.EXACT)
+        if (endWindow == 0)
+            player.seekTo(endWindow, editedEnd)
+        else
+            player.seekTo(endWindow, editedEnd - bufferDuration)
+    }
+
     private fun playVideo() {
+        gotoStartMarker()
+
         player.playWhenReady = true
         paused = false
         seekbar.showScrubber()
         seekAction = EditSeekControl.MOVE_NORMAL
+
+        setupProgressTracker()
+    }
+
+    private fun gotoStartMarker() {
+        player.setSeekParameters(SeekParameters.EXACT)
+        if (startWindow == 0)
+            player.seekTo(startWindow, editedStart)
+        else
+            player.seekTo(startWindow, editedStart - bufferDuration)
     }
 
     private fun bindViews(){
@@ -957,5 +973,70 @@ class QuickEditFragment: Fragment() {
         vectorDrawable.setBounds(0, 0, canvas.width, canvas.height)
         vectorDrawable.draw(canvas)
         return bitmap
+    }
+
+    /**
+     * start tracking progress
+     */
+    private fun setupProgressTracker() {
+        progressTracker?.stopTracking()
+        progressTracker = null
+
+        progressTracker = ProgressTracker(player)
+        progressTracker!!.run()
+    }
+
+    inner class ProgressTracker(private val player: Player) : Runnable {
+
+        private var handler: Handler? = null
+        private var isChangeAccepted: Boolean = false
+        private var isTrackingProgress = false
+
+        override fun run() {
+            if (context != null) {
+                var currentPosition = player.currentPosition
+                if(player.currentWindowIndex == 1)
+                    currentPosition += bufferDuration
+
+                if(currentPosition >= editedEnd || currentPosition >= maxDuration - 50){
+                    player.playWhenReady = false
+                    stopTracking()
+
+                    seekbar.hideScrubber(0)
+                    seekAction = onGoingSeekAction
+                    if(onGoingSeekAction == EditSeekControl.MOVE_START) {
+                        player.seekTo(startWindow, if(startWindow == 0) editedStart else (editedStart - bufferDuration))
+                    }else
+                        player.seekTo(endWindow, if(endWindow == 0) editedEnd else (editedEnd - bufferDuration))
+
+                } else {
+                    handler?.postDelayed(this, 20 /* ms */)
+                }
+            }
+        }
+
+        init {
+            handler = Handler()
+            handler?.post(this)
+        }
+
+        fun setChangeAccepted(isAccepted: Boolean) {
+            isChangeAccepted = isAccepted
+            isTrackingProgress = isAccepted
+            if (handler == null && isAccepted) {
+                handler = Handler()
+                handler!!.post(this)
+            }
+        }
+
+        fun stopTracking() {
+            handler?.removeCallbacksAndMessages(null)
+            handler = null
+            isTrackingProgress = false
+        }
+
+        fun isCurrentlyTracking(): Boolean {
+            return isTrackingProgress && handler != null
+        }
     }
 }
