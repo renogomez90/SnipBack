@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
+import com.exozet.android.core.extensions.show
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.exozet.android.core.utils.MathExtensions.floor
 import com.google.android.exoplayer2.*
@@ -64,7 +65,8 @@ class QuickEditFragment: Fragment() {
     private val TAG = QuickEditFragment::class.java.simpleName
     private val PROCESSING_DIALOG = "dialog_processing"
 
-    private var seekAction = EditSeekControl.MOVE_NORMAL
+    private var seekAction        = EditSeekControl.MOVE_START
+    private var onGoingSeekAction = EditSeekControl.MOVE_START
 
     private var timeStamp    : String? = null
     private var previewThumbs: File?   = null
@@ -410,7 +412,7 @@ class QuickEditFragment: Fragment() {
         setupMediaSource()
         playerView.setShowMultiWindowTimeBar(true)
         maxDuration = bufferDuration + videoDuration
-
+        seekbar.hideScrubber(0)
 
 
         player.apply {
@@ -530,6 +532,7 @@ class QuickEditFragment: Fragment() {
             // update button UI and flags
             startRangeUI()
             seekAction = EditSeekControl.MOVE_START
+            onGoingSeekAction = seekAction
 
             if(editedStart < 0) {
                 player.setSeekParameters(SeekParameters.EXACT)
@@ -548,6 +551,7 @@ class QuickEditFragment: Fragment() {
             // update button UI and flags
             endRangeUI()
             seekAction = EditSeekControl.MOVE_END
+            onGoingSeekAction = seekAction
 
             //  moves the cursor to required point
             if(editedEnd < 0) {
@@ -594,11 +598,13 @@ class QuickEditFragment: Fragment() {
             if (player.isPlaying) {
                 pauseVideo()
                 Log.d(TAG, "Stop Playback")
+                //  resetting to start of end point
+                seekAction = onGoingSeekAction
             }
         }
         toStartBtn.setOnClickListener {
             pauseVideo()
-            player.seekTo(endWindow, 0)
+            player.seekTo(0, 0)
         }
 
         rootView.isFocusableInTouchMode = true
@@ -617,12 +623,27 @@ class QuickEditFragment: Fragment() {
     private fun pauseVideo() {
         player.playWhenReady = false
         paused = true
+        seekbar.hideScrubber(0)
+        seekAction = onGoingSeekAction
+        if(seekAction == EditSeekControl.MOVE_START){
+            if(startWindow == 0)
+                player.seekTo(startWindow, editedStart)
+            else
+                player.seekTo(startWindow, editedStart - bufferDuration)
+        } else if(seekAction == EditSeekControl.MOVE_END){
+            if(endWindow == 0)
+                player.seekTo(endWindow, editedEnd)
+            else
+                player.seekTo(endWindow, editedEnd - bufferDuration)
+        }
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
     private fun playVideo() {
         player.playWhenReady = true
         paused = false
+        seekbar.showScrubber()
+        seekAction = EditSeekControl.MOVE_NORMAL
     }
 
     private fun bindViews(){
