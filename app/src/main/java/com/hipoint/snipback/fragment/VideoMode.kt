@@ -1564,7 +1564,22 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     takePhoto.alpha = 1F
                     r2Shutter.isEnabled = true
                     r2Shutter.alpha = 1F
-                    launchSnapbackVideoCapture(clip.absolutePath)
+
+                    val videoTask = VideoOpItem(
+                        operation = VideoOp.KEY_FRAMES,
+                        clips = arrayListOf(clip.absolutePath),
+                        outputPath = clip.parent!!,
+                        comingFrom = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
+                        swipeAction = swipeAction)
+                    val taskList = arrayListOf<VideoOpItem>()
+                    taskList.add(videoTask)
+
+                    val intentService = Intent(requireContext(), VideoService::class.java)
+                    intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM,
+                        taskList)
+                    VideoService.enqueueWork(requireContext(), intentService)
+
+                    launchSnapbackVideoCapture("")
                 }
             }
         }

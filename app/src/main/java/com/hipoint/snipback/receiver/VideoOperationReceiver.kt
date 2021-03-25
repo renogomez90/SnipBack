@@ -478,11 +478,18 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             }
         }
 
-        val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
-        intent.putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
-        intent.putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, VideoMode.currentSpeed)
-        intent.putExtra("log", "frames added")
-        receivedContext?.sendBroadcast(intent)
+        if(isFromSlowNo(comingFrom)) {
+            val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
+            intent.putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
+            intent.putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, VideoMode.currentSpeed)
+            intent.putExtra("log", "frames added")
+            receivedContext?.sendBroadcast(intent)
+        } else {
+            val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
+            snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.KEY_FRAMES.name)
+            snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
+            receivedContext?.sendBroadcast(snapbackCompleteReceiver)
+        }
     }
 
     /**
