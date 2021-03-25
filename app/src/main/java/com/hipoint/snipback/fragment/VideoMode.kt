@@ -229,11 +229,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     companion object {
-        const val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
-        const val SNAPBACK_ACTION      = "com.hipoint.snipback.SNAPBACK_ACTION"
-        const val PENDING_SWIPE_ACTION = "com.hipoint.snipback.PROCESS_SWIPE_ACTION"
-        const val UI_UPDATE_ACTION     = "com.hipoint.snipback.UPDATE_UI"
-        const val MIN_DISTANCE         = 150
+        const val VIDEO_DIRECTORY_NAME   = "SnipBackVirtual"
+        const val SNAPBACK_ACTION        = "com.hipoint.snipback.SNAPBACK_ACTION"
+        const val PENDING_SWIPE_ACTION   = "com.hipoint.snipback.PROCESS_SWIPE_ACTION"
+        const val UI_UPDATE_ACTION       = "com.hipoint.snipback.UPDATE_UI"
+        const val PREF_LAST_REC_DURATION = "LAST_REC_DURATION"
+        const val PREF_LAST_REC_PATH     = "LAST_USER_REC_PATH"
+        const val MIN_DISTANCE           = 150
 
         var currentSpeed: Int = 3
 
@@ -361,11 +363,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private val processSwipeReceiver: BroadcastReceiver by lazy {
         object: BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                intent?.let{
+                /*intent?.let{
                     val processedVideoPath = it.getStringExtra("processedVideoPath")!!
                     val comingFrom = it.getSerializableExtra("comingFrom") as CurrentOperation
                     processPendingSwipes(processedVideoPath, comingFrom)
-                }
+                }*/
             }
         }
     }
@@ -898,6 +900,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         parentSnip = null   //  resetting the session parent Snip
         CoroutineScope(Default).launch {
             cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
+            pref.edit().putString(PREF_LAST_REC_PATH, cameraControl?.getLastUserRecordedPath()).apply()
             attemptClipConcat() //  merge what is in the buffer with the recording
             // we can restart recoding clips if it is required at this point
             recordClips = true
@@ -905,10 +908,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 recordPressed = false,
                 stopPressed = true)
             ensureRecordingRestart()
+
+            if(slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
+                (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null,
+                    VideoMode.currentSpeed),
+                    true)
+            }
         }
-        if(slowMoClicked && showHFPSPreview){
+        /*if(slowMoClicked && showHFPSPreview){
             showProgress()
-        }
+        }*/
     }
 
     private fun showProgress(){
@@ -1003,6 +1012,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     private fun showSlowMoUi(showUi: Boolean) {
         slowMoClicked = showUi
+        pref.edit().putBoolean(SettingsDialog.SLOW_MO_CLICKED, slowMoClicked).apply()
 
         if(showUi) {
             slowMo.setImageResource(R.drawable.ic_speed_red)
@@ -1185,7 +1195,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val videoFilePath = "${File(newVideoPath).parent}/${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
             val taskList = arrayListOf<VideoOpItem>()
 
-            if(showHFPSPreview) {
+            if(currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO && showHFPSPreview ||
+                currentOperation == CurrentOperation.VIDEO_RECORDING) {
                 val bufferFile = VideoOpItem(
                     operation = VideoOp.TRIMMED,
                     clips = arrayListOf(newVideoPath),
@@ -1220,7 +1231,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 true)
         }
         if(slowMoClicked){
-        hideProgress()
+            hideProgress()
         }
     }
 
@@ -1948,6 +1959,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             mChronometer.stop()
             mChronometer.visibility = View.INVISIBLE
             mChronometer.text = "00:00:00"
+            pref.edit().putInt(PREF_LAST_REC_DURATION, userRecordDuration).apply()
         }
     }
 

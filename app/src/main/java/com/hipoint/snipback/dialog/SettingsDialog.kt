@@ -35,7 +35,8 @@ class SettingsDialog(context: Context,val closeListener: ISettingsClosedListener
     companion object {
         const val BUFFER_DURATION      = "BUFFER_DURATION"
         const val QB_DURATION          = "QUICKBACK_DURATION"
-        const val SLOW_MO_QB_DURATION  = "SLOWmo_QUICKBACK_DURATION"
+        const val SLOW_MO_QB_DURATION  = "SLOW_MO_QUICKBACK_DURATION"
+        const val SLOW_MO_CLICKED      = "SLOW_MO_CLICKED"
         const val SETTINGS_PREFERENCES = "PREFERENCES"
     }
 
