@@ -239,7 +239,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                     fullExtension = (editedStart == 0L)
 
                     if (fullExtension) {
-                        editedStart = 100L
+                        editedStart = 900L
                     }
 
                     if (saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty()) {    //  buffer

@@ -235,6 +235,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         const val UI_UPDATE_ACTION       = "com.hipoint.snipback.UPDATE_UI"
         const val PREF_LAST_REC_DURATION = "LAST_REC_DURATION"
         const val PREF_LAST_REC_PATH     = "LAST_USER_REC_PATH"
+        const val PREF_SLOW_MO_SPEED     = "SLOW_MO_SPEED"
         const val MIN_DISTANCE           = 150
 
         var currentSpeed: Int = 3
@@ -993,19 +994,29 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun changeSpeedText(): CharSequence? {
         return when (currentSpeed) {
             3 -> {
-                currentSpeed = 4; "4X"
+                currentSpeed = 4
+                pref.edit().putInt(PREF_SLOW_MO_SPEED, currentSpeed).apply()
+                "4X"
             }
             4 -> {
-                currentSpeed = 5; "5X"
+                currentSpeed = 5
+                pref.edit().putInt(PREF_SLOW_MO_SPEED, currentSpeed).apply()
+                "5X"
             }
             5 -> {
-                currentSpeed = 10; "10X"
+                currentSpeed = 10
+                pref.edit().putInt(PREF_SLOW_MO_SPEED, currentSpeed).apply()
+                "10X"
             }
             10 -> {
-                currentSpeed = 15; "15X"
+                currentSpeed = 15
+                pref.edit().putInt(PREF_SLOW_MO_SPEED, currentSpeed).apply()
+                "15X"
             }
             else -> {
-                currentSpeed = 3; "3X"
+                currentSpeed = 3
+                pref.edit().putInt(PREF_SLOW_MO_SPEED, currentSpeed).apply()
+                "3X"
             }
         }
     }

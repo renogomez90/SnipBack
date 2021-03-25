@@ -142,7 +142,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 msg?.let { Log.d(TAG, "onReceive: $msg") }
                 if(!videoSaved) {
                     bufferPath = intent.getStringExtra(EXTRA_BUFFER_PATH)
-                    videoPath = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
+                    videoPath  = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
+                    multiplier = intent.getIntExtra(EXTRA_INITIAL_MULTIPLIER, 3)
 
                     hideProgress()
                     setupPlayer()

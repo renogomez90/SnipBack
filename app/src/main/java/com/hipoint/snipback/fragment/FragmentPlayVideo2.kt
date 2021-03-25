@@ -677,7 +677,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                                     .toLong()
                     retriever.release()
 
-                    if (bufferDuration > 500L && videoDuration > 0L) {  //  if the buffer is over 100 milli seconds then show the quick edit button
+                    if (bufferDuration > 950L && videoDuration > 0L) {  //  if the buffer is over 100 milli seconds then show the quick edit button
                         withContext(Main) {
                             quickEditBtn.visibility = View.VISIBLE
                             quickEditTimeTxt.text =

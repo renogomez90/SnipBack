@@ -112,7 +112,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         val tmpFile = createFileList(fileList)
         val cmd = if (comingFrom == CurrentOperation.VIDEO_EDITING) {
-            if (filter.isNotBlank())
+            if(filter.isNotBlank())
                 "-f concat -safe 0 -i $tmpFile -vf $filter -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y $outputPath"
             else
                 "-f concat -safe 0 -i $tmpFile -vcodec libx264 -x264-params keyint=2:min-keyint=1 -crf 0 -preset ultrafast -y $outputPath"
@@ -174,7 +174,6 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         val retriever = MediaMetadataRetriever()
         retriever.setDataSource(clip.absolutePath)
         val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong() // in miliseconds
-        val rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION).toInt()
 
         val filter = when (orientationPref) {
             0 -> "transpose=2"
@@ -185,7 +184,6 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             }
         }
 
-        Log.d(TAG, "trimToClip: rotation = $rotation, pref = $orientationPref")
         retriever.release()
 
 //        val sec = TimeUnit.MILLISECONDS.toSeconds(duration)

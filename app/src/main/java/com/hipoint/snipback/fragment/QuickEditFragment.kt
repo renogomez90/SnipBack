@@ -139,10 +139,10 @@ class QuickEditFragment: Fragment() {
                     Log.d(TAG, "onReceive: CONCAT duration = $concatDuration")
 
                     concatedFile = inputName!!
-                    fullExtension = (editedStart == 0L)
+                    fullExtension = (editedStart <= 0L) //  we've noticed sometimes the value can be negative, why this is beyond the realm of sanity
 
                     if(fullExtension) {
-                        editedStart = 100    // 100 ,milli seconds into the video
+                        editedStart = 900    // 100 ,milli seconds into the video
                     }
                     val bufferTask = VideoOpItem(
                             operation = IVideoOpListener.VideoOp.TRIMMED,

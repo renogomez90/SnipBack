@@ -31,6 +31,7 @@ import com.hipoint.snipback.fragment.FragmentSlowMo
 import com.hipoint.snipback.fragment.SnapbackFragment
 import com.hipoint.snipback.fragment.VideoEditingFragment
 import com.hipoint.snipback.fragment.VideoMode
+import com.hipoint.snipback.fragment.VideoMode.Companion.PREF_SLOW_MO_SPEED
 import com.hipoint.snipback.fragment.VideoMode.Companion.VIDEO_DIRECTORY_NAME
 import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Hd_snips
@@ -354,8 +355,11 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
                         if(isForegrounded()) {
                             val dismissIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
-                            dismissIntent.putExtra("bufferPath", bufferPath)
-                            dismissIntent.putExtra("processedVideoPath", outputPath)
+                            val multiplier = pref.getInt(VideoMode.PREF_SLOW_MO_SPEED, 3)
+
+                            dismissIntent.putExtra(FragmentSlowMo.EXTRA_BUFFER_PATH, bufferPath)
+                            dismissIntent.putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, outputPath)
+                            dismissIntent.putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, multiplier)
                             dismissIntent.putExtra("log", "on trim complete")
                             receivedContext?.sendBroadcast(dismissIntent)
                         } else {    //  if the app was in the back ground for some reason it should still be able to get this
@@ -479,10 +483,13 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         }
 
         if(isFromSlowNo(comingFrom)) {
+            val multiplier = pref.getInt(PREF_SLOW_MO_SPEED, 3)
             val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
-            intent.putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
-            intent.putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, VideoMode.currentSpeed)
-            intent.putExtra("log", "frames added")
+            with(intent) {
+                putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
+                putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, multiplier)
+                putExtra("log", "frames added")
+            }
             receivedContext?.sendBroadcast(intent)
         } else {
             val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
