@@ -203,9 +203,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -y $outputPath"   // with re-encoding
         } else {
             if (swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1)
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -avoid_negative_ts make_zero -crf 0 -c copy -shortest -y $outputPath"
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -shortest -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -crf 0 -c:v copy -y $outputPath"
             else
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -x264-params keyint=2:min-keyint=1 -avoid_negative_ts make_zero -crf 0 -c copy -shortest -y $outputPath"   // without re-encoding
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -shortest -x264-params keyint=2:min-keyint=1 -crf 0 -c:v copy -y $outputPath"   // without re-encoding
 
         }
 
@@ -244,10 +244,17 @@ class VideoUtils(private val opListener: IVideoOpListener) {
     suspend fun addIDRFrame(clip: File, outputFolder: String, comingFrom: CurrentOperation, swipeAction: SwipeAction, orientationPref: Int) {
 
 //        val cmd = "-i ${clip.absolutePath} -c:v libx264 -profile:v baseline -level 3.0 -x264opts keyint=5:min-keyint=5 -g 10 -movflags +faststart+rtphint -maxrate:v 4000k -bufsize:v 4500k -preset ultrafast -y $outputFolder/out.mp4"
-        val cmd = if(orientationPref != -1)
+        val cmd = if(isFromSlowMo(comingFrom)) {
+            if (orientationPref != -1)
                 "-i ${clip.absolutePath} -map_metadata 0 -metadata:s:v rotate=$orientationPref -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -map_metadata:s:v 0:s:v -vsync 2 -r 120 $outputFolder/out.mp4"
             else
                 "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -map_metadata 0 -map_metadata:s:v 0:s:v -vsync 2 -r 120 $outputFolder/out.mp4"
+        } else {
+            if (orientationPref != -1)
+                "-i ${clip.absolutePath} -map_metadata 0 -metadata:s:v rotate=$orientationPref -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -vsync 2 -r 30 $outputFolder/out.mp4"
+            else
+                "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -vsync 2 -r 30 $outputFolder/out.mp4"
+        }
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
                 //mv $outputFolder/out.mp4 ava_${clip.absolutePath}
