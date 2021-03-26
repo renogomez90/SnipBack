@@ -629,6 +629,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             putSerializable("speedDuration"   , speedDuration)
             putSerializable("editAction"      , editAction)
             putSerializable("editSeekAction"  , editSeekAction)
+            putSerializable("saveAction"      , saveAction)
             putParcelable("tmpSpeedDetails"   , tmpSpeedDetails)
         }
     }
@@ -670,6 +671,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             speedDuration          = getSerializable("speedDuration") as Pair<Long, Long>
             editAction             = getSerializable("editAction") as EditAction
             editSeekAction         = getSerializable("editSeekAction") as EditSeekControl
+            saveAction             = getSerializable("saveAction") as SaveActionType
             tmpSpeedDetails        = getParcelable("tmpSpeedDetails")
         }
     }
@@ -2958,6 +2960,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val videoPath = snip!!.videoFilePath
         val concatOutputPath = "${File(videoPath).parent}/$timeStamp.mp4"
         val taskList = arrayListOf<VideoOpItem>()
+
+        if(!isStartInBuffer){   //  implies end is also not in buffer
+            editedStart += originalBufferDuration
+            editedEnd += originalBufferDuration
+        }
 
         if (!trimOnly) {
             val concatenateTask = VideoOpItem(
