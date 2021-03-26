@@ -404,6 +404,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         }
 
         quickEditBtn.setOnClickListener {
+            player.playWhenReady = false
             launchQuickEdit()
         }
 

@@ -118,7 +118,7 @@ class QuickEditFragment: Fragment() {
     private var editedEnd      = -1L
 
     //  Seek handling
-    private var paused        = true
+    private var paused = true
 
 
     private val trimSegment  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
@@ -989,7 +989,6 @@ class QuickEditFragment: Fragment() {
     inner class ProgressTracker(private val player: Player) : Runnable {
 
         private var handler: Handler? = null
-        private var isChangeAccepted: Boolean = false
         private var isTrackingProgress = false
 
         override fun run() {
@@ -1020,23 +1019,10 @@ class QuickEditFragment: Fragment() {
             handler?.post(this)
         }
 
-        fun setChangeAccepted(isAccepted: Boolean) {
-            isChangeAccepted = isAccepted
-            isTrackingProgress = isAccepted
-            if (handler == null && isAccepted) {
-                handler = Handler()
-                handler!!.post(this)
-            }
-        }
-
         fun stopTracking() {
             handler?.removeCallbacksAndMessages(null)
             handler = null
             isTrackingProgress = false
-        }
-
-        fun isCurrentlyTracking(): Boolean {
-            return isTrackingProgress && handler != null
         }
     }
 }
