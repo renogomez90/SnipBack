@@ -244,20 +244,20 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
                     if (saveAction == SaveActionType.SAVE && bufferPath.isNotNullOrEmpty()) {    //  buffer
                         val bufferTask = VideoOpItem(
-                                operation = IVideoOpListener.VideoOp.TRIMMED,
-                                clips = arrayListOf(inputName),
-                                startTime = 0F,
-                                endTime = editedStart.milliToFloatSecond(),
+                                operation  = IVideoOpListener.VideoOp.TRIMMED,
+                                clips      = arrayListOf(inputName),
+                                startTime  = 0F,
+                                endTime    = editedStart.milliToFloatSecond(),
                                 outputPath = bufferPath,
                                 comingFrom = CurrentOperation.VIDEO_EDITING)
 
                         taskList.add(bufferTask)
                     } else {    //  video without affecting buffer
                         val trimTask = VideoOpItem(
-                                operation = IVideoOpListener.VideoOp.TRIMMED,
-                                clips = arrayListOf(inputName),
-                                startTime = editedStart.milliToFloatSecond(),
-                                endTime = editedEnd.milliToFloatSecond(),
+                                operation  = IVideoOpListener.VideoOp.TRIMMED,
+                                clips      = arrayListOf(inputName),
+                                startTime  = editedStart.milliToFloatSecond(),
+                                endTime    = editedEnd.milliToFloatSecond(),
                                 outputPath = trimmedOutputPath,
                                 comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -344,8 +344,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                         Toast.makeText(requireContext(), "Saving Edits", Toast.LENGTH_SHORT).show()
                         Log.d(TAG, "onReceive: real video output = $outputName")
                     }
-                    else -> {
-                    }
+                    else -> { }
                 }
             }
         }
@@ -525,11 +524,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
                 } else null
 
                 showAdjustedSpeedChanges()
-                /*if(newSpeedChangeStart) {
-                    progressTracker?.setChangeAccepted(false)
-                    progressTracker?.stopTracking()
-                    progressTracker = null
-                }*/
+
                 if (tmpUiRangeSegment != null) {
                     uiRangeSegments?.add(tmpUiRangeSegment)
                 }
@@ -743,10 +738,9 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             changeList         = findViewById(R.id.change_list)
             previewBarProgress = findViewById(R.id.previewBarProgress)
             swipeDetector      = findViewById(R.id.edit_swipe_detector)
-
-            editControls   = findViewById(R.id.edit_controls)
-            layoutImages   = findViewById(R.id.layout_images)
-            horizontalView = findViewById(R.id.separator)
+            editControls       = findViewById(R.id.edit_controls)
+            layoutImages       = findViewById(R.id.layout_images)
+            horizontalView     = findViewById(R.id.separator)
         }
 
         commonTransition = arrayListOf()
@@ -1387,22 +1381,6 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         if (editedStart == previousEditStart && editedEnd == previousEditEnd)
             return
 
-        /*var moveBy: Long = if(isStartInBuffer){   // amount to move the edits by
-            if(previousEditStart != -1L) {
-                (originalBufferDuration - editedStart) - (originalBufferDuration - previousEditStart)
-            }
-            else {
-                (originalBufferDuration - editedStart)
-            }
-        }else{
-            if(previousEditStart != -1L) {
-                - editedStart
-            }
-            else {
-                editedStart + previousEditStart
-            }
-        }*/
-
         val moveBy = if (isStartInBuffer) {   //  starting is in buffer
             if (previousEditStart != -1L) {   //  previous edit exists
                 if (previousStartInBuffer) {   //  previous start in buffer
@@ -1494,11 +1472,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 //        speedDetailSet.forEach{ Log.d(TAG, "adjustPreviousSpeedEdits: $it\n") }
 
         //  to remember the changes we made
-        previousMaxDuration = maxDuration
-        previousEditStart = editedStart
-        previousEditEnd = editedEnd
+        previousMaxDuration   = maxDuration
+        previousEditStart     = editedStart
+        previousEditEnd       = editedEnd
         previousStartInBuffer = isStartInBuffer
-        previousEndInBuffer = isEndInBuffer
+        previousEndInBuffer   = isEndInBuffer
     }
 
     /**
@@ -1818,10 +1796,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         tmpSpeedDetails = SpeedDetails(
                 startWindowIndex = player.currentWindowIndex,
-                endWindowIndex = player.currentWindowIndex,
-                isFast = editAction == EditAction.FAST,
-                multiplier = getCurrentEditSpeed(),
-                timeDuration = Pair(player.currentPosition, player.currentPosition)
+                endWindowIndex   = player.currentWindowIndex,
+                isFast           = editAction == EditAction.FAST,
+                multiplier       = getCurrentEditSpeed(),
+                timeDuration     = Pair(player.currentPosition, player.currentPosition)
         )
 
         speedDetailSet.add(tmpSpeedDetails!!)
@@ -1846,12 +1824,12 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
      * resets the UI to playback the video inclusive of any edits made
      */
     private fun resetPlaybackUI() {
-        speedIndicator.visibility = View.GONE
-        playCon1.visibility = View.GONE
-        changeList.visibility = View.GONE
+        speedIndicator.visibility     = View.GONE
+        playCon1.visibility           = View.GONE
+        changeList.visibility         = View.GONE
         acceptRejectHolder.visibility = View.INVISIBLE
-        playCon2.visibility = View.VISIBLE
-        editAction = EditAction.NORMAL
+        playCon2.visibility           = View.VISIBLE
+        editAction                    = EditAction.NORMAL
 
         player.seekTo(0, 0)
         seekBar.showScrubber()
@@ -2603,28 +2581,28 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
     private fun getVideoPreviewFrames() {
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
-                operation = IVideoOpListener.VideoOp.FRAMES,
-                clips = arrayListOf(snip!!.videoFilePath),
-                outputPath = File(snip!!.videoFilePath).parent!!,
+                operation        = IVideoOpListener.VideoOp.FRAMES,
+                clips            = arrayListOf(snip!!.videoFilePath),
+                outputPath       = File(snip!!.videoFilePath).parent!!,
                 speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
-                comingFrom = CurrentOperation.VIDEO_EDITING))
+                comingFrom       = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
     }
 
     companion object {
-        const val PREVIEW_ACTION = "com.hipoint.snipback.previewTile"
+        const val PREVIEW_ACTION         = "com.hipoint.snipback.previewTile"
         const val VIRTUAL_TO_REAL_ACTION = "com.hipoint.snipback.virtualToReal"
-        const val EXTEND_TRIM_ACTION = "com.hipoint.snipback.extendTrim"
-        const val DISMISS_ACTION = "com.hipoint.snipback.dismiss"
+        const val EXTEND_TRIM_ACTION     = "com.hipoint.snipback.extendTrim"
+        const val DISMISS_ACTION         = "com.hipoint.snipback.dismiss"
 
-        private var tries = 0
+        private var tries              = 0
         private var currentOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        private var speedDetailSet = mutableSetOf<SpeedDetails>()
+        private var speedDetailSet     = mutableSetOf<SpeedDetails>()
 
         private var uiRangeSegments: ArrayList<RangeSeekbarCustom>? = null
-        private var restrictList: ArrayList<SpeedDetails>? = null //  speed details to prevent users from selecting an existing edit
-        private var progressTracker: ProgressTracker? = null
+        private var restrictList   : ArrayList<SpeedDetails>?       = null //  speed details to prevent users from selecting an existing edit
+        private var progressTracker: ProgressTracker?               = null
 
         var saveAction: SaveActionType = SaveActionType.CANCEL
         private var fragment: VideoEditingFragment? = null
@@ -2771,11 +2749,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val outputName = "VID_$timeStamp.mp4"
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
-                operation = IVideoOpListener.VideoOp.SPEED,
-                clips = arrayListOf(clip.absolutePath),
-                outputPath = "${clip.parent}/$outputName",
+                operation        = IVideoOpListener.VideoOp.SPEED,
+                clips            = arrayListOf(clip.absolutePath),
+                outputPath       = "${clip.parent}/$outputName",
                 speedDetailsList = speedDetailSet.toMutableList() as ArrayList<SpeedDetails>,
-                comingFrom = CurrentOperation.VIDEO_EDITING))
+                comingFrom       = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
         return Pair(clip, outputName)
@@ -2794,11 +2772,11 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         val outputName = "VID_$timeStamp.mp4"
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(clip.absolutePath),
+                operation  = IVideoOpListener.VideoOp.TRIMMED,
+                clips      = arrayListOf(clip.absolutePath),
                 outputPath = "${clip.parent}/$outputName",
-                startTime = startTime.toFloat(),
-                endTime = endTime.toFloat(),
+                startTime  = startTime.toFloat(),
+                endTime    = endTime.toFloat(),
                 comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
@@ -2983,8 +2961,8 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
         if (!trimOnly) {
             val concatenateTask = VideoOpItem(
-                    operation = IVideoOpListener.VideoOp.CONCAT,
-                    clips = arrayListOf(bufferPath, snip!!.videoFilePath),
+                    operation  = IVideoOpListener.VideoOp.CONCAT,
+                    clips      = arrayListOf(bufferPath, snip!!.videoFilePath),
                     outputPath = concatOutputPath,
                     comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -2996,10 +2974,10 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         } else {
             val trimmedOutputPath = "${File(videoPath).parent}/trimmed-$timeStamp.mp4"
             val trimTask = VideoOpItem(
-                    operation = IVideoOpListener.VideoOp.TRIMMED,
-                    clips = arrayListOf(videoPath),
-                    startTime = editedStart.milliToFloatSecond(),
-                    endTime = editedEnd.milliToFloatSecond(),
+                    operation  = IVideoOpListener.VideoOp.TRIMMED,
+                    clips      = arrayListOf(videoPath),
+                    startTime  = editedStart.milliToFloatSecond(),
+                    endTime    = editedEnd.milliToFloatSecond(),
                     outputPath = trimmedOutputPath,
                     comingFrom = CurrentOperation.VIDEO_EDITING)
 

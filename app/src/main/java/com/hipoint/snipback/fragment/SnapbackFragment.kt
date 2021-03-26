@@ -76,9 +76,9 @@ class SnapbackFragment: Fragment(), ISaveListener {
     private var tries   = 0
     private var seekToPoint: Long = 0
 
-    private var saveVideoDialog: KeepVideoDialog?  = null
-    private var subscriptions  : CompositeDisposable?      = null
-    private var animBlink      : Animation?                = null
+    private var saveVideoDialog: KeepVideoDialog?     = null
+    private var subscriptions  : CompositeDisposable? = null
+    private var animBlink      : Animation?           = null
 
     private lateinit var playerView     : PlayerView
     private lateinit var rootView       : View
@@ -539,7 +539,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
     override fun exit() {
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
-        File(videoPath).delete()    //  since we can discard this file
+        File(videoPath!!).delete()    //  since we can discard this file
         requireActivity().supportFragmentManager.popBackStack()
     }
 

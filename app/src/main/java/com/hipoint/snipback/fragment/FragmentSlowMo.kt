@@ -100,7 +100,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     //  slow down factor
     private var multiplier: Int = 3
     //  preview thumbnail
-    private var previewThumbs: File?   = null
+    private var previewThumbs: File? = null
     //  dialogs
     private var processingDialog: ProcessingDialog? = null
     //  adapters
@@ -114,11 +114,10 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private var bufferDuration: Long = -1L
     private var videoDuration : Long = -1L
     private var maxDuration   : Long = -1L
-
-    private var startWindow    = -1
-    private var endWindow      = -1
-    private var editedStart    = -1L
-    private var editedEnd      = -1L
+    private var editedStart   : Long = -1L
+    private var editedEnd     : Long = -1L
+    private var startWindow   : Int  = -1
+    private var endWindow     : Int  = -1
 
     private var timeStamp: String? = null
 
@@ -197,10 +196,10 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                         editedStart = 100L
                     }
                     val trimTask = VideoOpItem(
-                        operation = IVideoOpListener.VideoOp.TRIMMED,
-                        clips = arrayListOf(inputName),
-                        startTime = editedStart.milliToFloatSecond(),
-                        endTime = editedEnd.milliToFloatSecond(),
+                        operation  = IVideoOpListener.VideoOp.TRIMMED,
+                        clips      = arrayListOf(inputName),
+                        startTime  = editedStart.milliToFloatSecond(),
+                        endTime    = editedEnd.milliToFloatSecond(),
                         outputPath = trimmedOutputPath,
                         comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -211,16 +210,16 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                             .toLong()
                     Log.d(TAG, "onReceive: TRIMMED duration = $trimmedDuration")
                     val speedDetails = SpeedDetails(
-                        isFast = false,
+                        isFast       = false,
                         timeDuration = Pair(0, trimmedDuration),
-                        multiplier = multiplier
+                        multiplier   = multiplier
                     )
                     val speedChangeTask = VideoOpItem(
-                        operation = IVideoOpListener.VideoOp.SPEED,
-                        clips = arrayListOf(inputName),
-                        outputPath = speedChangedPath,
+                        operation        = IVideoOpListener.VideoOp.SPEED,
+                        clips            = arrayListOf(inputName),
+                        outputPath       = speedChangedPath,
                         speedDetailsList = arrayListOf(speedDetails),
-                        comingFrom = CurrentOperation.VIDEO_EDITING)
+                        comingFrom       = CurrentOperation.VIDEO_EDITING)
 
                     taskList.add(speedChangeTask)
                     AppClass.showInGallery.add(File(speedChangedPath).nameWithoutExtension)
@@ -311,8 +310,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     private fun getVideoPreviewFrames() {
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
-            operation = IVideoOpListener.VideoOp.FRAMES,
-            clips = arrayListOf(videoPath!!),
+            operation  = IVideoOpListener.VideoOp.FRAMES,
+            clips      = arrayListOf(videoPath!!),
             outputPath = File(videoPath!!).parent!!,
             comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
@@ -933,8 +932,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
      */
     private fun showBufferOverlay() {
         val bufferOverlay = RangeSeekbarCustom(requireContext())
-        val colour = resources.getColor(R.color.blackOverlay, context?.theme)
-        val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
+        val colour  = resources.getColor(R.color.blackOverlay, context?.theme)
+        val height  = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
 
         val thumbDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb_transparent, context?.theme) as VectorDrawable,
@@ -965,8 +964,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     private fun extendRangeMarker(startValue: Float, endValue: Float) {
         trimSegment = RangeSeekbarCustom(requireContext())
-        val colour = resources.getColor(android.R.color.transparent, context?.theme)
-        val height = (35 * resources.displayMetrics.density + 0.5f).toInt()
+        val colour  = resources.getColor(android.R.color.transparent, context?.theme)
+        val height  = (35 * resources.displayMetrics.density + 0.5f).toInt()
         val padding = (8 * resources.displayMetrics.density + 0.5f).toInt()
         val leftThumbImageDrawable = getBitmap(ResourcesCompat.getDrawable(resources, R.drawable.ic_thumb, context?.theme) as VectorDrawable,
             resources.getColor(android.R.color.holo_green_dark, context?.theme))
@@ -1132,9 +1131,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
     }
 
     inner class ProgressTracker(private val player: Player) : Runnable {
-
         private var handler: Handler? = null
-        private var isChangeAccepted: Boolean = false
         private var isTrackingProgress = false
 
         override fun run() {
@@ -1165,23 +1162,10 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             handler?.post(this)
         }
 
-        fun setChangeAccepted(isAccepted: Boolean) {
-            isChangeAccepted = isAccepted
-            isTrackingProgress = isAccepted
-            if (handler == null && isAccepted) {
-                handler = Handler()
-                handler!!.post(this)
-            }
-        }
-
         fun stopTracking() {
             handler?.removeCallbacksAndMessages(null)
             handler = null
             isTrackingProgress = false
-        }
-
-        fun isCurrentlyTracking(): Boolean {
-            return isTrackingProgress && handler != null
         }
     }
 }

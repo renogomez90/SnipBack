@@ -150,10 +150,10 @@ class QuickEditFragment: Fragment() {
                         editedStart = 900    // 100 ,milli seconds into the video
                     }
                     val bufferTask = VideoOpItem(
-                            operation = IVideoOpListener.VideoOp.TRIMMED,
-                            clips = arrayListOf(concatedFile),
-                            startTime = 0F,
-                            endTime = editedStart.milliToFloatSecond(),
+                            operation  = IVideoOpListener.VideoOp.TRIMMED,
+                            clips      = arrayListOf(concatedFile),
+                            startTime  = 0F,
+                            endTime    = editedStart.milliToFloatSecond(),
                             outputPath = bufferPath!!,
                             comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -175,10 +175,10 @@ class QuickEditFragment: Fragment() {
                             }
 
                             val videoTask = VideoOpItem(
-                                operation = IVideoOpListener.VideoOp.TRIMMED,
-                                clips = arrayListOf(concatedFile),
-                                startTime = editedStart.milliToFloatSecond(),
-                                endTime = editedEnd.milliToFloatSecond(),
+                                operation  = IVideoOpListener.VideoOp.TRIMMED,
+                                clips      = arrayListOf(concatedFile),
+                                startTime  = editedStart.milliToFloatSecond(),
+                                endTime    = editedEnd.milliToFloatSecond(),
                                 outputPath = videoPath!!,
                                 comingFrom = CurrentOperation.VIDEO_EDITING)
                             taskList.add(videoTask)

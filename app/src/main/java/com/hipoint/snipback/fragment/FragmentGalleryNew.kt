@@ -60,9 +60,10 @@ class FragmentGalleryNew : Fragment() {
     private var mainRecyclerAdapter: MainRecyclerAdapter? = null
 
     var snipArrayList: List<Snip> = ArrayList()
+    var viewChange   : String?    = null
+    var orientation  : Int?       = null
+
     private var viewButtonClicked = false
-    var viewChange: String? = null
-    var orientation: Int? = null
     private val uri: Uri? = null
 
     private val allEvents: MutableList<Event> by lazy { ArrayList() }
@@ -290,7 +291,7 @@ class FragmentGalleryNew : Fragment() {
     private fun pullToRefresh() {
         pullToRefresh.setOnRefreshListener {
             pullToRefresh.isRefreshing = false
-//            loadGalleryDataFromDB()
+            /*loadGalleryDataFromDB()*/
 
             prepareGalleryItems(allEvents, hdSnips, snip)
         }
@@ -301,21 +302,9 @@ class FragmentGalleryNew : Fragment() {
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = false)
         requireActivity().registerReceiver(videoProcessingReceiver, IntentFilter(VideoMode.UI_UPDATE_ACTION))
         startPostponedEnterTransition()
-//        loadGalleryDataFromDB()
+        /*loadGalleryDataFromDB()*/
         loadData()
         updateViewButtonUI(viewButtonClicked)
-
-//        if(AppClass.getAppInsatnce().getAllParentSnip().size() == 0) {
-//            loadGalleryDataFromDB();
-//            AppClass.getAppInsatnce().setInsertionInProgress(false);
-//        }else{
-//            List<EventData> allSnipEvent = AppClass.getAppInsatnce().getAllSnip();
-//            List<EventData> allParentSnipEvent = AppClass.getAppInsatnce().getAllParentSnip();
-//            RecyclerView.LayoutManager layoutManager=new LinearLayoutManager(requireActivity());
-//            mainCategoryRecycler.setLayoutManager(layoutManager);
-//            mainRecyclerAdapter=new MainRecyclerAdapter(requireActivity(),allParentSnipEvent,allSnipEvent);
-//            mainCategoryRecycler.setAdapter(mainRecyclerAdapter);
-//        }
     }
 
     override fun onPause() {
@@ -399,7 +388,7 @@ class FragmentGalleryNew : Fragment() {
     }
 
     private fun loadGalleryDataFromDB() {
-        AppClass.getAppInstance().clearAllParentSnips()
+        /*AppClass.getAppInstance().clearAllParentSnips()
         AppClass.getAppInstance().clearAllSnips()
         val appViewModel = ViewModelProvider(this@FragmentGalleryNew).get(AppViewModel::class.java)
         //        getFilePathFromInternalStorage();
@@ -467,7 +456,7 @@ class FragmentGalleryNew : Fragment() {
                         }
                 )
             }
-        })
+        })*/
     }
 
     /**

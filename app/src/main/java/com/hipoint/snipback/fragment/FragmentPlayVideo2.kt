@@ -341,25 +341,24 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     }
 
     private fun bindViews() {
-        buttonCamera = rootView.findViewById(R.id.button_camera)
-        backArrow = rootView.findViewById(R.id.back_arrow)
-        tvConvertToReal = rootView.findViewById(R.id.tvConvertToReal)
-        playerView = rootView.findViewById(R.id.player_view)
-        editBtn = rootView.findViewById(R.id.edit)
-        tag = rootView.findViewById(R.id.tag)
-        shutter = rootView.findViewById(R.id.shutter)
-        share = rootView.findViewById(R.id._button_share)
-        delete = rootView.findViewById(R.id.button_delete)
-        swipeDetector = rootView.findViewById(R.id.swipe_detector)
+        buttonCamera           = rootView.findViewById(R.id.button_camera)
+        backArrow              = rootView.findViewById(R.id.back_arrow)
+        tvConvertToReal        = rootView.findViewById(R.id.tvConvertToReal)
+        playerView             = rootView.findViewById(R.id.player_view)
+        editBtn                = rootView.findViewById(R.id.edit)
+        tag                    = rootView.findViewById(R.id.tag)
+        shutter                = rootView.findViewById(R.id.shutter)
+        share                  = rootView.findViewById(R.id._button_share)
+        delete                 = rootView.findViewById(R.id.button_delete)
+        swipeDetector          = rootView.findViewById(R.id.swipe_detector)
         progressDurationHolder = rootView.findViewById(R.id.progress_duration_holder)
-        playPauseHolder = rootView.findViewById(R.id.play_pause_holder)
-        seekBar = rootView.findViewById(R.id.exo_progress)
-        playBtn = rootView.findViewById(R.id.exo_play)
-        pauseBtn = rootView.findViewById(R.id.exo_pause)
-        quickEditBtn = rootView.findViewById(R.id.quickEdit_button)
-        quickEditTimeTxt = rootView.findViewById(R.id.quick_edit_time)
-        bottomMenu = rootView.findViewById(R.id.bottom_menu)
-
+        playPauseHolder        = rootView.findViewById(R.id.play_pause_holder)
+        seekBar                = rootView.findViewById(R.id.exo_progress)
+        playBtn                = rootView.findViewById(R.id.exo_play)
+        pauseBtn               = rootView.findViewById(R.id.exo_pause)
+        quickEditBtn           = rootView.findViewById(R.id.quickEdit_button)
+        quickEditTimeTxt       = rootView.findViewById(R.id.quick_edit_time)
+        bottomMenu             = rootView.findViewById(R.id.bottom_menu)
     }
 
 
@@ -628,7 +627,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 release()
             }
         }
-
 
         subscriptions?.dispose()
         super.onPause()
