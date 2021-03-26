@@ -15,7 +15,7 @@ import java.util.List;
 public class AppClass extends Application {
 
     public RoomDB database;
-   private List<Integer> snipDurations = new ArrayList<>();
+    private List<Integer> snipDurations = new ArrayList<>();
     private static AppClass appInstance;
     private List<EventData> allEventSnips = new ArrayList<>();
     private List<EventData> eventParentSnips = new ArrayList<>();

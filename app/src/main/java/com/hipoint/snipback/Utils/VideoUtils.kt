@@ -452,8 +452,30 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             outputPath.deleteRecursively()
         outputPath.mkdirs()
 
+        val listener =  object : OnEditorListener {
+            override fun onSuccess() {
+                opListener.changed(IVideoOpListener.VideoOp.FRAMES,
+                    comingFrom, swipeAction,
+                    outputPath.absolutePath)
+            }
+
+            override fun onFailure() {
+                opListener.failed(IVideoOpListener.VideoOp.FRAMES, comingFrom)
+            }
+
+            override fun onProgress(progress: Float) {
+
+            }
+        }
+
         val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(clip.absolutePath)
+        try {
+            retriever.setDataSource(clip.absolutePath)
+        } catch (e: IllegalArgumentException){
+            e.printStackTrace()
+            listener.onFailure()
+            return
+        }
         var duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong() // in miliseconds
         retriever.release()
 
@@ -469,21 +491,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         Log.d(TAG, "getThumbnails: cmd = $cmd")
 
-        EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), object : OnEditorListener {
-            override fun onSuccess() {
-                opListener.changed(IVideoOpListener.VideoOp.FRAMES,
-                        comingFrom, swipeAction,
-                        outputPath.absolutePath)
-            }
-
-            override fun onFailure() {
-                opListener.failed(IVideoOpListener.VideoOp.FRAMES, comingFrom)
-            }
-
-            override fun onProgress(progress: Float) {
-
-            }
-        })
+        EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), listener)
     }
 
     private fun createFileList(clipList: List<File>): String {

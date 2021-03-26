@@ -73,8 +73,10 @@ class FragmentGalleryNew : Fragment() {
         object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
                 intent?.let{
-                    if(mainCategoryRecycler.adapter != null)
-                        (mainCategoryRecycler.adapter as MainRecyclerAdapter).showLoading(false)
+                    if(mainCategoryRecycler.adapter != null) {
+                        (mainCategoryRecycler.adapter as MainRecyclerAdapter)
+                            .showLoading(it.getIntExtra("progress", VideoService.STATUS_NO_VALUE) == VideoService.STATUS_SHOW_PROGRESS)
+                    }
                 }
             }
         }
@@ -297,7 +299,7 @@ class FragmentGalleryNew : Fragment() {
     override fun onResume() {
         super.onResume()
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = false)
-        requireActivity().registerReceiver(videoProcessingReceiver, IntentFilter(VideoService.ACTION))
+        requireActivity().registerReceiver(videoProcessingReceiver, IntentFilter(VideoMode.UI_UPDATE_ACTION))
         startPostponedEnterTransition()
 //        loadGalleryDataFromDB()
         loadData()
