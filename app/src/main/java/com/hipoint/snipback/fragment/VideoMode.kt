@@ -113,9 +113,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     var mMinZoom        = 0f
     var mMaxZoom        = 0f
 
-    //  left swipe
-    private var point1 = 0f
-    private var point2 = 0f
+    //  swipe action
+    private var point1 = Pair(0f,0f)    //  this is for the x,y values regardless of device orientation
+    private var point2 = Pair(0f,0f)
 
     private val swipeAnimationListener = object : Animator.AnimatorListener {
         override fun onAnimationStart(animation: Animator?) = Unit
@@ -145,34 +145,37 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 MotionEvent.ACTION_DOWN ->
                     point1 = when (previousOrientation) {
                         SimpleOrientationListener.VideoModeOrientation.PORTRAIT -> {
-                            event.x
+                            Pair(event.x, event.y)
                         }
                         SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE -> {
-                            -(event.y)
+                            Pair(-(event.y), -(event.x))
                         }
                         else -> {
-                            event.y
+                            Pair(event.y, event.x)
                         }
                     }
                 MotionEvent.ACTION_UP -> {
-                    if(slowMoClicked && currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO)
+                    if (slowMoClicked && currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO)
                         return false
 
                     point2 = when (previousOrientation) {
                         SimpleOrientationListener.VideoModeOrientation.PORTRAIT -> {
-                            event.x
+                            Pair(event.x, event.y)
                         }
                         SimpleOrientationListener.VideoModeOrientation.REV_LANDSCAPE -> {
-                            -(event.y)
+                            Pair(-(event.y), -(event.x))
                         }
                         else -> {
-                            event.y
+                            Pair(event.y, event.x)
                         }
                     }
-                    val deltaX = point2 - point1
-                    if (abs(deltaX) > MIN_DISTANCE) {
+                    val deltaX = point2.first - point1.first
+                    val deltaY = point2.second - point1.second
+
+                    if (abs(deltaX) > MIN_DISTANCE && abs(deltaX) > abs(deltaY)) {  //  this is a swipe action and most likely in the x direction
+
                         // Left to Right swipe action
-                        if (point2 > point1) {
+                        if (point2.first > point1.first) {
                             if (cameraControl!!.isRecordingVideo()) {   //  media recorder is capturing
                                 if (cameraControl!!.isRecordingClips()) {
                                     handleRightSwipe()
@@ -181,10 +184,26 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                                 }
                             }
                         }
+
                         //  Right to left swipe action
-                        if (point2 < point1) {
+                        if (point2.first < point1.first) {
                             if (cameraControl!!.isRecordingVideo()) {
                                 handleLeftSwipe()
+                            }
+                        }
+                    } else if (abs(deltaY) > MIN_DISTANCE && abs(deltaY) > abs(deltaX)) {   // this is a swipe action and most likely in the y direction
+
+                        if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.PORTRAIT) {
+                            if (point1.second < point2.second) {    //  Swipe down action
+                                handleDownSwipe()
+                            } else {    //  Swipe up action
+                                handleUpSwipe()
+                            }
+                        } else {
+                            if (point1.second > point2.second) {
+                                handleDownSwipe()
+                            } else {    //  Swipe up action
+                                handleUpSwipe()
                             }
                         }
                     } else {
@@ -1325,6 +1344,40 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     }
 
     /**
+     * handles down swipe functionality : Quickback plus
+     */
+    private fun handleDownSwipe() {
+        //  button move animation
+        triggerLeftActionAnimation()
+        if (cameraControl!!.isRecordingClips() && (currentOperation == CurrentOperation.CLIP_RECORDING || currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)) {    //  if clips are being recorded
+            gallery.disable()
+            if (cameraControl!!.clipQueueSize() > 1) { // there is more than 1 items in the queue
+                if (concatOnSwipeDuringClipRecording(SwipeAction.SWIPE_DOWN)) {
+                    return
+                }
+            } else {    //  there is only  item in the queue
+                if (cameraControl!!.clipQueueSize() > 0) {
+                    CoroutineScope(Default).launch {
+                        ensureRecordingRestart()
+                        trimOnSwipeDuringClipRecording(SwipeAction.SWIPE_DOWN)
+
+                        //  launch the quick edit fragment to handle down swipe
+                        (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null), true)
+                    }
+                }
+            }
+            gallery.enable()
+        }
+    }
+
+    /**
+     * handles up swipe functionality: Tagging
+     */
+    private fun handleUpSwipe() {
+
+    }
+
+    /**
      * show the animations when left swipe is performed
      */
     private fun triggerLeftActionAnimation() {
@@ -1372,7 +1425,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 val queueSize = cameraControl!!.clipQueueSize()
                 for (i in 0 until queueSize) {
                     clips.add(cameraControl!!.removeClipQueueItem()!!.absolutePath)
-                    if (i == queueSize - 2 && swipeAction == SwipeAction.SWIPE_LEFT) {
+                    if (i == queueSize - 2 && (swipeAction == SwipeAction.SWIPE_LEFT || swipeAction == SwipeAction.SWIPE_DOWN)) {
                         ensureRecordingRestart()
                     }
                 }
@@ -1399,6 +1452,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO && showHFPSPreview)
                 (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null), true)
+
+            if(swipeAction == SwipeAction.SWIPE_DOWN){
+                //  launch the quick edit fragment to handle down swipe
+                (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null), true)
+            }
         }
         if(swipeAction == SwipeAction.SWIPE_RIGHT) {
             CoroutineScope(Main).launch{
@@ -1457,7 +1515,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val taskList = arrayListOf<VideoOpItem>()
 
             if (swipeAction == SwipeAction.SWIPE_LEFT && (!slowMoClicked ||    //  since we don't need the buffer for right swipe
-                (slowMoClicked && showHFPSPreview))) {   //  if we are in slow mo mode and we need to see the preview, then buffer is required
+                (slowMoClicked && showHFPSPreview)) ||  //  if we are in slow mo mode and we need to see the preview, then buffer is required
+                    swipeAction == SwipeAction.SWIPE_DOWN) {    // if we are swiping down we need the buffer as well
                 val bufferTask = VideoOpItem(
                         operation             = VideoOp.TRIMMED,
                         clips                 = arrayListOf(clip.absolutePath),
@@ -1576,7 +1635,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 //                        bufferDetails.add(BufferDataDetails(outputPath, outputPath))
                 }
             }
-            if(swipeAction == SwipeAction.SWIPE_RIGHT) {
+            if(swipeAction == SwipeAction.SWIPE_RIGHT || swipeAction == SwipeAction.SWIPE_DOWN) {
                 CoroutineScope(Main).launch{
 //                    videoProcessing(false)
                     takePhoto.isEnabled = true
@@ -1599,7 +1658,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         taskList)
                     VideoService.enqueueWork(requireContext(), intentService)
 
-                    launchSnapbackVideoCapture("")
+                    if(swipeAction == SwipeAction.SWIPE_RIGHT)  //  show snapback fragment when right swipe
+                        launchSnapbackVideoCapture("")
                 }
             }
         }

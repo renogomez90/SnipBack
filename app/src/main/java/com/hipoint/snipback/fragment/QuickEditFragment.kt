@@ -1,6 +1,5 @@
 package com.hipoint.snipback.fragment
 
-import android.annotation.SuppressLint
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -12,7 +11,6 @@ import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
-import android.os.PowerManager
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -22,7 +20,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.isNotNullOrEmpty
-import com.exozet.android.core.extensions.show
 import com.exozet.android.core.ui.custom.SwipeDistanceView
 import com.exozet.android.core.utils.MathExtensions.floor
 import com.google.android.exoplayer2.*
@@ -35,9 +32,11 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
+import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
+import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.dialog.ProcessingDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.EditSeekControl
@@ -45,13 +44,13 @@ import com.hipoint.snipback.listener.IVideoOpListener
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
-import com.hipoint.snipback.videoControl.VideoOpItem
 import com.hipoint.snipback.service.VideoService
-import com.hipoint.snipback.videoControl.SpeedDetails
+import com.hipoint.snipback.videoControl.VideoOpItem
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.Main
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
@@ -120,6 +119,7 @@ class QuickEditFragment: Fragment() {
     //  Seek handling
     private var paused = true
 
+    private var timestamp: String? = null
 
     private val trimSegment  : RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
     private val bufferOverlay: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
@@ -149,16 +149,27 @@ class QuickEditFragment: Fragment() {
                     if(fullExtension) {
                         editedStart = 900    // 100 ,milli seconds into the video
                     }
-                    val bufferTask = VideoOpItem(
+                    val bufferTask = if(bufferHdSnipId > 0) {
+                        VideoOpItem(
                             operation  = IVideoOpListener.VideoOp.TRIMMED,
                             clips      = arrayListOf(concatedFile),
                             startTime  = 0F,
                             endTime    = editedStart.milliToFloatSecond(),
                             outputPath = bufferPath!!,
                             comingFrom = CurrentOperation.VIDEO_EDITING)
+                    } else {    //  coming from swipe down
+//                        VideoService.bufferDetails.add(BufferDataDetails(bufferPath!!, videoPath!!))
 
-                        taskList.add(bufferTask)
+                        VideoOpItem(
+                            operation  = IVideoOpListener.VideoOp.TRIMMED,
+                            clips      = arrayListOf(concatedFile),
+                            startTime  = 0F,
+                            endTime    = editedStart.milliToFloatSecond(),
+                            outputPath = bufferPath!!,
+                            comingFrom = CurrentOperation.VIDEO_EDITING)
+                    }
 
+                    taskList.add(bufferTask)
                 }else {
                     if (operation == IVideoOpListener.VideoOp.TRIMMED.name) {
                         trimmedItemCount++
@@ -166,30 +177,66 @@ class QuickEditFragment: Fragment() {
 
                         if(trimmedItemCount == 1) {
 
-                            CoroutineScope(Default).launch {
-                                //  update video in DB
-                                videoSnip = appRepository.getSnipById(videoSnipId)
-                                videoSnip!!.total_video_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
-                                videoSnip!!.snip_duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toDouble()
-                                appRepository.updateSnip(videoSnip!!)
+                            if(videoSnipId > 0) {   //  we are coming from playback and snips are already saved in DB
+                                CoroutineScope(Default).launch {
+                                    //  update video in DB
+                                    videoSnip = appRepository.getSnipById(videoSnipId)
+                                    videoSnip!!.total_video_duration =
+                                        (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
+                                    videoSnip!!.snip_duration =
+                                        (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toDouble()
+                                    appRepository.updateSnip(videoSnip!!)
+                                }
+                            } else if (bufferPath == videoPath){    //  if we didn't have a buffer to deal with
+                                CoroutineScope(Default).launch {
+                                    videoSnip = appRepository.getSnipByVideoPath(inputName!!)
+
+                                    hideProgress()
+                                    videoSnip?.let{ snip -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
+                                        (requireActivity() as AppMainActivity).loadFragment(FragmentPlayVideo2.newInstance(snip), true)
+                                    }
+                                }
                             }
 
-                            val videoTask = VideoOpItem(
-                                operation  = IVideoOpListener.VideoOp.TRIMMED,
-                                clips      = arrayListOf(concatedFile),
-                                startTime  = editedStart.milliToFloatSecond(),
-                                endTime    = editedEnd.milliToFloatSecond(),
-                                outputPath = videoPath!!,
-                                comingFrom = CurrentOperation.VIDEO_EDITING)
-                            taskList.add(videoTask)
+                            if(bufferPath != videoPath) {   //  if buffer exists, proceed to trim the video, else trimming is already done
+                                val videoTask = VideoOpItem(
+                                    operation = IVideoOpListener.VideoOp.TRIMMED,
+                                    clips = arrayListOf(concatedFile),
+                                    startTime = editedStart.milliToFloatSecond(),
+                                    endTime = editedEnd.milliToFloatSecond(),
+                                    outputPath = videoPath!!,
+                                    comingFrom = CurrentOperation.VIDEO_EDITING)
+                                taskList.add(videoTask)
+
+                                if(videoSnipId == 0){   //  this video is not yet in snip DB
+                                    val duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
+                                    AppClass.showInGallery.add(File(videoPath!!).nameWithoutExtension)
+                                    (requireActivity() as AppMainActivity).addSnip(videoPath!!, duration, duration)
+                                }
+                            }
                         }
 
                         if (trimmedItemCount == 2) {
-                            Log.d(TAG, "onReceive: both files received")
-                            trimmedItemCount = 0
-                            hideProgress()
-                            videoSnip?.let{ snip -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
-                                (requireActivity() as AppMainActivity).loadFragment(FragmentPlayVideo2.newInstance(snip), true)
+                            // if from swipe down, video snip needs to be retrieved
+                            if(bufferHdSnipId == 0){
+                                CoroutineScope(Default).launch {
+                                    videoSnip = appRepository.getSnipByVideoPath(inputName!!)
+                                    withContext(Main) {
+                                        hideProgress()
+                                        videoSnip?.let { snip -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
+                                            (requireActivity() as AppMainActivity).loadFragment(
+                                                FragmentPlayVideo2.newInstance(snip),
+                                                true)
+                                        }
+                                    }
+                                }
+                            } else {
+                                Log.d(TAG, "onReceive: both files received")
+                                trimmedItemCount = 0
+                                hideProgress()
+                                videoSnip?.let{ snip -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
+                                    (requireActivity() as AppMainActivity).loadFragment(FragmentPlayVideo2.newInstance(snip), true)
+                                }
                             }
                         }
                     }
@@ -206,9 +253,15 @@ class QuickEditFragment: Fragment() {
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
                 val processedVideoPath = intent.getStringExtra("processedVideoPath")
-                hideProgress()
+                val tmpVideoPath = intent.getStringExtra(EXTRA_VIDEO_PATH)
+                val tmpBufferPath = intent.getStringExtra(EXTRA_BUFFER_PATH)
 
-                if (processedVideoPath != null) {
+                tmpVideoPath?.let{ videoPath = it }
+                tmpBufferPath?.let{ bufferPath = it }
+
+                if(processedVideoPath != null) {
+                    hideProgress()
+
                     CoroutineScope(Dispatchers.IO).launch {
                         var snip: Snip? = null
                         var tries = 0
@@ -225,6 +278,11 @@ class QuickEditFragment: Fragment() {
                             }
                         }
                     }
+                } else if(videoPath != null && bufferPath != null){
+                    Log.d(TAG, "onReceive: buffer path = ${bufferPath}, \n video path = $videoPath")
+                    getVideoPreviewFrames()
+                    setupPlayer()
+                    return@let
                 }
             }
         }
@@ -310,8 +368,11 @@ class QuickEditFragment: Fragment() {
     companion object {
         var fragment: QuickEditFragment? = null
 
+        const val EXTRA_BUFFER_PATH = "bufferPath"
+        const val EXTRA_VIDEO_PATH = "videoPath"
+
         @JvmStatic
-        fun newInstance(bufferId: Int, videoSnipId: Int, bufferPath: String, videoPath: String): QuickEditFragment {
+        fun newInstance(bufferId: Int, videoSnipId: Int, bufferPath: String?, videoPath: String?): QuickEditFragment {
             //  we need to create new fragments for each video
             // otherwise the smooth scrolling is having issues for some reason
             if(fragment == null)
@@ -320,8 +381,8 @@ class QuickEditFragment: Fragment() {
             val bundle = Bundle()
             bundle.putInt("bufferId", bufferId)
             bundle.putInt("videoSnipId", videoSnipId)
-            bundle.putString("bufferPath", bufferPath)
-            bundle.putString("videoPath", videoPath)
+            bundle.putString(EXTRA_BUFFER_PATH, bufferPath)
+            bundle.putString(EXTRA_VIDEO_PATH, videoPath)
             fragment!!.arguments = bundle
             return fragment!!
         }
@@ -352,7 +413,12 @@ class QuickEditFragment: Fragment() {
         requireActivity().registerReceiver(previewTileReceiver, IntentFilter(VideoEditingFragment.PREVIEW_ACTION))
         requireActivity().registerReceiver(extendTrimReceiver, IntentFilter(VideoEditingFragment.EXTEND_TRIM_ACTION))
         requireActivity().registerReceiver(progressDismissReceiver, IntentFilter(VideoEditingFragment.DISMISS_ACTION))
-        setupPlayer()
+
+        if(videoPath != null && bufferPath != null) {
+            setupPlayer()
+        }else {
+            showProgress()
+        }
     }
 
     override fun onPause() {
@@ -400,8 +466,8 @@ class QuickEditFragment: Fragment() {
         appViewModel   = ViewModelProvider(this).get(AppViewModel::class.java)
         bufferHdSnipId = requireArguments().getInt("bufferId")
         videoSnipId    = requireArguments().getInt("videoSnipId")
-        bufferPath     = requireArguments().getString("bufferPath")
-        videoPath      = requireArguments().getString("videoPath")
+        bufferPath     = requireArguments().getString(EXTRA_BUFFER_PATH)
+        videoPath      = requireArguments().getString(EXTRA_VIDEO_PATH)
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         bindViews()
         bindListeners()
@@ -410,6 +476,7 @@ class QuickEditFragment: Fragment() {
     }
 
     private fun setupPlayer(){
+        hideProgress()
         player = SimpleExoPlayer.Builder(requireContext()).build()
         playerView.player = player
         setupMediaSource()
@@ -468,45 +535,71 @@ class QuickEditFragment: Fragment() {
 
     private fun setupMediaSource() {
         val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(bufferPath)
-        bufferDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
-        retriever.setDataSource(videoPath)
-        videoDuration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
-        retriever.release()
+        val clips = arrayListOf<ClippingMediaSource>()
 
-        Log.d(TAG, "setupMediaSource: setting up videos: \n$bufferPath and \n$videoPath")
-        val bufferSource =
-            ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
-                .createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
-        val videoSource =
-            ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
-                .createMediaSource(MediaItem.fromUri(Uri.parse(videoPath)))
+        if(bufferPath == videoPath){
+            bufferDuration = 0
 
-        //  clippingMediaSource used as workaround for timeline scrubbing
-        val clip1 = ClippingMediaSource(
-            bufferSource,
-            0,
-            TimeUnit.MILLISECONDS.toMicros(bufferDuration)
-        )
-        val clippedVideoDuration = videoDuration/1000
-        val clip2 = ClippingMediaSource(
-            videoSource,
-            0,
-            TimeUnit.SECONDS.toMicros(clippedVideoDuration)
-        )
+            retriever.setDataSource(videoPath)
+            videoDuration =
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+            retriever.release()
+            val videoSource =
+                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
+                    .createMediaSource(MediaItem.fromUri(Uri.parse(videoPath)))
+            val clippedVideoDuration = videoDuration / 1000
+            val clip2 = ClippingMediaSource(
+                videoSource,
+                0,
+                TimeUnit.SECONDS.toMicros(clippedVideoDuration)
+            )
 
+            clips.add(clip2)
+        }else {
+            retriever.setDataSource(bufferPath)
+            bufferDuration =
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+            retriever.setDataSource(videoPath)
+            videoDuration =
+                retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+            retriever.release()
 
-        val mediaSource = ConcatenatingMediaSource(true, clip1, clip2)
+            Log.d(TAG, "setupMediaSource: setting up videos: \n$bufferPath and \n$videoPath")
+            val bufferSource =
+                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
+                    .createMediaSource(MediaItem.fromUri(Uri.parse(bufferPath)))
+            val videoSource =
+                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(requireContext()))
+                    .createMediaSource(MediaItem.fromUri(Uri.parse(videoPath)))
 
+            //  clippingMediaSource used as workaround for timeline scrubbing
+            val clip1 = ClippingMediaSource(
+                bufferSource,
+                0,
+                TimeUnit.MILLISECONDS.toMicros(bufferDuration)
+            )
+
+            val clippedVideoDuration = videoDuration / 1000
+            val clip2 = ClippingMediaSource(
+                videoSource,
+                0,
+                TimeUnit.SECONDS.toMicros(clippedVideoDuration)
+            )
+
+            clips.add(clip1)
+            clips.add(clip2)
+            showBufferOverlay()
+        }
+
+        val mediaSource = ConcatenatingMediaSource(true, *clips.toTypedArray())
         player.setMediaSource(mediaSource)
         player.prepare()
-        showBufferOverlay()
     }
 
     private fun prepareForEdit() {
         if(startWindow < 0 || endWindow < 0){
             startWindow = 0
-            endWindow   = 1
+            endWindow = if(videoPath != bufferPath) 1 else 0
         }
         if(editedStart < 0 || editedEnd < 0){
             editedStart = bufferDuration
@@ -824,24 +917,54 @@ class QuickEditFragment: Fragment() {
         timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val concatOutputPath = "${File(videoPath!!).parent}/$timeStamp.mp4"
 
-        val concatenateTask = VideoOpItem(
-            operation = IVideoOpListener.VideoOp.CONCAT,
-            clips = arrayListOf(bufferPath!!, videoPath!!),
-            outputPath = concatOutputPath,
-            comingFrom = CurrentOperation.VIDEO_EDITING)
+        if(bufferPath != videoPath) {   //  the video doesn't have a buffer
+            val concatenateTask = VideoOpItem(
+                operation = IVideoOpListener.VideoOp.CONCAT,
+                clips = arrayListOf(bufferPath!!, videoPath!!),
+                outputPath = concatOutputPath,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
 
-        val taskList = arrayListOf<VideoOpItem>()
+            val taskList = arrayListOf<VideoOpItem>()
 
-        taskList.apply {
-            add(concatenateTask)
+            taskList.apply {
+                add(concatenateTask)
+            }
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)    //  for the concatenated file
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)   //  for the buffer file
+//            if(videoSnipId > 0) //  video is available in snip DB
+                VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)   //  for the video file
+
+            val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
+            createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+            VideoService.enqueueWork(requireContext(), createNewVideoIntent)
+        } else {
+
+            timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss",
+                Locale.getDefault()).format(Date())
+
+            val outputPath = File(videoPath!!).parent!! + File.separator + "VID_" + timeStamp + ".mp4"
+
+            val taskList = arrayListOf<VideoOpItem>()
+            val videoTask = VideoOpItem(
+                operation = IVideoOpListener.VideoOp.TRIMMED,
+                clips = arrayListOf(videoPath!!),
+                startTime = editedStart.milliToFloatSecond(),
+                endTime = editedEnd.milliToFloatSecond(),
+                outputPath = outputPath,
+                comingFrom = CurrentOperation.VIDEO_EDITING)
+
+            taskList.add(videoTask)
+            AppClass.showInGallery.add(File(outputPath).nameWithoutExtension)
+            VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)   //  for the video file
+
+            //  adding the video to DB
+            val duration = (editedEnd.milliToFloatSecond() - editedStart.milliToFloatSecond()).toInt()
+            (requireActivity() as AppMainActivity).addSnip(outputPath, duration, duration)
+
+            val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
+            createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+            VideoService.enqueueWork(requireContext(), createNewVideoIntent)
         }
-        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.CONCAT)    //  for the concatenated file
-        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)   //  for the buffer file
-        VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)   //  for the video file
-
-        val createNewVideoIntent = Intent(requireContext(), VideoService::class.java)
-        createNewVideoIntent.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
-        VideoService.enqueueWork(requireContext(), createNewVideoIntent)
     }
 
     private fun getCorrectedTimebarPosition(): Long {

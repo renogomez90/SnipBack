@@ -27,10 +27,7 @@ import com.hipoint.snipback.application.AppClass.swipeProcessed
 import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
-import com.hipoint.snipback.fragment.FragmentSlowMo
-import com.hipoint.snipback.fragment.SnapbackFragment
-import com.hipoint.snipback.fragment.VideoEditingFragment
-import com.hipoint.snipback.fragment.VideoMode
+import com.hipoint.snipback.fragment.*
 import com.hipoint.snipback.fragment.VideoMode.Companion.PREF_SLOW_MO_SPEED
 import com.hipoint.snipback.fragment.VideoMode.Companion.VIDEO_DIRECTORY_NAME
 import com.hipoint.snipback.listener.IVideoOpListener
@@ -273,11 +270,25 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             if (fromOperation == CurrentOperation.VIDEO_EDITING)
                 return
 
-            if(!isFromSlowNo(fromOperation)) {
+            if(!isFromSlowNo(fromOperation) && swipeAction != SwipeAction.SWIPE_DOWN) {
                 CoroutineScope(Dispatchers.IO).launch {
                     val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                     addSnip(processedVideoPath, duration, duration, fromOperation)
                 }
+            }
+
+            if(swipeAction == SwipeAction.SWIPE_DOWN){
+                //  send video clips for QB plus
+                val sendVideoToQuickEditIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
+                if(processedVideoPath.contains("buff-")) {
+                    sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_BUFFER_PATH,
+                        processedVideoPath)
+                }else {
+                    sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_VIDEO_PATH,
+                        processedVideoPath)
+                }
+
+                receivedContext?.sendBroadcast(sendVideoToQuickEditIntent)
             }
 
             if (!swipeProcessed &&
@@ -483,6 +494,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         }
 
         if(isFromSlowNo(comingFrom)) {
+
             val multiplier = pref.getInt(PREF_SLOW_MO_SPEED, 3)
             val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
             with(intent) {
@@ -491,11 +503,23 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 putExtra("log", "frames added")
             }
             receivedContext?.sendBroadcast(intent)
-        } else {
+
+        } else if(swipeAction == SwipeAction.SWIPE_RIGHT) {
+
             val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
             snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.KEY_FRAMES.name)
             snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
             receivedContext?.sendBroadcast(snapbackCompleteReceiver)
+
+        } else if (swipeAction == SwipeAction.SWIPE_DOWN){
+
+            val sendVideoToQuickEditIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
+            sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_BUFFER_PATH,
+                processedVideoPath)
+            sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_VIDEO_PATH,
+                processedVideoPath)
+            receivedContext?.sendBroadcast(sendVideoToQuickEditIntent)
+
         }
     }
 
