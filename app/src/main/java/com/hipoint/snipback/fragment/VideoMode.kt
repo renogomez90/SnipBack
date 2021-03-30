@@ -94,6 +94,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     private val VIDEO_DIRECTORY_NAME1 = "Snipback"
     private val PROCESSING_DIALOG     = "dialog_processing"
+
     private val swipedFileNames : ArrayList<String> = arrayListOf()                   //  names of files generated from swiping left
     private var parentSnip      : Snip?             = null
     private var currentOperation: CurrentOperation  = CurrentOperation.CLIP_RECORDING
@@ -109,9 +110,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     var zoomFactor: TextView? = null
 
     //  zoom slider controls
-    var mProgress       = 0f
-    var mMinZoom        = 0f
-    var mMaxZoom        = 0f
+    var mProgress = 0f
+    var mMinZoom  = 0f
+    var mMaxZoom  = 0f
 
     //  swipe action
     private var point1 = Pair(0f,0f)    //  this is for the x,y values regardless of device orientation
@@ -1362,7 +1363,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         trimOnSwipeDuringClipRecording(SwipeAction.SWIPE_DOWN)
 
                         //  launch the quick edit fragment to handle down swipe
-                        (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null), true)
+                        (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null, QuickEditFragment.OperationMode.QB_PLUS), true)
                     }
                 }
             }
@@ -1455,7 +1456,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             if(swipeAction == SwipeAction.SWIPE_DOWN){
                 //  launch the quick edit fragment to handle down swipe
-                (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null), true)
+                (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null, QuickEditFragment.OperationMode.QB_PLUS), true)
             }
         }
         if(swipeAction == SwipeAction.SWIPE_RIGHT) {
