@@ -194,18 +194,20 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             }
                         }
                     } else if (abs(deltaY) > MIN_DISTANCE && abs(deltaY) > abs(deltaX)) {   // this is a swipe action and most likely in the y direction
-
-                        if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.PORTRAIT) {
-                            if (point1.second < point2.second) {    //  Swipe down action
-                                handleDownSwipe()
-                            } else {    //  Swipe up action
-                                handleUpSwipe()
-                            }
-                        } else {
-                            if (point1.second > point2.second) {
-                                handleDownSwipe()
-                            } else {    //  Swipe up action
-                                handleUpSwipe()
+                        if (currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO ||
+                            currentOperation == CurrentOperation.CLIP_RECORDING) {
+                            if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.PORTRAIT) {
+                                if (point1.second < point2.second) {    //  Swipe down action
+                                    handleDownSwipe()
+                                } else {    //  Swipe up action
+                                    handleUpSwipe()
+                                }
+                            } else {
+                                if (point1.second > point2.second) {
+                                    handleDownSwipe()
+                                } else {    //  Swipe up action
+                                    handleUpSwipe()
+                                }
                             }
                         }
                     } else {
