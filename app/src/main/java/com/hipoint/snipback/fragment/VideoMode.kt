@@ -42,6 +42,7 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.SwipedRecording
 import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.Utils.BufferDataDetails
+import com.hipoint.snipback.Utils.Constants
 import com.hipoint.snipback.Utils.SimpleOrientationListener
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.application.AppClass.swipeProcessed
@@ -424,6 +425,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
         }
     }
+
+    private val paths by lazy { Constants(requireContext()) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -573,6 +577,11 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             setClipDuration(clipDuration)
             setRecordClips(true)
             currentOperation = CurrentOperation.CLIP_RECORDING
+        }
+
+        val outputFile = File(paths.EXTERNAL_VIDEO_DIR)
+        if(!outputFile.exists()){
+            outputFile.mkdirs()
         }
     }
 
@@ -1099,7 +1108,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     /**
      * Processes the swipe that were made during user recording
      * */
-    fun processPendingSwipes(
+    private fun processPendingSwipes(
             newVideoPath: String = swipedRecording?.originalFilePath ?: "",
             currentOperation: CurrentOperation = CurrentOperation.VIDEO_RECORDING,
     ) {
@@ -1108,14 +1117,14 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         if (swipedRecording != null) {  // we have swiped during the user recording
             if (swipedRecording?.originalFilePath.equals(cameraControl?.getLastUserRecordedPath())) {
-                val parentPath = File(swipedRecording?.originalFilePath!!).parent
+                val parentPath = paths.INTERNAL_VIDEO_DIR
 
                 val intentService = Intent(requireContext(), VideoService::class.java)
                 val task = arrayListOf<VideoOpItem>()
 
                 val retriever = MediaMetadataRetriever()
                 val originalBuffer = "$parentPath/buff-${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
-                val originalVideo = "$parentPath/${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
+                val originalVideo = "${paths.EXTERNAL_VIDEO_DIR}/${File(swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
 
                 retriever.setDataSource(newVideoPath)
 
@@ -1150,7 +1159,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 swipedRecording?.timestamps?.forEachIndexed { index, timeStamp ->
 
                     val buffFileName = "$parentPath/buff-${File(originalVideo).nameWithoutExtension}-$index.mp4"
-                    val outputFileName = "$parentPath/${File(originalVideo).nameWithoutExtension}-$index.mp4"
+                    val outputFileName = "${paths.EXTERNAL_VIDEO_DIR}/${File(originalVideo).nameWithoutExtension}-$index.mp4"
 
                     AppClass.showInGallery.add(File(outputFileName).nameWithoutExtension)
                     Log.d(TAG,
@@ -1228,7 +1237,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val videoDuration = userRecordDuration
             val intentService = Intent(requireContext(), VideoService::class.java)
             val bufferFilePath = "${File(newVideoPath).parent}/buff-${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that is the buffer
-            val videoFilePath = "${File(newVideoPath).parent}/${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
+            val videoFilePath = "${paths.EXTERNAL_VIDEO_DIR}/${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
             val taskList = arrayListOf<VideoOpItem>()
 
             if(currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO && showHFPSPreview ||
@@ -1510,7 +1519,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             AppClass.showInGallery.add("trimmed-${clip.nameWithoutExtension}")
 
             val bufferFile = "${clip.parent}/buff-${clip.name}"
-            val videoFile = "${clip.parent}/trimmed-${clip.name}"
+            val videoFile = "${paths.EXTERNAL_VIDEO_DIR}/trimmed-${clip.name}"
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val taskList = arrayListOf<VideoOpItem>()
@@ -1573,7 +1582,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     val videoTask = VideoOpItem(
                         operation             = VideoOp.KEY_FRAMES,
                         clips                 = arrayListOf(clip.absolutePath),
-                        outputPath            = clip.parent!!,
+                        outputPath            = paths.EXTERNAL_VIDEO_DIR,
                         comingFrom            = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
                         swipeAction           = swipeAction,
                         orientationPreference = orientationPref)
@@ -1591,7 +1600,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 } else if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
                     if(!showHFPSPreview) {
                         val outputName = "${clip.nameWithoutExtension}_slow_mo"
-                        val outputPath = "${clip.parent}/$outputName.mp4"
+                        val outputPath = "${paths.EXTERNAL_VIDEO_DIR}/$outputName.mp4"
                         val speedDetails = SpeedDetails(
                             isFast = false,
                             multiplier = currentSpeed,

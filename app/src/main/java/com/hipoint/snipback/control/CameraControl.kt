@@ -22,6 +22,7 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.Utils.AutoFitTextureView
+import com.hipoint.snipback.Utils.Constants
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IRecordUIListener
@@ -89,6 +90,8 @@ class CameraControl(val activity: FragmentActivity) {
     private var mImageFileName      : String?           = null
     private var lastUserRecordedPath: String?           = null
     private var clipQueue           : Queue<File>?      = null
+
+    private val paths: Constants by lazy { Constants(activity) }
 
     //two finger pinch zoom
     private var finger_spacing = 0f
@@ -172,8 +175,6 @@ class CameraControl(val activity: FragmentActivity) {
             mBackgroundHandler!!.post(ImageSaver(reader.acquireLatestImage()))
         }
     }
-
-    private val EXTERNAL_DIR_PATH: String by lazy{"${activity.externalMediaDirs[0]}/$EXTERNAL_DIR_NAME"}
 
     @Volatile var postedMsgOngoing = false
 
@@ -633,14 +634,12 @@ class CameraControl(val activity: FragmentActivity) {
             clipQueue = LinkedList()
         }
 
-        // External sdcard file location
-        val mediaStorageDir = File(activity.dataDir,
-            VideoMode.VIDEO_DIRECTORY_NAME)
+        val mediaStorageDir = File(paths.INTERNAL_VIDEO_DIR)
         // Create storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 Log.d(TAG, "Oops! Failed create "
-                        + VideoMode.VIDEO_DIRECTORY_NAME + " directory")
+                        + paths.INTERNAL_VIDEO_DIR + " directory")
                 return null
             }
         }
@@ -927,11 +926,11 @@ class CameraControl(val activity: FragmentActivity) {
     private fun createImageFileName(): File? {
         val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
         val fileName = "IMAGE_$timeStamp.jpg"
-        val folder = File(EXTERNAL_DIR_PATH)
+        val folder = File(paths.EXTERNAL_VIDEO_DIR)
 
         if(!folder.exists()) folder.mkdirs()
 
-        val imageFile = File(EXTERNAL_DIR_PATH, fileName)
+        val imageFile = File(paths.EXTERNAL_VIDEO_DIR, fileName)
         imageFile.createNewFile()
         mImageFileName = imageFile.absolutePath
         Log.d(TAG, "createImageFileName: mImageFileName = $mImageFileName")

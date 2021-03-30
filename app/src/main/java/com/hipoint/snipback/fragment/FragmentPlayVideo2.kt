@@ -33,6 +33,7 @@ import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.CommonUtils
+import com.hipoint.snipback.Utils.Constants
 import com.hipoint.snipback.Utils.TrimmerUtils
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.CurrentOperation
@@ -111,6 +112,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var bufferDuration             = -1L
     private var videoDuration              = -1L
     private var maxDuration                = 0L
+
+    private val paths by lazy { Constants(requireContext()) }
 
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
@@ -548,8 +551,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     private fun validateVideo(snip: Snip?) {
         val destinationPath = snip!!.videoFilePath
-        val mediaStorageDir = File(Environment.getExternalStorageDirectory(),
-                VIDEO_DIRECTORY_NAME)
+        val mediaStorageDir = File(paths.EXTERNAL_VIDEO_DIR)
         // Create storage directory if it does not exist
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
@@ -636,11 +638,13 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * Populates preview frames in the seekBar area from the video
      */
     private fun getVideoPreviewFrames() {
+        val previewOutputDir = paths.INTERNAL_PARENT_DIR
+
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
                 operation = IVideoOpListener.VideoOp.FRAMES,
                 clips = arrayListOf(snip!!.videoFilePath),
-                outputPath = File(snip!!.videoFilePath).parent!!,
+                outputPath = previewOutputDir,
                 comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
@@ -679,8 +683,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                     if (bufferDuration > 950L && videoDuration > 0L) {  //  if the buffer is over 100 milli seconds then show the quick edit button
                         withContext(Main) {
                             quickEditBtn.visibility = View.VISIBLE
-                            quickEditTimeTxt.text =
-                                    "-${(bufferDuration.toFloat() / 1000).roundToInt()} s"
+                            quickEditTimeTxt.text = "-${(bufferDuration.toFloat() / 1000).roundToInt()} s"
                         }
                         bufferAvailable = true
                         bufferPath = sorted[0].video_path_processed

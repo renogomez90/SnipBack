@@ -32,7 +32,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
-import com.hipoint.snipback.Utils.BufferDataDetails
+import com.hipoint.snipback.Utils.Constants
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
@@ -65,18 +65,18 @@ class QuickEditFragment : Fragment() {
     private val TAG = QuickEditFragment::class.java.simpleName
     private val PROCESSING_DIALOG = "dialog_processing"
 
-    private var seekAction = EditSeekControl.MOVE_START
+    private var seekAction        = EditSeekControl.MOVE_START
     private var onGoingSeekAction = EditSeekControl.MOVE_START
 
     private var operationMode: OperationMode? = null
-    private var timeStamp: String? = null
-    private var previewThumbs: File? = null
+    private var timeStamp    : String?        = null
+    private var previewThumbs: File?          = null
 
     // file paths
-    private var bufferHdSnipId: Int = 0
-    private var videoSnipId: Int = 0
-    private var bufferPath: String? = null
-    private var videoPath: String? = null
+    private var bufferHdSnipId: Int     = 0
+    private var videoSnipId   : Int     = 0
+    private var bufferPath    : String? = null
+    private var videoPath     : String? = null
 
     private var exit = false
 
@@ -96,47 +96,47 @@ class QuickEditFragment : Fragment() {
     //  progress tracker
     private var progressTracker: ProgressTracker? = null
 
-    private lateinit var rootView: View
-    private lateinit var appRepository: AppRepository
-    private lateinit var appViewModel: AppViewModel
-    private lateinit var player: SimpleExoPlayer
-    private lateinit var playerView: PlayerView
-    private lateinit var start: TextView
-    private lateinit var end: TextView
-    private lateinit var editBackBtn: ImageView
-    private lateinit var acceptBtn: ImageView
-    private lateinit var rejectBtn: ImageView
+    private lateinit var rootView          : View
+    private lateinit var appRepository     : AppRepository
+    private lateinit var appViewModel      : AppViewModel
+    private lateinit var player            : SimpleExoPlayer
+    private lateinit var playerView        : PlayerView
+    private lateinit var start             : TextView
+    private lateinit var end               : TextView
+    private lateinit var editBackBtn       : ImageView
+    private lateinit var acceptBtn         : ImageView
+    private lateinit var rejectBtn         : ImageView
     private lateinit var acceptRejectHolder: LinearLayout
     private lateinit var previewBarProgress: ProgressBar
-    private lateinit var previewTileList: RecyclerView
-    private lateinit var swipeDetector: SwipeDistanceView
-    private lateinit var timebarHolder: FrameLayout
-    private lateinit var seekbar: SnipbackTimeBar
+    private lateinit var previewTileList   : RecyclerView
+    private lateinit var swipeDetector     : SwipeDistanceView
+    private lateinit var timebarHolder     : FrameLayout
+    private lateinit var seekbar           : SnipbackTimeBar
+    private lateinit var playBtn           : ImageButton       //  playback the video
+    private lateinit var pauseBtn          : ImageButton       //  stop video playback
+    private lateinit var toStartBtn        : ImageButton       //  seek back to start of video
 
-    private lateinit var playBtn: ImageButton       //  playback the video
-    private lateinit var pauseBtn: ImageButton       //  stop video playback
-    private lateinit var toStartBtn: ImageButton       //  seek back to start of video
-
-    private var maxDuration = 0L
+    private var maxDuration    = 0L
     private var bufferDuration = -1L
-    private var videoDuration = -1L
-    private var startWindow = -1
-    private var endWindow = -1
-    private var editedStart = -1L
-    private var editedEnd = -1L
+    private var videoDuration  = -1L
+    private var startWindow    = -1
+    private var endWindow      = -1
+    private var editedStart    = -1L
+    private var editedEnd      = -1L
 
     //  Seek handling
     private var paused = true
 
     private var timestamp: String? = null
 
+    private val paths by lazy { Constants(requireContext()) }
     private val trimSegment: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
     private val bufferOverlay: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 
-    private val extendTrimReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+    private val extendTrimReceiver: BroadcastReceiver = object: BroadcastReceiver() {
         var trimmedItemCount = 0
-        var fullExtension = false
-        var concatedFile = ""
+        var fullExtension    = false
+        var concatedFile     = ""
         var videoSnip: Snip? = null
 
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -162,10 +162,10 @@ class QuickEditFragment : Fragment() {
                         editedStart = 900    // 100 ,milli seconds into the video
                     }
                     val bufferTask = VideoOpItem(
-                        operation = IVideoOpListener.VideoOp.TRIMMED,
-                        clips = arrayListOf(concatedFile),
-                        startTime = 0F,
-                        endTime = editedStart.milliToFloatSecond(),
+                        operation  = IVideoOpListener.VideoOp.TRIMMED,
+                        clips      = arrayListOf(concatedFile),
+                        startTime  = 0F,
+                        endTime    = editedStart.milliToFloatSecond(),
                         outputPath = bufferPath!!,
                         comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -375,11 +375,13 @@ class QuickEditFragment : Fragment() {
      * Populates preview frames in the seekBar area from the video
      */
     private fun getVideoPreviewFrames() {
+        val previewOutputDir = paths.INTERNAL_PARENT_DIR    //  since previewTiles will be added in VideoUtils
+
         val intentService = Intent(requireContext(), VideoService::class.java)
         val task = arrayListOf(VideoOpItem(
-            operation = IVideoOpListener.VideoOp.FRAMES,
-            clips = arrayListOf(videoPath!!),
-            outputPath = File(videoPath!!).parent!!,
+            operation  = IVideoOpListener.VideoOp.FRAMES,
+            clips      = arrayListOf(videoPath!!),
+            outputPath = previewOutputDir,
             comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
@@ -976,12 +978,12 @@ class QuickEditFragment : Fragment() {
      */
     private fun createModifiedVideo() {
         timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val concatOutputPath = "${File(videoPath!!).parent}/$timeStamp.mp4"
+        val concatOutputPath = "${paths.INTERNAL_VIDEO_DIR}/$timeStamp.mp4"
 
         if (bufferPath != videoPath) {   //  the video doesn't have a buffer
             val concatenateTask = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.CONCAT,
-                clips = arrayListOf(bufferPath!!, videoPath!!),
+                operation  = IVideoOpListener.VideoOp.CONCAT,
+                clips      = arrayListOf(bufferPath!!, videoPath!!),
                 outputPath = concatOutputPath,
                 comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -1003,15 +1005,14 @@ class QuickEditFragment : Fragment() {
             timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss",
                 Locale.getDefault()).format(Date())
 
-            val outputPath =
-                File(videoPath!!).parent!! + File.separator + "VID_" + timeStamp + ".mp4"
+            val outputPath = paths.EXTERNAL_VIDEO_DIR + File.separator + "VID_" + timeStamp + ".mp4"
 
             val taskList = arrayListOf<VideoOpItem>()
             val videoTask = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(videoPath!!),
-                startTime = editedStart.milliToFloatSecond(),
-                endTime = editedEnd.milliToFloatSecond(),
+                operation  = IVideoOpListener.VideoOp.TRIMMED,
+                clips      = arrayListOf(videoPath!!),
+                startTime  = editedStart.milliToFloatSecond(),
+                endTime    = editedEnd.milliToFloatSecond(),
                 outputPath = outputPath,
                 comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -1054,8 +1055,19 @@ class QuickEditFragment : Fragment() {
     }
 
     private fun showProgress() {
-        if (processingDialog == null)
-            processingDialog = ProcessingDialog()
+        if (processingDialog == null) {    //  checks if the dialog was being shown; get a reference to that or create a new one
+
+            val frag = requireActivity().supportFragmentManager.findFragmentByTag(PROCESSING_DIALOG)
+            processingDialog = if (frag == null)
+                ProcessingDialog()
+            else
+                frag as ProcessingDialog
+        }
+
+        if (processingDialog!!.isAdded || processingDialog!!.isVisible) {
+            return
+        }
+
         processingDialog!!.isCancelable = false
         processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
         requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

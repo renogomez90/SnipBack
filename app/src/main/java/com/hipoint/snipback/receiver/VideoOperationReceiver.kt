@@ -20,6 +20,7 @@ import com.hipoint.snipback.AppMainActivity.Companion.parentChanged
 import com.hipoint.snipback.AppMainActivity.Companion.parentSnip
 import com.hipoint.snipback.AppMainActivity.Companion.replacedWith
 import com.hipoint.snipback.Utils.BufferDataDetails
+import com.hipoint.snipback.Utils.Constants
 import com.hipoint.snipback.Utils.isPathInList
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.application.AppClass.showInGallery
@@ -57,6 +58,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
     private var receivedContext: Context?          = null
     private var addedToSnip    : ArrayList<String> = arrayListOf()
 
+    private val paths by lazy { Constants(receivedContext!!) }
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
     private val pref: SharedPreferences by lazy { receivedContext!!.getSharedPreferences(
         SettingsDialog.SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
@@ -64,13 +66,13 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
     override fun onReceive(context: Context?, intent: Intent?) {
         receivedContext = context
         intent?.let{
-            val operation = intent.getStringExtra("operation")
-            val showProgress = intent.getIntExtra("progress", -1)
-            val processedVideoPath = intent.getStringExtra("processedVideoPath")
+            val operation              = intent.getStringExtra("operation")
+            val showProgress           = intent.getIntExtra("progress", -1)
+            val processedVideoPath     = intent.getStringExtra("processedVideoPath")
             val currentOperationString = intent.getStringExtra(VideoService.LAUNCHED_FROM_EXTRA)
-            val swipeActionString = intent.getStringExtra(VideoService.SWIPE_ACTION_EXTRA)
-            val currentOperation = getCurrentOperation(currentOperationString)
-            val swipeAction = getCurrentSwipeAction(swipeActionString)
+            val swipeActionString      = intent.getStringExtra(VideoService.SWIPE_ACTION_EXTRA)
+            val currentOperation       = getCurrentOperation(currentOperationString)
+            val swipeAction            = getCurrentSwipeAction(swipeActionString)
 
             if (processedVideoPath.isNullOrBlank())
                 return
@@ -188,9 +190,9 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             //  merged clips to be trimmed to size
             val intentService = Intent(receivedContext, VideoService::class.java)
             val buffFile =
-                "${File(processedVideoPath).parent}/buff-${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that is the buffer
+                "${paths.INTERNAL_VIDEO_DIR}/buff-${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that is the buffer
             val split2File =
-                "${File(processedVideoPath).parent}/${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
+                "${paths.EXTERNAL_VIDEO_DIR}/${File(processedVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
             val taskList = arrayListOf<VideoOpItem>()
 
             if((swipeAction == SwipeAction.SWIPE_LEFT && !isFromSlowNo(comingFrom)) ||  //  left swipe on normal recording
@@ -198,13 +200,13 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                     swipeAction == SwipeAction.SWIPE_DOWN) {    //  when swipe action is down
 
                 val bufferFile = VideoOpItem(
-                    operation = IVideoOpListener.VideoOp.TRIMMED,
-                    clips = arrayListOf(processedVideoPath),
-                    startTime = Integer.max((totalDuration - swipeClipDuration - bufferDuration).toInt(),0)
+                    operation      = IVideoOpListener.VideoOp.TRIMMED,
+                    clips          = arrayListOf(processedVideoPath),
+                    startTime      = Integer.max((totalDuration - swipeClipDuration - bufferDuration).toInt(), 0)
                         .toFloat(),
-                    endTime = (totalDuration - swipeClipDuration).toFloat(),
-                    outputPath = buffFile,
-                    comingFrom = comingFrom,
+                    endTime        = (totalDuration - swipeClipDuration).toFloat(),
+                    outputPath     = buffFile,
+                    comingFrom     = comingFrom,
                     swipeAction = swipeAction
                 )
 
@@ -213,12 +215,12 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             }
 
             val videoFile = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(processedVideoPath),
-                startTime = (totalDuration - swipeClipDuration).toFloat(),
-                endTime = totalDuration.toFloat(),
-                outputPath = split2File,
-                comingFrom = comingFrom,
+                operation   = IVideoOpListener.VideoOp.TRIMMED,
+                clips       = arrayListOf(processedVideoPath),
+                startTime   = (totalDuration - swipeClipDuration).toFloat(),
+                endTime     = totalDuration.toFloat(),
+                outputPath  = split2File,
+                comingFrom  = comingFrom,
                 swipeAction = swipeAction
             )
 
@@ -302,7 +304,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
                 //  we don't have to show the preview and processing has to be done now
                 var outputName = "${File(processedVideoPath).nameWithoutExtension}_slow_mo"
-                var outputPath = "${File(processedVideoPath).parent}/$outputName.mp4"
+                var outputPath = "${paths.EXTERNAL_VIDEO_DIR}/$outputName.mp4"
 
                 if(!VideoMode.showHFPSPreview) {
                     //  slow the video down
@@ -315,12 +317,12 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                     )
 
                     val videoFile = VideoOpItem(
-                        operation = IVideoOpListener.VideoOp.SPEED,
-                        clips = arrayListOf(processedVideoPath),
+                        operation        = IVideoOpListener.VideoOp.SPEED,
+                        clips            = arrayListOf(processedVideoPath),
                         speedDetailsList = arrayListOf(speedDetails),
-                        outputPath = outputPath,
-                        comingFrom = fromOperation,
-                        swipeAction = swipeAction
+                        outputPath       = outputPath,
+                        comingFrom       = fromOperation,
+                        swipeAction      = swipeAction
                     )
 
                     if (processedVideoPath.contains("buff-")) {  // if the video being processed is a buffer... then make sure it shows up as the buffer
@@ -789,7 +791,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
     /**
      * Processes the swipe that were made during user recording
      * */
-    fun processPendingSwipes(
+    private fun processPendingSwipes(
         newVideoPath: String = VideoMode.swipedRecording?.originalFilePath ?: "",
         currentOperation: CurrentOperation = CurrentOperation.VIDEO_RECORDING,
     ) {
@@ -802,14 +804,13 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
         if (VideoMode.swipedRecording != null) {  // we have swiped during the user recording
             if (VideoMode.swipedRecording?.originalFilePath.equals(lastUserRecordedPath)) {
-                val parentPath = File(VideoMode.swipedRecording?.originalFilePath!!).parent
 
                 val intentService = Intent(receivedContext, VideoService::class.java)
                 val task = arrayListOf<VideoOpItem>()
 
                 val retriever = MediaMetadataRetriever()
-                val originalBuffer = "$parentPath/buff-${File(VideoMode.swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
-                val originalVideo = "$parentPath/${File(VideoMode.swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
+                val originalBuffer = "${paths.INTERNAL_VIDEO_DIR}/buff-${File(VideoMode.swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
+                val originalVideo = "${paths.EXTERNAL_VIDEO_DIR}/${File(VideoMode.swipedRecording?.originalFilePath!!).nameWithoutExtension}.mp4"
 
                 retriever.setDataSource(newVideoPath)
 
@@ -820,10 +821,10 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 val endTime = max((totalDuration - originalVideoDuration), 0).toFloat()
                 //  trim out original video and buffer from combined video file
                 val oBufferFile = VideoOpItem(
-                    operation = IVideoOpListener.VideoOp.TRIMMED,
-                    clips = arrayListOf(newVideoPath),
-                    startTime = 0F,
-                    endTime = max((totalDuration - originalVideoDuration), 0).toFloat(),
+                    operation  = IVideoOpListener.VideoOp.TRIMMED,
+                    clips      = arrayListOf(newVideoPath),
+                    startTime  = 0F,
+                    endTime    = max((totalDuration - originalVideoDuration), 0).toFloat(),
                     outputPath = originalBuffer,
                     comingFrom = currentOperation)
 
@@ -832,10 +833,10 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
                 //  creating the video file
                 val oVideoFile = VideoOpItem(
-                    operation = IVideoOpListener.VideoOp.TRIMMED,
-                    clips = arrayListOf(newVideoPath),
-                    startTime = max((totalDuration - originalVideoDuration), 0).toFloat(),
-                    endTime = totalDuration.toFloat(),
+                    operation  = IVideoOpListener.VideoOp.TRIMMED,
+                    clips      = arrayListOf(newVideoPath),
+                    startTime  = max((totalDuration - originalVideoDuration), 0).toFloat(),
+                    endTime    = totalDuration.toFloat(),
                     outputPath = originalVideo,
                     comingFrom = currentOperation)
 
@@ -843,8 +844,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 //  create buffer and video for each swipe
                 VideoMode.swipedRecording?.timestamps?.forEachIndexed { index, timeStamp ->
 
-                    val buffFileName = "$parentPath/buff-${File(originalVideo).nameWithoutExtension}-$index.mp4"
-                    val outputFileName = "$parentPath/${File(originalVideo).nameWithoutExtension}-$index.mp4"
+                    val buffFileName = "${paths.INTERNAL_VIDEO_DIR}/buff-${File(originalVideo).nameWithoutExtension}-$index.mp4"
+                    val outputFileName = "${paths.EXTERNAL_VIDEO_DIR}/${File(originalVideo).nameWithoutExtension}-$index.mp4"
 
                     AppClass.showInGallery.add(File(outputFileName).nameWithoutExtension)
                     Log.d(TAG,
@@ -862,12 +863,12 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                         val videoTs = (mergedDuration - originalDuration) + timeStamp
                         //  creating the buffer file
                         val bufferFile = VideoOpItem(
-                            operation = IVideoOpListener.VideoOp.TRIMMED,
-                            clips = arrayListOf(newVideoPath),
-                            startTime = max((videoTs - (swipeValue / 1000) - (clipDuration / 1000)).toInt(),
+                            operation        = IVideoOpListener.VideoOp.TRIMMED,
+                            clips            = arrayListOf(newVideoPath),
+                            startTime        = max((videoTs - (swipeValue / 1000) - (clipDuration / 1000)).toInt(),
                                 0).toFloat(),
-                            endTime = max((videoTs - (swipeValue / 1000)).toInt(), 0).toFloat(),
-                            outputPath = buffFileName,
+                            endTime          = max((videoTs - (swipeValue / 1000)).toInt(), 0).toFloat(),
+                            outputPath       = buffFileName,
                             comingFrom = currentOperation)
 
                         VideoService.bufferDetails.add(BufferDataDetails(buffFileName, outputFileName))
@@ -875,10 +876,10 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
                         //  creating the video file
                         val videoFile = VideoOpItem(
-                            operation = IVideoOpListener.VideoOp.TRIMMED,
-                            clips = arrayListOf(newVideoPath),
-                            startTime = max((videoTs - (swipeValue / 1000)).toInt(), 0).toFloat(),
-                            endTime = videoTs.toFloat(),
+                            operation  = IVideoOpListener.VideoOp.TRIMMED,
+                            clips      = arrayListOf(newVideoPath),
+                            startTime  = max((videoTs - (swipeValue / 1000)).toInt(), 0).toFloat(),
+                            endTime    = videoTs.toFloat(),
                             outputPath = outputFileName,
                             comingFrom = currentOperation)
 
@@ -886,23 +887,23 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                     }else {
                         //  creating the buffer file
                         val bufferFile = VideoOpItem(
-                            operation = IVideoOpListener.VideoOp.TRIMMED,
-                            clips = arrayListOf(VideoMode.swipedRecording?.originalFilePath!!),
-                            startTime = max((timeStamp - (swipeValue / 1000) - (clipDuration / 1000)).toInt(),
+                            operation        = IVideoOpListener.VideoOp.TRIMMED,
+                            clips            = arrayListOf(VideoMode.swipedRecording?.originalFilePath!!),
+                            startTime        = max((timeStamp - (swipeValue / 1000) - (clipDuration / 1000)).toInt(),
                                 0).toFloat(),
-                            endTime = max((timeStamp - (swipeValue / 1000)).toInt(), 0).toFloat(),
-                            outputPath = buffFileName,
-                            comingFrom = currentOperation)
+                            endTime          = max((timeStamp - (swipeValue / 1000)).toInt(), 0).toFloat(),
+                            outputPath       = buffFileName,
+                            comingFrom       = currentOperation)
 
                         VideoService.bufferDetails.add(BufferDataDetails(buffFileName, outputFileName))
                         task.add(bufferFile)
 
                         //  creating the video file
                         val videoFile = VideoOpItem(
-                            operation = IVideoOpListener.VideoOp.TRIMMED,
-                            clips = arrayListOf(VideoMode.swipedRecording?.originalFilePath!!),
-                            startTime = max((timeStamp - (swipeValue / 1000)).toInt(), 0).toFloat(),
-                            endTime = timeStamp.toFloat(),
+                            operation  = IVideoOpListener.VideoOp.TRIMMED,
+                            clips      = arrayListOf(VideoMode.swipedRecording?.originalFilePath!!),
+                            startTime  = max((timeStamp - (swipeValue / 1000)).toInt(), 0).toFloat(),
+                            endTime    = timeStamp.toFloat(),
                             outputPath = outputFileName,
                             comingFrom = currentOperation)
 
@@ -923,19 +924,19 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
             val videoDuration = pref.getInt(VideoMode.PREF_LAST_REC_DURATION, 0)
             val intentService = Intent(receivedContext!!, VideoService::class.java)
-            val bufferFilePath = "${File(newVideoPath).parent}/buff-${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that is the buffer
-            val videoFilePath = "${File(newVideoPath).parent}/${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
+            val bufferFilePath = "${paths.INTERNAL_VIDEO_DIR}/buff-${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that is the buffer
+            val videoFilePath = "${paths.EXTERNAL_VIDEO_DIR}/${File(newVideoPath).nameWithoutExtension}-1.mp4"    //  this is the file that the user will see
             val taskList = arrayListOf<VideoOpItem>()
 
             if(currentOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO && VideoMode.showHFPSPreview ||
                 currentOperation == CurrentOperation.VIDEO_RECORDING) {
                 val bufferFile = VideoOpItem(
-                    operation = IVideoOpListener.VideoOp.TRIMMED,
-                    clips = arrayListOf(newVideoPath),
-                    startTime = max((totalDuration - videoDuration - (clipDuration / 1000)).toInt(),
+                    operation        = IVideoOpListener.VideoOp.TRIMMED,
+                    clips            = arrayListOf(newVideoPath),
+                    startTime        = max((totalDuration - videoDuration - (clipDuration / 1000)).toInt(),
                         0).toFloat(),
-                    endTime = (totalDuration - videoDuration).toFloat(),
-                    outputPath = bufferFilePath,
+                    endTime          = (totalDuration - videoDuration).toFloat(),
+                    outputPath       = bufferFilePath,
                     comingFrom = if (slowMoClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING)
 
                 VideoService.bufferDetails.add(BufferDataDetails(bufferFilePath, videoFilePath))
@@ -943,10 +944,10 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             }
 
             val videoFile = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(newVideoPath),
-                startTime = (totalDuration - videoDuration).toFloat(),
-                endTime = totalDuration.toFloat(),
+                operation  = IVideoOpListener.VideoOp.TRIMMED,
+                clips      = arrayListOf(newVideoPath),
+                startTime  = (totalDuration - videoDuration).toFloat(),
+                endTime    = totalDuration.toFloat(),
                 outputPath = videoFilePath,
                 comingFrom = if(slowMoClicked) CurrentOperation.VIDEO_RECORDING_SLOW_MO else CurrentOperation.VIDEO_RECORDING)
 

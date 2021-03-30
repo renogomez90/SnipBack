@@ -31,6 +31,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
+import com.hipoint.snipback.Utils.Constants
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
@@ -121,6 +122,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     private var timeStamp: String? = null
 
+    private val paths by lazy { Constants(requireContext()) }
+
     //  App repository
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
 
@@ -169,16 +172,16 @@ class FragmentSlowMo : Fragment(), ISaveListener {
      * Once this is completed the speed changes are triggered
      */
     private val extendTrimReceiver: BroadcastReceiver = object: BroadcastReceiver() {
-        var concatOutput     = ""
-        var fullExtension    = false
+        var concatOutput  = ""
+        var fullExtension = false
 
         override fun onReceive(context: Context?, intent: Intent?) {
             intent?.let {
                 val retriever = MediaMetadataRetriever()
                 val operation = it.getStringExtra("operation")
                 val inputName = it.getStringExtra("fileName")
-                val trimmedOutputPath = "${File(inputName!!).parent}/trimmed-$timeStamp.mp4"
-                val speedChangedPath = "${File(inputName).parent}/VID_$timeStamp.mp4"
+                val trimmedOutputPath = "${paths.INTERNAL_VIDEO_DIR}/trimmed-$timeStamp.mp4"
+                val speedChangedPath = "${paths.EXTERNAL_VIDEO_DIR}/VID_$timeStamp.mp4"
 
                 retriever.setDataSource(inputName)
 
@@ -189,7 +192,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                         retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
                             .toLong()
                     Log.d(TAG, "onReceive: CONCAT duration = $concatDuration")
-                    concatOutput = inputName
+                    concatOutput = inputName!!
                     fullExtension = (editedStart == 0L)
 
                     if (fullExtension) {
@@ -216,7 +219,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                     )
                     val speedChangeTask = VideoOpItem(
                         operation        = IVideoOpListener.VideoOp.SPEED,
-                        clips            = arrayListOf(inputName),
+                        clips            = arrayListOf(inputName!!),
                         outputPath       = speedChangedPath,
                         speedDetailsList = arrayListOf(speedDetails),
                         comingFrom       = CurrentOperation.VIDEO_EDITING)
@@ -312,7 +315,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         val task = arrayListOf(VideoOpItem(
             operation  = IVideoOpListener.VideoOp.FRAMES,
             clips      = arrayListOf(videoPath!!),
-            outputPath = File(videoPath!!).parent!!,
+            outputPath = paths.INTERNAL_PARENT_DIR,
             comingFrom = CurrentOperation.VIDEO_EDITING))
         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
         VideoService.enqueueWork(requireContext(), intentService)
@@ -1084,13 +1087,13 @@ class FragmentSlowMo : Fragment(), ISaveListener {
      */
     private fun createModifiedVideo() {
         timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val concatOutputPath = "${File(videoPath!!).parent}/$timeStamp.mp4"
+        val concatOutputPath = "${paths.INTERNAL_VIDEO_DIR}/$timeStamp.mp4"
         val taskList = arrayListOf<VideoOpItem>()
 
         if (bufferPath != null) {
             val concatenateTask = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.CONCAT,
-                clips = arrayListOf(bufferPath!!, videoPath!!),
+                operation  = IVideoOpListener.VideoOp.CONCAT,
+                clips      = arrayListOf(bufferPath!!, videoPath!!),
                 outputPath = concatOutputPath,
                 comingFrom = CurrentOperation.VIDEO_EDITING)
 
@@ -1100,12 +1103,12 @@ class FragmentSlowMo : Fragment(), ISaveListener {
             if (VideoEditingFragment.saveAction == VideoEditingFragment.SaveActionType.SAVE && bufferPath.isNotNullOrEmpty())
                 VideoService.ignoreResultOf.add(IVideoOpListener.VideoOp.TRIMMED)
         } else {
-            val trimmedOutputPath = "${File(videoPath!!).parent}/trimmed-$timeStamp.mp4"
+            val trimmedOutputPath = "${paths.EXTERNAL_VIDEO_DIR}/trimmed-$timeStamp.mp4"
             val trimTask = VideoOpItem(
-                operation = IVideoOpListener.VideoOp.TRIMMED,
-                clips = arrayListOf(videoPath!!),
-                startTime = editedStart.milliToFloatSecond(),
-                endTime = editedEnd.milliToFloatSecond(),
+                operation  = IVideoOpListener.VideoOp.TRIMMED,
+                clips      = arrayListOf(videoPath!!),
+                startTime  = editedStart.milliToFloatSecond(),
+                endTime    = editedEnd.milliToFloatSecond(),
                 outputPath = trimmedOutputPath,
                 comingFrom = CurrentOperation.VIDEO_EDITING)
 

@@ -255,11 +255,11 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
-                //mv $outputFolder/out.mp4 ava_${clip.absolutePath}
-                File("$outputFolder/out.mp4").renameTo(clip)
+                val renamePath = File("$outputFolder/${clip.name}")
+                File("$outputFolder/out.mp4").renameTo(renamePath)
                 opListener.changed(IVideoOpListener.VideoOp.KEY_FRAMES,
-                        comingFrom, swipeAction,
-                        clip.absolutePath)
+                    comingFrom, swipeAction,
+                    renamePath.absolutePath)
             }
 
             override fun onFailure() {

@@ -37,6 +37,7 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
+import com.hipoint.snipback.Utils.Constants
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.application.AppClass.showInGallery
 import com.hipoint.snipback.dialog.KeepVideoDialog
@@ -70,7 +71,6 @@ class SnapbackFragment: Fragment(), ISaveListener {
 
     private val PROCESSING_SNAPBACK_DIALOG = "com.hipoint.snipback.SNAPBACK_VIDEO_PROCESSING"
     private val SAVE_SNAPBACK_DIALOG       = "com.hipoint.snipback.SNAPBACK_SAVE_VIDEO"
-    private val EXTERNAL_DIR_NAME          = "Snipback"
 
     private val retries = 3
     private var tries   = 0
@@ -104,11 +104,6 @@ class SnapbackFragment: Fragment(), ISaveListener {
         }
     }
 
-    private val mediaStorageDir by lazy { requireContext().externalMediaDirs[0] }
-    private val EXTERNAL_DIR_PATH: String by lazy{
-        "$mediaStorageDir/$EXTERNAL_DIR_NAME"
-    }
-
     companion object{
         val SNAPBACK_PATH_ACTION = "com.hipoint.snipback.SNAPBACK_VIDEO_PATH"
         val EXTRA_VIDEO_PATH = "videoPath"
@@ -132,6 +127,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         }
     }
 
+    private val paths by lazy { Constants(requireContext()) }
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
      */
@@ -345,7 +341,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
      * captures and saves the current frame
      */
     private fun performCapture() {
-        val storageFile = File(EXTERNAL_DIR_PATH)
+        val storageFile = File(paths.EXTERNAL_VIDEO_DIR)
         if (!storageFile.exists()) {
             storageFile.mkdir()
         }
@@ -492,13 +488,13 @@ class SnapbackFragment: Fragment(), ISaveListener {
      */
     private fun saveFrame(){
         val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
-        val cmd = "-ss ${player.currentPosition.toFloat()/1000} -i $videoPath -vframes 1 -f image2 ${EXTERNAL_DIR_PATH}/IMAGE_${timeStamp}.jpg"
+        val cmd = "-ss ${player.currentPosition.toFloat()/1000} -i $videoPath -vframes 1 -f image2 ${paths.EXTERNAL_VIDEO_DIR}/IMAGE_${timeStamp}.jpg"
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
                 Log.d(TAG, "onSuccess: image saved")
                 MediaScannerConnection.scanFile(
                         requireContext(),
-                        arrayOf("${mediaStorageDir!!.path}/${timeStamp}.jpg"),
+                        arrayOf("${paths.EXTERNAL_VIDEO_DIR}/${timeStamp}.jpg"),
                         arrayOf(MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")),
                         null
                 )
@@ -508,7 +504,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
                 values.put(Images.Media.DATE_TAKEN, System.currentTimeMillis())
                 values.put(Images.Media.MIME_TYPE, "image/jpeg")
                 values.put(MediaStore.MediaColumns.DATA,
-                        "${EXTERNAL_DIR_PATH}/IMAGE_${timeStamp}.jpg")
+                        "${paths.EXTERNAL_VIDEO_DIR}/IMAGE_${timeStamp}.jpg")
 
                 context!!.contentResolver.insert(Images.Media.EXTERNAL_CONTENT_URI, values)
             }
