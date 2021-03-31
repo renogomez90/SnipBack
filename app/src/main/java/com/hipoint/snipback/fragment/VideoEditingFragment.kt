@@ -66,7 +66,6 @@ import com.hipoint.snipback.videoControl.SpeedDetails
 import com.hipoint.snipback.videoControl.VideoOpItem
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.android.synthetic.main.activity_main2.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.IO

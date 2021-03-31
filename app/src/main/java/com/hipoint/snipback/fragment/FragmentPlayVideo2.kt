@@ -8,7 +8,6 @@ import android.graphics.*
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.*
 import android.widget.*
@@ -47,9 +46,6 @@ import com.hipoint.snipback.service.VideoService
 import com.hipoint.snipback.videoControl.VideoOpItem
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.rxkotlin.addTo
-import kotlinx.android.synthetic.main.activity_main2.*
-import kotlinx.android.synthetic.main.exo_controls.*
-import kotlinx.android.synthetic.main.layout_play_video.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main

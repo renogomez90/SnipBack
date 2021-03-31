@@ -36,7 +36,6 @@ import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.service.CleanupService
 import com.hipoint.snipback.service.VideoService
-import kotlinx.android.synthetic.main.fragment_settings.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main

@@ -10,10 +10,12 @@ import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.room.dao.EventDao
 import com.hipoint.snipback.room.dao.Hd_snipsDao
 import com.hipoint.snipback.room.dao.SnipsDao
+import com.hipoint.snipback.room.dao.TagDao
 import com.hipoint.snipback.room.db.RoomDB
 import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
+import com.hipoint.snipback.room.entities.Tags
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.async
@@ -29,6 +31,9 @@ class AppRepository(context: Context?) {
     private val HdSnipsData: LiveData<Hd_snips>? = null
     private val snipsDao: SnipsDao
     private val SnipData: LiveData<Snip>? = null
+    private val tagDao: TagDao
+    private val tagData: LiveData<List<Tags>>
+        get() = tagDao.tagsData
 
     interface OnTaskCompleted {
         suspend fun onTaskCompleted(snip: Snip?)
@@ -216,6 +221,58 @@ class AppRepository(context: Context?) {
         return snipId
     } //Snip Table Actions END//
 
+
+    //  Tags data
+
+    suspend fun insertTag(tag: Tags) {
+//        InsertSnipAsync(listener, snipsDao).execute(snip)
+        val result = CoroutineScope(IO).async {
+            tagDao.insert(tag)
+        }
+    }
+
+    suspend fun getTagById(tagId: Int): Tags? {
+        val tag = CoroutineScope(IO).async {
+            tagDao.getTagById(tagId)
+        }
+        return tag.await()
+    }
+
+    suspend fun getTagBySnipId(snipId: Int): Tags? {
+        val tag = CoroutineScope(IO).async {
+            tagDao.getTagBySnipId(snipId)
+        }
+        return tag.await()
+    }
+
+    //data update
+    suspend fun updateTag(tag: Tags) {
+        withContext(IO) {
+            tagDao.update(tag)
+        }
+    }
+
+    //data delete
+    suspend fun deleteTag(tag: Tags) {
+        withContext(IO) {
+            tagDao.delete(tag)
+        }
+    }
+
+    suspend fun deleteAllTags() {
+        withContext(IO) {
+            tagDao.deleteAll()
+        }
+    }
+
+    suspend fun getAllTags(): MutableList<Tags>? {
+        val result = CoroutineScope(IO).async {
+            tagDao.getAll()
+        }
+        return result.await() as? MutableList<Tags>
+    }
+
+
     companion object {
         @JvmStatic
         var instance: AppRepository? = null
@@ -230,9 +287,10 @@ class AppRepository(context: Context?) {
 
     init {
 //        RoomDB db = AppClass.getAppInsatnce().database;
-        val db = RoomDB.getDatabase(context)
-        eventDao = db.eventDao()
+        val db      = RoomDB.getDatabase(context)
+        eventDao    = db.eventDao()
         hd_snipsDao = db.hd_snipsDao()
-        snipsDao = db.snipsDao()
+        snipsDao    = db.snipsDao()
+        tagDao      = db.tagDao()
     }
 }

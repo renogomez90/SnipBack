@@ -10,11 +10,13 @@ import androidx.room.TypeConverters;
 import com.hipoint.snipback.room.dao.EventDao;
 import com.hipoint.snipback.room.dao.Hd_snipsDao;
 import com.hipoint.snipback.room.dao.SnipsDao;
+import com.hipoint.snipback.room.dao.TagDao;
 import com.hipoint.snipback.room.entities.Event;
 import com.hipoint.snipback.room.entities.Hd_snips;
 import com.hipoint.snipback.room.entities.Snip;
+import com.hipoint.snipback.room.entities.Tags;
 
-@Database(entities = {Event.class, Hd_snips.class, Snip.class}, version = 1, exportSchema = false)
+@Database(entities = {Event.class, Hd_snips.class, Snip.class, Tags.class}, version = 2, exportSchema = false)
 public abstract class RoomDB extends RoomDatabase {
 
     private static RoomDB INSTANCE;
@@ -37,5 +39,7 @@ public abstract class RoomDB extends RoomDatabase {
     public abstract Hd_snipsDao hd_snipsDao();
 
     public abstract SnipsDao snipsDao();
+
+    public abstract TagDao tagDao();
 
 }

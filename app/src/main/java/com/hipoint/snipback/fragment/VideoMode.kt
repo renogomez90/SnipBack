@@ -24,7 +24,6 @@ import android.view.*
 import android.view.View.OnTouchListener
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
-import android.view.animation.LinearInterpolator
 import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.SeekBar.OnSeekBarChangeListener
@@ -66,8 +65,6 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-import kotlinx.android.synthetic.main.fragment_gallery.*
-import kotlinx.android.synthetic.main.fragment_videomode.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.Dispatchers.Main
@@ -366,15 +363,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private lateinit var tvTimer         : TextView
     private lateinit var mChronometer    : Chronometer
     private lateinit var blinkEffect     : View
+    private lateinit var con             : ConstraintLayout
     private lateinit var rlVideo         : ConstraintLayout
     private lateinit var recStartLayout  : ConstraintLayout
     private lateinit var bottomContainer : ConstraintLayout
     private lateinit var seekBar         : SeekBar
-    private lateinit var slowMo           : ImageButton
-    private lateinit var slowMoQuickback  : TextView
-    private lateinit var slowMoSpeed      : TextView
-    private lateinit var slowMoPreview    : TextView
-    private lateinit var slowMoContainer  : ConstraintLayout
+    private lateinit var slowMo          : ImageButton
+    private lateinit var slowMoQuickback : TextView
+    private lateinit var slowMoSpeed     : TextView
+    private lateinit var slowMoPreview   : TextView
+    private lateinit var slowMoContainer : ConstraintLayout
 
     private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(
             SettingsDialog.SETTINGS_PREFERENCES,
@@ -609,6 +607,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         settings         = rootView.findViewById(R.id.menu_btn)
         capturePrevious  = rootView.findViewById(R.id.back_video_btn)
         changeCamera     = rootView.findViewById(R.id.switch_cam_btn)
+        con              = rootView.findViewById(R.id.con)
         recordButton     = rootView.findViewById(R.id.rec)
         mChronometer     = rootView.findViewById(R.id.chronometer)
         mTextureView     = rootView.findViewById(R.id.texture)
