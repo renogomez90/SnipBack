@@ -288,8 +288,17 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                     sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_BUFFER_PATH,
                         processedVideoPath)
                 }else {
-                    sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_VIDEO_PATH,
-                        processedVideoPath)
+                    if(isFromSlowNo(fromOperation)){
+                        val multiplier = pref.getInt(VideoMode.PREF_SLOW_MO_SPEED, 3)
+                        sendVideoToQuickEditIntent.putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER,
+                            multiplier)
+
+                        sendVideoToQuickEditIntent.putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH,
+                            processedVideoPath)
+                    } else {
+                        sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_VIDEO_PATH,
+                            processedVideoPath)
+                    }
                 }
 
                 receivedContext?.sendBroadcast(sendVideoToQuickEditIntent)
@@ -300,7 +309,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                         fromOperation == CurrentOperation.VIDEO_RECORDING_SLOW_MO)) {
                 processPendingSwipes(processedVideoPath, fromOperation)
 
-            } else if(isFromSlowNo(fromOperation)){
+            } else if(isFromSlowNo(fromOperation) && swipeAction != SwipeAction.SWIPE_DOWN){    //  we don't need to process for speed change when swipe down since preview will be shown
 
                 //  we don't have to show the preview and processing has to be done now
                 var outputName = "${File(processedVideoPath).nameWithoutExtension}_slow_mo"

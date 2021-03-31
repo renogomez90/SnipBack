@@ -194,8 +194,21 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                             }
                         }
                     } else if (abs(deltaY) > MIN_DISTANCE && abs(deltaY) > abs(deltaX)) {   // this is a swipe action and most likely in the y direction
-                        if (currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO ||
-                            currentOperation == CurrentOperation.CLIP_RECORDING) {
+                        if (currentOperation == CurrentOperation.CLIP_RECORDING) {
+                            if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.PORTRAIT) {
+                                if (point1.second < point2.second) {    //  Swipe down action
+                                    handleDownSwipe()
+                                } else {    //  Swipe up action
+                                    handleUpSwipe()
+                                }
+                            } else {
+                                if (point1.second > point2.second) {
+                                    handleDownSwipe()
+                                } else {    //  Swipe up action
+                                    handleUpSwipe()
+                                }
+                            }
+                        } else if (currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
                             if (previousOrientation == SimpleOrientationListener.VideoModeOrientation.PORTRAIT) {
                                 if (point1.second < point2.second) {    //  Swipe down action
                                     handleDownSwipe()
@@ -1373,8 +1386,15 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         ensureRecordingRestart()
                         trimOnSwipeDuringClipRecording(SwipeAction.SWIPE_DOWN)
 
-                        //  launch the quick edit fragment to handle down swipe
-                        (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null, QuickEditFragment.OperationMode.QB_PLUS), true)
+                        if(currentOperation != CurrentOperation.CLIP_RECORDING_SLOW_MO) {
+                            //  launch the quick edit fragment to handle down swipe
+                            (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(
+                                0,
+                                0,
+                                null,
+                                null,
+                                QuickEditFragment.OperationMode.QB_PLUS), true)
+                        }
                     }
                 }
             }
@@ -1462,10 +1482,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             VideoService.enqueueWork(requireContext(), intentService)
 
-            if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO && showHFPSPreview)
-                (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null), true)
+            if((currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO && showHFPSPreview) ||
+                (swipeAction == SwipeAction.SWIPE_DOWN && slowMoClicked)) {
+                (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null,
+                    null), true)
+            }
 
-            if(swipeAction == SwipeAction.SWIPE_DOWN){
+            if(swipeAction == SwipeAction.SWIPE_DOWN && !slowMoClicked){
                 //  launch the quick edit fragment to handle down swipe
                 (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null, QuickEditFragment.OperationMode.QB_PLUS), true)
             }
@@ -1557,7 +1580,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
             VideoService.enqueueWork(requireContext(), intentService)
 
-            if(swipeAction == SwipeAction.SWIPE_LEFT && slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
+            if(swipeAction == SwipeAction.SWIPE_LEFT && slowMoClicked && showHFPSPreview ||
+                    swipeAction == SwipeAction.SWIPE_DOWN && slowMoClicked){   //  if we need to show the slow mo preview
                 (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null, currentSpeed),
                     true)
             }
@@ -1575,8 +1599,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         } else { //  save what we have
             swipedFileNames.add(clip.nameWithoutExtension)
             AppClass.showInGallery.add(clip.nameWithoutExtension)
-            if(swipeAction == SwipeAction.SWIPE_LEFT) {  //  we only need to save the snip in DB for left swipe
-                if(currentOperation == CurrentOperation.CLIP_RECORDING) {
+            if(swipeAction == SwipeAction.SWIPE_LEFT ||
+                    (swipeAction == SwipeAction.SWIPE_DOWN && currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)) {
+
+                if(currentOperation == CurrentOperation.CLIP_RECORDING) {   //  we only need to save the snip in DB for left swipe
                     (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
                         actualClipTime,
                         actualClipTime)
@@ -1600,7 +1626,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     //  saving the clip itself as buffer since no buffer exists
                     bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
                 } else if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
-                    if(!showHFPSPreview) {
+                    if(!showHFPSPreview && swipeAction != SwipeAction.SWIPE_DOWN) {
                         val outputName = "${clip.nameWithoutExtension}_slow_mo"
                         val outputPath = "${paths.EXTERNAL_VIDEO_DIR}/$outputName.mp4"
                         val speedDetails = SpeedDetails(
@@ -1644,10 +1670,9 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null, null),
                             true)
                     }
-//                        bufferDetails.add(BufferDataDetails(outputPath, outputPath))
                 }
             }
-            if(swipeAction == SwipeAction.SWIPE_RIGHT || swipeAction == SwipeAction.SWIPE_DOWN) {
+            if(swipeAction == SwipeAction.SWIPE_RIGHT || (swipeAction == SwipeAction.SWIPE_DOWN && currentOperation != CurrentOperation.CLIP_RECORDING_SLOW_MO)) {
                 CoroutineScope(Main).launch{
 //                    videoProcessing(false)
                     takePhoto.isEnabled = true

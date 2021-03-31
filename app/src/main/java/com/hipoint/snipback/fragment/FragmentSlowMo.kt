@@ -143,12 +143,19 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 val msg  = intent.getStringExtra("log")
                 msg?.let { Log.d(TAG, "onReceive: $msg") }
                 if(!videoSaved) {
-                    bufferPath = intent.getStringExtra(EXTRA_BUFFER_PATH)
-                    videoPath  = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
-                    multiplier = intent.getIntExtra(EXTRA_INITIAL_MULTIPLIER, 3)
+                    val tmpBufferPath = intent.getStringExtra(EXTRA_BUFFER_PATH)
+                    val tmpVideoPath  = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
+                    val tmpMultiplier = intent.getIntExtra(EXTRA_INITIAL_MULTIPLIER, 1)
 
-                    hideProgress()
-                    setupPlayer()
+                    tmpVideoPath?.let { videoPath = it }
+                    tmpBufferPath?.let { bufferPath = it }
+                    if(tmpMultiplier != 1){
+                        multiplier = tmpMultiplier
+                    }
+                    if(videoPath != null) {
+                        hideProgress()
+                        setupPlayer()
+                    }
                 } else {
                     videoPath = intent.getStringExtra(EXTRA_RECEIVER_VIDEO_PATH)
                     hideProgress()
@@ -516,8 +523,8 @@ class FragmentSlowMo : Fragment(), ISaveListener {
                 tries++
                 if (videoPath.isNotNullOrEmpty() && tries < retries) {  //  retry in case of errors
                     CoroutineScope(Dispatchers.Main).launch {
-                        player!!.clearMediaItems()
-                        player!!.release()
+                        player?.clearMediaItems()
+                        player?.release()
                         player = null
                         Log.d(TAG, "TEST123onPlayerError: retrying = $tries")
                         delay(200)
@@ -596,27 +603,27 @@ class FragmentSlowMo : Fragment(), ISaveListener {
         return when (multiplier) {
             3 -> {
                 multiplier = 4
-                player?.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player?.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
                 "4X"
             }
             4 -> {
                 multiplier = 5
-                player?.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player?.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
                 "5X"
             }
             5 -> {
                 multiplier = 10
-                player?.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player?.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
                 "10X"
             }
             10 -> {
                 multiplier = 15
-                player?.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player?.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
                 "15X"
             }
             else -> {
                 multiplier = 3
-                player?.setPlaybackParameters(PlaybackParameters(1/multiplier.toFloat()))
+                player?.setPlaybackParameters(PlaybackParameters(1 / multiplier.toFloat()))
                 "3X"
             }
         }
