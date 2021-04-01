@@ -1,10 +1,8 @@
 package com.hipoint.snipback.fragment
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.media.MediaRecorder
 import android.os.Bundle
-import android.os.Environment
 import android.os.SystemClock
 import android.util.Log
 import android.view.LayoutInflater
@@ -17,15 +15,18 @@ import android.widget.Chronometer.OnChronometerTickListener
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
-import com.hipoint.snipback.ActivityPlayVideo
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
-import com.hipoint.snipback.Utils.CommonUtils
 import com.hipoint.snipback.Utils.SnipPaths
+import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.TagColours
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.newInstance
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.entities.Tags
+import com.hipoint.snipback.room.repository.AppRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -59,6 +60,9 @@ class CreateTag : Fragment() {
 
     private var savedAudioPath: String = ""
 
+    private val paths by lazy { SnipPaths(requireContext()) }
+    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -89,8 +93,6 @@ class CreateTag : Fragment() {
         edit         = rootView.findViewById(R.id.edit)
         mChronometer = rootView.findViewById(R.id.chronometer)
     }
-
-    private val paths by lazy { SnipPaths(requireContext()) }
 
     /**
      * binds listeners to views
@@ -198,14 +200,25 @@ class CreateTag : Fragment() {
      */
     private fun saveTag() {
 
-        val snipId = snip!!.snip_id
-        val audioPath = savedAudioPath
+        val snipId        = snip!!.snip_id
+        val audioPath     = savedAudioPath
         val audioPosition = posToChoose
-        val colourId = TagColours.NO_COLOR.ordinal
-        val shareLater = false
-        val exportLater = false
-        val textTag = tagText.text
+        val colourId      = TagColours.NO_COLOR.ordinal
+        val shareLater    = false
+        val linkLater     = false
+        val textTag       = tagText.text.toString()
 
+        val tag = Tags(
+            snipId        = snipId,
+            audioPath     = audioPath,
+            audioPosition = audioPosition,
+            colourId      = colourId,
+            shareLater    = shareLater,
+            linkLater     = linkLater,
+            textTag       = textTag
+        )
+
+        CoroutineScope(IO).launch { appRepository.insertTag(tag) }
     }
 
     /**

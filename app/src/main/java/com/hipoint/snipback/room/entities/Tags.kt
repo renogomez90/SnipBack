@@ -11,7 +11,7 @@ import kotlinx.parcelize.Parcelize
 data class Tags(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "tag_id")
-    val tagId        : Int,              //  ID of the entry
+    val tagId        : Int? = null,      //  ID of the entry
 
     @ColumnInfo(name = "snip_id")
     val snipId       : Int,              //  ID of the associated snip
@@ -28,8 +28,8 @@ data class Tags(
     @ColumnInfo(name = "share_later")
     val shareLater   : Boolean = false,  //  marked for share later
 
-    @ColumnInfo(name = "export_later")
-    val exportLater  : Boolean = false,  //  marked for export later
+    @ColumnInfo(name = "link_later")
+    val linkLater  : Boolean = false,    //  marked for export later
 
     @ColumnInfo(name = "text_tag")
     val textTag      : String            //  text tag entry

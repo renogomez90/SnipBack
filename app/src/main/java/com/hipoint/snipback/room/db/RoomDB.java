@@ -2,10 +2,13 @@ package com.hipoint.snipback.room.db;
 
 import android.content.Context;
 
+import androidx.annotation.NonNull;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
+import androidx.room.migration.Migration;
+import androidx.sqlite.db.SupportSQLiteDatabase;
 
 import com.hipoint.snipback.room.dao.EventDao;
 import com.hipoint.snipback.room.dao.Hd_snipsDao;
@@ -28,6 +31,7 @@ public abstract class RoomDB extends RoomDatabase {
             INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                     RoomDB.class, DB_NAME)
                     .fallbackToDestructiveMigration()
+                    .addMigrations(MIGRATION_1_2)
                     .setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build();
 
         }
@@ -41,5 +45,20 @@ public abstract class RoomDB extends RoomDatabase {
     public abstract SnipsDao snipsDao();
 
     public abstract TagDao tagDao();
+
+    static final Migration MIGRATION_1_2 = new Migration(1, 2) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE Tag (" +
+                    "tag_id INTEGER PRIMARY KEY, " +
+                    "snip_id INTEGER, " +
+                    "audio_path TEXT, " +
+                    "audio_position INTEGER, " +
+                    "tag_colour_id INTEGER, " +
+                    "share_later INTEGER, "+
+                    "link_later INTEGER, " +
+                    "text_tag TEXT)");
+        }
+    };
 
 }
