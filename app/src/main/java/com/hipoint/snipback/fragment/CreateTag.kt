@@ -1,6 +1,7 @@
 package com.hipoint.snipback.fragment
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.SystemClock
@@ -12,9 +13,11 @@ import android.view.View.OnTouchListener
 import android.view.ViewGroup
 import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
+import android.widget.CompoundButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.RecyclerView
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.SnipPaths
@@ -33,18 +36,27 @@ import java.util.concurrent.TimeUnit
 
 class CreateTag : Fragment() {
 
-    private lateinit var rootView    : View
-    private lateinit var edit        : ImageButton
-    private lateinit var mic         : ImageButton
-    private lateinit var tick        : ImageButton
-    private lateinit var delVoiceTag : ImageButton
-    private lateinit var afterBtn    : SwitchCompat
-    private lateinit var beforeBtn   : SwitchCompat
-    private lateinit var play        : CheckBox
-    private lateinit var tagText     : EditText
-    private lateinit var afterText   : TextView
-    private lateinit var beforeText  : TextView
-    private lateinit var mChronometer: Chronometer
+    private lateinit var rootView       : View
+    private lateinit var edit           : ImageButton
+    private lateinit var mic            : ImageButton
+    private lateinit var tick           : ImageButton
+    private lateinit var delVoiceTag    : ImageButton
+    private lateinit var afterBtn       : SwitchCompat
+    private lateinit var beforeBtn      : SwitchCompat
+    private lateinit var play           : CheckBox
+    private lateinit var tagText        : EditText
+    private lateinit var afterText      : TextView
+    private lateinit var beforeText     : TextView
+    private lateinit var mChronometer   : Chronometer
+    private lateinit var shareLater     : CheckBox
+    private lateinit var linkLater      : CheckBox
+    private lateinit var videoTag       : RecyclerView
+    private lateinit var colorOne       : CheckBox
+    private lateinit var colorTwo       : CheckBox
+    private lateinit var colorThree       : CheckBox
+    private lateinit var colorFour       : CheckBox
+    private lateinit var colorFive       : CheckBox
+
 
     private val currentFormat = 0
 
@@ -95,6 +107,16 @@ class CreateTag : Fragment() {
         delVoiceTag  = rootView.findViewById(R.id.del_voice_tag)
         edit         = rootView.findViewById(R.id.edit)
         mChronometer = rootView.findViewById(R.id.chronometer)
+        shareLater   = rootView.findViewById(R.id.share_later)
+        linkLater    = rootView.findViewById(R.id.link_later)
+        videoTag     = rootView.findViewById(R.id.videotag)
+        colorOne     = rootView.findViewById(R.id.color_one)
+        colorTwo     = rootView.findViewById(R.id.color_two)
+        colorThree     = rootView.findViewById(R.id.color_three)
+        colorFour     = rootView.findViewById(R.id.color_four)
+        colorFive     = rootView.findViewById(R.id.color_five)
+
+
     }
 
     /**
@@ -104,7 +126,7 @@ class CreateTag : Fragment() {
     private fun bindListeners() {
         afterBtn.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
-                if(beforeBtn.isChecked) //  this needs to be called before we set the new position
+                if (beforeBtn.isChecked) //  this needs to be called before we set the new position
                     beforeBtn.performClick()
 
                 afterText.setTextColor(ResourcesCompat.getColor(resources, R.color.red_tag, requireContext().theme))
@@ -118,7 +140,7 @@ class CreateTag : Fragment() {
 
         beforeBtn.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
             if (isChecked) {
-                if(afterBtn.isChecked)  //  this needs to be called before we set the new position
+                if (afterBtn.isChecked)  //  this needs to be called before we set the new position
                     afterBtn.performClick()
 
                 beforeText.setTextColor(resources.getColor(R.color.red_tag))
@@ -194,8 +216,34 @@ class CreateTag : Fragment() {
         //  todo: what is this for?
         edit.setOnClickListener(View.OnClickListener {
             (requireActivity() as AppMainActivity).loadFragment(
-                newInstance(snip, false), true)
+                    newInstance(snip, false), true)
         })
+
+        shareLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked) {
+                shareLater.setBackgroundResource(R.drawable.tag_bg_red)
+                shareLater.setTextColor(Color.WHITE)
+            } else {
+                shareLater.setBackgroundResource(R.drawable.tag_bg_white)
+                shareLater.setTextColor(Color.BLACK)
+
+            }
+        })
+
+        linkLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked) {
+                linkLater.setBackgroundResource(R.drawable.tag_bg_red)
+                linkLater.setTextColor(Color.WHITE)
+            } else {
+                linkLater.setBackgroundResource(R.drawable.tag_bg_white)
+                linkLater.setTextColor(Color.BLACK)
+
+            }
+        })
+
+        colorTwo.setOnClickListener{
+
+        }
     }
 
     /**
@@ -257,7 +305,7 @@ class CreateTag : Fragment() {
     }
 
     private val filename: String
-        get() {
+        private get() {
             val filepath = paths.INTERNAL_VIDEO_DIR
             val file = File(filepath, AUDIO_RECORDER_FOLDER)
             if (!file.exists()) {
