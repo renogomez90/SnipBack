@@ -22,8 +22,7 @@ import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.isPathInList
 import com.hipoint.snipback.application.AppClass
-import com.hipoint.snipback.application.AppClass.showInGallery
-import com.hipoint.snipback.application.AppClass.swipeProcessed
+import com.hipoint.snipback.application.AppClass.*
 import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
@@ -243,6 +242,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         fromOperation: CurrentOperation,
         swipeAction: SwipeAction
     ) {
+        //  if operation is in the ignore list, some thing else will handle the trim complete. Pass the details on
         if (VideoService.ignoreResultOf.isNotEmpty()) {
             if (VideoService.ignoreResultOf[0] == IVideoOpListener.VideoOp.TRIMMED) {
                 VideoService.ignoreResultOf.removeAt(0)
@@ -263,7 +263,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         }
 
         Log.d(TAG, "videoTrimCompleted $processedVideoPath Completed")
-        if (AppMainActivity.virtualToReal) {
+        if (AppMainActivity.virtualToReal) {    //  if a virtual video was made real
             AppMainActivity.virtualToReal = false
             val virtualToRealCompletedIntent = Intent(VideoEditingFragment.VIRTUAL_TO_REAL_ACTION)
             virtualToRealCompletedIntent.putExtra("video_path", processedVideoPath)
@@ -272,8 +272,14 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             if (fromOperation == CurrentOperation.VIDEO_EDITING)
                 return
 
+            // save the snip, if we are not coming from slow mo and the swipe action was not down
+            //  these cases will be handled in their corresponding fragments
             if(!isFromSlowNo(fromOperation) && swipeAction != SwipeAction.SWIPE_DOWN) {
                 CoroutineScope(Dispatchers.IO).launch {
+                    //  mark the video for tagging
+                    if(swipeAction == SwipeAction.SWIPE_UP){
+                        AppClass.tagRequired.add(processedVideoPath)
+                    }
                     val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                     addSnip(processedVideoPath, duration, duration, fromOperation)
                 }
@@ -620,6 +626,13 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 saveSnipToDB(parentSnip, hdSnips.video_path_processed)
                 getVideoThumbnail(snip, File(hdSnips.video_path_processed))
                 showInGallery.remove(File(snip.videoFilePath).nameWithoutExtension) // house keeping
+
+                //  if this file was marked for tagging broadcast the required details
+                if(tagRequired.contains(snip.videoFilePath)){
+                    val taggingIntent = Intent(VideoMode.TAG_ACTION)
+                    taggingIntent.putExtra("snip", snip)
+                    receivedContext?.sendBroadcast(taggingIntent)
+                }
             }
 
             if (parentChanged)   //  resetting the parent changed flag if it was set, since at this point it must have been consumed

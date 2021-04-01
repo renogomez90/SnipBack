@@ -48,9 +48,12 @@ class CreateTag : Fragment() {
 
     private val currentFormat = 0
 
-    private val output_formats =
-        intArrayOf(MediaRecorder.OutputFormat.MPEG_4, MediaRecorder.OutputFormat.THREE_GPP)
-    private val file_exts = arrayOf(AUDIO_RECORDER_FILE_EXT_MP4, AUDIO_RECORDER_FILE_EXT_3GP)
+    private val output_formats = intArrayOf(
+        MediaRecorder.OutputFormat.MPEG_4,
+        MediaRecorder.OutputFormat.THREE_GPP)
+    private val file_exts = arrayOf(
+        AUDIO_RECORDER_FILE_EXT_MP4,
+        AUDIO_RECORDER_FILE_EXT_3GP)
     private var snip: Snip? = null
     private var recorder: MediaRecorder? = null
 
@@ -254,7 +257,7 @@ class CreateTag : Fragment() {
     }
 
     private val filename: String
-        private get() {
+        get() {
             val filepath = paths.INTERNAL_VIDEO_DIR
             val file = File(filepath, AUDIO_RECORDER_FOLDER)
             if (!file.exists()) {

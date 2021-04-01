@@ -264,6 +264,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         const val SNAPBACK_ACTION        = "com.hipoint.snipback.SNAPBACK_ACTION"
         const val PENDING_SWIPE_ACTION   = "com.hipoint.snipback.PROCESS_SWIPE_ACTION"
         const val UI_UPDATE_ACTION       = "com.hipoint.snipback.UPDATE_UI"
+        const val TAG_ACTION             = "com.hipoint.snipback.TAGGING"
         const val PREF_LAST_REC_DURATION = "LAST_REC_DURATION"
         const val PREF_LAST_REC_PATH     = "LAST_USER_REC_PATH"
         const val PREF_SLOW_MO_SPEED     = "SLOW_MO_SPEED"
@@ -407,6 +408,19 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     val comingFrom = it.getSerializableExtra("comingFrom") as CurrentOperation
                     processPendingSwipes(processedVideoPath, comingFrom)
                 }*/
+            }
+        }
+    }
+
+    /**
+     * gets the intent for starting the tagging process
+     */
+    private val taggingInfoReceiver: BroadcastReceiver by lazy {
+        object : BroadcastReceiver(){
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let{
+                    (requireActivity() as AppMainActivity).loadFragment(CreateTag.newInstance(it.getParcelableExtra("snip")), true)
+                }
             }
         }
     }
@@ -760,10 +774,13 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         } else {
             slowMoPreview.alpha = 1F
         }
+
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(uiUpdateReceiver,
                 IntentFilter(UI_UPDATE_ACTION))
         LocalBroadcastManager.getInstance(requireContext()).registerReceiver(processSwipeReceiver,
                 IntentFilter(PENDING_SWIPE_ACTION))
+
+        requireActivity().registerReceiver(taggingInfoReceiver, IntentFilter(TAG_ACTION))
 //        videoProcessing(false)
     }
 
@@ -786,6 +803,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(uiUpdateReceiver)
         LocalBroadcastManager.getInstance(requireContext()).unregisterReceiver(processSwipeReceiver)
+        requireActivity().unregisterReceiver(taggingInfoReceiver)
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onPause()
     }
@@ -1405,7 +1423,24 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * handles up swipe functionality: Tagging
      */
     private fun handleUpSwipe() {
-        (requireActivity() as AppMainActivity).loadFragment(CreateTag.newInstance(null), true)
+        triggerLeftActionAnimation()
+        if (cameraControl!!.isRecordingClips() && (currentOperation == CurrentOperation.CLIP_RECORDING || currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)) {    //  if clips are being recorded
+            gallery.disable()
+            if (cameraControl!!.clipQueueSize() > 1) { // there is more than 1 items in the queue
+                if (concatOnSwipeDuringClipRecording(SwipeAction.SWIPE_UP)) {
+                    return
+                }
+            } else {    //  there is only  item in the queue
+                if (cameraControl!!.clipQueueSize() > 0) {
+                    CoroutineScope(Default).launch {
+                        ensureRecordingRestart()
+                        trimOnSwipeDuringClipRecording(SwipeAction.SWIPE_UP)
+                    }
+                }
+            }
+            gallery.enable()
+        }
+//        (requireActivity() as AppMainActivity).loadFragment(CreateTag.newInstance(null), true)
     }
 
     /**
@@ -1481,7 +1516,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, task)
             VideoService.enqueueWork(requireContext(), intentService)
 
-            if((currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO && showHFPSPreview) ||
+            if((currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO && showHFPSPreview) && swipeAction == SwipeAction.SWIPE_LEFT ||
                 (swipeAction == SwipeAction.SWIPE_DOWN && slowMoClicked)) {
                 (requireActivity() as AppMainActivity).loadFragment(FragmentSlowMo.newInstance(null,
                     null), true)
@@ -1550,7 +1585,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
             if (swipeAction == SwipeAction.SWIPE_LEFT && (!slowMoClicked ||    //  since we don't need the buffer for right swipe
                 (slowMoClicked && showHFPSPreview)) ||  //  if we are in slow mo mode and we need to see the preview, then buffer is required
-                    swipeAction == SwipeAction.SWIPE_DOWN) {    // if we are swiping down we need the buffer as well
+                    swipeAction == SwipeAction.SWIPE_DOWN ||
+                    swipeAction == SwipeAction.SWIPE_UP) {    // if we are swiping down we need the buffer as well
                 val bufferTask = VideoOpItem(
                         operation             = VideoOp.TRIMMED,
                         clips                 = arrayListOf(clip.absolutePath),
@@ -1599,6 +1635,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             swipedFileNames.add(clip.nameWithoutExtension)
             AppClass.showInGallery.add(clip.nameWithoutExtension)
             if(swipeAction == SwipeAction.SWIPE_LEFT ||
+                swipeAction == SwipeAction.SWIPE_UP ||
                     (swipeAction == SwipeAction.SWIPE_DOWN && currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)) {
 
                 if(currentOperation == CurrentOperation.CLIP_RECORDING) {   //  we only need to save the snip in DB for left swipe
@@ -1629,8 +1666,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         val outputName = "${clip.nameWithoutExtension}_slow_mo"
                         val outputPath = "${paths.EXTERNAL_VIDEO_DIR}/$outputName.mp4"
                         val speedDetails = SpeedDetails(
-                            isFast = false,
-                            multiplier = currentSpeed,
+                            isFast       = false,
+                            multiplier   = currentSpeed,
                             timeDuration = Pair(0L, actualClipTime * 1000L)
                         )
                         val videoTask = VideoOpItem(

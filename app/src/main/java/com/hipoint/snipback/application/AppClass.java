@@ -28,6 +28,7 @@ public class AppClass extends Application {
 
     public static boolean swipeProcessed = false;
     public static ArrayList<String> showInGallery = new ArrayList<>();    //  names of files that need to be displayed in the gallery
+    public static ArrayList<String> tagRequired = new ArrayList<>();    //  names of files that need to be displayed in the gallery
 
     public Event getLastCreatedEvent() {
         return lastCreatedEvent;
