@@ -209,6 +209,7 @@ class CreateTag : Fragment() {
         val textTag       = tagText.text.toString()
 
         val tag = Tags(
+
             snipId        = snipId,
             audioPath     = audioPath,
             audioPosition = audioPosition,

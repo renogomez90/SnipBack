@@ -1,6 +1,7 @@
 package com.hipoint.snipback.room.db;
 
 import android.content.Context;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.room.Database;
@@ -21,7 +22,7 @@ import com.hipoint.snipback.room.entities.Tags;
 
 @Database(entities = {Event.class, Hd_snips.class, Snip.class, Tags.class}, version = 2, exportSchema = false)
 public abstract class RoomDB extends RoomDatabase {
-
+    private static String TAG = RoomDB.class.getSimpleName();
     private static RoomDB INSTANCE;
     private final static String DB_NAME = "SnipbackDb";
 
@@ -30,8 +31,8 @@ public abstract class RoomDB extends RoomDatabase {
 
             INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                     RoomDB.class, DB_NAME)
-                    .fallbackToDestructiveMigration()
                     .addMigrations(MIGRATION_1_2)
+                    .fallbackToDestructiveMigration()
                     .setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build();
 
         }
@@ -49,15 +50,17 @@ public abstract class RoomDB extends RoomDatabase {
     static final Migration MIGRATION_1_2 = new Migration(1, 2) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
+            Log.d(TAG, "migrate: starting 1 to 2 migration");
+
             database.execSQL("CREATE TABLE Tag (" +
-                    "tag_id INTEGER PRIMARY KEY, " +
-                    "snip_id INTEGER, " +
-                    "audio_path TEXT, " +
-                    "audio_position INTEGER, " +
-                    "tag_colour_id INTEGER, " +
-                    "share_later INTEGER, "+
-                    "link_later INTEGER, " +
-                    "text_tag TEXT)");
+                    "tag_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "snip_id INTEGER DEFAULT 0 NOT NULL, " +
+                    "audio_path TEXT DEFAULT '' NOT NULL, " +
+                    "audio_position INTEGER DEFAULT 0 NOT NULL, " +
+                    "tag_colour_id INTEGER DEFAULT 0 NOT NULL, " +
+                    "share_later INTEGER DEFAULT 0 NOT NULL, "+
+                    "link_later INTEGER DEFAULT 0 NOT NULL, " +
+                    "text_tag TEXT DEFAULT '' NOT NULL)");
         }
     };
 
