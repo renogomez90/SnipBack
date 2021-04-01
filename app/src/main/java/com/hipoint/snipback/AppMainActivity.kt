@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.os.Build
@@ -14,7 +13,6 @@ import android.util.Log
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.Window
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -45,30 +43,29 @@ import java.io.FileOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 import kotlin.math.floor
 
 
 class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
-    AppRepository.OnTaskCompleted, IReplaceRequired {
+        AppRepository.OnTaskCompleted, IReplaceRequired {
     var PERMISSION_ALL = 1
     var PERMISSIONS = arrayOf(
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        Manifest.permission.INTERNET
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.INTERNET
     )
 
     //    private static String VIDEO_DIRECTORY_NAME = "SnipBackVirtual";
     //    private static String THUMBS_DIRECTORY_NAME = "Thumbs";
     private val TAG = AppMainActivity::class.java.simpleName
 
-    private val VIDEO_DIRECTORY_NAME  = "SnipBackVirtual"
+    private val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
     private val THUMBS_DIRECTORY_NAME = "Thumbs"
 
     private var onTouchListeners: MutableList<MyOnTouchListener>? = null
-    private var appViewModel    : AppViewModel?                   = null
-    private var addedToSnip     : ArrayList<String>               = arrayListOf()
+    private var appViewModel: AppViewModel? = null
+    private var addedToSnip: ArrayList<String> = arrayListOf()
 
     private lateinit var galleryLoader: ProgressBar
 
@@ -85,18 +82,18 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-
-        window.decorView.systemUiVisibility = flags
-        val decorView = window.decorView
-        decorView.setOnSystemUiVisibilityChangeListener { visibility ->
-            if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
-                decorView.systemUiVisibility = flags
-            }
-        }
+//        val flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+//                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+//                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+//                View.SYSTEM_UI_FLAG_FULLSCREEN or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+//
+//        window.decorView.systemUiVisibility = flags
+//        val decorView = window.decorView
+//        decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+//            if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+//                decorView.systemUiVisibility = flags
+//            }
+//        }
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
 
@@ -115,7 +112,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
 //        appViewModel.loadGalleryDataFromDB(this);
 
-        if(supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
+        if (supportFragmentManager.findFragmentByTag(VIDEO_MODE_TAG) == null) {
             loadFragment(videoModeFragment, true)
         }
         /*
@@ -141,36 +138,49 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 //        unregisterReceiver(videoOperationReceiver)
         super.onPause()
     }
-    override fun onWindowFocusChanged(hasFocus: Boolean) {
-        super.onWindowFocusChanged(hasFocus)
-        hideSystemUI(window)
+
+//    override fun onWindowFocusChanged(hasFocus: Boolean) {
+//        super.onWindowFocusChanged(hasFocus)
+//    }
+//    override fun onConfigurationChanged(newConfig: Configuration) {
+//        super.onConfigurationChanged(newConfig)
+//    }
+
+     fun showSystemUI1() {
+        val decorView: View = window.decorView
+        val uiOptions = decorView.systemUiVisibility
+        var newUiOptions = uiOptions
+        newUiOptions = newUiOptions and View.SYSTEM_UI_FLAG_LOW_PROFILE.inv()
+        newUiOptions = newUiOptions and View.SYSTEM_UI_FLAG_FULLSCREEN.inv()
+        newUiOptions = newUiOptions and View.SYSTEM_UI_FLAG_HIDE_NAVIGATION.inv()
+        newUiOptions = newUiOptions and View.SYSTEM_UI_FLAG_IMMERSIVE.inv()
+        newUiOptions = newUiOptions and View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY.inv()
+        decorView.systemUiVisibility = newUiOptions
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        hideSystemUI(window)
-
+     fun hideSystemUI1() {
+        val decorView: View = window.decorView
+        val uiOptions = decorView.systemUiVisibility
+        var newUiOptions = uiOptions
+        newUiOptions = newUiOptions or View.SYSTEM_UI_FLAG_LOW_PROFILE
+        newUiOptions = newUiOptions or View.SYSTEM_UI_FLAG_FULLSCREEN
+        newUiOptions = newUiOptions or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+        newUiOptions = newUiOptions or View.SYSTEM_UI_FLAG_IMMERSIVE
+        newUiOptions = newUiOptions or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        decorView.systemUiVisibility = newUiOptions
     }
 
-    private fun hideSystemUI(window: Window) {
-        window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                or View.SYSTEM_UI_FLAG_LOW_PROFILE
-                or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION)
-    }
-    public fun hideOrShowProgress(visible: Boolean){
-        if (visible){
-            galleryLoader.visibility=View.GONE
-        } else{
-            galleryLoader.visibility=View.VISIBLE
+    fun hideOrShowProgress(visible: Boolean) {
+        if (visible) {
+            galleryLoader.visibility = View.GONE
+        } else {
+            galleryLoader.visibility = View.VISIBLE
         }
     }
 
     override fun onDestroy() {
 
-        if(isFinishing) {   // to be called only when activity is actually being terminated and not just configuration change
+        if (isFinishing) {   // to be called only when activity is actually being terminated and not just configuration change
             if (!isFragmentVisible(SNAPBACK_VIDEO_TAG) && !isFragmentVisible(SLOW_MO_TAG)) {    //  don't trigger video file clean up since it may be in use in snapback fragment
                 //  so that clutter is removed
                 val cleanupIntent = Intent(this, CleanupService::class.java)
@@ -238,17 +248,17 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             R.anim.slide_out_left_to_right,
             R.anim.slide_in_right_to_left,
             R.anim.slide_out_right_to_left)*/
-        if(tag == GALLERY_FRAGMENT_TAG){
+        if (tag == GALLERY_FRAGMENT_TAG) {
             fragment.apply {
                 enterTransition = Slide(Gravity.END)
                 exitTransition = Slide(Gravity.START)
             }
-        }else {
+        } else {
             ft.setCustomAnimations(
-                R.anim.slide_in_left_to_right,
-                R.anim.slide_out_left_to_right,
-                R.anim.slide_in_right_to_left,
-                R.anim.slide_out_right_to_left)
+                    R.anim.slide_in_left_to_right,
+                    R.anim.slide_out_left_to_right,
+                    R.anim.slide_in_right_to_left,
+                    R.anim.slide_out_right_to_left)
         }
 
         //  don't add is already present
@@ -284,8 +294,8 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
         Log.d(TAG, "onBackPressed: stack count $count")
         for (entry in 0 until count)
             Log.d(
-                TAG,
-                "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}"
+                    TAG,
+                    "onBackPressed: stack item: ${supportFragmentManager.getBackStackEntryAt(entry)}"
             )
 
         if (videoModeFragment.isVisible || count == 1) {    //  we are at the first fragment when back was pressed. we can exit
@@ -296,26 +306,26 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             super.onBackPressed()
         } else {
             val playVideoFragment =
-                supportFragmentManager.findFragmentByTag(PLAY_VIDEO_TAG) as? FragmentPlayVideo2
+                    supportFragmentManager.findFragmentByTag(PLAY_VIDEO_TAG) as? FragmentPlayVideo2
             val slowMoFragment =
-                supportFragmentManager.findFragmentByTag(SLOW_MO_TAG) as? FragmentSlowMo
+                    supportFragmentManager.findFragmentByTag(SLOW_MO_TAG) as? FragmentSlowMo
             val editFrag =
-                supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
+                    supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
             val snapbackFragment =
-                supportFragmentManager.findFragmentByTag(SNAPBACK_VIDEO_TAG) as? SnapbackFragment
+                    supportFragmentManager.findFragmentByTag(SNAPBACK_VIDEO_TAG) as? SnapbackFragment
             val gallery =
-                supportFragmentManager.findFragmentByTag(GALLERY_FRAGMENT_TAG) as? FragmentGalleryNew
+                    supportFragmentManager.findFragmentByTag(GALLERY_FRAGMENT_TAG) as? FragmentGalleryNew
 
-            if(gallery != null && gallery.isVisible){
+            if (gallery != null && gallery.isVisible) {
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
                 supportFragmentManager.popBackStack()
-            }else if (editFrag != null && editFrag.isVisible) {
+            } else if (editFrag != null && editFrag.isVisible) {
                 editFrag.confirmExitOnBackPressed()
             } else if (snapbackFragment != null && snapbackFragment.isVisible) {
                 snapbackFragment.showSaveDialog()
-            } else if (slowMoFragment != null && slowMoFragment.isVisible){
+            } else if (slowMoFragment != null && slowMoFragment.isVisible) {
                 slowMoFragment.showSaveDialog()
-            } else if (playVideoFragment != null && playVideoFragment.isVisible && slowMoFragment != null){
+            } else if (playVideoFragment != null && playVideoFragment.isVisible && slowMoFragment != null) {
                 supportFragmentManager.popBackStack(SLOW_MO_TAG, FragmentManager.POP_BACK_STACK_INCLUSIVE)
             } else {
                 supportFragmentManager.popBackStack()
@@ -341,20 +351,20 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
         //  edit file replacement
         internal var fileToReplace: String? = null
-        internal var replacedWith : String? = null
-        internal var parentSnip   : Snip?   = null
-        internal var doReplace    : Boolean = false
+        internal var replacedWith: String? = null
+        internal var parentSnip: Snip? = null
+        internal var doReplace: Boolean = false
         internal var parentChanged: Boolean = false
         internal var virtualToReal: Boolean = false //  set this to true before trimming, so that additional operations may be applied on the new video eg. speed change
 
-        const val SLOW_MO_TAG          = "slow_mo_frag"
-        const val VIDEO_MODE_TAG       = "videoMode"
+        const val SLOW_MO_TAG = "slow_mo_frag"
+        const val VIDEO_MODE_TAG = "videoMode"
         const val GALLERY_FRAGMENT_TAG = "gallery_frag"
-        const val PLAY_VIDEO_TAG       = "play_frag"
-        const val PLAY_SNAPBACK_TAG    = "play_snapback_frag"
-        const val EDIT_VIDEO_TAG       = "edit_frag"
-        const val QUICK_EDIT_TAG       = "quick_edit_frag"
-        const val SNAPBACK_VIDEO_TAG   = "snapback_frag"
+        const val PLAY_VIDEO_TAG = "play_frag"
+        const val PLAY_SNAPBACK_TAG = "play_snapback_frag"
+        const val EDIT_VIDEO_TAG = "edit_frag"
+        const val QUICK_EDIT_TAG = "quick_edit_frag"
+        const val SNAPBACK_VIDEO_TAG = "snapback_frag"
 
         private val videoModeFragment: VideoMode by lazy { VideoMode.newInstance() }
 
@@ -362,9 +372,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             if (context != null) {
                 for (permission in permissions) {
                     if (ActivityCompat.checkSelfPermission(
-                            context,
-                            permission!!
-                        ) != PackageManager.PERMISSION_GRANTED
+                                    context,
+                                    permission!!
+                            ) != PackageManager.PERMISSION_GRANTED
                     ) {
                         return false
                     }
@@ -407,9 +417,9 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             is_virtual_version = 0
             parent_snip_id = if (parentSnip != null) {
                 if (File(snipFilePath).nameWithoutExtension.contains(File(parentSnip!!.videoFilePath).nameWithoutExtension) &&
-                    isFragmentVisible(VIDEO_MODE_TAG) ||    //  while in videoMode check with file names for parent
-                    isFragmentVisible(EDIT_VIDEO_TAG) ||
-                    parentChanged
+                        isFragmentVisible(VIDEO_MODE_TAG) ||    //  while in videoMode check with file names for parent
+                        isFragmentVisible(EDIT_VIDEO_TAG) ||
+                        parentChanged
                 ) {    //  while in editMode check is parentSnip was already set
                     parentSnip?.snip_id!!
                 } else 0
@@ -458,7 +468,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             hdSnips.video_path_processed = snip.videoFilePath
             hdSnips.snip_id = snip.snip_id
             if (!File(snip.videoFilePath).name.contains("-") && !parentChanged ||
-                VideoMode.getSwipedRecording().originalFilePath!!.contains(snip.videoFilePath)
+                    VideoMode.getSwipedRecording().originalFilePath!!.contains(snip.videoFilePath)
             ) { //  files names with - are edited from original todo: This is a mess
                 parentSnip = snip
             }
@@ -475,11 +485,11 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 
             //  restart the video playback fragment with the modified video, if we have just arrived here from saving the edit
             val editFrag =
-                supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
+                    supportFragmentManager.findFragmentByTag(EDIT_VIDEO_TAG) as? VideoEditingFragment
 
             if (editFrag != null &&
-                editFrag.isVisible &&
-                VideoEditingFragment.saveAction != VideoEditingFragment.SaveActionType.CANCEL
+                    editFrag.isVisible &&
+                    VideoEditingFragment.saveAction != VideoEditingFragment.SaveActionType.CANCEL
             )
                 dismissEditFragmentProcessingDialog(snip.videoFilePath)
 
@@ -563,26 +573,26 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
 //            File mediaStorageDir = new File(Environment.getExternalStorageDirectory(),
 //                    VIDEO_DIRECTORY_NAME);
             val thumbsStorageDir = File(
-                "$dataDir/$VIDEO_DIRECTORY_NAME",
-                THUMBS_DIRECTORY_NAME
+                    "$dataDir/$VIDEO_DIRECTORY_NAME",
+                    THUMBS_DIRECTORY_NAME
             )
             if (!thumbsStorageDir.exists()) {
                 if (!thumbsStorageDir.mkdirs()) {
                     Log.d(
-                        TAG, "Oops! Failed create "
-                                + VIDEO_DIRECTORY_NAME + " directory"
+                            TAG, "Oops! Failed create "
+                            + VIDEO_DIRECTORY_NAME + " directory"
                     )
                     return
                 }
             }
             val fullThumbPath: File
             fullThumbPath = File(
-                thumbsStorageDir.path + File.separator
-                        + "snip_" + snip!!.snip_id + ".png"
+                    thumbsStorageDir.path + File.separator
+                            + "snip_" + snip!!.snip_id + ".png"
             )
             Log.d(
-                TAG,
-                "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.absolutePath
+                    TAG,
+                    "saving video thumbnail at path: " + fullThumbPath + ", video path: " + videoFile.absolutePath
             )
             //Save the thumbnail in a PNG compressed format, and close everything. If something fails, return null
             val streamThumbnail = FileOutputStream(fullThumbPath)
@@ -595,13 +605,13 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
                 thumb = if (snip.is_virtual_version != 0) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                         retriever.getScaledFrameAtTime(
-                            snip.start_time.toInt() * 1000000.toLong(),
-                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100
+                                snip.start_time.toInt() * 1000000.toLong(),
+                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC, 100, 100
                         )
                     } else {
                         retriever.getFrameAtTime(
-                            snip.start_time.toInt() * 1000000.toLong(),
-                            MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                                snip.start_time.toInt() * 1000000.toLong(),
+                                MediaMetadataRetriever.OPTION_CLOSEST_SYNC
                         )
                     }
                 } else {
@@ -694,7 +704,7 @@ class AppMainActivity : AppCompatActivity(), VideoMode.OnTaskCompleted,
             try {
                 retriever.setDataSource(it)
                 duration =
-                    floor(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toFloat() / 1000).toInt()
+                        floor(retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toFloat() / 1000).toInt()
 
                 durationList.add(duration)
             } catch (e: IllegalArgumentException) {

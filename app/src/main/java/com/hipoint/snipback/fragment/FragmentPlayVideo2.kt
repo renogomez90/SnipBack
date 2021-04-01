@@ -163,6 +163,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        (requireActivity() as AppMainActivity).hideToolBr()
         savedInstanceState?.let {
             seekToPoint = it.getLong("KEY_PLAYER_POSITION")
             whenReady = it.getBoolean("KEY_PLAYER_PLAY_WHEN_READY")
@@ -172,6 +173,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        (requireActivity() as AppMainActivity).hideToolBr()
         postponeEnterTransition()
         rootView      = inflater.inflate(R.layout.layout_play_video, container, false)
         appRepository = AppRepository(requireActivity().applicationContext)
@@ -213,7 +215,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         seekToPoint = 0
         whenReady=false
         requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
+//        (requireActivity() as AppMainActivity).showSystemUI1()
         super.onDestroy()
 
     }

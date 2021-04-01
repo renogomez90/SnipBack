@@ -19,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.exozet.android.core.extensions.hideSystemUI
 import com.hipoint.snipback.ActivityPlayVideo
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
@@ -102,12 +103,26 @@ class FragmentGalleryNew : Fragment() {
         }
     }
 
+    /**
+     * Called when the fragment is no longer in use.  This is called
+     * after [.onStop] and before [.onDetach].
+     */
+    override fun onDestroy() {
+        super.onDestroy()
+        (requireActivity() as AppMainActivity).showSystemUI1()
+
+    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        (requireActivity() as AppMainActivity).hideSystemUI1()
+    }
     override fun onCreateView(
             inflater: LayoutInflater,
             container: ViewGroup?,
             savedInstanceState: Bundle?,
     ): View? {
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        (requireActivity() as AppMainActivity).hideSystemUI1()
+                requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         postponeEnterTransition()
         rootView       = inflater.inflate(R.layout.fragment_gallery_new, container, false)
         retainInstance = true
