@@ -44,6 +44,7 @@ import com.hipoint.snipback.Utils.BufferDataDetails
 import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.SimpleOrientationListener
 import com.hipoint.snipback.application.AppClass
+import com.hipoint.snipback.application.AppClass.showInGallery
 import com.hipoint.snipback.application.AppClass.swipeProcessed
 import com.hipoint.snipback.control.CameraControl
 import com.hipoint.snipback.dialog.ProcessingDialog
@@ -1659,6 +1660,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         taskList)
                     VideoService.enqueueWork(requireContext(), intentService)
 
+                    if(swipeAction == SwipeAction.SWIPE_UP)
+                        showInGallery.add(clip.nameWithoutExtension)
                     //  saving the clip itself as buffer since no buffer exists
                     bufferDetails.add(BufferDataDetails(clip.absolutePath, clip.absolutePath))
                 } else if(currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO){
