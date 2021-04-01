@@ -510,33 +510,41 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             }
         }
 
-        if(isFromSlowNo(comingFrom)) {
+        when {
+            isFromSlowNo(comingFrom) -> {
 
-            val multiplier = pref.getInt(PREF_SLOW_MO_SPEED, 3)
-            val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
-            with(intent) {
-                putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
-                putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, multiplier)
-                putExtra("log", "frames added")
+                val multiplier = pref.getInt(PREF_SLOW_MO_SPEED, 3)
+                val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
+                with(intent) {
+                    putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
+                    putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, multiplier)
+                    putExtra("log", "frames added")
+                }
+                receivedContext?.sendBroadcast(intent)
+
             }
-            receivedContext?.sendBroadcast(intent)
+            swipeAction == SwipeAction.SWIPE_RIGHT -> {
 
-        } else if(swipeAction == SwipeAction.SWIPE_RIGHT) {
+                val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
+                snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.KEY_FRAMES.name)
+                snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
+                receivedContext?.sendBroadcast(snapbackCompleteReceiver)
 
-            val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
-            snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.KEY_FRAMES.name)
-            snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
-            receivedContext?.sendBroadcast(snapbackCompleteReceiver)
+            }
+            swipeAction == SwipeAction.SWIPE_DOWN -> {
 
-        } else if (swipeAction == SwipeAction.SWIPE_DOWN){
-
-            val sendVideoToQuickEditIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
-            sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_BUFFER_PATH,
-                processedVideoPath)
-            sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_VIDEO_PATH,
-                processedVideoPath)
-            receivedContext?.sendBroadcast(sendVideoToQuickEditIntent)
-
+                val sendVideoToQuickEditIntent = Intent(VideoEditingFragment.DISMISS_ACTION)
+                sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_BUFFER_PATH,
+                    processedVideoPath)
+                sendVideoToQuickEditIntent.putExtra(QuickEditFragment.EXTRA_VIDEO_PATH,
+                    processedVideoPath)
+                receivedContext?.sendBroadcast(sendVideoToQuickEditIntent)
+            }
+            swipeAction == SwipeAction.SWIPE_UP -> {
+                tagRequired.add(processedVideoPath)
+                val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+                addSnip(processedVideoPath, duration, duration, comingFrom)
+            }
         }
     }
 
@@ -620,7 +628,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             }
             Log.d(TAG, "onTaskCompleted: ${parentSnip?.snip_id}")
             Log.d(TAG,
-                "onTaskCompleted: showInGallery at DB entry = ${showInGallery.toString()}")
+                "onTaskCompleted: showInGallery at DB entry = $showInGallery")
             if (showInGallery.isPathInList(snip.videoFilePath)) {
                 appRepository.insertHd_snips(hdSnips)
                 saveSnipToDB(parentSnip, hdSnips.video_path_processed)
@@ -867,7 +875,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                     val buffFileName = "${paths.INTERNAL_VIDEO_DIR}/buff-${File(originalVideo).nameWithoutExtension}-$index.mp4"
                     val outputFileName = "${paths.EXTERNAL_VIDEO_DIR}/${File(originalVideo).nameWithoutExtension}-$index.mp4"
 
-                    AppClass.showInGallery.add(File(outputFileName).nameWithoutExtension)
+                    showInGallery.add(File(outputFileName).nameWithoutExtension)
                     Log.d(TAG,
                         "processPendingSwipes: \n Output = $outputFileName, \n start = ${(timeStamp - (swipeValue / 1000)).toInt()} \n end = $timeStamp")
 
@@ -976,7 +984,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
             VideoService.enqueueWork(receivedContext!!, intentService)
 
-            AppClass.showInGallery.add(File(videoFilePath).nameWithoutExtension)
+            showInGallery.add(File(videoFilePath).nameWithoutExtension)
         }
 
     }
@@ -991,7 +999,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         fromOperation in arrayOf(CurrentOperation.VIDEO_RECORDING_SLOW_MO,
             CurrentOperation.CLIP_RECORDING_SLOW_MO)
 
-    public fun isForegrounded(): Boolean {
+    fun isForegrounded(): Boolean {
         val appProcessInfo = ActivityManager.RunningAppProcessInfo()
         ActivityManager.getMyMemoryState(appProcessInfo)
         return (appProcessInfo.importance == IMPORTANCE_FOREGROUND || appProcessInfo.importance == IMPORTANCE_VISIBLE)

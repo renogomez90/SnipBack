@@ -36,26 +36,26 @@ import java.util.concurrent.TimeUnit
 
 class CreateTag : Fragment() {
 
-    private lateinit var rootView       : View
-    private lateinit var edit           : ImageButton
-    private lateinit var mic            : ImageButton
-    private lateinit var tick           : ImageButton
-    private lateinit var delVoiceTag    : ImageButton
-    private lateinit var afterBtn       : SwitchCompat
-    private lateinit var beforeBtn      : SwitchCompat
-    private lateinit var play           : CheckBox
-    private lateinit var tagText        : EditText
-    private lateinit var afterText      : TextView
-    private lateinit var beforeText     : TextView
-    private lateinit var mChronometer   : Chronometer
-    private lateinit var shareLater     : CheckBox
-    private lateinit var linkLater      : CheckBox
-    private lateinit var videoTag       : RecyclerView
-    private lateinit var colorOne       : CheckBox
-    private lateinit var colorTwo       : CheckBox
-    private lateinit var colorThree       : CheckBox
-    private lateinit var colorFour       : CheckBox
-    private lateinit var colorFive       : CheckBox
+    private lateinit var rootView    : View
+    private lateinit var edit        : ImageButton
+    private lateinit var mic         : ImageButton
+    private lateinit var tick        : ImageButton
+    private lateinit var delVoiceTag : ImageButton
+    private lateinit var afterBtn    : SwitchCompat
+    private lateinit var beforeBtn   : SwitchCompat
+    private lateinit var play        : CheckBox
+    private lateinit var tagText     : EditText
+    private lateinit var afterText   : TextView
+    private lateinit var beforeText  : TextView
+    private lateinit var mChronometer: Chronometer
+    private lateinit var shareLater  : CheckBox
+    private lateinit var linkLater   : CheckBox
+    private lateinit var videoTag    : RecyclerView
+    private lateinit var colorOne    : CheckBox
+    private lateinit var colorTwo    : CheckBox
+    private lateinit var colorThree  : CheckBox
+    private lateinit var colorFour   : CheckBox
+    private lateinit var colorFive   : CheckBox
 
 
     private val currentFormat = 0
@@ -112,9 +112,9 @@ class CreateTag : Fragment() {
         videoTag     = rootView.findViewById(R.id.videotag)
         colorOne     = rootView.findViewById(R.id.color_one)
         colorTwo     = rootView.findViewById(R.id.color_two)
-        colorThree     = rootView.findViewById(R.id.color_three)
-        colorFour     = rootView.findViewById(R.id.color_four)
-        colorFive     = rootView.findViewById(R.id.color_five)
+        colorThree   = rootView.findViewById(R.id.color_three)
+        colorFour    = rootView.findViewById(R.id.color_four)
+        colorFive    = rootView.findViewById(R.id.color_five)
 
 
     }
