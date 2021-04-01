@@ -473,7 +473,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        (requireActivity() as AppMainActivity).hideToolBr()
+        (requireActivity() as AppMainActivity).hideSystemUI1()
         requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         if (savedInstanceState != null) {
             restoreFromBundle(savedInstanceState)
@@ -485,7 +485,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             container: ViewGroup?,
             savedInstanceState: Bundle?,
     ): View? {
-        (requireActivity() as AppMainActivity).hideToolBr()
+        (requireActivity() as AppMainActivity).hideSystemUI1()
         rootView = inflater.inflate(R.layout.video_editing_fragment_main2, container, false)
         snip = requireArguments().getParcelable("snip")
         thumbnailExtractionStarted = requireArguments().getBoolean("thumbnailExtractionStarted")
@@ -1041,7 +1041,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
         }
 
         back.setOnClickListener {
-            (requireActivity() as AppMainActivity).hideToolBr()
+            (requireActivity() as AppMainActivity).hideSystemUI1()
             confirmExitOnBackPressed()
         }
 
