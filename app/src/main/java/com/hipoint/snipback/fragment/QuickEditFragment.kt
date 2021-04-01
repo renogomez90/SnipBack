@@ -32,7 +32,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
-import com.hipoint.snipback.Utils.Constants
+import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
@@ -129,7 +129,7 @@ class QuickEditFragment : Fragment() {
 
     private var timestamp: String? = null
 
-    private val paths by lazy { Constants(requireContext()) }
+    private val paths by lazy { SnipPaths(requireContext()) }
     private val trimSegment: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
     private val bufferOverlay: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
 

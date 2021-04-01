@@ -37,7 +37,6 @@ import android.widget.VideoView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelProviders;
 
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.Utils.TrimmerUtils;
@@ -861,11 +860,11 @@ public class ActivityPlayVideo extends Swipper {
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.MATCH_PARENT;
 
-        TextView after = dialog.findViewById(R.id.after);
-        TextView before = dialog.findViewById(R.id.before);
-        Switch img3 = dialog.findViewById(R.id.img3);
-        Switch img4 = dialog.findViewById(R.id.img4);
-        ImageView play = dialog.findViewById(R.id.img1);
+        TextView after = dialog.findViewById(R.id.after_text);
+        TextView before = dialog.findViewById(R.id.before_text);
+        Switch img3 = dialog.findViewById(R.id.after_switch);
+        Switch img4 = dialog.findViewById(R.id.before_switch);
+        ImageView play = dialog.findViewById(R.id.play_pause_btn);
         ImageButton tick = dialog.findViewById(R.id.tick);
         ImageButton mic = dialog.findViewById(R.id.mic);
         ImageButton edit = dialog.findViewById(R.id.edit);

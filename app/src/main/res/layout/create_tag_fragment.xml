@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent">
+    android:background="@color/blackOverlay">
 
     <TextView
         android:id="@+id/create_tag_tv"
@@ -30,7 +30,7 @@
         android:textSize="15sp" />
 
     <EditText
-        android:id="@+id/ed_1"
+        android:id="@+id/tag_text"
         android:layout_width="242dp"
         android:layout_height="37dp"
         android:layout_below="@id/tv"
@@ -47,7 +47,7 @@
         android:id="@+id/videotag"
         android:layout_width="102dp"
         android:layout_height="34dp"
-        android:layout_below="@id/ed_1"
+        android:layout_below="@id/tag_text"
         android:layout_marginStart="37dp"
         android:layout_marginTop="14dp"
         android:background="@drawable/tag_background"
@@ -137,9 +137,9 @@
         android:background="@drawable/rec_button"
         app:srcCompat="@drawable/ic_microphone_1" />
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/sub_cont"
-        android:layout_width="222dp"
+        android:layout_width="wrap_content"
         android:layout_height="63dp"
         android:layout_below="@id/tv_audio"
         android:layout_marginStart="14dp"
@@ -147,68 +147,95 @@
         android:layout_toEndOf="@id/mic"
         android:background="@drawable/tag_background">
 
-        <ImageView
-            android:contentDescription="@string/no_desc"
-            android:id="@+id/img1"
+        <CheckBox
+            android:id="@+id/play_pause_btn"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginTop="14dp"
-            android:src="@drawable/ic_play" />
-
-        <ImageView
+            android:layout_marginStart="32dp"
+            android:button="@drawable/play_pause_switch"
             android:contentDescription="@string/no_desc"
-            android:id="@+id/img2"
+            app:layout_constraintBottom_toBottomOf="@+id/del_voice_tag"
+            app:layout_constraintEnd_toStartOf="@+id/del_voice_tag"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/del_voice_tag" />
+
+        <ImageButton
+            android:id="@+id/del_voice_tag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="14dp"
-            android:src="@drawable/ic_del" />
+            android:contentDescription="@string/no_desc"
+            android:background="@android:color/transparent"
+            android:src="@drawable/ic_del"
+            app:layout_constraintBottom_toBottomOf="@+id/after_holder"
+            app:layout_constraintEnd_toStartOf="@+id/after_holder"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/play_pause_btn"
+            app:layout_constraintTop_toTopOf="@+id/after_holder" />
 
-        <Switch
-            android:id="@+id/img3"
+        <LinearLayout
+            android:id="@+id/after_holder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="14dp"
-            android:layout_toEndOf="@id/img2"
-            android:background="@null"
-            android:button="@drawable/after_toggle"
-            android:thumb="@null"
-            app:track="@null" />
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            app:layout_constraintBottom_toBottomOf="@+id/before_holder"
+            app:layout_constraintEnd_toStartOf="@+id/before_holder"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/del_voice_tag"
+            app:layout_constraintTop_toTopOf="@+id/before_holder">
 
-        <TextView
-            android:id="@+id/after"
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/after_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:background="@null"
+                android:button="@drawable/after_toggle"
+                android:thumb="@null"
+                app:track="@null" />
+
+            <TextView
+                android:id="@+id/after_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="After"
+                android:textColor="@color/colorWhite" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/before_holder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:orientation="vertical"
             android:layout_marginStart="32dp"
-            android:layout_marginTop="38dp"
-            android:layout_toEndOf="@id/img2"
-            android:text="After"
-            android:textColor="@color/colorWhite" />
+            android:layout_marginEnd="32dp"
+            android:gravity="center_horizontal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/after_holder"
+            app:layout_constraintBottom_toBottomOf="parent">
 
-        <Switch
-            android:id="@+id/img4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="14dp"
-            android:layout_toEndOf="@id/img3"
-            android:thumb="@null"
-            app:track="@null"
-            android:button="@drawable/before_toggle" />
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/before_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:button="@drawable/before_toggle"
+                android:thumb="@null"
+                app:track="@null" />
 
-        <TextView
-            android:id="@+id/before"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="28dp"
-            android:layout_marginTop="38dp"
-            android:layout_toEndOf="@id/img3"
-            android:text="Before"
-            android:textColor="@color/colorWhite" />
-
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/before_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Before"
+                android:textColor="@color/colorWhite" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
     <TextView
@@ -231,11 +258,12 @@
         android:layout_marginTop="12dp"
         android:gravity="center">
 
-        <TextView
+        <CheckBox
             android:id="@+id/color_one"
             android:layout_width="39dp"
             android:layout_height="39dp"
             android:layout_marginTop="12dp"
+            android:button="@drawable/colour_filter_drawable"
             android:background="@drawable/filtercolor_one" />
 
         <TextView

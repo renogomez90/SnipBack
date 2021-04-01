@@ -41,7 +41,7 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.SwipedRecording
 import com.hipoint.snipback.Utils.AutoFitTextureView
 import com.hipoint.snipback.Utils.BufferDataDetails
-import com.hipoint.snipback.Utils.Constants
+import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.SimpleOrientationListener
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.application.AppClass.swipeProcessed
@@ -439,7 +439,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         }
     }
 
-    private val paths by lazy { Constants(requireContext()) }
+    private val paths by lazy { SnipPaths(requireContext()) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -1405,7 +1405,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
      * handles up swipe functionality: Tagging
      */
     private fun handleUpSwipe() {
-
+        (requireActivity() as AppMainActivity).loadFragment(CreateTag.newInstance(null), true)
     }
 
     /**

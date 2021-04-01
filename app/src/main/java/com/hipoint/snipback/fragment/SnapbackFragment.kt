@@ -37,7 +37,7 @@ import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.PlayerView
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
-import com.hipoint.snipback.Utils.Constants
+import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.application.AppClass.showInGallery
 import com.hipoint.snipback.dialog.KeepVideoDialog
@@ -124,7 +124,7 @@ class SnapbackFragment: Fragment(), ISaveListener {
         }
     }
 
-    private val paths by lazy { Constants(requireContext()) }
+    private val paths by lazy { SnipPaths(requireContext()) }
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
      */

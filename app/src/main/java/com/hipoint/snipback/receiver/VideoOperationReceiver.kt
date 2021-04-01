@@ -11,7 +11,6 @@ import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.os.Build
 import android.util.Log
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.AppMainActivity.Companion.doReplace
@@ -20,7 +19,7 @@ import com.hipoint.snipback.AppMainActivity.Companion.parentChanged
 import com.hipoint.snipback.AppMainActivity.Companion.parentSnip
 import com.hipoint.snipback.AppMainActivity.Companion.replacedWith
 import com.hipoint.snipback.Utils.BufferDataDetails
-import com.hipoint.snipback.Utils.Constants
+import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.isPathInList
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.application.AppClass.showInGallery
@@ -46,7 +45,6 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
-import java.nio.Buffer
 import java.util.concurrent.TimeUnit
 import kotlin.math.floor
 import kotlin.math.max
@@ -58,7 +56,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
     private var receivedContext: Context?          = null
     private var addedToSnip    : ArrayList<String> = arrayListOf()
 
-    private val paths by lazy { Constants(receivedContext!!) }
+    private val paths by lazy { SnipPaths(receivedContext!!) }
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
     private val pref: SharedPreferences by lazy { receivedContext!!.getSharedPreferences(
         SettingsDialog.SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }

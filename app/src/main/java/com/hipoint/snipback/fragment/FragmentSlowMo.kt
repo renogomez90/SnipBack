@@ -31,7 +31,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
-import com.hipoint.snipback.Utils.Constants
+import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.Utils.milliToFloatSecond
 import com.hipoint.snipback.adapter.TimelinePreviewAdapter
@@ -122,7 +122,7 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
     private var timeStamp: String? = null
 
-    private val paths by lazy { Constants(requireContext()) }
+    private val paths by lazy { SnipPaths(requireContext()) }
 
     //  App repository
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }

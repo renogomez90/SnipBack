@@ -15,7 +15,7 @@
 
         <ImageView
             android:contentDescription="@string/no_desc"
-            android:id="@+id/img1"
+            android:id="@+id/play_pause_btn"
             android:layout_width="20dp"
             android:layout_height="match_parent"
             android:layout_marginStart="30dp"
@@ -28,7 +28,7 @@
             android:layout_marginStart="20dp"
             android:fontFamily="@font/barlow_medium"
             android:gravity="start|center"
-            android:layout_toRightOf="@id/img1"
+            android:layout_toRightOf="@id/play_pause_btn"
             android:text="TUTORIALS"
             android:textColor="@color/colorAccent"
             android:textSize="15sp" />
@@ -69,7 +69,7 @@
 
         <ImageView
             android:contentDescription="@string/no_desc"
-            android:id="@+id/img2"
+            android:id="@+id/del_voice_tag"
             android:layout_width="20dp"
             android:layout_height="match_parent"
             android:layout_marginStart="30dp"
@@ -80,7 +80,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="20dp"
-            android:layout_toEndOf="@id/img2"
+            android:layout_toEndOf="@id/del_voice_tag"
             android:fontFamily="@font/barlow_medium"
             android:gravity="start|center"
             android:text="FEEDBACK"
@@ -121,7 +121,7 @@
 
         <ImageView
             android:contentDescription="@string/no_desc"
-            android:id="@+id/img3"
+            android:id="@+id/after_switch"
             android:layout_width="20dp"
             android:layout_height="match_parent"
             android:layout_marginStart="30dp"
@@ -132,7 +132,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="20dp"
-            android:layout_toEndOf="@id/img3"
+            android:layout_toEndOf="@id/after_switch"
             android:fontFamily="@font/barlow_medium"
             android:gravity="start|center"
             android:text="LIGHT"
@@ -185,7 +185,7 @@
 
         <ImageView
             android:contentDescription="@string/no_desc"
-            android:id="@+id/img4"
+            android:id="@+id/before_switch"
             android:layout_width="20dp"
             android:layout_height="match_parent"
             android:layout_marginStart="30dp"
@@ -196,7 +196,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginStart="20dp"
-            android:layout_toEndOf="@id/img4"
+            android:layout_toEndOf="@id/before_switch"
             android:fontFamily="@font/barlow_medium"
             android:gravity="start|center"
             android:text="SET BUFFER"

@@ -3,7 +3,7 @@ package com.hipoint.snipback.Utils
 import android.content.Context
 import java.io.File
 
-class Constants(context: Context) {
+class SnipPaths(context: Context) {
     private val INTERNAL_VIDEO_DIR_NAME = "SnipBackVirtual"
     private val EXTERNAL_VIDEO_DIR_NAME = "Snipback"
     private val PREVIEW_TILE_DIR_NAME   = "PreviewTiles"

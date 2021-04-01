@@ -41,7 +41,7 @@ import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.RangeSeekbarCustom
-import com.hipoint.snipback.Utils.Constants
+import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.SimpleOrientationListener
 import com.hipoint.snipback.Utils.SnipbackTimeBar
 import com.hipoint.snipback.Utils.milliToFloatSecond
@@ -198,7 +198,7 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
 
     private val replaceRequired: IReplaceRequired by lazy { requireActivity() as AppMainActivity }
     private val bufferOverlay: RangeSeekbarCustom by lazy { RangeSeekbarCustom(requireContext()) }
-    private val paths by lazy { Constants(requireContext()) }
+    private val paths by lazy { SnipPaths(requireContext()) }
 
     /**
      * The first time this is triggered is after the CONCAT is completed.

@@ -22,13 +22,11 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.Utils.AutoFitTextureView
-import com.hipoint.snipback.Utils.Constants
-import com.hipoint.snipback.enums.CurrentOperation
+import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.fragment.VideoMode
 import com.hipoint.snipback.listener.IRecordUIListener
 import kotlinx.coroutines.*
 import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.Main
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -91,7 +89,7 @@ class CameraControl(val activity: FragmentActivity) {
     private var lastUserRecordedPath: String?           = null
     private var clipQueue           : Queue<File>?      = null
 
-    private val paths: Constants by lazy { Constants(activity) }
+    private val paths: SnipPaths by lazy { SnipPaths(activity) }
 
     //two finger pinch zoom
     private var finger_spacing = 0f

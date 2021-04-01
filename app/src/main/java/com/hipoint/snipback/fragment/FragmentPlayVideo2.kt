@@ -32,7 +32,7 @@ import com.google.android.exoplayer2.util.Util
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.CommonUtils
-import com.hipoint.snipback.Utils.Constants
+import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.Utils.TrimmerUtils
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.CurrentOperation
@@ -109,7 +109,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var videoDuration              = -1L
     private var maxDuration                = 0L
 
-    private val paths by lazy { Constants(requireContext()) }
+    private val paths by lazy { SnipPaths(requireContext()) }
 
     /**
      * To dynamically change the seek parameters so that seek appears to be more responsive
