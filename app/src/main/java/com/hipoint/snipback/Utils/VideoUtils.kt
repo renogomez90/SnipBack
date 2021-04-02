@@ -196,9 +196,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
 
         val cmd = if (comingFrom == CurrentOperation.VIDEO_EDITING || swipeAction == SwipeAction.SWIPE_RIGHT || swipeAction == SwipeAction.SWIPE_DOWN || isFromSlowMo(comingFrom)) {
             if (filter.isNotBlank())
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -vf $filter -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -y $outputPath"   // with re-encoding
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -vf $filter -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -map 0 -y $outputPath"   // with re-encoding
             else
-                "-ss $start -i ${clip.absolutePath} -to ${end - start} -map_metadata 0 -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -y $outputPath"   // with re-encoding
+                "-ss $start -i ${clip.absolutePath} -to ${end - start} -vcodec libx264 -profile:v baseline -pix_fmt yuv420p -x264-params keyint=2:min-keyint=1 -preset ultrafast -shortest -crf 18 -c:a copy -map 0 -y $outputPath"   // with re-encoding
         } else {
             if (swipeAction == SwipeAction.SWIPE_LEFT && orientationPref != -1)
                 "-ss $start -to $end -i ${clip.absolutePath} -shortest -metadata:s:v rotate=$orientationPref -x264-params keyint=2:min-keyint=1 -crf 0 -c:v copy -y $outputPath"

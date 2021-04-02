@@ -17,10 +17,13 @@ import android.widget.CompoundButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.SnipPaths
+import com.hipoint.snipback.adapter.TagsRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.TagColours
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.newInstance
@@ -29,33 +32,35 @@ import com.hipoint.snipback.room.entities.Tags
 import com.hipoint.snipback.room.repository.AppRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class CreateTag : Fragment() {
 
-    private lateinit var rootView    : View
-    private lateinit var edit        : ImageButton
-    private lateinit var mic         : ImageButton
-    private lateinit var tick        : ImageButton
-    private lateinit var delVoiceTag : ImageButton
-    private lateinit var afterBtn    : SwitchCompat
-    private lateinit var beforeBtn   : SwitchCompat
-    private lateinit var play        : CheckBox
-    private lateinit var tagText     : EditText
-    private lateinit var afterText   : TextView
-    private lateinit var beforeText  : TextView
-    private lateinit var mChronometer: Chronometer
-    private lateinit var shareLater  : CheckBox
-    private lateinit var linkLater   : CheckBox
-    private lateinit var videoTag    : RecyclerView
-    private lateinit var colorOne    : CheckBox
-    private lateinit var colorTwo    : CheckBox
-    private lateinit var colorThree  : CheckBox
-    private lateinit var colorFour   : CheckBox
-    private lateinit var colorFive   : CheckBox
+    private lateinit var rootView     : View
+    private lateinit var edit         : ImageButton
+    private lateinit var mic          : ImageButton
+    private lateinit var tick         : ImageButton
+    private lateinit var delVoiceTag  : ImageButton
+    private lateinit var afterBtn     : SwitchCompat
+    private lateinit var beforeBtn    : SwitchCompat
+    private lateinit var play         : CheckBox
+    private lateinit var tagText      : EditText
+    private lateinit var afterText    : TextView
+    private lateinit var beforeText   : TextView
+    private lateinit var mChronometer : Chronometer
+    private lateinit var shareLater   : CheckBox
+    private lateinit var linkLater    : CheckBox
+    private lateinit var videoTagsList: RecyclerView
+    private lateinit var colorOne     : CheckBox
+    private lateinit var colorTwo     : CheckBox
+    private lateinit var colorThree   : CheckBox
+    private lateinit var colorFour    : CheckBox
+    private lateinit var colorFive    : CheckBox
 
 
     private val currentFormat = 0
@@ -63,9 +68,11 @@ class CreateTag : Fragment() {
     private val output_formats = intArrayOf(
         MediaRecorder.OutputFormat.MPEG_4,
         MediaRecorder.OutputFormat.THREE_GPP)
+
     private val file_exts = arrayOf(
         AUDIO_RECORDER_FILE_EXT_MP4,
         AUDIO_RECORDER_FILE_EXT_3GP)
+
     private var snip: Snip? = null
     private var recorder: MediaRecorder? = null
 
@@ -74,6 +81,7 @@ class CreateTag : Fragment() {
     private var posToChoose = 0
 
     private var savedAudioPath: String = ""
+    private var tagsAdapter: TagsRecyclerAdapter? = null
 
     private val paths by lazy { SnipPaths(requireContext()) }
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
@@ -96,26 +104,25 @@ class CreateTag : Fragment() {
     private fun bindViews() {
         snip = requireArguments().getParcelable("snip")
 
-        tagText      = rootView.findViewById(R.id.tag_text)
-        afterText    = rootView.findViewById(R.id.after_text)
-        beforeText   = rootView.findViewById(R.id.before_text)
-        afterBtn     = rootView.findViewById(R.id.after_switch)
-        beforeBtn    = rootView.findViewById(R.id.before_switch)
-        tick         = rootView.findViewById(R.id.tick)
-        play         = rootView.findViewById(R.id.play_pause_btn)
-        mic          = rootView.findViewById(R.id.mic)
-        delVoiceTag  = rootView.findViewById(R.id.del_voice_tag)
-        edit         = rootView.findViewById(R.id.edit)
-        mChronometer = rootView.findViewById(R.id.chronometer)
-        shareLater   = rootView.findViewById(R.id.share_later)
-        linkLater    = rootView.findViewById(R.id.link_later)
-        videoTag     = rootView.findViewById(R.id.videotag)
-        colorOne     = rootView.findViewById(R.id.color_one)
-        colorTwo     = rootView.findViewById(R.id.color_two)
-        colorThree   = rootView.findViewById(R.id.color_three)
-        colorFour    = rootView.findViewById(R.id.color_four)
-        colorFive    = rootView.findViewById(R.id.color_five)
-
+        tagText       = rootView.findViewById(R.id.tag_text)
+        afterText     = rootView.findViewById(R.id.after_text)
+        beforeText    = rootView.findViewById(R.id.before_text)
+        afterBtn      = rootView.findViewById(R.id.after_switch)
+        beforeBtn     = rootView.findViewById(R.id.before_switch)
+        tick          = rootView.findViewById(R.id.tick)
+        play          = rootView.findViewById(R.id.play_pause_btn)
+        mic           = rootView.findViewById(R.id.mic)
+        delVoiceTag   = rootView.findViewById(R.id.del_voice_tag)
+        edit          = rootView.findViewById(R.id.edit)
+        mChronometer  = rootView.findViewById(R.id.chronometer)
+        shareLater    = rootView.findViewById(R.id.share_later)
+        linkLater     = rootView.findViewById(R.id.link_later)
+        videoTagsList = rootView.findViewById(R.id.videoTagsList)
+        colorOne      = rootView.findViewById(R.id.color_one)
+        colorTwo      = rootView.findViewById(R.id.color_two)
+        colorThree    = rootView.findViewById(R.id.color_three)
+        colorFour     = rootView.findViewById(R.id.color_four)
+        colorFive     = rootView.findViewById(R.id.color_five)
 
     }
 
@@ -243,6 +250,29 @@ class CreateTag : Fragment() {
 
         colorTwo.setOnClickListener{
 
+        }
+
+        setupVideoTags()
+    }
+
+    /**
+     * lists out existing tags that can be used
+     */
+    private fun setupVideoTags() {
+        CoroutineScope(IO).launch {
+            val tagList = arrayListOf<String>()
+            val tagInfoList = appRepository.getAllTags()
+            tagInfoList?.forEach {
+                if(it.textTag.isNotNullOrEmpty()){
+                    tagList.addAll(it.textTag.split(','))
+                }
+            }
+
+            withContext(Main){
+                tagsAdapter = TagsRecyclerAdapter(requireContext(), tagList)
+                videoTagsList.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
+                videoTagsList.adapter = tagsAdapter
+            }
         }
     }
 
