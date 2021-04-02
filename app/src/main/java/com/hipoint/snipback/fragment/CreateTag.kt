@@ -253,6 +253,7 @@ class CreateTag : Fragment() {
         }
 
         setupVideoTags()
+        showSelectedColourTags()
     }
 
     /**
@@ -284,7 +285,7 @@ class CreateTag : Fragment() {
         val snipId        = snip!!.snip_id
         val audioPath     = savedAudioPath
         val audioPosition = posToChoose
-        val colourId      = TagColours.NO_COLOR.ordinal
+        val colourId      = getSelectedColourTags()
         val shareLater    = false
         val linkLater     = false
         val textTag       = getSelectedTextTags()
@@ -300,6 +301,44 @@ class CreateTag : Fragment() {
         )
 
         CoroutineScope(IO).launch { appRepository.insertTag(tag) }
+    }
+
+    private fun getSelectedColourTags(): String {
+        val sb = StringBuilder()
+        if(colorOne.isChecked) {
+            sb.append("${TagColours.BLUE.name},")
+        }
+        if(colorTwo.isChecked) {
+            sb.append("${TagColours.RED.name},")
+        }
+        if(colorThree.isChecked) {
+            sb.append("${TagColours.ORANGE.name},")
+        }
+        if(colorFour.isChecked) {
+            sb.append("${TagColours.PURPLE.name},")
+        }
+        if(colorFive.isChecked) {
+            sb.append("${TagColours.GREEN.name},")
+        }
+
+        return sb.toString()
+    }
+
+    private fun showSelectedColourTags(){
+        CoroutineScope(IO).launch {
+            val colourList = mutableSetOf<String>()    //  Set; so that we don't have repetition
+            val tagInfo = appRepository.getTagBySnipId(snip!!.snip_id)
+
+            tagInfo?.colourId?.let { colourList.addAll(it.split(',')) }
+
+            withContext(Main){
+                colorOne.isChecked = colourList.contains(TagColours.BLUE.name)
+                colorTwo.isChecked = colourList.contains(TagColours.RED.name)
+                colorThree.isChecked = colourList.contains(TagColours.ORANGE.name)
+                colorFour.isChecked = colourList.contains(TagColours.PURPLE.name)
+                colorFive.isChecked = colourList.contains(TagColours.GREEN.name)
+            }
+        }
     }
 
     /**

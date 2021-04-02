@@ -57,7 +57,7 @@ public abstract class RoomDB extends RoomDatabase {
                     "snip_id INTEGER DEFAULT 0 NOT NULL, " +
                     "audio_path TEXT DEFAULT '' NOT NULL, " +
                     "audio_position INTEGER DEFAULT 0 NOT NULL, " +
-                    "tag_colour_id INTEGER DEFAULT 0 NOT NULL, " +
+                    "tag_colour_id TEXT DEFAULT '' NOT NULL, " +
                     "share_later INTEGER DEFAULT 0 NOT NULL, "+
                     "link_later INTEGER DEFAULT 0 NOT NULL, " +
                     "text_tag TEXT DEFAULT '' NOT NULL)");

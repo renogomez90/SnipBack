@@ -28,7 +28,7 @@ data class Tags(
 
     @NotNull
     @ColumnInfo(name = "tag_colour_id")
-    val colourId: Int = 0,          //  based on ordinal of TagColours enum
+    val colourId: String = "",          //  based on TagColours enum, comma separated
 
     @ColumnInfo(name = "share_later")
     val shareLater: Boolean = false,  //  marked for share later

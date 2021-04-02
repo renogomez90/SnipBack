@@ -966,7 +966,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun endManualRecording() {
         bottomContainer.visibility = View.VISIBLE
         recStartLayout.visibility = View.INVISIBLE
-        AppClass.showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
+        showInGallery.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)
         parentSnip = null   //  resetting the session parent Snip
         CoroutineScope(Default).launch {
             cameraControl?.stopRecordingVideo()    // don't close session here since we have to resume saving clips
@@ -1194,7 +1194,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     val buffFileName = "$parentPath/buff-${File(originalVideo).nameWithoutExtension}-$index.mp4"
                     val outputFileName = "${paths.EXTERNAL_VIDEO_DIR}/${File(originalVideo).nameWithoutExtension}-$index.mp4"
 
-                    AppClass.showInGallery.add(File(outputFileName).nameWithoutExtension)
+                    showInGallery.add(File(outputFileName).nameWithoutExtension)
                     Log.d(TAG,
                             "processPendingSwipes: \n Output = $outputFileName, \n start = ${(timeStamp - (swipeValue / 1000)).toInt()} \n end = $timeStamp")
 
@@ -1301,7 +1301,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
             VideoService.enqueueWork(requireContext(), intentService)
 
-            AppClass.showInGallery.add(File(videoFilePath).nameWithoutExtension)
+            showInGallery.add(File(videoFilePath).nameWithoutExtension)
         }
 
         if(slowMoClicked && showHFPSPreview){   //  if we need to show the slow mo preview
@@ -1502,7 +1502,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val mergeFilePath = "${File(clips[0]).parent!!}/merged-$timeStamp.mp4"
             swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
-            AppClass.showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+            showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
 
             val intentService = Intent(requireContext(), VideoService::class.java)
             val task = arrayListOf(
@@ -1576,7 +1576,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             Log.d(TAG,
                     "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
             swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
-            AppClass.showInGallery.add("trimmed-${clip.nameWithoutExtension}")
+            showInGallery.add("trimmed-${clip.nameWithoutExtension}")
 
             val bufferFile = "${clip.parent}/buff-${clip.name}"
             val videoFile = "${paths.EXTERNAL_VIDEO_DIR}/trimmed-${clip.name}"
@@ -1634,15 +1634,17 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             }
         } else { //  save what we have
             swipedFileNames.add(clip.nameWithoutExtension)
-            AppClass.showInGallery.add(clip.nameWithoutExtension)
+            showInGallery.add(clip.nameWithoutExtension)
             if(swipeAction == SwipeAction.SWIPE_LEFT ||
                 swipeAction == SwipeAction.SWIPE_UP ||
                     (swipeAction == SwipeAction.SWIPE_DOWN && currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)) {
 
                 if(currentOperation == CurrentOperation.CLIP_RECORDING) {   //  we only need to save the snip in DB for left swipe
-                    (requireActivity() as AppMainActivity).addSnip(clip.absolutePath,
-                        actualClipTime,
-                        actualClipTime)
+                    if(swipeAction == SwipeAction.SWIPE_LEFT) {
+                        (requireActivity() as AppMainActivity).addSnip("${paths.EXTERNAL_VIDEO_DIR}/${clip.name}",
+                            actualClipTime,
+                            actualClipTime)
+                    }
 
                     val videoTask = VideoOpItem(
                         operation             = VideoOp.KEY_FRAMES,
@@ -1689,12 +1691,12 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                         intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM,
                             taskList)
                         VideoService.enqueueWork(requireContext(), intentService)
-                        AppClass.showInGallery.add(outputName)
+                        showInGallery.add(outputName)
                     } else {
                         val videoTask = VideoOpItem(
                             operation   = VideoOp.KEY_FRAMES,
                             clips       = arrayListOf(clip.absolutePath),
-                            outputPath  = clip.parent!!,
+                            outputPath  = paths.EXTERNAL_VIDEO_DIR,
                             comingFrom  = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
                             swipeAction = swipeAction)
 
@@ -1722,7 +1724,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                     val videoTask = VideoOpItem(
                         operation   = VideoOp.KEY_FRAMES,
                         clips       = arrayListOf(clip.absolutePath),
-                        outputPath  = clip.parent!!,
+                        outputPath  = paths.EXTERNAL_VIDEO_DIR,
                         comingFrom  = if (slowMoClicked) CurrentOperation.CLIP_RECORDING_SLOW_MO else CurrentOperation.CLIP_RECORDING,
                         swipeAction = swipeAction)
 
