@@ -260,7 +260,7 @@ class CreateTag : Fragment() {
      */
     private fun setupVideoTags() {
         CoroutineScope(IO).launch {
-            val tagList = arrayListOf<String>()
+            val tagList = mutableSetOf<String>()    //  Set; so that we don't have repetition
             val tagInfoList = appRepository.getAllTags()
             tagInfoList?.forEach {
                 if(it.textTag.isNotNullOrEmpty()){
@@ -269,7 +269,7 @@ class CreateTag : Fragment() {
             }
 
             withContext(Main){
-                tagsAdapter = TagsRecyclerAdapter(requireContext(), tagList)
+                tagsAdapter = TagsRecyclerAdapter(requireContext(), tagList.toList())
                 videoTagsList.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
                 videoTagsList.adapter = tagsAdapter
             }
@@ -287,10 +287,9 @@ class CreateTag : Fragment() {
         val colourId      = TagColours.NO_COLOR.ordinal
         val shareLater    = false
         val linkLater     = false
-        val textTag       = tagText.text.toString()
+        val textTag       = getSelectedTextTags()
 
         val tag = Tags(
-
             snipId        = snipId,
             audioPath     = audioPath,
             audioPosition = audioPosition,
@@ -301,6 +300,21 @@ class CreateTag : Fragment() {
         )
 
         CoroutineScope(IO).launch { appRepository.insertTag(tag) }
+    }
+
+    /**
+     * gets any selected tags as well
+     */
+    private fun getSelectedTextTags(): String {
+        val sb = StringBuilder()
+        val selected = (videoTagsList.adapter as? TagsRecyclerAdapter)?.getSelectedItems()
+        selected?.forEach {
+            sb.append(it)
+            sb.append(",")
+        }
+        sb.append(tagText.text.toString())
+
+        return sb.toString()
     }
 
     /**
