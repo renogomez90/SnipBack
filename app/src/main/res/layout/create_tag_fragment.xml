@@ -30,7 +30,7 @@
         android:text="Text"
         android:textAllCaps="true"
         android:textColor="@color/colorPrimaryWhite"
-        android:textSize="15sp"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/create_tag_tv" />
 
@@ -70,7 +70,7 @@
         android:fontFamily="@font/barlow_bold"
         android:text="To do"
         android:textColor="@color/colorPrimaryWhite"
-        android:textSize="15sp"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/videoTagsList" />
 
@@ -115,7 +115,7 @@
         android:fontFamily="@font/barlow_bold"
         android:text="Audio!"
         android:textColor="@color/colorPrimaryWhite"
-        android:textSize="15sp"
+        android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/share_later" />
 
@@ -136,25 +136,27 @@
         android:layout_width="match_parent"
         android:layout_height="40dp"
         android:layout_marginStart="97dp"
+        android:layout_marginTop="15dp"
         android:layout_marginEnd="37dp"
         android:background="@drawable/timer_cont"
         android:drawableStart="@drawable/ic_mic_black"
         android:drawablePadding="4dp"
+        android:gravity="center"
         android:paddingStart="32dp"
         android:textColor="#000"
         android:visibility="gone"
-        android:gravity="center"
         app:layout_constraintStart_toEndOf="@+id/tv_audio"
-        android:layout_marginTop="15dp"
         app:layout_constraintTop_toBottomOf="@+id/tv_audio" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/sub_cont"
         android:layout_width="wrap_content"
         android:layout_height="60dp"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="10dp"
         android:layout_marginTop="5dp"
+        android:layout_marginEnd="37dp"
         android:background="@drawable/tag_background"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/tv_audio"
         app:layout_constraintTop_toBottomOf="@+id/tv_audio">
 
@@ -217,10 +219,10 @@
             android:id="@+id/after_holder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="40dp"
-            android:layout_marginEnd="20dp"
             android:layout_marginBottom="5dp"
             android:gravity="center"
+            android:layout_marginEnd="19dp"
+            android:layout_marginStart="30dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -252,7 +254,7 @@
         android:layout_marginStart="37dp"
         android:layout_marginTop="24dp"
         android:fontFamily="@font/barlow_semibold"
-        android:text="COLOR"
+        android:text="Color"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -262,61 +264,62 @@
         android:id="@+id/con_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
         android:gravity="center"
+        android:layout_marginStart="37dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="37dp"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/color_label">
 
         <CheckBox
             android:id="@+id/color_one"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="20dp"
             android:background="@drawable/filtercolor_one"
             android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center"
-            android:gravity="center" />
+            android:foregroundGravity="center" />
 
         <CheckBox
             android:id="@+id/color_two"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="20dp"
             android:background="@drawable/filtercolor_two"
             android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center"
-            android:gravity="center" />
+            android:foregroundGravity="center" />
 
         <CheckBox
             android:id="@+id/color_three"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="20dp"
             android:background="@drawable/filtercolor_three"
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center"
-            android:gravity="center"
+
 
             />
 
         <CheckBox
             android:id="@+id/color_four"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="20dp"
             android:background="@drawable/filtercolor_four"
             android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center"
-            android:gravity="center" />
+            android:foregroundGravity="center" />
 
         <CheckBox
             android:id="@+id/color_five"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="15dp"
             android:background="@drawable/filtercolor_five"
             android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center"
-            android:gravity="center" />
+            android:foregroundGravity="center" />
     </LinearLayout>
 
     <LinearLayout
