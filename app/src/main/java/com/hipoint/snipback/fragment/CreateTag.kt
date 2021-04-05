@@ -15,6 +15,7 @@ import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.CompoundButton
 import androidx.appcompat.widget.SwitchCompat
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -61,6 +62,8 @@ class CreateTag : Fragment() {
     private lateinit var colorThree   : CheckBox
     private lateinit var colorFour    : CheckBox
     private lateinit var colorFive    : CheckBox
+    private lateinit var subContainer  : ConstraintLayout
+
 
 
     private val currentFormat = 0
@@ -123,6 +126,8 @@ class CreateTag : Fragment() {
         colorThree    = rootView.findViewById(R.id.color_three)
         colorFour     = rootView.findViewById(R.id.color_four)
         colorFive     = rootView.findViewById(R.id.color_five)
+        subContainer  = rootView.findViewById(R.id.sub_cont)
+
 
     }
 
@@ -385,6 +390,8 @@ class CreateTag : Fragment() {
         mChronometer.base = SystemClock.elapsedRealtime()
         mChronometer.start()
         mChronometer.visibility = View.VISIBLE
+        subContainer.visibility = View.INVISIBLE
+
     }
 
     private val filename: String
@@ -420,6 +427,7 @@ class CreateTag : Fragment() {
 
         mChronometer.stop()
         mChronometer.visibility = View.INVISIBLE
+        subContainer.visibility = View.VISIBLE
         mChronometer.text = ""
     }
 
