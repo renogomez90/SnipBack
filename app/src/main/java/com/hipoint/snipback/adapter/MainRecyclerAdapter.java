@@ -34,6 +34,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private String viewChangeValue;
     private Integer orientationValue;
     private int eventId = -1;
+    private List<Integer> allowedIds = new ArrayList<>();
 
     public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange) {
         this.context = context;
@@ -125,7 +126,6 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         int spanCount = getSpanCount();
         ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange);
         itemRecyclerAdapter.setHasStableIds(true);
-        itemRecyclerAdapter.notifyDataSetChanged();
 //        recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
         GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount, RecyclerView.VERTICAL, false);
         Set<Integer> hasChildren = new HashSet<>();
@@ -147,8 +147,10 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
                 return 1;
             }
         });
+        itemRecyclerAdapter.setFilterIds(allowedIds);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(itemRecyclerAdapter);
+        itemRecyclerAdapter.notifyDataSetChanged();
     }
 
     private int getSpanCount() {
@@ -164,6 +166,12 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
             else
                 return 2;
         }
+    }
+
+    public void setFilterIds(List<Integer> filterIds){
+        allowedIds.clear();
+        allowedIds.addAll(filterIds);
+        notifyDataSetChanged();
     }
 
     public static String getDate(long time) {

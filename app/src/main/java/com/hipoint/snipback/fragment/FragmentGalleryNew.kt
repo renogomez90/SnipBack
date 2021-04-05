@@ -27,6 +27,7 @@ import com.hipoint.snipback.adapter.TagsRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.TagColours
 import com.hipoint.snipback.room.entities.Event
+import com.hipoint.snipback.room.entities.EventData
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
@@ -250,12 +251,12 @@ class FragmentGalleryNew : Fragment() {
             var tagsAdapter: TagsRecyclerAdapter? = null
 
             filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
-                        R.drawable.ic_filter_selected,
-                        0,
-                        0)
+                R.drawable.ic_filter_selected,
+                0,
+                0)
             filter_button.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
             window!!.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT)
+                ViewGroup.LayoutParams.WRAP_CONTENT)
             dialogFilter.setContentView(R.layout.filter_layout)
             dialogFilter.show()
             audioTag            = dialogFilter.findViewById(R.id.audio_tag)
@@ -263,6 +264,9 @@ class FragmentGalleryNew : Fragment() {
             linkLater           = dialogFilter.findViewById(R.id.link_later)
             filterVideoTagsList = dialogFilter.findViewById(R.id.filterVideoTagsList)
 
+            audioTag = dialogFilter.findViewById(R.id.audio_tag)
+            shareLater = dialogFilter.findViewById(R.id.share_later)
+            linkLater = dialogFilter.findViewById(R.id.link_later)
 
 
             audioTag.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
@@ -277,15 +281,15 @@ class FragmentGalleryNew : Fragment() {
             })
 
             shareLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
-                shareLater.setBackgroundResource(R.drawable.red_outline_background)
-                shareLater.setTextColor(Color.WHITE)
-            } else {
-                shareLater.setBackgroundResource(R.drawable.grey_outine_background)
-                shareLater.setTextColor(Color.GRAY)
+                if (isChecked) {
+                    shareLater.setBackgroundResource(R.drawable.red_outline_background)
+                    shareLater.setTextColor(Color.WHITE)
+                } else {
+                    shareLater.setBackgroundResource(R.drawable.grey_outine_background)
+                    shareLater.setTextColor(Color.GRAY)
 
-            }
-        })
+                }
+            })
 
             linkLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
                 if (isChecked) {
@@ -296,38 +300,23 @@ class FragmentGalleryNew : Fragment() {
                     linkLater.setTextColor(Color.GRAY)
 
                 }
-        })
+            })
 
 
 
             dialogFilter.setOnDismissListener {
                 filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
-                        R.drawable.ic_filter_results_button,
-                        0,
-                        0)
+                    R.drawable.ic_filter_results_button,
+                    0,
+                    0)
                 filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
             }
 
             /*CoroutineScope(IO).launch {
                 val idList = appRepository.getSnipIdsByColour(TagColours.ORANGE.name)
-                val tmpSnip = AppClass.getAppInstance().allSnip
-                val tmpParent = AppClass.getAppInstance().allParentSnip
-                tmpSnip.forEach{
-                    it.snips.filter { snipItem ->
-                        idList!!.contains(snipItem.snip_id)
-                    }
-                }
-
-                tmpParent.forEach {
-                    it.parentSnip.filter { snipItem ->
-                        idList!!.contains(snipItem.snip_id)
-                    }
-                }
 
                 withContext(Main) {
-                    (mainCategoryRecycler.adapter as MainRecyclerAdapter).updateData(tmpParent,
-                        tmpSnip,
-                        viewChange)
+                    (mainCategoryRecycler.adapter as MainRecyclerAdapter).setFilterIds(idList)
                 }
             }*/
         }
