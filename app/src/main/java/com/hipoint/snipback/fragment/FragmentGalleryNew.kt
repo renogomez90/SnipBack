@@ -25,11 +25,18 @@ import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.adapter.MainRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
+import com.hipoint.snipback.enums.TagColours
 import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
+import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.service.VideoService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -70,6 +77,7 @@ class FragmentGalleryNew : Fragment() {
     private val allEvents: MutableList<Event> by lazy { ArrayList() }
     private val hdSnips: MutableList<Hd_snips> by lazy { ArrayList() }
     private val snip: MutableList<Snip> by lazy { ArrayList() }
+    private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
 
     private val videoProcessingReceiver: BroadcastReceiver by lazy {
         object : BroadcastReceiver() {
@@ -250,6 +258,29 @@ class FragmentGalleryNew : Fragment() {
                         0)
                 filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
             }
+
+            /*CoroutineScope(IO).launch {
+                val idList = appRepository.getSnipIdsByColour(TagColours.ORANGE.name)
+                val tmpSnip = AppClass.getAppInstance().allSnip
+                val tmpParent = AppClass.getAppInstance().allParentSnip
+                tmpSnip.forEach{
+                    it.snips.filter { snipItem ->
+                        idList!!.contains(snipItem.snip_id)
+                    }
+                }
+
+                tmpParent.forEach {
+                    it.parentSnip.filter { snipItem ->
+                        idList!!.contains(snipItem.snip_id)
+                    }
+                }
+
+                withContext(Main) {
+                    (mainCategoryRecycler.adapter as MainRecyclerAdapter).updateData(tmpParent,
+                        tmpSnip,
+                        viewChange)
+                }
+            }*/
         }
 
         click.setOnClickListener {
