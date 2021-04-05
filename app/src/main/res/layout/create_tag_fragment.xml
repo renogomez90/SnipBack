@@ -28,7 +28,6 @@
         android:layout_marginTop="24dp"
         android:fontFamily="@font/barlow_bold"
         android:text="Text"
-        android:textAllCaps="true"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -58,6 +57,7 @@
         android:layout_marginTop="5dp"
         android:orientation="horizontal"
         android:padding="5dp"
+        android:backgroundTint="@color/colorHint"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tag_text" />
 
@@ -212,7 +212,7 @@
                 android:layout_height="wrap_content"
                 android:text="Before"
                 android:textAlignment="center"
-                android:textColor="@color/colorWhite" />
+                android:textColor="@color/colorHint" />
         </LinearLayout>
 
         <LinearLayout
@@ -241,7 +241,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="After"
-                android:textColor="@color/colorWhite" />
+                android:textColor="@color/colorHint" />
 
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -253,7 +253,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="37dp"
         android:layout_marginTop="24dp"
-        android:fontFamily="@font/barlow_semibold"
+        android:fontFamily="@font/barlow_bold"
         android:text="Color"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="16sp"
@@ -275,7 +275,7 @@
 
         <RadioButton
             android:id="@+id/color_one"
-            android:layout_width="40dp"
+            android:layout_width="wrap_content"
             android:layout_height="40dp"
             android:layout_marginStart="20dp"
             android:background="@drawable/filtercolor_one"

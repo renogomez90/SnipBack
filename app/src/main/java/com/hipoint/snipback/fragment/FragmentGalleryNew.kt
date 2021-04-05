@@ -6,13 +6,12 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.view.*
-import android.widget.ImageView
-import android.widget.RelativeLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
@@ -64,6 +63,11 @@ class FragmentGalleryNew : Fragment() {
     private lateinit var layout_multidelete              : RelativeLayout
     private lateinit var click                           : RelativeLayout
     private lateinit var import_con                      : RelativeLayout
+    private lateinit var audioTag                       : CheckBox
+    private lateinit var shareLater                       : CheckBox
+    private lateinit var linkLater                       : CheckBox
+
+
 
     private var mainRecyclerAdapter: MainRecyclerAdapter? = null
 
@@ -250,6 +254,45 @@ class FragmentGalleryNew : Fragment() {
                     ViewGroup.LayoutParams.WRAP_CONTENT)
             dialogFilter.setContentView(R.layout.filter_layout)
             dialogFilter.show()
+            audioTag    = dialogFilter.findViewById(R.id.audio_tag)
+            shareLater    = dialogFilter.findViewById(R.id.share_later)
+            linkLater    = dialogFilter.findViewById(R.id.link_later)
+
+
+            audioTag.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+                if (isChecked) {
+                    audioTag.setBackgroundResource(R.drawable.red_outline_background)
+                    audioTag.setTextColor(Color.WHITE)
+                } else {
+                    audioTag.setBackgroundResource(R.drawable.grey_outine_background)
+                    audioTag.setTextColor(Color.GRAY)
+
+                }
+            })
+
+            shareLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked) {
+                shareLater.setBackgroundResource(R.drawable.red_outline_background)
+                shareLater.setTextColor(Color.WHITE)
+            } else {
+                shareLater.setBackgroundResource(R.drawable.grey_outine_background)
+                shareLater.setTextColor(Color.GRAY)
+
+            }
+        })
+
+            linkLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+                if (isChecked) {
+                    linkLater.setBackgroundResource(R.drawable.red_outline_background)
+                    linkLater.setTextColor(Color.WHITE)
+                } else {
+                    linkLater.setBackgroundResource(R.drawable.grey_outine_background)
+                    linkLater.setTextColor(Color.GRAY)
+
+                }
+        })
+
+
 
             dialogFilter.setOnDismissListener {
                 filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
