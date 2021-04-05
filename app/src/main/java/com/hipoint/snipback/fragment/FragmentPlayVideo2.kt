@@ -22,6 +22,7 @@ import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ClippingMediaSource
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.source.ads.AdsMediaSource
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout
 import com.google.android.exoplayer2.ui.DefaultTimeBar
 import com.google.android.exoplayer2.ui.PlayerView
@@ -246,8 +247,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
             setBackgroundColor(Color.BLACK)
             controllerShowTimeoutMs = 3000
-            setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
-            setShowMultiWindowTimeBar(true)
+//            setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
+            setShowMultiWindowTimeBar(false)
 //            setControllerVisibilityListener { i ->
 //                if (i == 8) {
 //                    hideSystemUI()

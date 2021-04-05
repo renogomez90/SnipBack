@@ -308,7 +308,7 @@ class CreateTag : Fragment() {
             val tagInfoList = appRepository.getAllTags()
             tagInfoList?.forEach {
                 if(it.textTag.isNotNullOrEmpty()){
-                    tagList.addAll(it.textTag.split(',').filter { item -> item != " " || item != ""})
+                    tagList.addAll(it.textTag.split(',').filter { item -> item.isNotEmpty() })
                 }
             }
 
