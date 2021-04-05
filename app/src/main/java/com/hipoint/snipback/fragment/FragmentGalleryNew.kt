@@ -23,6 +23,7 @@ import com.hipoint.snipback.ActivityPlayVideo
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.adapter.MainRecyclerAdapter
+import com.hipoint.snipback.adapter.TagsRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.TagColours
 import com.hipoint.snipback.room.entities.Event
@@ -63,9 +64,11 @@ class FragmentGalleryNew : Fragment() {
     private lateinit var layout_multidelete              : RelativeLayout
     private lateinit var click                           : RelativeLayout
     private lateinit var import_con                      : RelativeLayout
-    private lateinit var audioTag                       : CheckBox
-    private lateinit var shareLater                       : CheckBox
+    private lateinit var audioTag                        : CheckBox
+    private lateinit var shareLater                      : CheckBox
     private lateinit var linkLater                       : CheckBox
+    private lateinit var filterVideoTagsList             : RecyclerView
+
 
 
 
@@ -244,6 +247,7 @@ class FragmentGalleryNew : Fragment() {
         filter_button.setOnClickListener {
             val dialogFilter = Dialog(requireActivity())
             val window = dialogFilter.window
+            var tagsAdapter: TagsRecyclerAdapter? = null
 
             filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
                         R.drawable.ic_filter_selected,
@@ -254,9 +258,11 @@ class FragmentGalleryNew : Fragment() {
                     ViewGroup.LayoutParams.WRAP_CONTENT)
             dialogFilter.setContentView(R.layout.filter_layout)
             dialogFilter.show()
-            audioTag    = dialogFilter.findViewById(R.id.audio_tag)
-            shareLater    = dialogFilter.findViewById(R.id.share_later)
-            linkLater    = dialogFilter.findViewById(R.id.link_later)
+            audioTag            = dialogFilter.findViewById(R.id.audio_tag)
+            shareLater          = dialogFilter.findViewById(R.id.share_later)
+            linkLater           = dialogFilter.findViewById(R.id.link_later)
+            filterVideoTagsList = dialogFilter.findViewById(R.id.filterVideoTagsList)
+
 
 
             audioTag.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
