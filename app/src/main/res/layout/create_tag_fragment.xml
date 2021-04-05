@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -15,7 +15,9 @@
         android:fontFamily="@font/barlow_semibold"
         android:text="CREATE TAG"
         android:textColor="@color/colorPrimaryWhite"
-        android:textSize="20sp" />
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv"
@@ -28,13 +30,14 @@
         android:text="Text"
         android:textAllCaps="true"
         android:textColor="@color/colorPrimaryWhite"
-        android:textSize="15sp" />
+        android:textSize="15sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/create_tag_tv" />
 
     <EditText
         android:id="@+id/tag_text"
         android:layout_width="242dp"
         android:layout_height="37dp"
-        android:layout_below="@id/tv"
         android:layout_marginStart="37dp"
         android:layout_marginTop="10dp"
         android:background="@color/colorPrimaryWhite"
@@ -43,56 +46,55 @@
         android:inputType="text"
         android:paddingStart="17dp"
         android:textColor="@color/colorBlack"
-        android:textColorHint="@color/colorPrimary" />
+        android:textColorHint="@color/colorPrimary"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/videoTagsList"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tag_text"
         android:layout_marginStart="37dp"
-        android:layout_marginEnd="37dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal"
         android:padding="5dp"
-        android:layout_marginBottom="10dp"
-        android:orientation="horizontal" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tag_text" />
 
     <TextView
         android:id="@+id/tv_todo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/videoTagsList"
         android:layout_marginStart="37dp"
         android:layout_marginTop="10dp"
         android:fontFamily="@font/barlow_bold"
         android:text="To do"
-        android:textAllCaps="true"
         android:textColor="@color/colorPrimaryWhite"
-        android:textSize="15sp" />
+        android:textSize="15sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/videoTagsList" />
 
     <CheckBox
         android:id="@+id/share_later"
         android:layout_width="132dp"
-        android:layout_height="29dp"
-        android:layout_below="@id/tv_todo"
+        android:layout_height="30dp"
         android:layout_marginStart="37dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/to_do_btn_bg"
         android:button="@drawable/to_do_buttons"
         android:fontFamily="@font/barlow_medium"
         android:gravity="center"
         android:text="@string/share_later"
         android:textColor="@color/colorBlack"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_todo" />
 
     <CheckBox
         android:id="@+id/link_later"
         android:layout_width="132dp"
-        android:layout_height="29dp"
-        android:layout_below="@id/tv_todo"
-        android:layout_alignParentEnd="true"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="11dp"
+        android:layout_height="30dp"
+        android:layout_marginTop="10dp"
         android:layout_marginEnd="37dp"
         android:background="@drawable/to_do_btn_bg"
         android:button="@drawable/to_do_buttons"
@@ -100,133 +102,104 @@
         android:gravity="center"
         android:text="Link Later"
         android:textColor="@color/colorBlack"
-        android:textSize="16sp" />
-
-    <Chronometer
-        android:id="@+id/chronometer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
-        android:background="@drawable/timer_cont"
-        android:drawableStart="@drawable/ic_mic_black"
-        android:drawablePadding="4dp"
-        android:paddingStart="32dp"
-        android:layout_toRightOf="@id/tv_audio"
-        android:layout_above="@id/sub_cont"
-        android:textColor="#000"
-        android:visibility="gone" />
+        android:textSize="16sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_todo" />
 
     <TextView
         android:id="@+id/tv_audio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/link_later"
         android:layout_marginStart="37dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="20dp"
         android:fontFamily="@font/barlow_bold"
-        android:text="Audio"
-        android:textAllCaps="true"
+        android:text="Audio!"
         android:textColor="@color/colorPrimaryWhite"
-        android:textSize="15sp" />
+        android:textSize="15sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/share_later" />
 
     <ImageButton
         android:id="@+id/mic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/tv_audio"
         android:layout_marginStart="37dp"
-        android:layout_marginTop="19dp"
+        android:layout_marginTop="10dp"
         android:background="@drawable/rec_button"
         android:contentDescription="@string/no_desc"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_audio"
         app:srcCompat="@drawable/ic_microphone_1" />
+
+    <Chronometer
+        android:id="@+id/chronometer"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginStart="97dp"
+        android:layout_marginEnd="37dp"
+        android:background="@drawable/timer_cont"
+        android:drawableStart="@drawable/ic_mic_black"
+        android:drawablePadding="4dp"
+        android:paddingStart="32dp"
+        android:textColor="#000"
+        android:visibility="gone"
+        android:gravity="center"
+        app:layout_constraintStart_toEndOf="@+id/tv_audio"
+        android:layout_marginTop="15dp"
+        app:layout_constraintTop_toBottomOf="@+id/tv_audio" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/sub_cont"
         android:layout_width="wrap_content"
-        android:layout_height="63dp"
-        android:layout_below="@id/tv_audio"
-        android:layout_marginStart="14dp"
-        android:layout_marginTop="13dp"
-        android:layout_toEndOf="@id/mic"
-        android:background="@drawable/tag_background">
+        android:layout_height="60dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/tag_background"
+        app:layout_constraintStart_toEndOf="@+id/tv_audio"
+        app:layout_constraintTop_toBottomOf="@+id/tv_audio">
 
         <CheckBox
             android:id="@+id/play_pause_btn"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="30dp"
             android:button="@drawable/play_pause_switch"
             android:contentDescription="@string/no_desc"
-            app:layout_constraintBottom_toBottomOf="@+id/del_voice_tag"
-            app:layout_constraintEnd_toStartOf="@+id/del_voice_tag"
-            app:layout_constraintHorizontal_bias="0.5"
+            android:gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/del_voice_tag" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageButton
             android:id="@+id/del_voice_tag"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
+            android:layout_marginStart="30dp"
             android:background="@android:color/transparent"
             android:contentDescription="@string/no_desc"
             android:src="@drawable/ic_del"
-            app:layout_constraintBottom_toBottomOf="@+id/after_holder"
-            app:layout_constraintEnd_toStartOf="@+id/after_holder"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/play_pause_btn"
-            app:layout_constraintTop_toTopOf="@+id/after_holder" />
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
-            android:id="@+id/after_holder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="@+id/before_holder"
-            app:layout_constraintEnd_toStartOf="@+id/before_holder"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/del_voice_tag"
-            app:layout_constraintTop_toTopOf="@+id/before_holder">
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/after_switch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:button="@drawable/before_toggle"
-                android:thumb="@null"
-                app:track="@null" />
-
-            <TextView
-                android:id="@+id/after_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="After"
-                android:textColor="@color/colorWhite" />
-        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/before_holder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
-            android:gravity="center_horizontal"
+            android:layout_marginStart="40dp"
+            android:layout_marginBottom="5dp"
+            android:gravity="center"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/after_holder"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintStart_toEndOf="@+id/del_voice_tag">
 
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/before_switch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
+                android:layout_gravity="center"
                 android:button="@drawable/before_toggle"
                 android:thumb="@null"
                 app:track="@null" />
@@ -236,7 +209,38 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Before"
+                android:textAlignment="center"
                 android:textColor="@color/colorWhite" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/after_holder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="40dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="5dp"
+            android:gravity="center"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/before_holder">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/after_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:button="@drawable/after_toggle"
+                android:thumb="@null"
+                app:track="@null" />
+
+            <TextView
+                android:id="@+id/after_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="After"
+                android:textColor="@color/colorWhite" />
+
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -245,28 +249,28 @@
         android:id="@+id/color_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/sub_cont"
         android:layout_marginStart="37dp"
         android:layout_marginTop="24dp"
         android:fontFamily="@font/barlow_semibold"
         android:text="COLOR"
         android:textColor="@color/colorPrimaryWhite"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/sub_cont" />
 
-    <RelativeLayout
+    <LinearLayout
         android:id="@+id/con_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:layout_below="@id/color_label"
-        android:gravity="center">
+        android:gravity="center"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/color_label">
 
         <CheckBox
             android:id="@+id/color_one"
-            android:layout_width="39dp"
-            android:layout_height="39dp"
-            android:layout_marginStart="11dp"
-            android:layout_toEndOf="@id/color_one"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:background="@drawable/filtercolor_one"
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center"
@@ -274,10 +278,9 @@
 
         <CheckBox
             android:id="@+id/color_two"
-            android:layout_width="39dp"
-            android:layout_height="39dp"
-            android:layout_marginStart="11dp"
-            android:layout_toEndOf="@id/color_one"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:background="@drawable/filtercolor_two"
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center"
@@ -285,21 +288,21 @@
 
         <CheckBox
             android:id="@+id/color_three"
-            android:layout_width="39dp"
-            android:layout_height="39dp"
-            android:layout_marginStart="11dp"
-            android:layout_toEndOf="@id/color_two"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:background="@drawable/filtercolor_three"
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center"
-            android:gravity="center" />
+            android:gravity="center"
+
+            />
 
         <CheckBox
             android:id="@+id/color_four"
-            android:layout_width="39dp"
-            android:layout_height="39dp"
-            android:layout_marginStart="11dp"
-            android:layout_toEndOf="@id/color_three"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:background="@drawable/filtercolor_four"
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center"
@@ -307,30 +310,26 @@
 
         <CheckBox
             android:id="@+id/color_five"
-            android:layout_width="39dp"
-            android:layout_height="39dp"
-            android:layout_marginStart="11dp"
-            android:layout_toEndOf="@id/color_four"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
             android:background="@drawable/filtercolor_five"
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center"
             android:gravity="center" />
-
-    </RelativeLayout>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="4dp"
+        android:layout_marginBottom="20dp"
         android:gravity="center"
-        android:padding="12dp">
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <ImageButton
             android:id="@+id/share"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="30dp"
             android:background="@drawable/whire_border_round"
             android:contentDescription="@string/no_desc"
             app:srcCompat="@drawable/ic_share"
@@ -341,9 +340,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="30dp"
-            android:background="@drawable/white_circle"
+            android:background="@drawable/ic_play_black"
             android:contentDescription="@string/no_desc"
-            app:srcCompat="@drawable/ic_edit"
             tools:ignore="VectorDrawableCompat" />
 
         <ImageButton
@@ -365,7 +363,7 @@
             android:contentDescription="@string/no_desc"
             app:srcCompat="@drawable/ic_del"
             tools:ignore="VectorDrawableCompat" />
-
     </LinearLayout>
 
-</RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
