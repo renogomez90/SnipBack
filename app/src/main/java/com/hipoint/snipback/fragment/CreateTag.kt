@@ -31,7 +31,6 @@ import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.adapter.TagsRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.TagColours
-import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.newInstance
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.entities.Tags
@@ -330,8 +329,8 @@ class CreateTag : Fragment() {
         val audioPath     = savedAudioPath
         val audioPosition = posToChoose
         val colourId      = getSelectedColourTags()
-        val shareLater    = false
-        val linkLater     = false
+        val shareLaterVal = shareLater.isChecked
+        val linkLaterVal  = linkLater.isChecked
         val textTag       = getSelectedTextTags()
 
         val tag = Tags(
@@ -339,8 +338,8 @@ class CreateTag : Fragment() {
             audioPath     = audioPath,
             audioPosition = audioPosition,
             colourId      = colourId,
-            shareLater    = shareLater,
-            linkLater     = linkLater,
+            shareLater    = shareLaterVal,
+            linkLater     = linkLaterVal,
             textTag       = textTag
         )
 

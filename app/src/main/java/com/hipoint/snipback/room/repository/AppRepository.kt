@@ -223,7 +223,6 @@ class AppRepository(context: Context?) {
 
 
     //  Tags data
-
     suspend fun insertTag(tag: Tags) {
 //        InsertSnipAsync(listener, snipsDao).execute(snip)
         val result = CoroutineScope(IO).async {
@@ -270,6 +269,38 @@ class AppRepository(context: Context?) {
             tagDao.getAll()
         }
         return result.await() as? MutableList<Tags>
+    }
+
+    suspend fun getSnipIdsByColour(colourTagName: String): List<Int>?{
+        val result = CoroutineScope(IO).async {
+            tagDao.getSnipIdsByColour(colourTagName)
+        }
+
+        return result.await()
+    }
+
+    suspend fun getSnipIdsByShareLater(): List<Int>?{
+        val result = CoroutineScope(IO).async {
+            tagDao.getSnipIdsByShareLater()
+        }
+
+        return result.await()
+    }
+
+    suspend fun getSnipIdsByLinkLater(): List<Int>?{
+        val result = CoroutineScope(IO).async {
+            tagDao.getSnipIdsByLinkLater()
+        }
+
+        return result.await()
+    }
+
+    suspend fun getSnipIdsByTextTag(tagText: String): List<Int>?{
+        val result = CoroutineScope(IO).async {
+            tagDao.getSnipIdsByTextTag(tagText)
+        }
+
+        return result.await()
     }
 
 
