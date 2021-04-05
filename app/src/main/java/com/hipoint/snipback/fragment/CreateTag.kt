@@ -2,7 +2,9 @@ package com.hipoint.snipback.fragment
 
 import android.annotation.SuppressLint
 import android.graphics.Color
+import android.media.MediaPlayer
 import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -19,6 +21,8 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.exozet.android.core.extensions.disable
+import com.exozet.android.core.extensions.enable
 import com.exozet.android.core.extensions.isNotNullOrEmpty
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
@@ -42,13 +46,13 @@ import java.util.concurrent.TimeUnit
 class CreateTag : Fragment() {
 
     private lateinit var rootView     : View
-    private lateinit var edit         : ImageButton
+    private lateinit var playVideo         : ImageButton
     private lateinit var mic          : ImageButton
     private lateinit var tick         : ImageButton
     private lateinit var delVoiceTag  : ImageButton
     private lateinit var afterBtn     : SwitchCompat
     private lateinit var beforeBtn    : SwitchCompat
-    private lateinit var play         : CheckBox
+    private lateinit var playBtn      : CheckBox
     private lateinit var tagText      : EditText
     private lateinit var afterText    : TextView
     private lateinit var beforeText   : TextView
@@ -62,16 +66,16 @@ class CreateTag : Fragment() {
     private lateinit var colorFour    : CheckBox
     private lateinit var colorFive    : CheckBox
 
-
+    private var audioPlayer: MediaPlayer? = null
     private val currentFormat = 0
 
     private val output_formats = intArrayOf(
         MediaRecorder.OutputFormat.MPEG_4,
-        MediaRecorder.OutputFormat.THREE_GPP)
+        MediaRecorder.OutputFormat.AAC_ADTS)
 
     private val file_exts = arrayOf(
         AUDIO_RECORDER_FILE_EXT_MP4,
-        AUDIO_RECORDER_FILE_EXT_3GP)
+        AUDIO_RECORDER_FILE_EXT_MP3)
 
     private var snip: Snip? = null
     private var recorder: MediaRecorder? = null
@@ -110,10 +114,10 @@ class CreateTag : Fragment() {
         afterBtn      = rootView.findViewById(R.id.after_switch)
         beforeBtn     = rootView.findViewById(R.id.before_switch)
         tick          = rootView.findViewById(R.id.tick)
-        play          = rootView.findViewById(R.id.play_pause_btn)
+        playBtn          = rootView.findViewById(R.id.play_pause_btn)
         mic           = rootView.findViewById(R.id.mic)
         delVoiceTag   = rootView.findViewById(R.id.del_voice_tag)
-        edit          = rootView.findViewById(R.id.edit)
+        playVideo          = rootView.findViewById(R.id.edit)
         mChronometer  = rootView.findViewById(R.id.chronometer)
         shareLater    = rootView.findViewById(R.id.share_later)
         linkLater     = rootView.findViewById(R.id.link_later)
@@ -189,10 +193,22 @@ class CreateTag : Fragment() {
             requireActivity().supportFragmentManager.popBackStack()
         })
 
-        play.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
+        playBtn.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (savedAudioPath.isNotNullOrEmpty()) {
+                if (isChecked) {
+                    if(audioPlayer == null) {
+                        audioPlayer = MediaPlayer.create(context, Uri.parse(savedAudioPath))
+                        audioPlayer!!.setOnCompletionListener {
+                            playBtn.isChecked = false
+                        }
+                    }
+
+                    audioPlayer?.start()
+                } else {
+                    audioPlayer?.stop()
+                }
             }
-        })
+        }
 
         // record audio
         mic.setOnTouchListener(OnTouchListener { v, event ->
@@ -217,13 +233,19 @@ class CreateTag : Fragment() {
             if(audioFile.exists()){
                 audioFile.delete()
                 savedAudioPath = ""
+
+                audioPlayer?.release()
+                audioPlayer = null
+                disableAudioControls()
             }
         }
 
         //  todo: what is this for?
-        edit.setOnClickListener(View.OnClickListener {
-            (requireActivity() as AppMainActivity).loadFragment(
-                    newInstance(snip, false), true)
+        playVideo.setOnClickListener(View.OnClickListener {
+            /*(requireActivity() as AppMainActivity).loadFragment(
+                    newInstance(snip, false), true)*/
+
+            (requireActivity() as AppMainActivity).loadFragment(FragmentPlayVideo2.newInstance(snip), true)
         })
 
         shareLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
@@ -254,6 +276,8 @@ class CreateTag : Fragment() {
 
         setupVideoTags()
         showSelectedColourTags()
+        if(savedAudioPath.isBlank())
+            disableAudioControls()
     }
 
     /**
@@ -265,7 +289,7 @@ class CreateTag : Fragment() {
             val tagInfoList = appRepository.getAllTags()
             tagInfoList?.forEach {
                 if(it.textTag.isNotNullOrEmpty()){
-                    tagList.addAll(it.textTag.split(','))
+                    tagList.addAll(it.textTag.split(',').filter { item -> item != " " || item != ""})
                 }
             }
 
@@ -400,6 +424,7 @@ class CreateTag : Fragment() {
         }
     private val errorListener = MediaRecorder.OnErrorListener { mr, what, extra ->
         //            AppLog.logString("Error: " + what + ", " + extra);
+        disableAudioControls()
     }
     private val infoListener = MediaRecorder.OnInfoListener { mr, what, extra ->
         //            AppLog.logString("Warning: " + what + ", " + extra);
@@ -418,14 +443,53 @@ class CreateTag : Fragment() {
             recorder = null
         }
 
+        enableAudioControls()
+
         mChronometer.stop()
         mChronometer.visibility = View.INVISIBLE
         mChronometer.text = ""
     }
 
+    /**
+     * to be used to disable audio controls when no recorded audio is available
+     */
+    private fun disableAudioControls(){
+        playBtn.disable()
+        delVoiceTag.disable()
+        beforeBtn.disable()
+        afterBtn.disable()
+
+        playBtn.alpha = 0.5F
+        delVoiceTag.alpha = 0.5F
+        beforeBtn.alpha = 0.5F
+        afterBtn.alpha = 0.5F
+
+        if(afterBtn.isChecked){ //  for some reason directly setting the values does not trigger the listeners
+            afterBtn.performClick()
+        }
+        if(beforeBtn.isChecked){    //  for some reason directly setting the values does not trigger the listeners
+            beforeBtn.performClick()
+        }
+    }
+
+    /**
+     * to be used to enable audio controls once the audio is available for playback
+     */
+    private fun enableAudioControls(){
+        playBtn.enable()
+        delVoiceTag.enable()
+        beforeBtn.enable()
+        afterBtn.enable()
+
+        playBtn.alpha = 1F
+        delVoiceTag.alpha = 1F
+        beforeBtn.alpha = 1F
+        afterBtn.alpha = 1F
+    }
+
     companion object {
         private const val TAG = "CreateTag"
-        private const val AUDIO_RECORDER_FILE_EXT_3GP = ".3gp"
+        private const val AUDIO_RECORDER_FILE_EXT_MP3 = ".mp3"
         private const val AUDIO_RECORDER_FILE_EXT_MP4 = ".mp4"
         private const val AUDIO_RECORDER_FOLDER = "SnipRec"
 

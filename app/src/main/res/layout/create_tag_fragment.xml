@@ -26,6 +26,7 @@
         android:layout_marginTop="24dp"
         android:fontFamily="@font/barlow_bold"
         android:text="Text"
+        android:textAllCaps="true"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="15sp" />
 
@@ -65,6 +66,7 @@
         android:layout_marginTop="10dp"
         android:fontFamily="@font/barlow_bold"
         android:text="To do"
+        android:textAllCaps="true"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="15sp" />
 
@@ -102,16 +104,16 @@
 
     <Chronometer
         android:id="@+id/chronometer"
-        android:layout_width="match_parent"
-        android:layout_height="29dp"
-        android:layout_below="@id/tv_todo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginStart="40dp"
-        android:layout_marginTop="70dp"
         android:layout_marginEnd="40dp"
         android:background="@drawable/timer_cont"
         android:drawableStart="@drawable/ic_mic_black"
         android:drawablePadding="4dp"
         android:paddingStart="32dp"
+        android:layout_toRightOf="@id/tv_audio"
+        android:layout_above="@id/sub_cont"
         android:textColor="#000"
         android:visibility="gone" />
 
@@ -123,7 +125,8 @@
         android:layout_marginStart="37dp"
         android:layout_marginTop="24dp"
         android:fontFamily="@font/barlow_bold"
-        android:text="To do"
+        android:text="Audio"
+        android:textAllCaps="true"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="15sp" />
 
