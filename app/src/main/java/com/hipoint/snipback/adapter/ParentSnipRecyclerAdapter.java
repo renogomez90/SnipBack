@@ -15,6 +15,7 @@ import com.hipoint.snipback.R;
 import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.room.entities.Snip;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRecyclerAdapter.ParentItemViewHolder> {
@@ -22,7 +23,27 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     private ItemListener mListener;
     List<Snip> snipArrayList;
     private String viewChangeValue;
+    private List<Integer> allowedIds = new ArrayList<>();
 
+
+    public void setFilterIds(List<Integer> filterIds){
+        if(filterIds == null || filterIds.isEmpty())
+            return;
+
+        allowedIds.clear();
+        allowedIds.addAll(filterIds);
+
+        List<Snip> tmpList = new ArrayList<>();
+        tmpList.addAll(snipArrayList);
+
+        for (Snip item : tmpList) {
+            if(!allowedIds.contains(item.getSnip_id())){
+                snipArrayList.remove(item);
+            }
+        }
+
+        notifyDataSetChanged();
+    }
 
     public ParentSnipRecyclerAdapter(Context context, List<Snip> allParentSnips, String viewChange) {
         this.context = context;
