@@ -141,11 +141,11 @@ class CreateTag : Fragment() {
                     beforeBtn.performClick()
 
                 afterText.setTextColor(ResourcesCompat.getColor(resources, R.color.red_tag, requireContext().theme))
-                posToChoose = 1
+                posToChoose = AUDIO_AFTER
             } else {
                 afterBtn.isChecked = false
                 afterText.setTextColor(resources.getColor(R.color.colorPrimaryWhite))
-                posToChoose = 0
+                posToChoose = NO_AUDIO
             }
         })
 
@@ -155,11 +155,11 @@ class CreateTag : Fragment() {
                     afterBtn.performClick()
 
                 beforeText.setTextColor(resources.getColor(R.color.red_tag))
-                posToChoose = 2
+                posToChoose = AUDIO_BEFORE
             } else {
                 beforeBtn.isChecked = false
                 beforeText.setTextColor(ResourcesCompat.getColor(resources, R.color.colorPrimaryWhite, requireContext().theme))
-                posToChoose = 0
+                posToChoose = NO_AUDIO
             }
         })
 
@@ -489,9 +489,14 @@ class CreateTag : Fragment() {
 
     companion object {
         private const val TAG = "CreateTag"
+
         private const val AUDIO_RECORDER_FILE_EXT_MP3 = ".mp3"
         private const val AUDIO_RECORDER_FILE_EXT_MP4 = ".mp4"
-        private const val AUDIO_RECORDER_FOLDER = "SnipRec"
+        private const val AUDIO_RECORDER_FOLDER       = "SnipRec"
+
+        const val NO_AUDIO     = 0
+        const val AUDIO_BEFORE = 1
+        const val AUDIO_AFTER  = 2
 
         fun newInstance(snip: Snip?): CreateTag {
             val fragment = CreateTag()

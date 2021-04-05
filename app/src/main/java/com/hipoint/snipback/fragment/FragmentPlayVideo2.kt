@@ -247,6 +247,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             setBackgroundColor(Color.BLACK)
             controllerShowTimeoutMs = 3000
             setShutterBackgroundColor(Color.TRANSPARENT)    // removes the black screen when seeking or switching media
+            setShowMultiWindowTimeBar(true)
 //            setControllerVisibilityListener { i ->
 //                if (i == 8) {
 //                    hideSystemUI()
@@ -307,13 +308,28 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     /**
      * set up playback video source
      */
-    private fun setVideoSource() {
+    private fun setVideoSource() = CoroutineScope(Main).launch{
+        var tagInfo: Pair<String, Int>? = null
+
         defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
         dataSourceFactory = DefaultDataSourceFactory(requireContext(),
                 Util.getUserAgent(requireActivity(), "mediaPlayerSample"), defaultBandwidthMeter)
 
         mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory)
                 .createMediaSource(Uri.parse(snip!!.videoFilePath))
+
+        //  checking for audio tag information
+        val result = CoroutineScope(IO).async {
+            val tag = appRepository.getTagBySnipId(snipId = snip!!.snip_id)
+            tag?.let {
+                if(it.audioPath.isNotNullOrEmpty()){
+                    return@async Pair(it.audioPath, it.audioPosition)
+                }
+            }
+            return@async null
+        }
+
+        result.await()?.let { tagInfo = it }
 
         if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
             val clippingMediaSource = ClippingMediaSource(mediaSource,
@@ -326,7 +342,17 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                     0,
                     TimeUnit.SECONDS.toMicros(snip!!.total_video_duration.toLong()))
             seekBar.setDuration(snip!!.total_video_duration.toLong() * 1000)
-            player.setMediaSource(clippingMediaSource)
+            if(tagInfo != null){
+                if (tagInfo!!.second == CreateTag.AUDIO_BEFORE) {
+                    player.addMediaItem(MediaItem.fromUri((Uri.parse(tagInfo!!.first))))
+                    player.addMediaSource(clippingMediaSource)
+                } else {
+                    player.addMediaSource(clippingMediaSource)
+                    player.addMediaItem(MediaItem.fromUri((Uri.parse(tagInfo!!.first))))
+                }
+            } else {
+                player.setMediaSource(clippingMediaSource)
+            }
 //            player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
         }
 
