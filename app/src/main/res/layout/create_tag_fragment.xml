@@ -260,7 +260,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/sub_cont" />
 
-    <LinearLayout
+    <RadioGroup
         android:id="@+id/con_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -268,11 +268,12 @@
         android:layout_marginStart="37dp"
         android:layout_marginTop="10dp"
         android:layout_marginEnd="37dp"
+        android:orientation="horizontal"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/color_label">
 
-        <CheckBox
+        <RadioButton
             android:id="@+id/color_one"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -281,7 +282,7 @@
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center" />
 
-        <CheckBox
+        <RadioButton
             android:id="@+id/color_two"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -290,19 +291,16 @@
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center" />
 
-        <CheckBox
+        <RadioButton
             android:id="@+id/color_three"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginStart="20dp"
             android:background="@drawable/filtercolor_three"
             android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center"
+            android:foregroundGravity="center" />
 
-
-            />
-
-        <CheckBox
+        <RadioButton
             android:id="@+id/color_four"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -311,7 +309,7 @@
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center" />
 
-        <CheckBox
+        <RadioButton
             android:id="@+id/color_five"
             android:layout_width="40dp"
             android:layout_height="40dp"
@@ -320,7 +318,7 @@
             android:background="@drawable/filtercolor_five"
             android:button="@drawable/colour_filter_drawable"
             android:foregroundGravity="center" />
-    </LinearLayout>
+    </RadioGroup>
 
     <LinearLayout
         android:layout_width="match_parent"

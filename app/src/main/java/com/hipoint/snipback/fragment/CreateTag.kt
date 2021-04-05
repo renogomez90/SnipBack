@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit
 class CreateTag : Fragment() {
 
     private lateinit var rootView     : View
-    private lateinit var playVideo         : ImageButton
+    private lateinit var playVideo    : ImageButton
     private lateinit var mic          : ImageButton
     private lateinit var tick         : ImageButton
     private lateinit var delVoiceTag  : ImageButton
@@ -61,12 +61,12 @@ class CreateTag : Fragment() {
     private lateinit var shareLater   : CheckBox
     private lateinit var linkLater    : CheckBox
     private lateinit var videoTagsList: RecyclerView
-    private lateinit var colorOne     : CheckBox
-    private lateinit var colorTwo     : CheckBox
-    private lateinit var colorThree   : CheckBox
-    private lateinit var colorFour    : CheckBox
-    private lateinit var colorFive    : CheckBox
-    private lateinit var subContainer  : ConstraintLayout
+    private lateinit var colorOne     : RadioButton
+    private lateinit var colorTwo     : RadioButton
+    private lateinit var colorThree   : RadioButton
+    private lateinit var colorFour    : RadioButton
+    private lateinit var colorFive    : RadioButton
+    private lateinit var subContainer : ConstraintLayout
 
 
     private var audioPlayer: MediaPlayer? = null
@@ -275,10 +275,6 @@ class CreateTag : Fragment() {
             }
         })
 
-        colorTwo.setOnClickListener{
-
-        }
-
         setupVideoTags()
         showSelectedColourTags()
         if(savedAudioPath.isBlank())
@@ -333,6 +329,7 @@ class CreateTag : Fragment() {
     }
 
     private fun getSelectedColourTags(): String {
+        /*  //  this is for multiple colour tag selection
         val sb = StringBuilder()
         if(colorOne.isChecked) {
             sb.append("${TagColours.BLUE.name},")
@@ -349,8 +346,24 @@ class CreateTag : Fragment() {
         if(colorFive.isChecked) {
             sb.append("${TagColours.GREEN.name},")
         }
+        return sb.toString()*/
 
-        return sb.toString()
+        if(colorOne.isChecked) {
+            return TagColours.BLUE.name
+        }
+        if(colorTwo.isChecked) {
+            return TagColours.RED.name
+        }
+        if(colorThree.isChecked) {
+            return TagColours.ORANGE.name
+        }
+        if(colorFour.isChecked) {
+            return TagColours.PURPLE.name
+        }
+        if(colorFive.isChecked) {
+            return TagColours.GREEN.name
+        }
+        return ""
     }
 
     private fun showSelectedColourTags(){
