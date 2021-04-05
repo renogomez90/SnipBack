@@ -32,6 +32,7 @@ import com.hipoint.snipback.adapter.TagsRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.TagColours
 import com.hipoint.snipback.fragment.VideoEditingFragment.Companion.newInstance
+import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.entities.Tags
 import com.hipoint.snipback.room.repository.AppRepository
@@ -51,6 +52,7 @@ class CreateTag : Fragment() {
     private lateinit var mic          : ImageButton
     private lateinit var tick         : ImageButton
     private lateinit var delVoiceTag  : ImageButton
+    private lateinit var delete       : ImageButton
     private lateinit var afterBtn     : SwitchCompat
     private lateinit var beforeBtn    : SwitchCompat
     private lateinit var playBtn      : CheckBox
@@ -117,10 +119,11 @@ class CreateTag : Fragment() {
         afterBtn      = rootView.findViewById(R.id.after_switch)
         beforeBtn     = rootView.findViewById(R.id.before_switch)
         tick          = rootView.findViewById(R.id.tick)
-        playBtn          = rootView.findViewById(R.id.play_pause_btn)
+        playBtn       = rootView.findViewById(R.id.play_pause_btn)
         mic           = rootView.findViewById(R.id.mic)
         delVoiceTag   = rootView.findViewById(R.id.del_voice_tag)
-        playVideo          = rootView.findViewById(R.id.edit)
+        delete        = rootView.findViewById(R.id.delete)
+        playVideo     = rootView.findViewById(R.id.edit)
         mChronometer  = rootView.findViewById(R.id.chronometer)
         shareLater    = rootView.findViewById(R.id.share_later)
         linkLater     = rootView.findViewById(R.id.link_later)
@@ -131,8 +134,6 @@ class CreateTag : Fragment() {
         colorFour     = rootView.findViewById(R.id.color_four)
         colorFive     = rootView.findViewById(R.id.color_five)
         subContainer  = rootView.findViewById(R.id.sub_cont)
-
-
     }
 
     /**
@@ -245,7 +246,6 @@ class CreateTag : Fragment() {
             }
         }
 
-        //  todo: what is this for?
         playVideo.setOnClickListener(View.OnClickListener {
             /*(requireActivity() as AppMainActivity).loadFragment(
                     newInstance(snip, false), true)*/
@@ -274,6 +274,25 @@ class CreateTag : Fragment() {
 
             }
         })
+
+        delete.setOnClickListener {
+            CoroutineScope(IO).launch {
+                appRepository.deleteSnip(snip!!)
+                appRepository.getHDSnipsBySnipID(object : AppRepository.HDSnipResult {
+                    override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
+                        if (!hdSnips.isNullOrEmpty()) {
+                            for (items in hdSnips) {
+                                appRepository.deleteHDSnip(items)
+                            }
+                        }
+
+                        withContext(Main) {
+                            requireActivity().supportFragmentManager.popBackStack()
+                        }
+                    }
+                }, snip!!.snip_id)
+            }
+        }
 
         setupVideoTags()
         showSelectedColourTags()
