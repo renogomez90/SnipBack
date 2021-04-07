@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/blackOverlay">
+    android:background="@color/blackOverlay"
+    android:padding="37dp">
 
     <TextView
         android:id="@+id/create_tag_tv"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="44dp"
         android:fontFamily="@font/barlow_semibold"
         android:text="CREATE TAG"
@@ -24,7 +24,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/create_tag_tv"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="24dp"
         android:fontFamily="@font/barlow_bold"
         android:text="Text"
@@ -37,7 +36,6 @@
         android:id="@+id/tag_text"
         android:layout_width="242dp"
         android:layout_height="37dp"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="10dp"
         android:background="@color/colorPrimaryWhite"
         android:fontFamily="@font/barlow_medium"
@@ -51,13 +49,15 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/videoTagsList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="37dp"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
         android:layout_marginTop="5dp"
+        android:backgroundTint="@color/colorHint"
+        android:clipToPadding="true"
         android:orientation="horizontal"
         android:padding="5dp"
-        android:backgroundTint="@color/colorHint"
+        android:scrollbars="vertical"
+        android:overScrollMode="ifContentScrolls"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tag_text" />
 
@@ -65,7 +65,6 @@
         android:id="@+id/tv_todo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="10dp"
         android:fontFamily="@font/barlow_bold"
         android:text="To do"
@@ -78,7 +77,6 @@
         android:id="@+id/share_later"
         android:layout_width="132dp"
         android:layout_height="30dp"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/to_do_btn_bg"
         android:button="@drawable/to_do_buttons"
@@ -95,7 +93,6 @@
         android:layout_width="132dp"
         android:layout_height="30dp"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="37dp"
         android:background="@drawable/to_do_btn_bg"
         android:button="@drawable/to_do_buttons"
         android:fontFamily="@font/barlow_medium"
@@ -110,7 +107,6 @@
         android:id="@+id/tv_audio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="20dp"
         android:fontFamily="@font/barlow_bold"
         android:text="Audio!"
@@ -123,7 +119,6 @@
         android:id="@+id/mic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="10dp"
         android:background="@drawable/rec_button"
         android:contentDescription="@string/no_desc"
@@ -154,7 +149,6 @@
         android:layout_height="60dp"
         android:layout_marginStart="10dp"
         android:layout_marginTop="5dp"
-        android:layout_marginEnd="37dp"
         android:background="@drawable/tag_background"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/tv_audio"
@@ -219,10 +213,10 @@
             android:id="@+id/after_holder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="19dp"
             android:layout_marginBottom="5dp"
             android:gravity="center"
-            android:layout_marginEnd="19dp"
-            android:layout_marginStart="30dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -246,12 +240,10 @@
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
     <TextView
         android:id="@+id/color_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="24dp"
         android:fontFamily="@font/barlow_bold"
         android:text="Color"
@@ -264,13 +256,11 @@
         android:id="@+id/con_2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_marginStart="37dp"
         android:layout_marginTop="10dp"
-        android:layout_marginEnd="37dp"
+        android:gravity="center"
         android:orientation="horizontal"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/color_label">
 
         <RadioButton

@@ -112,7 +112,7 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
                         holder.textShareTag.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_edit_red));
                         holder.textShareTag.setVisibility(View.VISIBLE);
                     }
-                    if(!tag.getShareLater()){
+                    if(tag.getShareLater()){
                         holder.textShareTag.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_share));
                         holder.textShareTag.setImageTintList(ColorStateList.valueOf(context.getColor(R.color.colorPrimaryRed)));
                         holder.textShareTag.setVisibility(View.VISIBLE);

@@ -250,9 +250,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -map_metadata 0 -map_metadata:s:v 0:s:v -vsync 2 -r 120 $outputFolder/out.mp4"
         } else {
             if (orientationPref != -1)
-                "-i ${clip.absolutePath} -map_metadata 0 -metadata:s:v rotate=$orientationPref -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -vsync 2 -r 30 $outputFolder/out.mp4"
+                "-i ${clip.absolutePath} -map_metadata 0 -metadata:s:v rotate=$orientationPref -vcodec libx264 -x264-params keyint=10:min-keyint=5:scenecut=0 -preset ultrafast -y -vsync 2 -r 30 $outputFolder/out.mp4"
             else
-                "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=2:min-keyint=1:scenecut=0 -preset ultrafast -y -vsync 2 -r 30 $outputFolder/out.mp4"
+                "-i ${clip.absolutePath} -vcodec libx264 -x264-params keyint=10:min-keyint=5:scenecut=0 -preset ultrafast -y -vsync 2 -r 30 $outputFolder/out.mp4"
         }
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {

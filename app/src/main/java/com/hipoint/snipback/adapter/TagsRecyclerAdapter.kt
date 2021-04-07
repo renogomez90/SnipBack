@@ -12,7 +12,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.hipoint.snipback.R
 
-class TagsRecyclerAdapter(val context: Context, val tagsList: List<String>): RecyclerView.Adapter<TagsRecyclerAdapter.TagViewHolder>() {
+class TagsRecyclerAdapter(val context: Context, val tagsList: MutableList<String>): RecyclerView.Adapter<TagsRecyclerAdapter.TagViewHolder>() {
 
     private val selectedList = arrayListOf<String>()
 
@@ -44,7 +44,9 @@ class TagsRecyclerAdapter(val context: Context, val tagsList: List<String>): Rec
         }
 
         holder.deleteTag.setOnClickListener {
-
+            selectedList.remove(tagsList[holder.absoluteAdapterPosition])
+            tagsList.removeAt(holder.absoluteAdapterPosition)
+            notifyItemRemoved(holder.absoluteAdapterPosition)
         }
     }
 

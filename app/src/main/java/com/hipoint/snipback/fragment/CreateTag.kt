@@ -21,6 +21,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.disable
@@ -327,8 +328,8 @@ class CreateTag : Fragment() {
             }
 
             withContext(Main){
-                tagsAdapter = TagsRecyclerAdapter(requireContext(), tagList.toList())
-                videoTagsList.layoutManager = LinearLayoutManager(requireContext(), RecyclerView.HORIZONTAL, false)
+                tagsAdapter = TagsRecyclerAdapter(requireContext(), tagList.toMutableList())
+                videoTagsList.layoutManager = GridLayoutManager(requireContext(), 3, RecyclerView.VERTICAL, false)
                 videoTagsList.adapter = tagsAdapter
             }
         }
