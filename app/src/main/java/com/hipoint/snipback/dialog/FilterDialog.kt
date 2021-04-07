@@ -109,8 +109,11 @@ class FilterDialog(private val filterListener: IFilterListener) : DialogFragment
 
     override fun onDismiss(dialog: DialogInterface) {
         super.onDismiss(dialog)
-
-        filterListener.filterSet(TagFilter(audioTag.isChecked, shareLater.isChecked, linkLater.isChecked, getSelectedColours(), arrayListOf<String>()))
+        filterListener.filterSet(TagFilter(audioTag.isChecked,
+            shareLater.isChecked,
+            linkLater.isChecked,
+            getSelectedColours(),
+            (filterVideoTagsList.adapter as TagsRecyclerAdapter).getSelectedItems()))
     }
 
     private fun getSelectedColours(): ArrayList<String> {

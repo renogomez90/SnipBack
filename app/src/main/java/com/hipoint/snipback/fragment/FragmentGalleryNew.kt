@@ -33,6 +33,7 @@ import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.service.VideoService
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import java.io.File
@@ -617,8 +618,32 @@ class FragmentGalleryNew : Fragment(), IFilterListener {
             0)
         filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
 
+        val filteredSnipSet = mutableSetOf<Int>()
+
         tag?.let{
-            Log.d(TAG, "filterSet: tag set = $it")
+            CoroutineScope(IO).launch {
+                if(it.hasAudio){
+                    appRepository.getSnipIdsByAudioTag()?.let { idList -> filteredSnipSet.addAll(idList) }
+                }
+                if(it.hasLinkLater){
+                    appRepository.getSnipIdsByLinkLater()?.let { idList -> filteredSnipSet.addAll(idList) }
+                }
+                if(it.hasShareLater){
+                    appRepository.getSnipIdsByShareLater()?.let { idList -> filteredSnipSet.addAll(idList) }
+                }
+                if(it.hasColour.isNotEmpty()){
+                    it.hasColour.forEach{
+                        appRepository.getSnipIdsByColour(it)?.let { idList -> filteredSnipSet.addAll(idList) }
+                    }
+                }
+                if(it.hasText.isNotEmpty()){
+                    it.hasText.forEach{
+                        appRepository.getSnipIdsByTextTag(it)?.let { idList -> filteredSnipSet.addAll(idList) }
+                    }
+                }
+
+                Log.d(TAG, "filterSet: filtered ids = $filteredSnipSet")
+            }
         }
     }
 }

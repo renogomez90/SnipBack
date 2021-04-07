@@ -41,6 +41,9 @@ interface TagDao {
     @Query("SELECT snip_id FROM Tag WHERE instr(text_tag, :tagText)")
     fun getSnipIdsByTextTag(tagText: String): List<Int>?
 
+    @Query("SELECT snip_id FROM Tag WHERE audio_path NOT NULL AND audio_path != ''")
+    fun getSnipIdsByAudioTag(): List<Int>?
+
     @get:Query("SELECT * from Tag")
     val tagsData: LiveData<List<Tags>>
 

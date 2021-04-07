@@ -303,6 +303,14 @@ class AppRepository(context: Context?) {
         return result.await()
     }
 
+    suspend fun getSnipIdsByAudioTag(): List<Int>?{
+        val result = CoroutineScope(IO).async {
+            tagDao.getSnipIdsByAudioTag()
+        }
+
+        return result.await()
+    }
+
 
     companion object {
         @JvmStatic
