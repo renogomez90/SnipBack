@@ -6,10 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
+import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.core.content.FileProvider
@@ -18,32 +18,29 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.exozet.android.core.extensions.hideSystemUI
 import com.hipoint.snipback.ActivityPlayVideo
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
+import com.hipoint.snipback.Utils.TagFilter
 import com.hipoint.snipback.adapter.MainRecyclerAdapter
-import com.hipoint.snipback.adapter.TagsRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
-import com.hipoint.snipback.enums.TagColours
+import com.hipoint.snipback.dialog.FilterDialog
+import com.hipoint.snipback.listener.IFilterListener
 import com.hipoint.snipback.room.entities.Event
-import com.hipoint.snipback.room.entities.EventData
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
 import com.hipoint.snipback.room.repository.AppViewModel
 import com.hipoint.snipback.service.VideoService
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
 
 
-class FragmentGalleryNew : Fragment() {
+class FragmentGalleryNew : Fragment(), IFilterListener {
     private val TAG = FragmentPlayVideo2::class.java.simpleName
 
     private lateinit var rootView                        : View
@@ -65,10 +62,6 @@ class FragmentGalleryNew : Fragment() {
     private lateinit var layout_multidelete              : RelativeLayout
     private lateinit var click                           : RelativeLayout
     private lateinit var import_con                      : RelativeLayout
-    private lateinit var audioTag                        : CheckBox
-    private lateinit var shareLater                      : CheckBox
-    private lateinit var linkLater                       : CheckBox
-    private lateinit var filterVideoTagsList             : RecyclerView
 
     private var mainRecyclerAdapter: MainRecyclerAdapter? = null
 
@@ -243,77 +236,15 @@ class FragmentGalleryNew : Fragment() {
         }
 
         filter_button.setOnClickListener {
-            val dialogFilter = Dialog(requireActivity())
-            val window = dialogFilter.window
-            var tagsAdapter: TagsRecyclerAdapter? = null
+            val dialogFilter = FilterDialog(this@FragmentGalleryNew)
+            dialogFilter.show(requireActivity().supportFragmentManager, FILTER_DIALOG)
 
             filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
                 R.drawable.ic_filter_selected,
                 0,
                 0)
             filter_button.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
-            window!!.setLayout(ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT)
-            dialogFilter.setContentView(R.layout.filter_layout)
-            dialogFilter.show()
-            audioTag            = dialogFilter.findViewById(R.id.audio_tag)
-            shareLater          = dialogFilter.findViewById(R.id.share_later)
-            linkLater           = dialogFilter.findViewById(R.id.link_later)
-            filterVideoTagsList = dialogFilter.findViewById(R.id.filterVideoTagsList)
 
-            audioTag = dialogFilter.findViewById(R.id.audio_tag)
-            shareLater = dialogFilter.findViewById(R.id.share_later)
-            linkLater = dialogFilter.findViewById(R.id.link_later)
-
-
-            audioTag.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-                if (isChecked) {
-                    audioTag.setBackgroundResource(R.drawable.red_outline_background)
-                    audioTag.setTextColor(Color.WHITE)
-                } else {
-                    audioTag.setBackgroundResource(R.drawable.grey_outine_background)
-                    audioTag.setTextColor(Color.GRAY)
-
-                }
-            })
-
-            shareLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-                if (isChecked) {
-                    shareLater.setBackgroundResource(R.drawable.red_outline_background)
-                    shareLater.setTextColor(Color.WHITE)
-                } else {
-                    shareLater.setBackgroundResource(R.drawable.grey_outine_background)
-                    shareLater.setTextColor(Color.GRAY)
-
-                }
-            })
-
-            linkLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-                if (isChecked) {
-                    linkLater.setBackgroundResource(R.drawable.red_outline_background)
-                    linkLater.setTextColor(Color.WHITE)
-                } else {
-                    linkLater.setBackgroundResource(R.drawable.grey_outine_background)
-                    linkLater.setTextColor(Color.GRAY)
-
-                }
-            })
-
-            dialogFilter.setOnDismissListener {
-                filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
-                    R.drawable.ic_filter_results_button,
-                    0,
-                    0)
-                filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
-            }
-
-            /*CoroutineScope(IO).launch {
-                val idList = appRepository.getSnipIdsByColour(TagColours.ORANGE.name)
-
-                withContext(Main) {
-                    (mainCategoryRecycler.adapter as MainRecyclerAdapter).setFilterIds(idList)
-                }
-            }*/
         }
 
         click.setOnClickListener {
@@ -676,5 +607,18 @@ class FragmentGalleryNew : Fragment() {
 
         private const val VIDEO_DIRECTORY_NAME = "SnipBackVirtual"
         private const val THUMBS_DIRECTORY_NAME = "Thumbs"
+        private const val FILTER_DIALOG = "com.hipoint.snipback.FILTER_DIALOG"
+    }
+
+    override fun filterSet(tag: TagFilter?) {
+        filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
+            R.drawable.ic_filter_results_button,
+            0,
+            0)
+        filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
+
+        tag?.let{
+            Log.d(TAG, "filterSet: tag set = $it")
+        }
     }
 }

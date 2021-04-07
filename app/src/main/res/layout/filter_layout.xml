@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/colorPrimary">
+    android:layout_height="match_parent"
+    android:background="@color/colorPrimary"
+    android:padding="30dp">
 
     <TextView
         android:id="@+id/filterlabelfil"
@@ -13,36 +15,29 @@
         android:text="FILTER"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="20sp"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/colorlabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/barlow_bold"
+        android:text="COLOR"
+        android:textColor="@color/colorPrimaryWhite"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="@+id/filterlabelfil"
+        app:layout_constraintTop_toBottomOf="@+id/filterlabelfil" />
 
     <LinearLayout
         android:id="@+id/color_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
         android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@+id/colorlabel"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/filterlabelfil"
-        app:layout_constraintTop_toTopOf="parent"
-
-        >
-
-        <TextView
-            android:id="@+id/colorlabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/barlow_bold"
-            android:text="COLOR"
-            android:textColor="@color/colorPrimaryWhite"
-            android:textSize="16sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/filterlabelfil" />
+        app:layout_constraintTop_toTopOf="@+id/colorlabel">
 
         <CheckBox
             android:id="@+id/color_one"
@@ -95,89 +90,78 @@
         android:id="@+id/separator_one"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginTop="20dp"
         android:background="@color/colorHint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/color_container" />
 
-
     <TextView
         android:id="@+id/audio_tag_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="20dp"
         android:fontFamily="@font/barlow_bold"
         android:text="AUDIO TAG"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/colorlabel"
         app:layout_constraintTop_toBottomOf="@+id/separator_one" />
 
     <CheckBox
         android:id="@+id/audio_tag"
         android:layout_width="220dp"
         android:layout_height="30dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
         android:background="@drawable/audio_tag_rounded_corner_grey"
+        android:button="@drawable/audio_tag_button"
         android:fontFamily="@font/barlow_medium"
         android:gravity="center"
-        android:button="@drawable/audio_tag_button"
         android:text="Audio"
         android:textColor="@color/colorHint"
         android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@+id/audio_tag_label"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/audio_tag_label"
-        app:layout_constraintTop_toBottomOf="@+id/separator_one" />
+        app:layout_constraintTop_toTopOf="@+id/audio_tag_label" />
 
     <View
         android:id="@+id/separator_two"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginStart="30dp"
         android:layout_marginTop="20dp"
-        android:layout_marginEnd="30dp"
         android:background="@color/colorHint"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/audio_tag_label" />
+        app:layout_constraintTop_toBottomOf="@id/audio_tag_label" />
+
+    <TextView
+        android:id="@+id/todotag_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/barlow_bold"
+        android:orientation="horizontal"
+        android:text="TO DO TAG"
+        android:textColor="@color/colorPrimaryWhite"
+        android:textSize="16sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/separator_two" />
 
     <LinearLayout
         android:id="@+id/to_do_tag_container"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/separator_two">
-
-
-        <TextView
-            android:id="@+id/todotag_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:fontFamily="@font/barlow_bold"
-            android:orientation="horizontal"
-            android:text="TO DO TAG"
-            android:textColor="@color/colorPrimaryWhite"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/separator_two" />
-
+        app:layout_constraintBottom_toBottomOf="@+id/todotag_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/todotag_label"
+        app:layout_constraintTop_toTopOf="@+id/todotag_label">
 
         <CheckBox
             android:id="@+id/share_later"
             android:layout_width="105dp"
             android:layout_height="30dp"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="10dp"
             android:background="@drawable/audio_tag_rounded_corner_grey"
             android:button="@drawable/audio_tag_button"
             android:fontFamily="@font/barlow_medium"
@@ -193,7 +177,6 @@
             android:layout_width="105dp"
             android:layout_height="30dp"
             android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
             android:layout_marginEnd="20dp"
             android:background="@drawable/audio_tag_rounded_corner_grey"
             android:button="@drawable/audio_tag_button"
@@ -210,43 +193,37 @@
         android:id="@+id/separator_three"
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginTop="20dp"
         android:background="@color/colorHint"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/to_do_tag_container" />
+        app:layout_constraintTop_toBottomOf="@id/todotag_label" />
 
-    <LinearLayout
-        android:id="@+id/textTagContainer"
+
+    <TextView
+        android:id="@+id/text_tag_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/barlow_bold"
+        android:gravity="center"
+        android:text="TEXT TAGS"
+        android:textColor="@color/colorPrimaryWhite"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/separator_three"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/filterVideoTagsList"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
-        android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@+id/separator_three">
-
-        <TextView
-            android:id="@+id/text_tag_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/barlow_bold"
-            android:gravity="center"
-            android:text="TEXT TAGS"
-            android:textColor="@color/colorPrimaryWhite"
-            android:textSize="16sp" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/filterVideoTagsList"
-                    android:layout_width="wrap_content"
-                    android:background="@color/colorHint"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="5dp"
-                    android:backgroundTint="@color/colorHint"
-                    android:orientation="vertical"
-                    android:padding="5dp" />
-    </LinearLayout>
+        android:layout_marginTop="5dp"
+        android:clipToPadding="true"
+        android:orientation="horizontal"
+        android:overScrollMode="ifContentScrolls"
+        android:padding="5dp"
+        android:scrollbars="vertical"
+        app:layout_constraintTop_toBottomOf="@id/text_tag_label"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
