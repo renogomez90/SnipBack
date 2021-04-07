@@ -198,8 +198,7 @@ class CreateTag : Fragment() {
             /*val intent = Intent(requireActivity(), ActivityPlayVideo::class.java)
             intent.putExtra("snip", snip)
             startActivity(intent)
-            requireActivity().finish()*/
-            saveTag()
+            requireActivity().finish()*/            saveTag()
             requireActivity().supportFragmentManager.popBackStack()
         })
 
@@ -217,6 +216,8 @@ class CreateTag : Fragment() {
                     audioPlayer?.start()
                 } else {
                     audioPlayer?.stop()
+                    audioPlayer?.release()
+                    audioPlayer = null
                 }
             }
         }
@@ -472,7 +473,11 @@ class CreateTag : Fragment() {
                 file.mkdirs()
             }
 
-//        return (file.getAbsolutePath() + "/" +snip.getSnip_id()+ file_exts[currentFormat]);\
+            val newFile = File(file.absolutePath + "/" + snip!!.snip_id + ".mp3")
+            if(newFile.exists()){
+                newFile.delete()
+            }
+
             return file.absolutePath + "/" + snip!!.snip_id + ".mp3"
         }
     private val errorListener = MediaRecorder.OnErrorListener { mr, what, extra ->
