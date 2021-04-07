@@ -22,8 +22,10 @@ import com.hipoint.snipback.AppMainActivity;
 import com.hipoint.snipback.R;
 import com.hipoint.snipback.Utils.CommonUtils;
 import com.hipoint.snipback.application.AppClass;
+import com.hipoint.snipback.enums.TagColours;
 import com.hipoint.snipback.fragment.FragmentPlayVideo2;
 import com.hipoint.snipback.room.entities.Snip;
+import com.hipoint.snipback.room.entities.Tags;
 
 import java.io.File;
 import java.util.List;
@@ -34,11 +36,13 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     List<Snip> snipArrayList;
     private String viewChangeValue;
     private int orientation,totalWidth;
+    private List<Tags> tagsList;
 
-    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips, String viewChange) {
+    public CategoryItemRecyclerAdapter(Context context, List<Snip> allSnips, String viewChange, List<Tags> tagList) {
         this.context = context;
         this.snipArrayList = allSnips;
         this.viewChangeValue = viewChange;
+        this.tagsList = tagList;
     }
 
     @NonNull
@@ -166,16 +170,19 @@ public class CategoryItemRecyclerAdapter extends RecyclerView.Adapter<CategoryIt
     }
 
     public class CategoryItemViewHolder extends RecyclerView.ViewHolder {
+
         ImageView itemImage;
         TextView tvVersionLabel;
         TextView tvDuration;
+//        ImageView colourFilter;
         RelativeLayout relativeLayoutImage;
 
         public CategoryItemViewHolder(@NonNull View itemView) {
             super(itemView);
-            itemImage = itemView.findViewById(R.id.image);
-            tvVersionLabel = itemView.findViewById(R.id.tvVersionLabel);
-            tvDuration = itemView.findViewById(R.id.tvDuration);
+            itemImage           = itemView.findViewById(R.id.image);
+            tvVersionLabel      = itemView.findViewById(R.id.tvVersionLabel);
+            tvDuration          = itemView.findViewById(R.id.tvDuration);
+//            colourFilter        = itemView.findViewById(R.id.colourFilter);
             relativeLayoutImage = itemView.findViewById(R.id.rel_layout_image);
         }
     }

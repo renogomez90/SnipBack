@@ -1,6 +1,7 @@
 package com.hipoint.snipback.fragment
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.media.MediaRecorder
@@ -25,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.disable
 import com.exozet.android.core.extensions.enable
 import com.exozet.android.core.extensions.isNotNullOrEmpty
+import com.google.android.exoplayer2.util.MimeTypes
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.SnipPaths
@@ -50,6 +52,7 @@ class CreateTag : Fragment() {
     private lateinit var playVideo    : ImageButton
     private lateinit var mic          : ImageButton
     private lateinit var tick         : ImageButton
+    private lateinit var share        : ImageButton
     private lateinit var delVoiceTag  : ImageButton
     private lateinit var delete       : ImageButton
     private lateinit var afterBtn     : SwitchCompat
@@ -118,6 +121,7 @@ class CreateTag : Fragment() {
         afterBtn      = rootView.findViewById(R.id.after_switch)
         beforeBtn     = rootView.findViewById(R.id.before_switch)
         tick          = rootView.findViewById(R.id.tick)
+        share         = rootView.findViewById(R.id.share)
         playBtn       = rootView.findViewById(R.id.play_pause_btn)
         mic           = rootView.findViewById(R.id.mic)
         delVoiceTag   = rootView.findViewById(R.id.del_voice_tag)
@@ -198,6 +202,7 @@ class CreateTag : Fragment() {
             requireActivity().supportFragmentManager.popBackStack()
         })
 
+        //  plays the video snip
         playBtn.setOnCheckedChangeListener { buttonView, isChecked ->
             if (savedAudioPath.isNotNullOrEmpty()) {
                 if (isChecked) {
@@ -274,6 +279,7 @@ class CreateTag : Fragment() {
             }
         })
 
+        //  deletes the snip
         delete.setOnClickListener {
             CoroutineScope(IO).launch {
                 appRepository.deleteSnip(snip!!)
@@ -291,6 +297,14 @@ class CreateTag : Fragment() {
                     }
                 }, snip!!.snip_id)
             }
+        }
+
+        //  shares the snip
+        share.setOnClickListener {
+            val shareIntent = Intent(Intent.ACTION_SEND)
+            shareIntent.type = MimeTypes.VIDEO_MP4
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(snip!!.videoFilePath))
+            startActivity(Intent.createChooser(shareIntent, null))
         }
 
         setupVideoTags()

@@ -70,9 +70,6 @@ class FragmentGalleryNew : Fragment() {
     private lateinit var linkLater                       : CheckBox
     private lateinit var filterVideoTagsList             : RecyclerView
 
-
-
-
     private var mainRecyclerAdapter: MainRecyclerAdapter? = null
 
     var snipArrayList: List<Snip> = ArrayList()
@@ -302,8 +299,6 @@ class FragmentGalleryNew : Fragment() {
                 }
             })
 
-
-
             dialogFilter.setOnDismissListener {
                 filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
                     R.drawable.ic_filter_results_button,
@@ -361,12 +356,15 @@ class FragmentGalleryNew : Fragment() {
         }
     }
 
-    private fun galleryEnlargedView(viewChange: String, viewButtonClicked: Boolean) {
+    private fun galleryEnlargedView(viewChange: String, viewButtonClicked: Boolean) = CoroutineScope(Main).launch {
         updateViewButtonUI(viewButtonClicked) //update view when button clicked
         val allSnips = AppClass.getAppInstance().allSnip
         val allParentSnip = AppClass.getAppInstance().allParentSnip
+
+        val tagsList = appRepository.getAllTags()
+
         mainRecyclerAdapter =
-            MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange)
+            MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange, tagsList)
         mainRecyclerAdapter!!.setHasStableIds(true)
         mainCategoryRecycler.adapter = mainRecyclerAdapter
         mainRecyclerAdapter?.notifyDataSetChanged()
@@ -458,15 +456,18 @@ class FragmentGalleryNew : Fragment() {
             if(mainCategoryRecycler.layoutManager == null)
                 mainCategoryRecycler.layoutManager = LinearLayoutManager(requireActivity())
 
-            if(mainCategoryRecycler.adapter == null) {
-                mainRecyclerAdapter = MainRecyclerAdapter(requireActivity(),
-                        allParentSnip, allSnips, viewChange)
-                mainCategoryRecycler.adapter = mainRecyclerAdapter
-            } else {
-                (mainCategoryRecycler.adapter as MainRecyclerAdapter).updateData(allParentSnip, allSnips, viewChange)
+            CoroutineScope(Main).launch {
+                val tagsList = appRepository.getAllTags()
+
+                if(mainCategoryRecycler.adapter == null) {
+                    mainRecyclerAdapter = MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, viewChange, tagsList)
+                    mainCategoryRecycler.adapter = mainRecyclerAdapter
+                } else {
+                    (mainCategoryRecycler.adapter as MainRecyclerAdapter).updateData(allParentSnip, allSnips, viewChange, tagsList)
+                }
+                if(VideoService.isProcessing)
+                    (mainCategoryRecycler.adapter as MainRecyclerAdapter).showLoading(true)
             }
-            if(VideoService.isProcessing)
-                (mainCategoryRecycler.adapter as MainRecyclerAdapter).showLoading(true)
 //            mainCategoryRecycler.adapter!!.notifyDataSetChanged()
         }
     }
@@ -646,17 +647,19 @@ class FragmentGalleryNew : Fragment() {
 //        }
         }
 
-    fun onLoadingCompleted(success: Boolean) {
+    fun onLoadingCompleted(success: Boolean) = CoroutineScope(Main).launch{
         if (success) {
             rlLoader.visibility = View.INVISIBLE
             val allSnips = AppClass.getAppInstance().allSnip
             val allParentSnip = AppClass.getAppInstance().allParentSnip
+            val tagsList = appRepository.getAllTags()
+
             if (mainRecyclerAdapter == null) {
                 val layoutManager: RecyclerView.LayoutManager =
                     LinearLayoutManager(requireActivity())
                 mainCategoryRecycler.layoutManager = layoutManager
                 mainRecyclerAdapter =
-                    MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, null)
+                    MainRecyclerAdapter(requireActivity(), allParentSnip, allSnips, null, tagsList)
                 mainCategoryRecycler.adapter = mainRecyclerAdapter
             } else {
                 mainRecyclerAdapter?.notifyDataSetChanged()

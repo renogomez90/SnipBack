@@ -17,6 +17,7 @@ import com.hipoint.snipback.application.AppClass;
 import com.hipoint.snipback.fragment.FragmentGalleryNew;
 import com.hipoint.snipback.room.entities.EventData;
 import com.hipoint.snipback.room.entities.Snip;
+import com.hipoint.snipback.room.entities.Tags;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,14 +36,16 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private Integer orientationValue;
     private int eventId = -1;
     private List<Integer> allowedIds = new ArrayList<>();
+    private List<Tags> tagsList;
 
-    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange) {
+    public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange, List<Tags> tagsList) {
         this.context = context;
         this.allSnips = new ArrayList<>();
         this.parentSnips = new ArrayList<>();
         this.allSnips.addAll(allEventSnip);
         this.parentSnips.addAll(allParentSnip);
         this.viewChangeValue = viewChange;
+        this.tagsList = tagsList;
     }
 
     @Override
@@ -50,7 +53,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         return (long) position;
     }
 
-    public void updateData(List<EventData> updatedAllParentSnip, List<EventData> updatedAllEventSnip, String updatedViewChange){
+    public void updateData(List<EventData> updatedAllParentSnip, List<EventData> updatedAllEventSnip, String updatedViewChange, List<Tags> tagList){
         /*GalleryDiffUtlCallback parentDiffCallback = new GalleryDiffUtlCallback(this.parentSnips, updatedAllParentSnip);
         GalleryDiffUtlCallback snipDiffCallback = new GalleryDiffUtlCallback(this.allSnips, updatedAllEventSnip);
         DiffUtil.DiffResult parentDiffResult = DiffUtil.calculateDiff(parentDiffCallback);
@@ -60,6 +63,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
         this.allSnips.addAll(updatedAllEventSnip);
         this.parentSnips.addAll(updatedAllParentSnip);
         this.viewChangeValue = updatedViewChange;
+        this.tagsList = tagList;
         /*parentDiffResult.dispatchUpdatesTo(this);
         snipDiffResult.dispatchUpdatesTo(this);*/
         notifyDataSetChanged();
@@ -124,7 +128,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 
     private void setCatItemRecycler(RecyclerView recyclerView, List<Snip> allEventSnips, String viewChange) {
         int spanCount = getSpanCount();
-        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange);
+        ParentSnipRecyclerAdapter itemRecyclerAdapter = new ParentSnipRecyclerAdapter(context, allEventSnips, viewChange, tagsList);
         itemRecyclerAdapter.setHasStableIds(true);
 //        recyclerView.setLayoutManager(new LinearLayoutManager(context, RecyclerView.VERTICAL, false));
         GridLayoutManager layoutManager = new GridLayoutManager(context, spanCount, RecyclerView.VERTICAL, false);
