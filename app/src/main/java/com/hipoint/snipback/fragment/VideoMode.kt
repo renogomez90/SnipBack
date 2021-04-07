@@ -420,6 +420,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         object : BroadcastReceiver(){
             override fun onReceive(context: Context?, intent: Intent?) {
                 intent?.let{
+                    hideProgress()
                     (requireActivity() as AppMainActivity).loadFragment(CreateTag.newInstance(it.getParcelableExtra("snip")), true)
                 }
             }
@@ -1427,6 +1428,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         triggerLeftActionAnimation()
         if (cameraControl!!.isRecordingClips() && (currentOperation == CurrentOperation.CLIP_RECORDING || currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)) {    //  if clips are being recorded
             gallery.disable()
+            showProgress()
             if (cameraControl!!.clipQueueSize() > 1) { // there is more than 1 items in the queue
                 if (concatOnSwipeDuringClipRecording(SwipeAction.SWIPE_UP)) {
                     return
