@@ -36,6 +36,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.*
 import kotlin.collections.ArrayList
@@ -612,11 +613,32 @@ class FragmentGalleryNew : Fragment(), IFilterListener {
     }
 
     override fun filterSet(tag: TagFilter?) {
-        filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
-            R.drawable.ic_filter_results_button,
-            0,
-            0)
-        filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
+        if(isNoFilterSelected(tag)){
+            CoroutineScope(IO).launch {
+                val allSnips = AppClass.getAppInstance().allSnip
+                val allParentSnip = AppClass.getAppInstance().allParentSnip
+                val tagsList = appRepository.getAllTags()
+
+                withContext(Main) {
+                    val adapter = (mainCategoryRecycler.adapter as MainRecyclerAdapter)
+
+                    adapter.setFilterIds(null)
+                    adapter.updateData(allParentSnip,
+                        allSnips,
+                        viewChange,
+                        tagsList)
+
+                    //  since no filter is applied we can reset the button colour
+                    filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
+                        R.drawable.ic_filter_results_button,
+                        0,
+                        0)
+                    filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
+                }
+            }
+
+            return
+        }
 
         val filteredSnipSet = mutableSetOf<Int>()
 
@@ -642,8 +664,23 @@ class FragmentGalleryNew : Fragment(), IFilterListener {
                     }
                 }
 
-                Log.d(TAG, "filterSet: filtered ids = $filteredSnipSet")
+                withContext(Main) {
+                    (mainCategoryRecycler.adapter as MainRecyclerAdapter).setFilterIds(
+                        filteredSnipSet.toList())
+                }
             }
+        }
+    }
+
+    private fun isNoFilterSelected(tag: TagFilter?): Boolean {
+        return if(tag == null)
+            true
+        else {
+            !tag.hasShareLater &&
+            !tag.hasLinkLater &&
+            !tag.hasAudio &&
+            tag.hasText.isEmpty() &&
+            tag.hasColour.isEmpty()
         }
     }
 }

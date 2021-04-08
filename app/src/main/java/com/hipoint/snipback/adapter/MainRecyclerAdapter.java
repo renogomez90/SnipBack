@@ -35,8 +35,8 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
     private String viewChangeValue;
     private Integer orientationValue;
     private int eventId = -1;
-    private List<Integer> allowedIds = new ArrayList<>();
-    private List<Tags> tagsList;
+    private List<Integer> allowedIds = new ArrayList<>();   //  to filter the gallery listing
+    private List<Tags> tagsList;    //  to show the icons for associated tags
 
     public MainRecyclerAdapter(Context context, List<EventData> allParentSnip, List<EventData> allEventSnip, String viewChange, List<Tags> tagsList) {
         this.context = context;
@@ -174,7 +174,8 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<MainRecyclerAdapte
 
     public void setFilterIds(List<Integer> filterIds){
         allowedIds.clear();
-        allowedIds.addAll(filterIds);
+        if(filterIds != null)
+            allowedIds.addAll(filterIds);
         notifyDataSetChanged();
     }
 

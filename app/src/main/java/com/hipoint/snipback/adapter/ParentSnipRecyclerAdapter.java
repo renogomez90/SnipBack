@@ -26,23 +26,22 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     private Context context;
     private ItemListener mListener;
     List<Snip> snipArrayList;
+    List<Snip> filteredArrayList;
     private String viewChangeValue;
     private List<Integer> allowedIds = new ArrayList<>();
     private List<Tags> tagsList;
 
     public void setFilterIds(List<Integer> filterIds){
-        if(filterIds == null || filterIds.isEmpty())
-            return;
-
         allowedIds.clear();
-        allowedIds.addAll(filterIds);
+        filteredArrayList.clear();
+        filteredArrayList.addAll(snipArrayList);
 
-        List<Snip> tmpList = new ArrayList<>();
-        tmpList.addAll(snipArrayList);
-
-        for (Snip item : tmpList) {
-            if(!allowedIds.contains(item.getSnip_id())){
-                snipArrayList.remove(item);
+        if (filterIds != null && !filterIds.isEmpty()) {
+            allowedIds.addAll(filterIds);
+            for (Snip item : snipArrayList) {
+                if(!allowedIds.contains(item.getSnip_id())){
+                    filteredArrayList.remove(item);
+                }
             }
         }
 
@@ -54,6 +53,9 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
         this.snipArrayList = allParentSnips;
         this.viewChangeValue = viewChange;
         this.tagsList = tagsList;
+
+        this.filteredArrayList = new ArrayList<>();
+        this.filteredArrayList.addAll(this.snipArrayList);
     }
 
     @Override
@@ -70,14 +72,14 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     @Override
     public void onBindViewHolder(@NonNull ParentItemViewHolder holder, int position) {
 
-        if (snipArrayList != null) {
-            if(snipArrayList.get(position).getVideoFilePath() == null){
+        if (filteredArrayList != null) {
+            if(filteredArrayList.get(position).getVideoFilePath() == null){
                 holder.loading.setVisibility(View.VISIBLE);
             } else {
-                int parentId = snipArrayList.get(position).getSnip_id();
-                showTags(holder, snipArrayList.get(position));
+                int parentId = filteredArrayList.get(position).getSnip_id();
+                showTags(holder, filteredArrayList.get(position));
                 String viewChange = viewChangeValue;
-                List<Snip> childSnip = AppClass.getAppInstance().getChildSnipsByParentSnipId(snipArrayList.get(position).getEvent_id(), parentId);
+                List<Snip> childSnip = AppClass.getAppInstance().getChildSnipsByParentSnipId(filteredArrayList.get(position).getEvent_id(), parentId);
                 setCatItemRecycler(holder.itemRecycler, childSnip, viewChange);
             }
         }
@@ -94,7 +96,7 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
 
     @Override
     public int getItemCount() {
-        return snipArrayList.size();
+        return filteredArrayList.size();
     }
 
     /**
