@@ -2,11 +2,13 @@ package com.hipoint.snipback.adapter;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -73,6 +75,18 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
     public void onBindViewHolder(@NonNull ParentItemViewHolder holder, int position) {
 
         if (filteredArrayList != null) {
+
+            int orientation = context.getResources().getConfiguration().orientation;
+            //  this is required here to make the tag icons appear properly when enlarged
+            if (viewChangeValue != null && orientation == Configuration.ORIENTATION_PORTRAIT) {
+                enlargedPortraitView(holder);
+
+            } else if (viewChangeValue != null && orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                enlargedLandscapeMode(holder);
+            } else {
+                enlargedPortraitView(holder);
+            }
+
             if(filteredArrayList.get(position).getVideoFilePath() == null){
                 holder.loading.setVisibility(View.VISIBLE);
             } else {
@@ -146,7 +160,40 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
         }
     }
 
+    private void enlargedPortraitView(ParentItemViewHolder holder) {
+        if (viewChangeValue != null) {
+            if (viewChangeValue.equals("ENLARGED")) {
+                RelativeLayout.LayoutParams relativeParams = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 750);
+                relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,10));
+                holder.parentHolder.setLayoutParams(relativeParams);
+            }
+        }
+    }
+
+    private void enlargedLandscapeMode(ParentItemViewHolder holder) {
+        int totalWidth = context.getResources().getDisplayMetrics().widthPixels;
+
+        if (viewChangeValue != null) {
+            if (viewChangeValue.equals("ENLARGED")) {
+                RelativeLayout.LayoutParams relativeParams =
+                        new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT , RelativeLayout.LayoutParams.MATCH_PARENT);
+                relativeParams.setMargins((int) dpToPx(context,4), 0, 0, (int) dpToPx(context,10));
+                relativeParams.width = (totalWidth - (int) dpToPx(context,70)) / 2;
+                relativeParams.height = (totalWidth - (int) dpToPx(context,70)) / 2;
+                relativeParams.addRule(RelativeLayout.CENTER_HORIZONTAL, RelativeLayout.TRUE);
+                relativeParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE);
+                holder.parentHolder.setLayoutParams(relativeParams);
+
+            }
+        }
+    }
+
+    public float dpToPx(Context context, float dp) {
+        return dp * context.getResources().getDisplayMetrics().density;
+    }
+
     public class ParentItemViewHolder extends RecyclerView.ViewHolder {
+        RelativeLayout parentHolder;
         RecyclerView itemRecycler;
         ProgressBar loading;
         ImageView colourFilter;
@@ -154,10 +201,11 @@ public class ParentSnipRecyclerAdapter extends RecyclerView.Adapter<ParentSnipRe
 
         public ParentItemViewHolder(@NonNull View itemView) {
             super(itemView);
+            loading      = itemView.findViewById(R.id.gallery_item_loading);
             itemRecycler = itemView.findViewById(R.id.item_recycler);
-            loading = itemView.findViewById(R.id.gallery_item_loading);
             colourFilter = itemView.findViewById(R.id.color_tag);
             textShareTag = itemView.findViewById(R.id.tagged_overlay);
+            parentHolder = itemView.findViewById(R.id.parent_holder);
         }
     }
 

@@ -230,7 +230,7 @@ class CreateTag : Fragment() {
             }
             if (event.action == MotionEvent.ACTION_UP) {
                 stopRecording()
-                afterBtn.isChecked = true
+                beforeBtn.isChecked = true
                 return@OnTouchListener true
             }
             true

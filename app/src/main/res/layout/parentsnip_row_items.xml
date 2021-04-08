@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
@@ -11,8 +12,9 @@
         android:layout_height="wrap_content" />
 
     <RelativeLayout
+        android:id="@+id/parent_holder"
         android:layout_width="match_parent"
-        android:layout_height="100dp"
+        android:layout_height="match_parent"
         android:gravity="center"
         android:visibility="visible">
 
@@ -22,16 +24,6 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:scaleType="centerCrop" />
-
-        <TextView
-            android:id="@+id/tvVersionLabel"
-            android:layout_width="100dp"
-            android:layout_height="20dp"
-            android:background="@color/colorBlack"
-            android:gravity="center"
-            android:textColor="@color/colorWhite"
-            android:textSize="12sp"
-            android:visibility="invisible"/>
 
         <ImageView
             android:id="@+id/tagged_overlay"
@@ -51,21 +43,6 @@
             android:layout_alignParentBottom="true"
             android:layout_marginStart="5dp"
             android:visibility="invisible"/>
-
-        <TextView
-            android:id="@+id/tvDuration"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:layout_marginEnd="6dp"
-            android:alpha="0.6"
-            android:background="@color/colorBlack"
-            android:paddingStart="6dp"
-            android:paddingEnd="6dp"
-            android:textColor="@color/colorWhite"
-            android:textSize="13sp"
-            android:visibility="invisible" />
 
         <ProgressBar
             android:id="@+id/gallery_item_loading"
