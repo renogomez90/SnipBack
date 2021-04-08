@@ -1,7 +1,7 @@
 package com.hipoint.snipback.fragment
 
 import android.annotation.SuppressLint
-import android.content.Intent
+import android.content.*
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.media.MediaRecorder
@@ -9,11 +9,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.MotionEvent
-import android.view.View
+import android.view.*
 import android.view.View.OnTouchListener
-import android.view.ViewGroup
 import android.widget.*
 import android.widget.Chronometer.OnChronometerTickListener
 import android.widget.CompoundButton
@@ -22,7 +19,6 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.disable
 import com.exozet.android.core.extensions.enable
@@ -33,6 +29,8 @@ import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.SnipPaths
 import com.hipoint.snipback.adapter.TagsRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
+import com.hipoint.snipback.dialog.ProcessingDialog
+import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.TagColours
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
@@ -73,7 +71,6 @@ class CreateTag : Fragment() {
     private lateinit var colorFive    : RadioButton
     private lateinit var subContainer : ConstraintLayout
 
-
     private var audioPlayer: MediaPlayer? = null
     private val currentFormat = 0
 
@@ -89,14 +86,63 @@ class CreateTag : Fragment() {
     private var recorder: MediaRecorder? = null
 
     private var isAudioPlaying = false
-    private var timerSecond = 0
-    private var posToChoose = 0
+    private var timerSecond    = 0
+    private var posToChoose    = 0
 
-    private var savedAudioPath: String = ""
-    private var tagsAdapter: TagsRecyclerAdapter? = null
+    private var savedAudioPath  : String               = ""
+    private var tagsAdapter     : TagsRecyclerAdapter? = null
+    private var processingDialog: ProcessingDialog?    = null
+    private var lastAction      : LastAction           = LastAction.NO_ACTION
 
     private val paths by lazy { SnipPaths(requireContext()) }
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
+    private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(
+        SettingsDialog.SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
+
+
+    /**
+     * gets snip to be used for tagging
+     * if some action was performed while the snip was
+     */
+    private val taggingInfoReceiver: BroadcastReceiver by lazy {
+        object : BroadcastReceiver(){
+            override fun onReceive(context: Context?, intent: Intent?) {
+                intent?.let{
+                    snip = it.getParcelableExtra("snip") as Snip
+                    if(processingDialog != null){
+                        if(processingDialog!!.isVisible) {  //  dialog will only be shown when save was attempted
+                            dismissProgress()
+                            pref.edit().putInt("snipTagRequired", -1).apply()
+
+                            when(lastAction){
+                                LastAction.SAVE_TAG -> { saveTag() }
+
+                                LastAction.PLAY_VIDEO -> {
+                                    if (snip != null) {
+                                        (requireActivity() as AppMainActivity).loadFragment(
+                                            FragmentPlayVideo2.newInstance(
+                                                snip),
+                                            true)
+                                    }
+                                }
+
+                                LastAction.DELETE -> {
+                                    delete.performClick()
+                                }
+
+                                LastAction.SHARE -> {
+                                    share.performClick()
+                                }
+
+                                LastAction.NO_ACTION -> {}
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -108,6 +154,30 @@ class CreateTag : Fragment() {
         bindViews()
         bindListeners()
         return rootView
+    }
+
+    override fun onResume() {
+        super.onResume()
+        requireActivity().registerReceiver(taggingInfoReceiver, IntentFilter(TAG_ACTION))
+
+        if(snip == null){
+            val snipId = pref.getInt("snipTagRequired", -1)
+            if(snipId != -1) {  //  there is a saved snip
+                CoroutineScope(IO).launch {
+                    val tag = appRepository.getTagBySnipId(snipId)
+                    if (tag == null) { //  this is a new snip, and looks like our receiver missed it
+                        snip = appRepository.getSnipById(snipId)
+                        if(snip != null)
+                            pref.edit().putInt("snipTagRequired", -1).apply()
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onPause() {
+        requireActivity().unregisterReceiver(taggingInfoReceiver)
+        super.onPause()
     }
 
     /**
@@ -194,16 +264,19 @@ class CreateTag : Fragment() {
          * save the tag and
          * dismiss the fragment
          */
-        tick.setOnClickListener(View.OnClickListener {
-            /*val intent = Intent(requireActivity(), ActivityPlayVideo::class.java)
-            intent.putExtra("snip", snip)
-            startActivity(intent)
-            requireActivity().finish()*/            saveTag()
-            requireActivity().supportFragmentManager.popBackStack()
-        })
+        tick.setOnClickListener {
+            if (snip == null) {
+                if (processingDialog == null) {
+                    showProgress()
+                }
+                lastAction = LastAction.SAVE_TAG
+            } else {
+                saveTag()
+            }
+        }
 
         //  plays the video snip
-        playBtn.setOnCheckedChangeListener { buttonView, isChecked ->
+        playBtn.setOnCheckedChangeListener { _, isChecked ->
             if (savedAudioPath.isNotNullOrEmpty()) {
                 if (isChecked) {
                     if(audioPlayer == null) {
@@ -223,7 +296,7 @@ class CreateTag : Fragment() {
         }
 
         // record audio
-        mic.setOnTouchListener(OnTouchListener { v, event ->
+        mic.setOnTouchListener(OnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
                 startRecording()
                 return@OnTouchListener true
@@ -255,8 +328,15 @@ class CreateTag : Fragment() {
         playVideo.setOnClickListener(View.OnClickListener {
             /*(requireActivity() as AppMainActivity).loadFragment(
                     newInstance(snip, false), true)*/
-
-            (requireActivity() as AppMainActivity).loadFragment(FragmentPlayVideo2.newInstance(snip), true)
+            if (snip != null) {
+                (requireActivity() as AppMainActivity).loadFragment(FragmentPlayVideo2.newInstance(
+                    snip), true)
+            } else {
+                if (processingDialog == null) {
+                        showProgress()
+                }
+                lastAction = LastAction.PLAY_VIDEO
+            }
         })
 
         shareLater.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
@@ -283,6 +363,12 @@ class CreateTag : Fragment() {
 
         //  deletes the snip
         delete.setOnClickListener {
+            if(snip == null){
+                showProgress()
+                lastAction = LastAction.DELETE
+                return@setOnClickListener
+            }
+
             CoroutineScope(IO).launch {
                 appRepository.deleteSnip(snip!!)
                 appRepository.getHDSnipsBySnipID(object : AppRepository.HDSnipResult {
@@ -303,6 +389,12 @@ class CreateTag : Fragment() {
 
         //  shares the snip
         share.setOnClickListener {
+            if(snip == null){
+                showProgress()
+                lastAction = LastAction.SHARE
+                return@setOnClickListener
+            }
+
             val shareIntent = Intent(Intent.ACTION_SEND)
             shareIntent.type = MimeTypes.VIDEO_MP4
             shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(snip!!.videoFilePath))
@@ -310,7 +402,7 @@ class CreateTag : Fragment() {
         }
 
         setupVideoTags()
-        showSelectedColourTags()
+//        showSelectedColourTags()
         if(savedAudioPath.isBlank())
             disableAudioControls()
     }
@@ -360,6 +452,8 @@ class CreateTag : Fragment() {
         )
 
         CoroutineScope(IO).launch { appRepository.insertTag(tag) }
+
+        requireActivity().supportFragmentManager.popBackStack()
     }
 
     private fun getSelectedColourTags(): String {
@@ -546,13 +640,28 @@ class CreateTag : Fragment() {
         afterBtn.alpha = 1F
     }
 
+    private fun showProgress(){
+        if(processingDialog == null)
+            processingDialog = ProcessingDialog()
+        processingDialog!!.isCancelable = false
+        processingDialog!!.show(requireActivity().supportFragmentManager, PROCESSING_DIALOG)
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
+    private fun dismissProgress(){
+        processingDialog?.dismiss()
+        processingDialog = null
+    }
+
     companion object {
         private const val TAG = "CreateTag"
 
         private const val AUDIO_RECORDER_FILE_EXT_MP3 = ".mp3"
         private const val AUDIO_RECORDER_FILE_EXT_MP4 = ".mp4"
         private const val AUDIO_RECORDER_FOLDER       = "SnipRec"
+        private const val PROCESSING_DIALOG           = "dialog_processing"
 
+        const val TAG_ACTION   = "com.hipoint.snipback.TAGGING"
         const val NO_AUDIO     = 0
         const val AUDIO_BEFORE = 1
         const val AUDIO_AFTER  = 2
@@ -564,5 +673,9 @@ class CreateTag : Fragment() {
             fragment.arguments = bundle
             return fragment
         }
+    }
+
+    enum class LastAction {
+        NO_ACTION, PLAY_VIDEO, SAVE_TAG, DELETE, SHARE
     }
 }

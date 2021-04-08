@@ -319,7 +319,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                 var outputName = "${File(processedVideoPath).nameWithoutExtension}_slow_mo"
                 var outputPath = "${paths.EXTERNAL_VIDEO_DIR}/$outputName.mp4"
 
-                if(!VideoMode.showHFPSPreview) {
+                if(!VideoMode.showHFPSPreview ||                //  if preview is not enabled then change the speed
+                    swipeAction == SwipeAction.SWIPE_UP) {      //  if we were trying to tag also change the speed without the preview
                     //  slow the video down
                     val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
                     val speedDetails = SpeedDetails(
@@ -361,6 +362,7 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                     val intentService = Intent(receivedContext, VideoService::class.java)
                     intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
                     VideoService.enqueueWork(receivedContext!!, intentService)
+
                 } else {    //  trigger the preview and just pass this video on with the buffer
                     //  capture the buffer file path and add this as the buffer
                     //  capture the video and add that as the path for the video corresponding to the buffer
@@ -480,6 +482,9 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
             }
         } else {
             //  IReplaceRequired.parent must be called before this point for proper functioning
+            if(swipeAction == SwipeAction.SWIPE_UP){
+                tagRequired.add(processedVideoPath)
+            }
             addSnip(processedVideoPath, duration, duration, comingFrom)
         }
     }
@@ -513,14 +518,49 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
         when {
             isFromSlowNo(comingFrom) -> {
 
-                val multiplier = pref.getInt(PREF_SLOW_MO_SPEED, 3)
-                val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
-                with(intent) {
-                    putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
-                    putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, multiplier)
-                    putExtra("log", "frames added")
+                if(swipeAction == SwipeAction.SWIPE_UP){    //  if we were trying to tag the slowmo video
+
+                    //  we don't have to show the preview and processing has to be done now
+                    val outputName = "${File(processedVideoPath).nameWithoutExtension}_slow_mo"
+                    val outputPath = "${paths.EXTERNAL_VIDEO_DIR}/$outputName.mp4"
+
+                    //  slow the video down
+                    val duration = getMetadataDurations(arrayListOf(processedVideoPath))[0]
+                    val speedDetails = SpeedDetails(
+                        isFast = false,
+                        multiplier = 3,
+                        timeDuration = Pair(0L,
+                            duration * 1000L)   //  since the duration we get here is in seconds
+                    )
+
+                    val videoFile = VideoOpItem(
+                        operation        = IVideoOpListener.VideoOp.SPEED,
+                        clips            = arrayListOf(processedVideoPath),
+                        speedDetailsList = arrayListOf(speedDetails),
+                        outputPath       = outputPath,
+                        comingFrom       = comingFrom,
+                        swipeAction      = swipeAction
+                    )
+
+                    showInGallery.add(outputName)
+
+                    val taskList = arrayListOf<VideoOpItem>()
+                    taskList.add(videoFile)
+                    val intentService = Intent(receivedContext, VideoService::class.java)
+                    intentService.putParcelableArrayListExtra(VideoService.VIDEO_OP_ITEM, taskList)
+                    VideoService.enqueueWork(receivedContext!!, intentService)
+
+                } else {
+
+                    val multiplier = pref.getInt(PREF_SLOW_MO_SPEED, 3)
+                    val intent = Intent(VideoEditingFragment.DISMISS_ACTION)
+                    with(intent) {
+                        putExtra(FragmentSlowMo.EXTRA_RECEIVER_VIDEO_PATH, processedVideoPath)
+                        putExtra(FragmentSlowMo.EXTRA_INITIAL_MULTIPLIER, multiplier)
+                        putExtra("log", "frames added")
+                    }
+                    receivedContext?.sendBroadcast(intent)
                 }
-                receivedContext?.sendBroadcast(intent)
 
             }
             swipeAction == SwipeAction.SWIPE_RIGHT -> {
@@ -637,9 +677,11 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
                 //  if this file was marked for tagging broadcast the required details
                 if(tagRequired.contains(snip.videoFilePath)){
-                    val taggingIntent = Intent(VideoMode.TAG_ACTION)
+                    val taggingIntent = Intent(CreateTag.TAG_ACTION)
                     taggingIntent.putExtra("snip", snip)
                     receivedContext?.sendBroadcast(taggingIntent)
+
+                    pref.edit().putInt("snipTagRequired", snip.snip_id).apply()
                 }
             }
 

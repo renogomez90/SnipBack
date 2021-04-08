@@ -150,7 +150,7 @@ class AppRepository(context: Context?) {
         listener.onTaskCompleted(result.await())
     }
 
-    suspend fun getSnipById(snipId: Int): Snip {
+    suspend fun getSnipById(snipId: Int): Snip? {
         val snip = CoroutineScope(IO).async {
             snipsDao.getSnipById(snipId)
         }
