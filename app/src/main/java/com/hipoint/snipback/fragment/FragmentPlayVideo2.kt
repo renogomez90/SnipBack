@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.*
 import android.media.MediaMetadataRetriever
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -103,6 +104,10 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     // new added
     private var snip        : Snip?     = null
     private var bufferHDSnip: Hd_snips? = null
+
+    //  audio tag
+    private var tagPosition: Int = CreateTag.NO_AUDIO
+    private var audioTagPlayer: MediaPlayer? = null
 
     private var thumbnailExtractionStarted = false
     private var isInEditMode               = false
@@ -293,7 +298,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                     player.playWhenReady = false
                     whenReady = false
                     requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-
+                    if(tagPosition == CreateTag.AUDIO_AFTER){
+                        audioTagPlayer?.start()
+                    } else {
+                        player.seekTo(0)
+                    }
                 }
             }
         })
@@ -330,7 +339,21 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             return@async null
         }
 
-        result.await()?.let { tagInfo = it }
+        result.await()?.let {
+            tagInfo = it
+            tagPosition = it.second
+
+            audioTagPlayer = MediaPlayer.create(requireContext(), Uri.parse(it.first))
+            audioTagPlayer!!.setOnCompletionListener {
+                if(tagPosition == CreateTag.AUDIO_BEFORE){
+                    player.playWhenReady = true
+                } else if (tagPosition == CreateTag.AUDIO_AFTER){
+                    player.seekTo(0,0)
+                }
+            }
+        }
+
+        if(tagInfo == null) tagPosition = CreateTag.NO_AUDIO
 
         if (snip!!.is_virtual_version == 1) {   // Virtual versions only play part of the media
             val clippingMediaSource = ClippingMediaSource(mediaSource,
@@ -343,17 +366,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                     0,
                     TimeUnit.SECONDS.toMicros(snip!!.total_video_duration.toLong()))
             seekBar.setDuration(snip!!.total_video_duration.toLong() * 1000)
-            if(tagInfo != null){
-                if (tagInfo!!.second == CreateTag.AUDIO_BEFORE) {
-                    player.addMediaItem(MediaItem.fromUri((Uri.parse(tagInfo!!.first))))
-                    player.addMediaSource(clippingMediaSource)
-                } else {
-                    player.addMediaSource(clippingMediaSource)
-                    player.addMediaItem(MediaItem.fromUri((Uri.parse(tagInfo!!.first))))
-                }
-            } else {
-                player.setMediaSource(clippingMediaSource)
-            }
+            player.setMediaSource(clippingMediaSource)
+
 //            player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
         }
 
@@ -392,12 +406,16 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     private fun bindListeners() {
         playBtn.onClick {
-            if (player.currentPosition >= player.contentDuration) {
-                player.seekTo(0)
+            if(tagPosition == CreateTag.AUDIO_BEFORE && player.currentPosition == 0L){  //  plays the audio tag before the video
+                audioTagPlayer?.start()
+            } else {
+                if (player.currentPosition >= player.contentDuration) {
+                    player.seekTo(0, 0)
+                }
+                player.playWhenReady = true
+                whenReady = true
+                requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             }
-            player.playWhenReady = true
-            whenReady = true
-            requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
 
         pauseBtn.onClick {
