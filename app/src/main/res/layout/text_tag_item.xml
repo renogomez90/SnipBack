@@ -25,6 +25,7 @@
         android:layout_width="14dp"
         android:layout_height="14dp"
         android:layout_marginStart="10dp"
+        android:layout_marginEnd="5dp"
         android:background="@android:color/transparent"
         android:contentDescription="close tag"
         android:src="@drawable/close"

@@ -52,6 +52,7 @@ class SettingsDialog(context: Context,val closeListener: ISettingsClosedListener
         val dialog = super.onCreateDialog(savedInstanceState)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.setCancelable(true)
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
         return dialog
     }
 
