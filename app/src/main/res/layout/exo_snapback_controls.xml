@@ -80,8 +80,8 @@
 
             <RelativeLayout
                 android:id="@+id/back_arrow"
-                android:layout_width="43dp"
-                android:layout_height="43dp"
+                android:layout_width="@dimen/player_ui_icon_holder_large"
+                android:layout_height="@dimen/player_ui_icon_holder_large"
                 android:layout_alignParentBottom="true"
                 android:layout_marginStart="37dp"
                 android:layout_marginBottom="12dp"
@@ -92,16 +92,16 @@
                 app:layout_constraintEnd_toStartOf="@id/button_gallery">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="12dp"
+                    android:layout_width="@dimen/player_ui_icon_large"
+                    android:layout_height="@dimen/player_ui_icon_large"
                     android:contentDescription="@string/no_desc"
                     android:src="@drawable/ic_back_arrow" />
             </RelativeLayout>
 
             <RelativeLayout
                 android:id="@+id/button_gallery"
-                android:layout_width="43dp"
-                android:layout_height="43dp"
+                android:layout_width="@dimen/player_ui_icon_holder_large"
+                android:layout_height="@dimen/player_ui_icon_holder_large"
                 android:layout_alignParentBottom="true"
                 android:layout_marginStart="24dp"
                 android:layout_marginBottom="12dp"
@@ -112,16 +112,16 @@
                 app:layout_constraintStart_toEndOf="@id/back_arrow">
 
                 <ImageView
-                    android:layout_width="19dp"
-                    android:layout_height="13dp"
+                    android:layout_width="@dimen/player_ui_icon_large"
+                    android:layout_height="@dimen/player_ui_icon_large"
                     android:contentDescription="@string/no_desc"
                     android:src="@drawable/ic_gallery" />
             </RelativeLayout>
 
             <RelativeLayout
                 android:id="@+id/button_capture"
-                android:layout_width="43dp"
-                android:layout_height="43dp"
+                android:layout_width="@dimen/player_ui_icon_holder_large"
+                android:layout_height="@dimen/player_ui_icon_holder_large"
                 android:layout_alignParentBottom="true"
                 android:layout_marginStart="24dp"
                 android:layout_marginBottom="12dp"
@@ -133,8 +133,8 @@
                 app:layout_constraintEnd_toStartOf="@id/switch_holder">
 
                 <ImageView
-                    android:layout_width="19dp"
-                    android:layout_height="13dp"
+                    android:layout_width="@dimen/player_ui_icon_large"
+                    android:layout_height="@dimen/player_ui_icon_large"
                     android:contentDescription="@string/no_desc"
                     android:src="@drawable/ic_shutter" />
             </RelativeLayout>

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,10 +17,10 @@ import androidx.fragment.app.DialogFragment
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.fragment.Feedback_fragment
-import com.hipoint.snipback.listener.ISettingsClosedListener
+import com.hipoint.snipback.listener.IMenuClosedListener
 
 
-class SettingsDialog(context: Context,val closeListener: ISettingsClosedListener) : DialogFragment() {
+class SettingsDialog(context: Context,val closeListener: IMenuClosedListener) : DialogFragment() {
     private val TAG = SettingsDialog::class.java.simpleName
     private val pref: SharedPreferences by lazy { context.getSharedPreferences(SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
 

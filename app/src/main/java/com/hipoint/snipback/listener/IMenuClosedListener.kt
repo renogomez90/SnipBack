@@ -1,5 +1,5 @@
 package com.hipoint.snipback.listener
 
-interface ISettingsClosedListener {
+interface IMenuClosedListener {
     fun settingsSaved()
 }

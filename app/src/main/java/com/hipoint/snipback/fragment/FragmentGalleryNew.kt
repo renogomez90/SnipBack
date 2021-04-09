@@ -25,7 +25,9 @@ import com.hipoint.snipback.Utils.TagFilter
 import com.hipoint.snipback.adapter.MainRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.dialog.FilterDialog
+import com.hipoint.snipback.dialog.GalleryMenuDialog
 import com.hipoint.snipback.listener.IFilterListener
+import com.hipoint.snipback.listener.IMenuClosedListener
 import com.hipoint.snipback.room.entities.Event
 import com.hipoint.snipback.room.entities.Hd_snips
 import com.hipoint.snipback.room.entities.Snip
@@ -42,7 +44,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 
-class FragmentGalleryNew : Fragment(), IFilterListener {
+class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
     private val TAG = FragmentPlayVideo2::class.java.simpleName
 
     private lateinit var rootView                        : View
@@ -54,14 +56,8 @@ class FragmentGalleryNew : Fragment(), IFilterListener {
     private lateinit var camera_button                   : TextView
     private lateinit var menu_label                      : TextView
     private lateinit var photolabel                      : TextView
-    private lateinit var autodelete_arrow                : ImageView
     private lateinit var player_view_image               : ImageView
     private lateinit var rlLoader                        : RelativeLayout
-    private lateinit var relativeLayout_menu             : RelativeLayout
-    private lateinit var relativeLayout_autodeleteactions: RelativeLayout
-    private lateinit var layout_autodelete               : RelativeLayout
-    private lateinit var layout_filter                   : RelativeLayout
-    private lateinit var layout_multidelete              : RelativeLayout
     private lateinit var click                           : RelativeLayout
     private lateinit var import_con                      : RelativeLayout
 
@@ -189,52 +185,16 @@ class FragmentGalleryNew : Fragment(), IFilterListener {
         }
 
         menu_button.setOnClickListener { v: View? ->
-            val dialog = Dialog(requireActivity())
-            val window = dialog.window
-            val wlp = window!!.attributes
-            wlp.gravity = Gravity.BOTTOM
-            wlp.flags = wlp.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND.inv()
-            window.attributes = wlp
-            dialog.setContentView(R.layout.menu_layout)
-            val params = dialog.window!!.attributes // change this to your dialog.
-            params.y = 150
-            dialog.window!!.attributes = params
+            val dialog = GalleryMenuDialog(this@FragmentGalleryNew)
+
             menu_button.setCompoundDrawablesWithIntrinsicBounds(0,
                     R.drawable.ic_menu_selected,
                     0,
                     0)
             menu_button.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
-            layout_autodelete = dialog.findViewById(R.id.layout_autodelete)
-            relativeLayout_autodeleteactions = dialog.findViewById(R.id.layout_autodeleteactions)
-            autodelete_arrow = dialog.findViewById(R.id.autodelete_arrow)
-            layout_multidelete = dialog.findViewById(R.id.layout_multipledelete)
-            layout_autodelete.setOnClickListener(View.OnClickListener { v1: View? ->
-                relativeLayout_autodeleteactions.visibility = View.VISIBLE
-                autodelete_arrow.setImageResource(R.drawable.ic_keyboard_arrow_down_black_24dp)
-            })
-            layout_multidelete.setOnClickListener(View.OnClickListener {
-                relativeLayout_autodeleteactions.visibility = View.GONE
-                autodelete_arrow.setImageResource(R.drawable.ic_forward)
-                dialog.cancel()
-                (requireActivity() as AppMainActivity).loadFragment(FragmentMultiDeletePhoto.newInstance(),
-                        true)
-            })
-            val layout_import = dialog.findViewById<RelativeLayout>(R.id.layout_import)
-            layout_import.setOnClickListener {
-                val intent = Intent()
-                intent.type = "video/*"
-                intent.action = Intent.ACTION_GET_CONTENT
-                startActivityForResult(Intent.createChooser(intent, "Select Video"), 1111)
-                dialog.dismiss()
-            }
-            dialog.show()
-            dialog.setOnDismissListener {
-                menu_button.setCompoundDrawablesWithIntrinsicBounds(0,
-                        R.drawable.ic_menu,
-                        0,
-                        0)
-                menu_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
-            }
+
+            dialog.show(requireActivity().supportFragmentManager, GalleryMenuDialog.GALLERY_DIALOG_TAG)
+
         }
 
         filter_button.setOnClickListener {
@@ -250,7 +210,7 @@ class FragmentGalleryNew : Fragment(), IFilterListener {
         }
 
         click.setOnClickListener {
-            //                ((AppMainActivity) requireActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
+//                ((AppMainActivity) requireActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
 //                Intent intent = new Intent(requireActivity(), ActivityPlayVideo.class);
             val intent = Intent(requireActivity(), ActivityPlayVideo::class.java)
             intent.putExtra("uri", uri.toString())
@@ -682,5 +642,17 @@ class FragmentGalleryNew : Fragment(), IFilterListener {
             tag.hasText.isEmpty() &&
             tag.hasColour.isEmpty()
         }
+    }
+
+    /**
+     * when the menu is closed
+     */
+    override fun settingsSaved() {
+        //  resetting menu UI
+        menu_button.setCompoundDrawablesWithIntrinsicBounds(0,
+            R.drawable.ic_menu,
+            0,
+            0)
+        menu_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
     }
 }

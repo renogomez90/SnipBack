@@ -10,20 +10,34 @@
     <TextView
         android:id="@+id/filterlabelfil"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/menu_settings_item_height"
         android:fontFamily="@font/barlow_semibold"
+        android:gravity="center_vertical"
         android:text="FILTER"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageButton
+        android:id="@+id/backBtn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@android:color/transparent"
+        android:scaleType="fitXY"
+        android:src="@drawable/ic_down_arrow"
+        app:layout_constraintBottom_toBottomOf="@+id/filterlabelfil"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/filterlabelfil"
+        android:contentDescription="dismiss button" />
+
     <TextView
         android:id="@+id/colorlabel"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/menu_settings_item_height"
         android:layout_marginTop="20dp"
         android:fontFamily="@font/barlow_bold"
+        android:gravity="center_vertical"
         android:text="COLOR"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="16sp"
@@ -99,9 +113,10 @@
     <TextView
         android:id="@+id/audio_tag_label"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/menu_settings_item_height"
         android:layout_marginTop="20dp"
         android:fontFamily="@font/barlow_bold"
+        android:gravity="center_vertical"
         android:text="AUDIO TAG"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="16sp"
@@ -137,9 +152,10 @@
     <TextView
         android:id="@+id/todotag_label"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="@dimen/menu_settings_item_height"
         android:layout_marginTop="20dp"
         android:fontFamily="@font/barlow_bold"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:text="TO DO TAG"
         android:textColor="@color/colorPrimaryWhite"

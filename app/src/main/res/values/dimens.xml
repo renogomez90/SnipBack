@@ -5,4 +5,10 @@
 
     <dimen name="app_dialog_padding">30dp</dimen>
     <dimen name="menu_settings_item_height">60dp</dimen>
+    <dimen name="menu_icon_size">30dp</dimen>
+    <dimen name="menu_icon_margin">10dp</dimen>
+
+    <dimen name="player_ui_icon_holder_large">40dp</dimen>
+    <dimen name="player_ui_icon_large">20dp</dimen>
+
 </resources>

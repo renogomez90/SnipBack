@@ -4,12 +4,9 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import android.view.Window
+import android.view.*
 import android.widget.CheckBox
-import android.widget.CompoundButton
+import android.widget.ImageButton
 import androidx.fragment.app.DialogFragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -20,7 +17,6 @@ import com.hipoint.snipback.adapter.TagsRecyclerAdapter
 import com.hipoint.snipback.application.AppClass
 import com.hipoint.snipback.enums.TagColours
 import com.hipoint.snipback.listener.IFilterListener
-import com.hipoint.snipback.room.entities.Tags
 import com.hipoint.snipback.room.repository.AppRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -31,6 +27,7 @@ import kotlinx.coroutines.withContext
 class FilterDialog(private val filterListener: IFilterListener) : DialogFragment() {
     private val TAG = FilterDialog::class.java.simpleName
 
+    private lateinit var backBtn            : ImageButton
     private lateinit var audioTag           : CheckBox
     private lateinit var shareLater         : CheckBox
     private lateinit var linkLater          : CheckBox
@@ -45,7 +42,11 @@ class FilterDialog(private val filterListener: IFilterListener) : DialogFragment
 
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         val view = inflater.inflate(R.layout.filter_layout, container, false)
         bindViews(view)
         bindListener()
@@ -56,11 +57,18 @@ class FilterDialog(private val filterListener: IFilterListener) : DialogFragment
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+
+        /*dialog.window?.setGravity(Gravity.BOTTOM)   //  so that the dialog more or less stay at the bottom without covering the bottom menu
+        val params = dialog.window?.attributes
+        params?.y = -200
+        dialog.window?.attributes = params*/
+
         return dialog
     }
 
     private fun bindViews(rootView: View) {
         with(rootView) {
+            backBtn             = findViewById(R.id.backBtn)
             audioTag            = findViewById(R.id.audio_tag)
             shareLater          = findViewById(R.id.share_later)
             linkLater           = findViewById(R.id.link_later)
@@ -105,6 +113,8 @@ class FilterDialog(private val filterListener: IFilterListener) : DialogFragment
                 linkLater.setTextColor(Color.GRAY)
             }
         }
+
+        backBtn.setOnClickListener { dismiss() }
     }
 
     override fun onDismiss(dialog: DialogInterface) {
@@ -141,7 +151,10 @@ class FilterDialog(private val filterListener: IFilterListener) : DialogFragment
 
             withContext(Dispatchers.Main){
                 tagsAdapter = TagsRecyclerAdapter(requireContext(), tagList.toMutableList())
-                filterVideoTagsList.layoutManager = GridLayoutManager(requireContext(), 3, RecyclerView.VERTICAL, false)
+                filterVideoTagsList.layoutManager = GridLayoutManager(requireContext(),
+                    3,
+                    RecyclerView.VERTICAL,
+                    false)
                 filterVideoTagsList.adapter = tagsAdapter
             }
         }

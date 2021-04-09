@@ -52,7 +52,7 @@ import com.hipoint.snipback.dialog.SettingsDialog
 import com.hipoint.snipback.enums.CurrentOperation
 import com.hipoint.snipback.enums.SwipeAction
 import com.hipoint.snipback.listener.IRecordUIListener
-import com.hipoint.snipback.listener.ISettingsClosedListener
+import com.hipoint.snipback.listener.IMenuClosedListener
 import com.hipoint.snipback.listener.IVideoOpListener.VideoOp
 import com.hipoint.snipback.room.entities.Snip
 import com.hipoint.snipback.room.repository.AppRepository
@@ -84,7 +84,7 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 
-class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, IRecordUIListener, ISettingsClosedListener {
+class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCompat.OnRequestPermissionsResultCallback, IRecordUIListener, IMenuClosedListener {
 
     var swipeValue         = 5 * 1000L  //  swipeBack duration
     var slowMoQbValue      = 5 * 1000L  //  swipeBack duration
