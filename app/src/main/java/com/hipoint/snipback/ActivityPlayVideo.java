@@ -860,8 +860,8 @@ public class ActivityPlayVideo extends Swipper {
         lp.width = WindowManager.LayoutParams.MATCH_PARENT;
         lp.height = WindowManager.LayoutParams.MATCH_PARENT;
 
-        TextView after = dialog.findViewById(R.id.after_text);
-        TextView before = dialog.findViewById(R.id.before_text);
+//        TextView after = dialog.findViewById(R.id.after_text);
+//        TextView before = dialog.findViewById(R.id.before_text);
         Switch img3 = dialog.findViewById(R.id.after_switch);
         Switch img4 = dialog.findViewById(R.id.before_switch);
         ImageView play = dialog.findViewById(R.id.play_pause_btn);
@@ -880,9 +880,9 @@ public class ActivityPlayVideo extends Swipper {
                 if (isChecked) {
                     // The toggle is enabled
 
-                    after.setTextColor(getResources().getColor(R.color.red_tag));
+//                    after.setTextColor(getResources().getColor(R.color.red_tag));
                     img4.setChecked(false);
-                    before.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
+//                    before.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
                     posToChoose = 1;
                     CommonUtils.setPreferencesInt(ActivityPlayVideo.this, "poaition", posToChoose);
 
@@ -895,9 +895,9 @@ public class ActivityPlayVideo extends Swipper {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
 
-                    before.setTextColor(getResources().getColor(R.color.red_tag));
+//                    before.setTextColor(getResources().getColor(R.color.red_tag));
                     img3.setChecked(false);
-                    after.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
+//                    after.setTextColor(getResources().getColor(R.color.colorPrimaryWhite));
                     posToChoose = 2;
                     CommonUtils.setPreferencesInt(ActivityPlayVideo.this, "poaition", posToChoose);
 

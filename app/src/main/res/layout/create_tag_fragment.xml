@@ -180,64 +180,36 @@
             app:layout_constraintTop_toTopOf="parent" />
 
 
-        <LinearLayout
-            android:id="@+id/before_holder"
+        <RadioGroup
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="40dp"
-            android:layout_marginBottom="5dp"
-            android:gravity="center"
-            android:orientation="vertical"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/del_voice_tag">
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/before_switch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:button="@drawable/before_toggle"
-                android:thumb="@null"
-                app:track="@null" />
+                <RadioButton
+                    android:id="@+id/before_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:drawableTop="@drawable/after_toggle"
+                    android:button="@null"
+                    android:text="Before"
+                    android:textColor="@color/colorHint"/>
 
-            <TextView
-                android:id="@+id/before_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Before"
-                android:textAlignment="center"
-                android:textColor="@color/colorHint" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/after_holder"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="30dp"
-            android:layout_marginEnd="19dp"
-            android:layout_marginBottom="5dp"
-            android:gravity="center"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/before_holder">
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/after_switch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:button="@drawable/after_toggle"
-                android:thumb="@null"
-                app:track="@null" />
-
-            <TextView
-                android:id="@+id/after_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="After"
-                android:textColor="@color/colorHint" />
-
-        </LinearLayout>
+                <RadioButton
+                    android:id="@+id/after_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="30dp"
+                    android:layout_marginEnd="30dp"
+                    android:button="@null"
+                    android:drawableTop="@drawable/after_toggle"
+                    android:text="After"
+                    android:textColor="@color/colorHint"/>
+        </RadioGroup>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView

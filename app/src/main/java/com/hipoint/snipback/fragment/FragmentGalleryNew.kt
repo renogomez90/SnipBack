@@ -212,9 +212,9 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
         click.setOnClickListener {
 //                ((AppMainActivity) requireActivity()).loadFragment(FragmentPlayVideo.newInstance(uri.toString()));
 //                Intent intent = new Intent(requireActivity(), ActivityPlayVideo.class);
-            val intent = Intent(requireActivity(), ActivityPlayVideo::class.java)
-            intent.putExtra("uri", uri.toString())
-            startActivity(intent)
+//            val intent = Intent(requireActivity(), ActivityPlayVideo::class.java)
+//            intent.putExtra("uri", uri.toString())
+//            startActivity(intent)
         }
 
         view_button.setOnClickListener {

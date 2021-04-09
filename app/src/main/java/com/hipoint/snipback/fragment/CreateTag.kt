@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.exozet.android.core.extensions.disable
 import com.exozet.android.core.extensions.enable
 import com.exozet.android.core.extensions.isNotNullOrEmpty
+import com.exozet.android.core.math.Line
 import com.google.android.exoplayer2.util.MimeTypes
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
@@ -49,29 +50,27 @@ import java.util.concurrent.TimeUnit
 
 class CreateTag : Fragment() {
 
-    private lateinit var rootView     : View
-    private lateinit var playVideo    : ImageButton
-    private lateinit var mic          : ImageButton
-    private lateinit var tick         : ImageButton
-    private lateinit var share        : ImageButton
-    private lateinit var delVoiceTag  : ImageButton
-    private lateinit var delete       : ImageButton
-    private lateinit var afterBtn     : SwitchCompat
-    private lateinit var beforeBtn    : SwitchCompat
-    private lateinit var playBtn      : CheckBox
-    private lateinit var tagText      : EditText
-    private lateinit var afterText    : TextView
-    private lateinit var beforeText   : TextView
-    private lateinit var mChronometer : Chronometer
-    private lateinit var shareLater   : CheckBox
-    private lateinit var linkLater    : CheckBox
-    private lateinit var videoTagsList: RecyclerView
-    private lateinit var colorOne     : RadioButton
-    private lateinit var colorTwo     : RadioButton
-    private lateinit var colorThree   : RadioButton
-    private lateinit var colorFour    : RadioButton
-    private lateinit var colorFive    : RadioButton
-    private lateinit var subContainer : ConstraintLayout
+    private lateinit var rootView       : View
+    private lateinit var playVideo      : ImageButton
+    private lateinit var mic            : ImageButton
+    private lateinit var tick           : ImageButton
+    private lateinit var share          : ImageButton
+    private lateinit var delVoiceTag    : ImageButton
+    private lateinit var delete         : ImageButton
+    private lateinit var playBtn        : CheckBox
+    private lateinit var tagText        : EditText
+    private lateinit var afterBtn       : RadioButton
+    private lateinit var beforeBtn      : RadioButton
+    private lateinit var mChronometer   : Chronometer
+    private lateinit var shareLater     : CheckBox
+    private lateinit var linkLater      : CheckBox
+    private lateinit var videoTagsList  : RecyclerView
+    private lateinit var colorOne       : RadioButton
+    private lateinit var colorTwo       : RadioButton
+    private lateinit var colorThree     : RadioButton
+    private lateinit var colorFour      : RadioButton
+    private lateinit var colorFive      : RadioButton
+    private lateinit var subContainer   : ConstraintLayout
 
     private var audioPlayer: MediaPlayer? = null
     private val currentFormat = 0
@@ -100,6 +99,22 @@ class CreateTag : Fragment() {
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
     private val pref: SharedPreferences by lazy { requireContext().getSharedPreferences(
         SettingsDialog.SETTINGS_PREFERENCES, Context.MODE_PRIVATE) }
+    private val filename: String by lazy { prepareAudioFileName() }
+
+    private fun prepareAudioFileName(): String {
+        val filepath = paths.INTERNAL_VIDEO_DIR
+        val file = File(filepath, AUDIO_RECORDER_FOLDER)
+        if (!file.exists()) {
+            file.mkdirs()
+        }
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val newFile = File(file.absolutePath + "/" + timeStamp + ".mp3")
+        if(newFile.exists()){
+            newFile.delete()
+        }
+
+        return file.absolutePath + "/" + timeStamp + ".mp3"
+    }
 
 
     /**
@@ -188,28 +203,26 @@ class CreateTag : Fragment() {
     private fun bindViews() {
         snip = requireArguments().getParcelable("snip")
 
-        tagText       = rootView.findViewById(R.id.tag_text)
-        afterText     = rootView.findViewById(R.id.after_text)
-        beforeText    = rootView.findViewById(R.id.before_text)
-        afterBtn      = rootView.findViewById(R.id.after_switch)
-        beforeBtn     = rootView.findViewById(R.id.before_switch)
-        tick          = rootView.findViewById(R.id.tick)
-        share         = rootView.findViewById(R.id.share)
-        playBtn       = rootView.findViewById(R.id.play_pause_btn)
-        mic           = rootView.findViewById(R.id.mic)
-        delVoiceTag   = rootView.findViewById(R.id.del_voice_tag)
-        delete        = rootView.findViewById(R.id.delete)
-        playVideo     = rootView.findViewById(R.id.edit)
-        mChronometer  = rootView.findViewById(R.id.chronometer)
-        shareLater    = rootView.findViewById(R.id.share_later)
-        linkLater     = rootView.findViewById(R.id.link_later)
-        videoTagsList = rootView.findViewById(R.id.videoTagsList)
-        colorOne      = rootView.findViewById(R.id.color_one)
-        colorTwo      = rootView.findViewById(R.id.color_two)
-        colorThree    = rootView.findViewById(R.id.color_three)
-        colorFour     = rootView.findViewById(R.id.color_four)
-        colorFive     = rootView.findViewById(R.id.color_five)
-        subContainer  = rootView.findViewById(R.id.sub_cont)
+        tagText         = rootView.findViewById(R.id.tag_text)
+        afterBtn        = rootView.findViewById(R.id.after_switch)
+        beforeBtn       = rootView.findViewById(R.id.before_switch)
+        tick            = rootView.findViewById(R.id.tick)
+        share           = rootView.findViewById(R.id.share)
+        playBtn         = rootView.findViewById(R.id.play_pause_btn)
+        mic             = rootView.findViewById(R.id.mic)
+        delVoiceTag     = rootView.findViewById(R.id.del_voice_tag)
+        delete          = rootView.findViewById(R.id.delete)
+        playVideo       = rootView.findViewById(R.id.edit)
+        mChronometer    = rootView.findViewById(R.id.chronometer)
+        shareLater      = rootView.findViewById(R.id.share_later)
+        linkLater       = rootView.findViewById(R.id.link_later)
+        videoTagsList   = rootView.findViewById(R.id.videoTagsList)
+        colorOne        = rootView.findViewById(R.id.color_one)
+        colorTwo        = rootView.findViewById(R.id.color_two)
+        colorThree      = rootView.findViewById(R.id.color_three)
+        colorFour       = rootView.findViewById(R.id.color_four)
+        colorFive       = rootView.findViewById(R.id.color_five)
+        subContainer    = rootView.findViewById(R.id.sub_cont)
     }
 
     /**
@@ -217,33 +230,32 @@ class CreateTag : Fragment() {
      */
     @SuppressLint("ClickableViewAccessibility")
     private fun bindListeners() {
-        afterBtn.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
-                if (beforeBtn.isChecked) //  this needs to be called before we set the new position
-                    beforeBtn.performClick()
 
-                afterText.setTextColor(ResourcesCompat.getColor(resources, R.color.red_tag, requireContext().theme))
+        afterBtn.setOnCheckedChangeListener { view, isChecked ->
+            if (isChecked) {
+                view.setTextColor(ResourcesCompat.getColor(resources,
+                    R.color.red_tag,
+                    requireContext().theme))
                 posToChoose = AUDIO_AFTER
             } else {
                 afterBtn.isChecked = false
-                afterText.setTextColor(resources.getColor(R.color.colorPrimaryWhite))
-                posToChoose = NO_AUDIO
+                view.setTextColor(ResourcesCompat.getColor(resources, R.color.colorPrimaryWhite, requireContext().theme))
+//                posToChoose = NO_AUDIO
             }
-        })
+        }
 
-        beforeBtn.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+        beforeBtn.setOnCheckedChangeListener { view, isChecked ->
             if (isChecked) {
-                if (afterBtn.isChecked)  //  this needs to be called before we set the new position
-                    afterBtn.performClick()
-
-                beforeText.setTextColor(resources.getColor(R.color.red_tag))
+                view.setTextColor(ResourcesCompat.getColor(resources, R.color.red_tag, requireContext().theme))
                 posToChoose = AUDIO_BEFORE
             } else {
                 beforeBtn.isChecked = false
-                beforeText.setTextColor(ResourcesCompat.getColor(resources, R.color.colorPrimaryWhite, requireContext().theme))
-                posToChoose = NO_AUDIO
+                view.setTextColor(ResourcesCompat.getColor(resources,
+                    R.color.colorPrimaryWhite,
+                    requireContext().theme))
+//                posToChoose = NO_AUDIO
             }
-        })
+        }
 
         mChronometer.onChronometerTickListener = OnChronometerTickListener { arg0: Chronometer? ->
             //                if (!resume) {
@@ -566,22 +578,6 @@ class CreateTag : Fragment() {
 
     }
 
-    private val filename: String
-        private get() {
-            val filepath = paths.INTERNAL_VIDEO_DIR
-            val file = File(filepath, AUDIO_RECORDER_FOLDER)
-            if (!file.exists()) {
-                file.mkdirs()
-            }
-            val filename = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-
-            val newFile = File(file.absolutePath + "/" + filename + ".mp3")
-            if(newFile.exists()){
-                newFile.delete()
-            }
-
-            return file.absolutePath + "/" + filename + ".mp3"
-        }
     private val errorListener = MediaRecorder.OnErrorListener { mr, what, extra ->
         //            AppLog.logString("Error: " + what + ", " + extra);
         disableAudioControls()
@@ -615,22 +611,22 @@ class CreateTag : Fragment() {
      * to be used to disable audio controls when no recorded audio is available
      */
     private fun disableAudioControls(){
+
+        afterBtn.isChecked = false
+        beforeBtn.isChecked = false
+
         playBtn.disable()
         delVoiceTag.disable()
         beforeBtn.disable()
         afterBtn.disable()
 
-        playBtn.alpha = 0.5F
+        playBtn.alpha     = 0.5F
         delVoiceTag.alpha = 0.5F
-        beforeBtn.alpha = 0.5F
-        afterBtn.alpha = 0.5F
+        beforeBtn.alpha   = 0.5F
+        afterBtn.alpha    = 0.5F
 
-        if(afterBtn.isChecked){ //  for some reason directly setting the values does not trigger the listeners
-            afterBtn.performClick()
-        }
-        if(beforeBtn.isChecked){    //  for some reason directly setting the values does not trigger the listeners
-            beforeBtn.performClick()
-        }
+        beforeBtn.setTextColor(ResourcesCompat.getColor(resources, R.color.colorHint, requireContext().theme))
+        afterBtn.setTextColor(ResourcesCompat.getColor(resources, R.color.colorHint, requireContext().theme))
     }
 
     /**
@@ -642,10 +638,15 @@ class CreateTag : Fragment() {
         beforeBtn.enable()
         afterBtn.enable()
 
-        playBtn.alpha = 1F
+        playBtn.alpha     = 1F
         delVoiceTag.alpha = 1F
-        beforeBtn.alpha = 1F
-        afterBtn.alpha = 1F
+        beforeBtn.alpha   = 1F
+        afterBtn.alpha    = 1F
+
+        beforeBtn.setTextColor(ResourcesCompat.getColor(resources, R.color.colorPrimaryWhite, requireContext().theme))
+        afterBtn.setTextColor(ResourcesCompat.getColor(resources, R.color.colorPrimaryWhite, requireContext().theme))
+
+        beforeBtn.isChecked = true
     }
 
     private fun showProgress(){
