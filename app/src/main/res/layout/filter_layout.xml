@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
-    android:padding="30dp">
+    android:padding="@dimen/app_dialog_padding">
 
     <TextView
         android:id="@+id/filterlabelfil"
@@ -209,21 +209,18 @@
         android:text="TEXT TAGS"
         android:textColor="@color/colorPrimaryWhite"
         android:textSize="16sp"
-        app:layout_constraintTop_toBottomOf="@id/separator_three"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/separator_three" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/filterVideoTagsList"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="100dp"
         android:layout_marginTop="5dp"
-        android:clipToPadding="true"
-        android:orientation="horizontal"
         android:overScrollMode="ifContentScrolls"
-        android:padding="5dp"
         android:scrollbars="vertical"
-        app:layout_constraintTop_toBottomOf="@id/text_tag_label"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/text_tag_label" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

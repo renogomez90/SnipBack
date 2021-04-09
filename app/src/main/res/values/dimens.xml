@@ -3,6 +3,6 @@
     <dimen name="grid_expected_size">120dp</dimen>
     <dimen name="app_margin">8dp</dimen>
 
-    <dimen name="app_dialog_padding">20dp</dimen>
+    <dimen name="app_dialog_padding">30dp</dimen>
     <dimen name="menu_settings_item_height">60dp</dimen>
 </resources>
