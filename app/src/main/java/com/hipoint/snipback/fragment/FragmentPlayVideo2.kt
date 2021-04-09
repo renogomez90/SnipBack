@@ -673,6 +673,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             }
         }
 
+        audioTagPlayer?.stop()
+
         subscriptions?.dispose()
         super.onPause()
     }

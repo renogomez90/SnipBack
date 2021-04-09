@@ -26,6 +26,9 @@ class TagsRecyclerAdapter(val context: Context, val tagsList: MutableList<String
     override fun onBindViewHolder(holder: TagViewHolder, position: Int) {
         holder.tagText.text = tagsList[position]
         holder.tagHolder.tag = tagsList[position]
+
+        holder.tagText.isSelected = true
+
         showUnselectedUI(holder)
 
         if(selectedList.contains(tagsList[position])){

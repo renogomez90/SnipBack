@@ -53,11 +53,11 @@
         android:layout_height="100dp"
         android:layout_marginTop="5dp"
         android:backgroundTint="@color/colorHint"
-        android:clipToPadding="true"
         android:orientation="horizontal"
         android:padding="5dp"
         android:scrollbars="vertical"
         android:overScrollMode="ifContentScrolls"
+        android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tag_text" />
 

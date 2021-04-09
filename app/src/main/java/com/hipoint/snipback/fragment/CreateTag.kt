@@ -43,6 +43,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class CreateTag : Fragment() {
@@ -424,6 +426,11 @@ class CreateTag : Fragment() {
                 tagsAdapter = TagsRecyclerAdapter(requireContext(), tagList.toMutableList())
                 videoTagsList.layoutManager = GridLayoutManager(requireContext(), 3, RecyclerView.VERTICAL, false)
                 videoTagsList.adapter = tagsAdapter
+
+                if(tagList.isNullOrEmpty())
+                    videoTagsList.visibility = View.GONE
+                else
+                    videoTagsList.visibility = View.VISIBLE
             }
         }
     }
@@ -502,11 +509,11 @@ class CreateTag : Fragment() {
             tagInfo?.colourId?.let { colourList.addAll(it.split(',')) }
 
             withContext(Main){
-                colorOne.isChecked = colourList.contains(TagColours.BLUE.name)
-                colorTwo.isChecked = colourList.contains(TagColours.RED.name)
+                colorOne.isChecked   = colourList.contains(TagColours.BLUE.name)
+                colorTwo.isChecked   = colourList.contains(TagColours.RED.name)
                 colorThree.isChecked = colourList.contains(TagColours.ORANGE.name)
-                colorFour.isChecked = colourList.contains(TagColours.PURPLE.name)
-                colorFive.isChecked = colourList.contains(TagColours.GREEN.name)
+                colorFour.isChecked  = colourList.contains(TagColours.PURPLE.name)
+                colorFive.isChecked  = colourList.contains(TagColours.GREEN.name)
             }
         }
     }
@@ -566,13 +573,14 @@ class CreateTag : Fragment() {
             if (!file.exists()) {
                 file.mkdirs()
             }
+            val filename = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
 
-            val newFile = File(file.absolutePath + "/" + snip!!.snip_id + ".mp3")
+            val newFile = File(file.absolutePath + "/" + filename + ".mp3")
             if(newFile.exists()){
                 newFile.delete()
             }
 
-            return file.absolutePath + "/" + snip!!.snip_id + ".mp3"
+            return file.absolutePath + "/" + filename + ".mp3"
         }
     private val errorListener = MediaRecorder.OnErrorListener { mr, what, extra ->
         //            AppLog.logString("Error: " + what + ", " + extra);
