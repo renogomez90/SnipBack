@@ -226,10 +226,15 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         try {
             EpEditor.execCmd(cmd, TimeUnit.SECONDS.toMicros(duration), object : OnEditorListener {
                 override fun onSuccess() {
-                    opListener.changed(IVideoOpListener.VideoOp.TRIMMED, comingFrom, swipeAction, outputPath)
+                    Log.d(TAG, "trim Success")
+                    opListener.changed(IVideoOpListener.VideoOp.TRIMMED,
+                        comingFrom,
+                        swipeAction,
+                        outputPath)
                 }
 
                 override fun onFailure() {
+                    Log.d(TAG, "trim Failed")
                     opListener.failed(IVideoOpListener.VideoOp.TRIMMED, comingFrom)
                 }
 
@@ -256,6 +261,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         }
         EpEditor.execCmd(cmd, 1, object : OnEditorListener {
             override fun onSuccess() {
+                Log.d(TAG, "frame Success")
                 val renamePath = File("$outputFolder/${clip.name}")
                 File("$outputFolder/out.mp4").renameTo(renamePath)
                 opListener.changed(IVideoOpListener.VideoOp.KEY_FRAMES,
@@ -264,6 +270,7 @@ class VideoUtils(private val opListener: IVideoOpListener) {
             }
 
             override fun onFailure() {
+                Log.d(TAG, "frame Failed")
                 opListener.failed(IVideoOpListener.VideoOp.KEY_FRAMES, comingFrom)
             }
 

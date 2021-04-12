@@ -804,7 +804,9 @@ class FragmentSlowMo : Fragment(), ISaveListener {
 
         player!!.setMediaSource(mediaSource)
         player!!.prepare()
-        showBufferOverlay()
+
+        if(bufferPath != null)
+            showBufferOverlay()
     }
 
     private fun initSwipeControls() {

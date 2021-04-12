@@ -125,6 +125,7 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
             container: ViewGroup?,
             savedInstanceState: Bundle?,
     ): View? {
+        postponeEnterTransition()
         (requireActivity() as AppMainActivity).hideSystemUI1()
                 requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         postponeEnterTransition()
@@ -276,9 +277,9 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
         super.onResume()
         (requireActivity() as AppMainActivity).hideOrShowProgress(visible = false)
         requireActivity().registerReceiver(videoProcessingReceiver, IntentFilter(VideoMode.UI_UPDATE_ACTION))
-        startPostponedEnterTransition()
         /*loadGalleryDataFromDB()*/
         loadData()
+        startPostponedEnterTransition()
         updateViewButtonUI(viewButtonClicked)
     }
 

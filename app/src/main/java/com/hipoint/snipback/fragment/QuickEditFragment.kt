@@ -715,6 +715,7 @@ class QuickEditFragment : Fragment() {
 
         acceptBtn.setOnClickListener {
             Log.d(TAG, "bindListeners: selected start = $editedStart, selected end = $editedEnd")
+            player.playWhenReady = false
             if(operationMode == OperationMode.QB_PLUS)
                 exit = true
 

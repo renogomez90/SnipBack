@@ -276,7 +276,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
         private var cameraControl   : CameraControl?   = null
         internal var swipedRecording: SwipedRecording? = null
 
-        private const val TAG = "Camera2VideoFragment"
+        private const val TAG = "VideoMode"
         private const val FRAGMENT_DIALOG = "dialog"
         private const val THUMBS_DIRECTORY_NAME = "Thumbs"
 
@@ -1325,7 +1325,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             gallery.enable()
         } else {    // swiped during video recording
             swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
-            if (swipedRecording == null) {
+            if (swipedRecording == null || swipedRecording!!.originalFilePath.isNullOrEmpty()) {
                 swipedRecording = cameraControl?.getCurrentOutputPath()?.let { SwipedRecording(it) }
             }
             if (swipedRecording!!.originalFilePath?.equals(cameraControl?.getCurrentOutputPath())!!) {
@@ -1487,7 +1487,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             val timeStamp =
                 SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val mergeFilePath = "${File(clips[0]).parent!!}/merged-$timeStamp.mp4"
-            swipedFileNames.add("${File(cameraControl?.getCurrentOutputPath()!!).parent}/merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
+            swipedFileNames.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
             showInGallery.add("merged-$timeStamp-1")  //  indication of swiped file,"-1" since we want the second half of the split
 
             val intentService = Intent(requireContext(), VideoService::class.java)
@@ -1536,6 +1536,7 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
     private fun trimOnSwipeDuringClipRecording(swipeAction: SwipeAction) {
         Log.d(TAG, "trimOnSwipeDuringClipRecording: started")
         val clip = cameraControl!!.removeClipQueueItem()!!
+        //  the whole recorded duration
         val actualClipTime = try {
             (requireActivity() as AppMainActivity).getMetadataDurations(arrayListOf(clip.absolutePath))[0]
         } catch (e: NullPointerException) {
@@ -1552,14 +1553,16 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
             else -> 0 - 90
         }
 
+        //  swipeClipDuration in seconds
         val swipeClipDuration = if (currentOperation == CurrentOperation.CLIP_RECORDING_SLOW_MO)
             (pref.getLong(SettingsDialog.SLOW_MO_QB_DURATION, 5000L) / 1000).toInt()
         else
             (swipeValue / 1000).toInt()
 
         if (actualClipTime > swipeClipDuration) {   //  if the available video is more than the quick back duration then we have to trim to size
-            Log.d(TAG,
-                    "actualClipTime: $actualClipTime\nswipeValue: $swipeValue\nswipeClipDuration: $swipeClipDuration")
+            Log.d(TAG, "actualClipTime: $actualClipTime" +
+                    "\nswipeValue: $swipeValue" +
+                    "\nswipeClipDuration: $swipeClipDuration")
             swipedFileNames.add("trimmed-${clip.nameWithoutExtension}")
             showInGallery.add("trimmed-${clip.nameWithoutExtension}")
 
@@ -1997,9 +2000,8 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
 
     private fun saveSnipTimeToLocal() {
         swipedFileNames.add(File(cameraControl?.getCurrentOutputPath()!!).nameWithoutExtension)    // video file currently being recorded
-        if (swipedRecording == null) {
-            swipedRecording = cameraControl?.getCurrentOutputPath()
-                ?.let { SwipedRecording(it) }
+        if (swipedRecording == null || swipedRecording!!.originalFilePath.isNullOrEmpty()) {
+            swipedRecording = cameraControl?.getCurrentOutputPath()?.let { SwipedRecording(it) }
         }
         if (timerSecond != 0) { //  user recording is in progress
             val endSecond = timerSecond
