@@ -587,20 +587,21 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
                 val tagsList = appRepository.getAllTags()
 
                 withContext(Main) {
-                    val adapter = (mainCategoryRecycler.adapter as MainRecyclerAdapter)
+                    val adapter = (mainCategoryRecycler.adapter as? MainRecyclerAdapter)
+                    if(adapter != null) {
+                        adapter.setFilterIds(null)
+                        adapter.updateData(allParentSnip,
+                            allSnips,
+                            viewChange,
+                            tagsList)
 
-                    adapter.setFilterIds(null)
-                    adapter.updateData(allParentSnip,
-                        allSnips,
-                        viewChange,
-                        tagsList)
-
-                    //  since no filter is applied we can reset the button colour
-                    filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
-                        R.drawable.ic_filter_results_button,
-                        0,
-                        0)
-                    filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
+                        //  since no filter is applied we can reset the button colour
+                        filter_button.setCompoundDrawablesWithIntrinsicBounds(0,
+                            R.drawable.ic_filter_results_button,
+                            0,
+                            0)
+                        filter_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
+                    }
                 }
             }
 

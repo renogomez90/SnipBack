@@ -31,6 +31,7 @@ import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
+import com.google.common.primitives.Doubles
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.CommonUtils
@@ -66,9 +67,11 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     private val VIDEO_DIRECTORY_NAME = "Snipback"
 
-    private val retries     = 3
-    private var seekToPoint: Long    = 0
-    private var whenReady  : Boolean = false
+
+    private var currentWindow = 0
+    private var currentPos = 0L
+    private val retries    = 3
+    private var whenReady : Boolean = false
 
     private var subscriptions: CompositeDisposable? = null
 
@@ -110,7 +113,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var audioTagPlayer: MediaPlayer? = null
 
     private var thumbnailExtractionStarted = false
-    private var isInEditMode               = false
+//    private var isInEditMode               = false
     private var bufferDuration             = -1L
     private var videoDuration              = -1L
     private var maxDuration                = 0L
@@ -164,16 +167,53 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         bindListeners()
         startPostponedEnterTransition()
 //        setOnBackButtonPressed()
-        Log.d(TAG, "onResume: started")
+    }
+
+
+    override fun onPause() {
+        Log.d(TAG, "onPause: started")
+
+        player.playWhenReady = false
+        currentPos = player.currentPosition
+        currentWindow = player.currentWindowIndex
+
+        audioTagPlayer?.stop()
+
+        subscriptions?.dispose()
+        super.onPause()
+    }
+
+    /**
+     * Called when the fragment is no longer in use.  This is called
+     * after [.onStop] and before [.onDetach].
+     */
+    override fun onDestroy() {
+        if (this::player.isInitialized) {
+            player.apply {
+                stop()
+                setVideoSurface(null)
+                release()
+            }
+        }
+        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+//        (requireActivity() as AppMainActivity).showSystemUI1()
+        super.onDestroy()
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         (requireActivity() as AppMainActivity).hideSystemUI1()
-        savedInstanceState?.let {
-            seekToPoint = it.getLong("KEY_PLAYER_POSITION")
-            whenReady = it.getBoolean("KEY_PLAYER_PLAY_WHEN_READY")
-            Log.d("seekto and whenready", "seekPoint is $seekToPoint and whenReady is $whenReady")
+
+        snip = requireArguments().getParcelable("snip")
+        
+        //  to run only when this fragment is created and not when orientation is changed
+        if (savedInstanceState == null) {  //  in case we are coming from video editing there is a chance for crash
+            getVideoPreviewFrames()
+
+            currentPos = 0L
+            currentWindow = 0
+            whenReady = false
         }
     }
 
@@ -184,7 +224,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         rootView      = inflater.inflate(R.layout.layout_play_video, container, false)
         appRepository = AppRepository(requireActivity().applicationContext)
         appViewModel  = ViewModelProvider(this).get(AppViewModel::class.java)
-        snip          = requireArguments().getParcelable("snip")
 
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
         bindViews()
@@ -207,30 +246,14 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         })
     }
 
-
-    /**
-     * Called when the fragment is no longer in use.  This is called
-     * after [.onStop] and before [.onDetach].
-     */
-    override fun onDestroy() {
-        if (this::player.isInitialized) {
-            player.apply {
-                playWhenReady = false
-            }
-        }
-        seekToPoint = 0
-        whenReady=false
-        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-//        (requireActivity() as AppMainActivity).showSystemUI1()
-        super.onDestroy()
-
-    }
-
     /**
      * restarts the player with the updated snips.
      * To be called after an edited file has been saved
      */
     fun updatePlaybackFile(updatedSnip: Snip) {
+        whenReady = false
+        currentPos = 0
+        currentWindow = 0
         snip = updatedSnip
         player.release()
         initSetup()
@@ -244,8 +267,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
+
+            seekTo(currentWindow, currentPos)
             playWhenReady = whenReady
-            player.seekTo(seekToPoint)
         }
 
         playerView.apply {
@@ -271,11 +295,12 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 if (snip?.videoFilePath.isNotNullOrEmpty() && tries < retries) {  //  retry in case of errors
                     CoroutineScope(Dispatchers.Main).launch {
                         delay(500)
-                        val frag = requireActivity().supportFragmentManager.findFragmentByTag(AppMainActivity.PLAY_VIDEO_TAG)
+                        val frag = requireActivity().supportFragmentManager.findFragmentByTag(
+                            AppMainActivity.PLAY_VIDEO_TAG)
                         requireActivity().supportFragmentManager.beginTransaction()
-                                .detach(frag!!)
-                                .attach(frag)
-                                .commit()
+                            .detach(frag!!)
+                            .attach(frag)
+                            .commit()
                     }
                 }
             }
@@ -289,16 +314,16 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                         currentTimeline.getWindow(i, window)
                         maxDuration += window.durationMs
                     }
-                    if (isInEditMode) {
+                    /*if (isInEditMode) {
                         seekBar.setDuration(maxDuration)
-                    }
+                    }*/
                 }
 
                 if (playbackState == Player.STATE_ENDED && player.currentPosition >= player.duration) {
                     player.playWhenReady = false
                     whenReady = false
                     requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                    if(tagPosition == CreateTag.AUDIO_AFTER){
+                    if (tagPosition == CreateTag.AUDIO_AFTER) {
                         audioTagPlayer?.start()
                     } else {
                         player.seekTo(0)
@@ -309,9 +334,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         maxDuration = player.duration
         checkBufferAvailable()
-
-        if (!VideoService.isProcessing)  //  in case we are coming from video editing there is a chance for crash
-            getVideoPreviewFrames()
     }
 
 
@@ -319,6 +341,9 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
      * set up playback video source
      */
     private fun setVideoSource() = CoroutineScope(Main).launch{
+        if(context == null)
+            return@launch
+
         var tagInfo: Pair<String, Int>? = null
 
         defaultBandwidthMeter = DefaultBandwidthMeter.Builder(requireContext()).build()
@@ -476,7 +501,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         rootView.requestFocus()
         rootView.setOnKeyListener(object : View.OnKeyListener {
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
-                if (keyCode == KeyEvent.KEYCODE_BACK && isInEditMode) {
+                if (keyCode == KeyEvent.KEYCODE_BACK /*&& isInEditMode*/) {
                     restoreOriginalMedia()
                     return true
                 }
@@ -501,13 +526,21 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     override fun onSaveInstanceState(outState: Bundle) {
 
         outState.apply {
-            if (this@FragmentPlayVideo2::player.isInitialized) {
-                putLong("KEY_PLAYER_POSITION", player.contentPosition)
-            }
+            putInt("KEY_PLAYER_WINDOW", currentWindow)
+            putLong("KEY_PLAYER_POSITION", currentPos)
             putBoolean("KEY_PLAYER_PLAY_WHEN_READY", whenReady)
-
         }
         super.onSaveInstanceState(outState)
+    }
+
+    override fun onViewStateRestored(savedInstanceState: Bundle?) {
+        super.onViewStateRestored(savedInstanceState)
+
+        savedInstanceState?.let {
+            currentWindow = it.getInt("KEY_PLAYER_WINDOW")
+            currentPos = it.getLong("KEY_PLAYER_POSITION")
+            whenReady = it.getBoolean("KEY_PLAYER_PLAY_WHEN_READY")
+        }
     }
 
     /**
@@ -641,7 +674,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         private var fragment: FragmentPlayVideo2? = null
 
         private var tries           = 0
-        private var currentPos      = 0L
         private var bufferPath      = ""
         private var bufferAvailable = false
 
@@ -657,26 +689,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             fragment!!.arguments = bundle
             return fragment!!
         }
-    }
-
-    override fun onPause() {
-        Log.d(TAG, "onPause: started")
-
-        player.playWhenReady = false
-        currentPos = player.currentPosition
-
-        if (this::player.isInitialized) {
-            player.apply {
-                stop()
-                setVideoSurface(null)
-                release()
-            }
-        }
-
-        audioTagPlayer?.stop()
-
-        subscriptions?.dispose()
-        super.onPause()
     }
 
     /**

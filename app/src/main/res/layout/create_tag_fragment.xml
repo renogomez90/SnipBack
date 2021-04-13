@@ -189,26 +189,26 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/del_voice_tag">
 
-                <RadioButton
-                    android:id="@+id/before_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="30dp"
-                    android:drawableTop="@drawable/after_toggle"
-                    android:button="@null"
-                    android:text="Before"
-                    android:textColor="@color/colorHint"/>
+            <RadioButton
+                android:id="@+id/before_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:drawableTop="@drawable/after_toggle"
+                android:button="@null"
+                android:text="Before"
+                android:textColor="@color/colorHint"/>
 
-                <RadioButton
-                    android:id="@+id/after_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="30dp"
-                    android:layout_marginEnd="30dp"
-                    android:button="@null"
-                    android:drawableTop="@drawable/after_toggle"
-                    android:text="After"
-                    android:textColor="@color/colorHint"/>
+            <RadioButton
+                android:id="@+id/after_switch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
+                android:layout_marginEnd="30dp"
+                android:button="@null"
+                android:drawableTop="@drawable/after_toggle"
+                android:text="After"
+                android:textColor="@color/colorHint"/>
         </RadioGroup>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
