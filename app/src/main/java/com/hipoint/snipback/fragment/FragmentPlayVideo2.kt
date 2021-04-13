@@ -72,6 +72,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private var currentPos = 0L
     private val retries    = 3
     private var whenReady : Boolean = false
+    private var isPreparing : Boolean = false
 
     private var subscriptions: CompositeDisposable? = null
 
@@ -161,6 +162,36 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         })
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        (requireActivity() as AppMainActivity).hideSystemUI1()
+
+        snip = requireArguments().getParcelable("snip")
+        
+        //  to run only when this fragment is created and not when orientation is changed
+        if (savedInstanceState == null) {  //  in case we are coming from video editing there is a chance for crash
+            getVideoPreviewFrames()
+
+            currentPos = 0L
+            currentWindow = 0
+            whenReady = false
+        }
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
+        (requireActivity() as AppMainActivity).hideSystemUI1()
+        postponeEnterTransition()
+        rootView      = inflater.inflate(R.layout.layout_play_video, container, false)
+        appRepository = AppRepository(requireActivity().applicationContext)
+        appViewModel  = ViewModelProvider(this).get(AppViewModel::class.java)
+
+        appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
+        bindViews()
+//        hideSystemUI()
+        return rootView
+    }
+
     override fun onResume() {
         super.onResume()
         initSetup()
@@ -201,36 +232,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        (requireActivity() as AppMainActivity).hideSystemUI1()
-
-        snip = requireArguments().getParcelable("snip")
-        
-        //  to run only when this fragment is created and not when orientation is changed
-        if (savedInstanceState == null) {  //  in case we are coming from video editing there is a chance for crash
-            getVideoPreviewFrames()
-
-            currentPos = 0L
-            currentWindow = 0
-            whenReady = false
-        }
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
-        (requireActivity() as AppMainActivity).hideSystemUI1()
-        postponeEnterTransition()
-        rootView      = inflater.inflate(R.layout.layout_play_video, container, false)
-        appRepository = AppRepository(requireActivity().applicationContext)
-        appViewModel  = ViewModelProvider(this).get(AppViewModel::class.java)
-
-        appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
-        bindViews()
-//        hideSystemUI()
-        return rootView
-    }
-
     private fun setOnBackButtonPressed() {
 
         rootView.isFocusableInTouchMode = true
@@ -267,9 +268,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         player.apply {
             repeatMode = Player.REPEAT_MODE_OFF
             setSeekParameters(SeekParameters.CLOSEST_SYNC)
-
-            seekTo(currentWindow, currentPos)
-            playWhenReady = whenReady
         }
 
         playerView.apply {
@@ -314,9 +312,10 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                         currentTimeline.getWindow(i, window)
                         maxDuration += window.durationMs
                     }
-                    /*if (isInEditMode) {
-                        seekBar.setDuration(maxDuration)
-                    }*/
+                    if(isPreparing) //  preparation is done and we can set seek
+                        player.seekTo(currentWindow, currentPos)
+
+                    isPreparing = false
                 }
 
                 if (playbackState == Player.STATE_ENDED && player.currentPosition >= player.duration) {
@@ -334,6 +333,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 
         maxDuration = player.duration
         checkBufferAvailable()
+
+        player.playWhenReady = whenReady
     }
 
 
@@ -396,6 +397,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
 //            player.setMediaItem(MediaItem.fromUri(Uri.parse(snip!!.videoFilePath)))
         }
 
+        isPreparing = true
         player.prepare()
     }
 
@@ -479,7 +481,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         }
 
         tag.setOnClickListener {
-            // ((AppMainActivity) requireActivity()).loadFragment(CreateTag.newInstance(), true);
+            (requireActivity() as AppMainActivity).loadFragment(CreateTag.newInstance(snip), true)
         }
         shutter.setOnClickListener {
 
