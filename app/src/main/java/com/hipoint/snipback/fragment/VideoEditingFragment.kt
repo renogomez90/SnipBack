@@ -1234,9 +1234,15 @@ class VideoEditingFragment : Fragment(), ISaveListener, IJumpToEditPoint, AppRep
             override fun onSimpleOrientationChanged(orientation: Int) {
                 if (activity != null) {  //because rotating a few times was causing the activity to be null
                     when (orientation) {
-                        VideoModeOrientation.REV_LANDSCAPE.ordinal,
-                        VideoModeOrientation.LANDSCAPE.ordinal,
-                        -> {
+                        VideoModeOrientation.REV_LANDSCAPE.ordinal -> {
+                            val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
+                                requireActivity(),
+                                *commonTransition.toTypedArray())
+                            currentOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                            activity?.requestedOrientation =
+                                ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
+                        }
+                        VideoModeOrientation.LANDSCAPE.ordinal -> {
                             val options = ActivityOptionsCompat.makeSceneTransitionAnimation(
                                     requireActivity(),
                                     *commonTransition.toTypedArray())
