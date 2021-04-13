@@ -6,6 +6,7 @@ import android.graphics.Color
 import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
+import android.nfc.Tag
 import android.os.Bundle
 import android.os.SystemClock
 import android.util.Log
@@ -83,10 +84,11 @@ class CreateTag : Fragment() {
         AUDIO_RECORDER_FILE_EXT_MP4,
         AUDIO_RECORDER_FILE_EXT_MP3)
 
-    private var snip: Snip? = null
-    private var recorder: MediaRecorder? = null
+    private var snip       : Snip?          = null
+    private var recorder   : MediaRecorder? = null
+    private var existingTag: Tags?          = null
 
-    private var isAudioPlaying = false
+    private var isExistingTag = false
     private var timerSecond    = 0
     private var posToChoose    = 0
 
@@ -170,7 +172,46 @@ class CreateTag : Fragment() {
 
         bindViews()
         bindListeners()
+        if(snip != null) {
+            showExistingTags()
+        }
         return rootView
+    }
+
+    private fun showExistingTags() {
+
+        CoroutineScope(IO).launch {
+            val colourList = mutableSetOf<String>()    //  Set; so that we don't have repetition
+            existingTag = appRepository.getTagBySnipId(snip!!.snip_id)
+            isExistingTag = existingTag != null
+
+            //  getting colour tags
+            existingTag?.colourId?.let { colourList.addAll(it.split(',')) }
+
+            withContext(Main){
+                //  showing colours
+                colorOne.isChecked   = colourList.contains(TagColours.BLUE.name)
+                colorTwo.isChecked   = colourList.contains(TagColours.RED.name)
+                colorThree.isChecked = colourList.contains(TagColours.ORANGE.name)
+                colorFour.isChecked  = colourList.contains(TagColours.PURPLE.name)
+                colorFive.isChecked  = colourList.contains(TagColours.GREEN.name)
+
+                //  showing to do tags
+                shareLater.isChecked = existingTag?.shareLater ?: false
+                linkLater.isChecked = existingTag?.linkLater ?: false
+
+                //  showing audio tags
+                savedAudioPath = existingTag?.audioPath ?: ""
+                if(savedAudioPath.isNotEmpty()){
+                    enableAudioControls()
+                }
+                when(existingTag?.audioPosition){
+                    AUDIO_BEFORE -> { beforeBtn.isChecked = true}
+                    AUDIO_AFTER -> { afterBtn.isChecked = true}
+                    else -> disableAudioControls()
+                }
+            }
+        }
     }
 
     override fun onResume() {
@@ -460,7 +501,8 @@ class CreateTag : Fragment() {
         val linkLaterVal  = linkLater.isChecked
         val textTag       = getSelectedTextTags()
 
-        val tag = Tags(
+         val tag = Tags(
+            tagId         = existingTag?.tagId,
             snipId        = snipId,
             audioPath     = audioPath,
             audioPosition = audioPosition,
@@ -470,7 +512,12 @@ class CreateTag : Fragment() {
             textTag       = textTag
         )
 
-        CoroutineScope(IO).launch { appRepository.insertTag(tag) }
+        CoroutineScope(IO).launch {
+            if(isExistingTag)
+                appRepository.updateTag(tag)
+            else
+                appRepository.insertTag(tag)
+        }
 
         requireActivity().supportFragmentManager.popBackStack()
     }
@@ -513,22 +560,6 @@ class CreateTag : Fragment() {
         return ""
     }
 
-    private fun showSelectedColourTags(){
-        CoroutineScope(IO).launch {
-            val colourList = mutableSetOf<String>()    //  Set; so that we don't have repetition
-            val tagInfo = appRepository.getTagBySnipId(snip!!.snip_id)
-
-            tagInfo?.colourId?.let { colourList.addAll(it.split(',')) }
-
-            withContext(Main){
-                colorOne.isChecked   = colourList.contains(TagColours.BLUE.name)
-                colorTwo.isChecked   = colourList.contains(TagColours.RED.name)
-                colorThree.isChecked = colourList.contains(TagColours.ORANGE.name)
-                colorFour.isChecked  = colourList.contains(TagColours.PURPLE.name)
-                colorFive.isChecked  = colourList.contains(TagColours.GREEN.name)
-            }
-        }
-    }
 
     /**
      * gets any selected tags as well
