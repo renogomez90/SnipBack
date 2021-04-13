@@ -98,7 +98,9 @@ class VideoUtils(private val opListener: IVideoOpListener) {
                 totalDuration += retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
             }
         }
-        val rotation = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION).toInt()
+        val rotationKey = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)
+        val rotation: Int = rotationKey?.toInt() ?: 0
+
         retriever.release()
 
         val filter = when (rotation) {

@@ -109,8 +109,8 @@
 
         <RelativeLayout
             android:id="@+id/back_arrow"
-            android:layout_width="43dp"
-            android:layout_height="43dp"
+            android:layout_width="@dimen/player_ui_icon_holder_large"
+            android:layout_height="@dimen/player_ui_icon_holder_large"
             android:layout_marginBottom="12dp"
             android:background="@drawable/background_black_round"
             android:gravity="center"
@@ -118,16 +118,16 @@
             app:layout_constraintStart_toStartOf="parent">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="12dp"
+                android:layout_width="@dimen/player_ui_icon_large"
+                android:layout_height="@dimen/player_ui_icon_large"
                 android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_back_arrow" />
         </RelativeLayout>
 
         <RelativeLayout
             android:id="@+id/button_gallery"
-            android:layout_width="43dp"
-            android:layout_height="43dp"
+            android:layout_width="@dimen/player_ui_icon_holder_large"
+            android:layout_height="@dimen/player_ui_icon_holder_large"
             android:layout_marginBottom="12dp"
             android:layout_toEndOf="@id/back_arrow"
             android:background="@drawable/background_black_round"
@@ -135,24 +135,24 @@
             app:layout_constraintStart_toEndOf="@id/back_arrow">
 
             <ImageView
-                android:layout_width="22dp"
-                android:layout_height="16dp"
+                android:layout_width="@dimen/player_ui_icon_large"
+                android:layout_height="@dimen/player_ui_icon_large"
                 android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_gallery" />
         </RelativeLayout>
 
         <RelativeLayout
             android:id="@+id/button_capture"
-            android:layout_width="43dp"
-            android:layout_height="43dp"
+            android:layout_width="@dimen/player_ui_icon_holder_large"
+            android:layout_height="@dimen/player_ui_icon_holder_large"
             android:layout_marginBottom="12dp"
             android:background="@drawable/background_black_round"
             android:gravity="center"
             app:layout_constraintStart_toEndOf="@id/button_gallery">
 
             <ImageView
-                android:layout_width="21dp"
-                android:layout_height="15dp"
+                android:layout_width="@dimen/player_ui_icon_large"
+                android:layout_height="@dimen/player_ui_icon_large"
                 android:contentDescription="@string/no_desc"
                 android:src="@drawable/ic_shutter" />
         </RelativeLayout>
