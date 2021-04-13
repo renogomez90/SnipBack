@@ -49,7 +49,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="38.85dp"
-            android:src="@drawable/ic_edit_one" />
+            android:src="@drawable/ic_tag" />
 
         <ImageView
             android:contentDescription="@string/no_desc"

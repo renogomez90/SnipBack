@@ -1,7 +1,9 @@
 package com.hipoint.snipback.dialog
 
+import android.app.Activity
 import android.app.Dialog
 import android.content.DialogInterface
+import android.content.pm.ActivityInfo
 import android.graphics.Color
 import android.os.Bundle
 import android.view.*
@@ -57,7 +59,7 @@ class FilterDialog(private val filterListener: IFilterListener) : DialogFragment
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
         /*dialog.window?.setGravity(Gravity.BOTTOM)   //  so that the dialog more or less stay at the bottom without covering the bottom menu
         val params = dialog.window?.attributes
         params?.y = -200
@@ -124,6 +126,7 @@ class FilterDialog(private val filterListener: IFilterListener) : DialogFragment
             linkLater.isChecked,
             getSelectedColours(),
             (filterVideoTagsList.adapter as TagsRecyclerAdapter).getSelectedItems()))
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
     }
 
     private fun getSelectedColours(): ArrayList<String> {

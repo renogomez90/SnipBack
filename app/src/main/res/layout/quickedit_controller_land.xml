@@ -208,7 +208,7 @@
                         android:layout_height="match_parent"
                         android:layout_gravity="center"
                         android:contentDescription="@string/no_desc"
-                        android:src="@drawable/ic_delete" />
+                        android:src="@drawable/ic_delete_black" />
 
                     <ImageView
                         android:id="@+id/accept"

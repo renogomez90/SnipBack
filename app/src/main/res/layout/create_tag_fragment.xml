@@ -173,7 +173,7 @@
             android:layout_marginStart="30dp"
             android:background="@android:color/transparent"
             android:contentDescription="@string/no_desc"
-            android:src="@drawable/ic_del"
+            android:src="@drawable/ic_delete_white"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toEndOf="@+id/play_pause_btn"
@@ -324,7 +324,7 @@
             android:layout_marginStart="30dp"
             android:background="@drawable/whire_border_round"
             android:contentDescription="@string/no_desc"
-            app:srcCompat="@drawable/ic_del"
+            app:srcCompat="@drawable/ic_delete_white"
             tools:ignore="VectorDrawableCompat" />
     </LinearLayout>
 

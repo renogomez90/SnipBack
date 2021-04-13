@@ -1,242 +1,252 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
-    android:padding="@dimen/app_dialog_padding">
+    android:orientation="vertical"
+    android:padding="@dimen/app_dialog_padding"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent">
 
-    <TextView
-        android:id="@+id/filterlabelfil"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/menu_settings_item_height"
-        android:fontFamily="@font/barlow_semibold"
-        android:gravity="center_vertical"
-        android:text="FILTER"
-        android:textColor="@color/colorPrimaryWhite"
-        android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-    <ImageButton
-        android:id="@+id/backBtn"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@android:color/transparent"
-        android:scaleType="fitXY"
-        android:src="@drawable/ic_down_arrow"
-        app:layout_constraintBottom_toBottomOf="@+id/filterlabelfil"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/filterlabelfil"
-        android:contentDescription="dismiss button" />
-
-    <TextView
-        android:id="@+id/colorlabel"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/menu_settings_item_height"
-        android:layout_marginTop="20dp"
-        android:fontFamily="@font/barlow_bold"
-        android:gravity="center_vertical"
-        android:text="COLOR"
-        android:textColor="@color/colorPrimaryWhite"
-        android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="@+id/filterlabelfil"
-        app:layout_constraintTop_toBottomOf="@+id/filterlabelfil" />
-
-    <LinearLayout
-        android:id="@+id/color_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="@+id/colorlabel"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/colorlabel">
-
-        <CheckBox
-            android:id="@+id/color_one"
+        <TextView
+            android:id="@+id/filterlabelfil"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
-            android:layout_marginStart="20dp"
-            android:background="@drawable/filtercolor_one"
-            android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center" />
+            android:layout_height="@dimen/menu_settings_item_height"
+            android:fontFamily="@font/barlow_semibold"
+            android:gravity="center_vertical"
+            android:text="FILTER"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="20sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <CheckBox
-            android:id="@+id/color_two"
+        <ImageButton
+            android:id="@+id/backBtn"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/filtercolor_two"
-            android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center" />
+            android:background="@android:color/transparent"
+            android:contentDescription="dismiss button"
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_down_arrow"
+            app:layout_constraintBottom_toBottomOf="@+id/filterlabelfil"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/filterlabelfil" />
+
+        <TextView
+            android:id="@+id/colorlabel"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/menu_settings_item_height"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/barlow_bold"
+            android:gravity="center_vertical"
+            android:text="COLOR"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="@+id/filterlabelfil"
+            app:layout_constraintTop_toBottomOf="@+id/filterlabelfil" />
+
+        <LinearLayout
+            android:id="@+id/color_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="@+id/colorlabel"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/colorlabel">
+
+            <CheckBox
+                android:id="@+id/color_one"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="20dp"
+                android:background="@drawable/filtercolor_one"
+                android:button="@drawable/colour_filter_drawable"
+                android:foregroundGravity="center" />
+
+            <CheckBox
+                android:id="@+id/color_two"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/filtercolor_two"
+                android:button="@drawable/colour_filter_drawable"
+                android:foregroundGravity="center" />
+
+            <CheckBox
+                android:id="@+id/color_three"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/filtercolor_three"
+                android:button="@drawable/colour_filter_drawable"
+                android:foregroundGravity="center" />
+
+            <CheckBox
+                android:id="@+id/color_four"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/filtercolor_four"
+                android:button="@drawable/colour_filter_drawable"
+                android:foregroundGravity="center" />
+
+            <CheckBox
+                android:id="@+id/color_five"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="15dp"
+                android:background="@drawable/filtercolor_five"
+                android:button="@drawable/colour_filter_drawable"
+                android:foregroundGravity="center" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/separator_one"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="@color/colorHint"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/color_container" />
+
+        <TextView
+            android:id="@+id/audio_tag_label"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/menu_settings_item_height"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/barlow_bold"
+            android:gravity="center_vertical"
+            android:text="AUDIO TAG"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="@+id/colorlabel"
+            app:layout_constraintTop_toBottomOf="@+id/separator_one" />
 
         <CheckBox
-            android:id="@+id/color_three"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/filtercolor_three"
-            android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center" />
-
-        <CheckBox
-            android:id="@+id/color_four"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="10dp"
-            android:background="@drawable/filtercolor_four"
-            android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center" />
-
-        <CheckBox
-            android:id="@+id/color_five"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="15dp"
-            android:background="@drawable/filtercolor_five"
-            android:button="@drawable/colour_filter_drawable"
-            android:foregroundGravity="center" />
-    </LinearLayout>
-
-    <View
-        android:id="@+id/separator_one"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="20dp"
-        android:background="@color/colorHint"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/color_container" />
-
-    <TextView
-        android:id="@+id/audio_tag_label"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/menu_settings_item_height"
-        android:layout_marginTop="20dp"
-        android:fontFamily="@font/barlow_bold"
-        android:gravity="center_vertical"
-        android:text="AUDIO TAG"
-        android:textColor="@color/colorPrimaryWhite"
-        android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="@+id/colorlabel"
-        app:layout_constraintTop_toBottomOf="@+id/separator_one" />
-
-    <CheckBox
-        android:id="@+id/audio_tag"
-        android:layout_width="220dp"
-        android:layout_height="30dp"
-        android:background="@drawable/audio_tag_rounded_corner_grey"
-        android:button="@drawable/audio_tag_button"
-        android:fontFamily="@font/barlow_medium"
-        android:gravity="center"
-        android:text="Audio"
-        android:textColor="@color/colorHint"
-        android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="@+id/audio_tag_label"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/audio_tag_label"
-        app:layout_constraintTop_toTopOf="@+id/audio_tag_label" />
-
-    <View
-        android:id="@+id/separator_two"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="20dp"
-        android:background="@color/colorHint"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/audio_tag_label" />
-
-    <TextView
-        android:id="@+id/todotag_label"
-        android:layout_width="wrap_content"
-        android:layout_height="@dimen/menu_settings_item_height"
-        android:layout_marginTop="20dp"
-        android:fontFamily="@font/barlow_bold"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:text="TO DO TAG"
-        android:textColor="@color/colorPrimaryWhite"
-        android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/separator_two" />
-
-    <LinearLayout
-        android:id="@+id/to_do_tag_container"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="@+id/todotag_label"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/todotag_label"
-        app:layout_constraintTop_toTopOf="@+id/todotag_label">
-
-        <CheckBox
-            android:id="@+id/share_later"
-            android:layout_width="105dp"
+            android:id="@+id/audio_tag"
+            android:layout_width="220dp"
             android:layout_height="30dp"
-            android:layout_marginStart="20dp"
             android:background="@drawable/audio_tag_rounded_corner_grey"
             android:button="@drawable/audio_tag_button"
             android:fontFamily="@font/barlow_medium"
             android:gravity="center"
-            android:text="@string/share_later"
+            android:text="Audio"
             android:textColor="@color/colorHint"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="@+id/audio_tag_label"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/audio_tag_label"
+            app:layout_constraintTop_toTopOf="@+id/audio_tag_label" />
+
+        <View
+            android:id="@+id/separator_two"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="@color/colorHint"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/audio_tag_label" />
+
+        <TextView
+            android:id="@+id/todotag_label"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/menu_settings_item_height"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/barlow_bold"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:text="TO DO TAG"
+            android:textColor="@color/colorPrimaryWhite"
             android:textSize="16sp"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_todo" />
+            app:layout_constraintTop_toBottomOf="@id/separator_two" />
 
-        <CheckBox
-            android:id="@+id/link_later"
-            android:layout_width="105dp"
-            android:layout_height="30dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="20dp"
-            android:background="@drawable/audio_tag_rounded_corner_grey"
-            android:button="@drawable/audio_tag_button"
-            android:fontFamily="@font/barlow_medium"
-            android:gravity="center"
-            android:text="Link Later"
-            android:textColor="@color/colorHint"
-            android:textSize="16sp"
+        <LinearLayout
+            android:id="@+id/to_do_tag_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toBottomOf="@+id/todotag_label"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_todo" />
-    </LinearLayout>
+            app:layout_constraintStart_toEndOf="@+id/todotag_label"
+            app:layout_constraintTop_toTopOf="@+id/todotag_label">
 
-    <View
-        android:id="@+id/separator_three"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="20dp"
-        android:background="@color/colorHint"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/todotag_label" />
+            <CheckBox
+                android:id="@+id/share_later"
+                android:layout_width="105dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="20dp"
+                android:background="@drawable/audio_tag_rounded_corner_grey"
+                android:button="@drawable/audio_tag_button"
+                android:fontFamily="@font/barlow_medium"
+                android:gravity="center"
+                android:text="@string/share_later"
+                android:textColor="@color/colorHint"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_todo" />
+
+            <CheckBox
+                android:id="@+id/link_later"
+                android:layout_width="105dp"
+                android:layout_height="30dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="20dp"
+                android:background="@drawable/audio_tag_rounded_corner_grey"
+                android:button="@drawable/audio_tag_button"
+                android:fontFamily="@font/barlow_medium"
+                android:gravity="center"
+                android:text="Link Later"
+                android:textColor="@color/colorHint"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_todo" />
+        </LinearLayout>
+
+        <View
+            android:id="@+id/separator_three"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="20dp"
+            android:background="@color/colorHint"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/todotag_label" />
 
 
-    <TextView
-        android:id="@+id/text_tag_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:fontFamily="@font/barlow_bold"
-        android:gravity="center"
-        android:text="TEXT TAGS"
-        android:textColor="@color/colorPrimaryWhite"
-        android:textSize="16sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/separator_three" />
+        <TextView
+            android:id="@+id/text_tag_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:fontFamily="@font/barlow_bold"
+            android:gravity="center"
+            android:text="TEXT TAGS"
+            android:textColor="@color/colorPrimaryWhite"
+            android:textSize="16sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/separator_three" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/filterVideoTagsList"
-        android:layout_width="0dp"
-        android:layout_height="100dp"
-        android:layout_marginTop="5dp"
-        android:overScrollMode="ifContentScrolls"
-        android:scrollbars="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/text_tag_label" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/filterVideoTagsList"
+            android:layout_width="0dp"
+            android:layout_height="100dp"
+            android:layout_marginTop="5dp"
+            android:overScrollMode="ifContentScrolls"
+            android:scrollbars="vertical"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_tag_label" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

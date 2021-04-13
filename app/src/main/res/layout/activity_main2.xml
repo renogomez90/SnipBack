@@ -223,7 +223,7 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/no_desc"
-                android:src="@drawable/ic_edit_one" />
+                android:src="@drawable/ic_tag" />
 
             <TextView
                 android:id="@+id/edit_text"
@@ -254,7 +254,7 @@
                 android:layout_height="wrap_content"
                 android:background="@android:color/transparent"
                 android:contentDescription="@string/no_desc"
-                android:src="@drawable/ic_edit_one" />
+                android:src="@drawable/ic_tag" />
 
             <TextView
                 android:id="@+id/tag_text"

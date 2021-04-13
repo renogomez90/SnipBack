@@ -69,6 +69,7 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
 
     private var viewButtonClicked = false
     private val uri: Uri? = null
+    private var currentTagFilter: TagFilter? = null
 
     private val allEvents: MutableList<Event> by lazy { ArrayList() }
     private val hdSnips: MutableList<Hd_snips> by lazy { ArrayList() }
@@ -95,6 +96,7 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("viewChangeValue", viewChange)
         outState.putBoolean("buttonClickedValue", viewButtonClicked)
+        outState.putParcelable("currentTag", currentTagFilter)
         super.onSaveInstanceState(outState)
     }
 
@@ -103,6 +105,7 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
         if (savedInstanceState != null) {
             viewChange = savedInstanceState.getString("viewChangeValue")
             viewButtonClicked = savedInstanceState.getBoolean("buttonClickedValue")
+            currentTagFilter = savedInstanceState.getParcelable("currentTag")
             updateViewButtonUI(viewButtonClicked) // update viewButton on orientation change
         }
     }
@@ -361,6 +364,8 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
                 }
                 if(VideoService.isProcessing)
                     (mainCategoryRecycler.adapter as MainRecyclerAdapter).showLoading(true)
+
+                filterSet(currentTagFilter)
             }
 //            mainCategoryRecycler.adapter!!.notifyDataSetChanged()
         }
@@ -574,6 +579,10 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
     }
 
     override fun filterSet(tag: TagFilter?) {
+        currentTagFilter = tag
+        if(mainCategoryRecycler.adapter == null)
+            return
+
         if(isNoFilterSelected(tag)){
             CoroutineScope(IO).launch {
                 val allSnips = AppClass.getAppInstance().allSnip
@@ -626,7 +635,7 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
                 }
 
                 withContext(Main) {
-                    (mainCategoryRecycler.adapter as MainRecyclerAdapter).setFilterIds(
+                    (mainCategoryRecycler.adapter as? MainRecyclerAdapter)?.setFilterIds(
                         filteredSnipSet.toList())
                 }
             }
