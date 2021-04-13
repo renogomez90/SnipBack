@@ -1,6 +1,5 @@
 package com.hipoint.snipback.fragment
 
-import android.app.Dialog
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -13,12 +12,12 @@ import android.util.Log
 import android.view.*
 import android.widget.*
 import androidx.core.content.FileProvider
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.hipoint.snipback.ActivityPlayVideo
 import com.hipoint.snipback.AppMainActivity
 import com.hipoint.snipback.R
 import com.hipoint.snipback.Utils.TagFilter
@@ -68,13 +67,13 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
     var orientation  : Int?       = null
 
     private var viewButtonClicked = false
-    private val uri: Uri? = null
     private var currentTagFilter: TagFilter? = null
 
     private val allEvents: MutableList<Event> by lazy { ArrayList() }
     private val hdSnips: MutableList<Hd_snips> by lazy { ArrayList() }
     private val snip: MutableList<Snip> by lazy { ArrayList() }
     private val appRepository by lazy { AppRepository(AppClass.getAppInstance()) }
+    private val menuDialog by lazy { GalleryMenuDialog(this@FragmentGalleryNew) }
 
     private val videoProcessingReceiver: BroadcastReceiver by lazy {
         object : BroadcastReceiver() {
@@ -189,7 +188,6 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
         }
 
         menu_button.setOnClickListener { v: View? ->
-            val dialog = GalleryMenuDialog(this@FragmentGalleryNew)
 
             menu_button.setCompoundDrawablesWithIntrinsicBounds(0,
                     R.drawable.ic_menu_selected,
@@ -197,8 +195,7 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
                     0)
             menu_button.setTextColor(resources.getColor(R.color.colorPrimaryDimRed))
 
-            dialog.show(requireActivity().supportFragmentManager, GalleryMenuDialog.GALLERY_DIALOG_TAG)
-
+            menuDialog.show(requireActivity().supportFragmentManager, GalleryMenuDialog.GALLERY_DIALOG_TAG)
         }
 
         filter_button.setOnClickListener {
@@ -659,10 +656,14 @@ class FragmentGalleryNew : Fragment(), IFilterListener, IMenuClosedListener {
      */
     override fun settingsSaved() {
         //  resetting menu UI
-        menu_button.setCompoundDrawablesWithIntrinsicBounds(0,
-            R.drawable.ic_menu,
-            0,
-            0)
-        menu_button.setTextColor(resources.getColor(R.color.colorDarkGreyDim))
+        if(this::menu_button.isInitialized && context != null) {
+            menu_button.setCompoundDrawablesWithIntrinsicBounds(0,
+                R.drawable.ic_menu,
+                0,
+                0)
+            menu_button.setTextColor(ResourcesCompat.getColor(resources,
+                R.color.colorDarkGreyDim,
+                requireContext().theme))
+        }
     }
 }

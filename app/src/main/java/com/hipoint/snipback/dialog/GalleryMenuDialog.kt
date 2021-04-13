@@ -3,6 +3,7 @@ package com.hipoint.snipback.dialog
 import android.app.Dialog
 import android.content.DialogInterface
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.*
@@ -46,6 +47,8 @@ class GalleryMenuDialog(private val closeListener: IMenuClosedListener): DialogF
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LOCKED
+
         val window = dialog.window
         val windowParams = window!!.attributes
 
@@ -101,6 +104,7 @@ class GalleryMenuDialog(private val closeListener: IMenuClosedListener): DialogF
     }
 
     override fun onDismiss(dialog: DialogInterface) {
+        requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         closeListener.settingsSaved()
         super.onDismiss(dialog)
     }
