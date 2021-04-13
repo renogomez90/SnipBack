@@ -114,7 +114,8 @@
                     android:layout_gravity="center"
                     android:layout_height="40dp"
                     android:contentDescription="@string/no_desc"
-                    android:src="@drawable/ic_delete_black" />
+                    android:src="@drawable/ic_delete_white"
+                    app:tint="@color/red_tag" />
 
                 <ImageView
                     android:id="@+id/accept"

@@ -580,6 +580,15 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
                         receivedContext?.sendBroadcast(sendVideoToQuickEditIntent)
 
                     }
+
+                    SwipeAction.SWIPE_RIGHT -> {
+
+                        val snapbackCompleteReceiver = Intent(SnapbackFragment.SNAPBACK_PATH_ACTION)
+                        snapbackCompleteReceiver.putExtra("operation",IVideoOpListener.VideoOp.KEY_FRAMES.name)
+                        snapbackCompleteReceiver.putExtra(SnapbackFragment.EXTRA_VIDEO_PATH, processedVideoPath)
+                        receivedContext?.sendBroadcast(snapbackCompleteReceiver)
+
+                    }
                 }
             }
 
