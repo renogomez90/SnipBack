@@ -167,7 +167,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         (requireActivity() as AppMainActivity).hideSystemUI1()
 
         snip = requireArguments().getParcelable("snip")
-        
         //  to run only when this fragment is created and not when orientation is changed
         if (savedInstanceState == null) {  //  in case we are coming from video editing there is a chance for crash
             getVideoPreviewFrames()
@@ -185,6 +184,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         rootView      = inflater.inflate(R.layout.layout_play_video, container, false)
         appRepository = AppRepository(requireActivity().applicationContext)
         appViewModel  = ViewModelProvider(this).get(AppViewModel::class.java)
+        snip          = requireArguments().getParcelable("snip")
 
         appViewModel.getEventByIdLiveData(snip!!.event_id).observe(viewLifecycleOwner, Observer { snipevent: Event? -> event = snipevent })
         bindViews()

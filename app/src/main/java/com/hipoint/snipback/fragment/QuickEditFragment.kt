@@ -235,9 +235,9 @@ class QuickEditFragment : Fragment() {
 
                                     withContext(Main) {
                                         hideProgress()
-                                        videoSnip?.let { snip -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
+                                        videoSnip?.let { snip1 -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
                                             (requireActivity() as AppMainActivity).loadFragment(
-                                                FragmentPlayVideo2.newInstance(snip),
+                                                FragmentPlayVideo2.newInstance(snip1),
                                                 true)
                                         }
                                     }
@@ -246,9 +246,9 @@ class QuickEditFragment : Fragment() {
                                 Log.d(TAG, "onReceive: both files received")
                                 trimmedItemCount = 0
                                 hideProgress()
-                                videoSnip?.let { snip -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
+                                videoSnip?.let { snip1 -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
                                     (requireActivity() as AppMainActivity).loadFragment(
-                                        FragmentPlayVideo2.newInstance(snip),
+                                        FragmentPlayVideo2.newInstance(snip1),
                                         true)
                                 }
                             }
