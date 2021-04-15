@@ -503,10 +503,10 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         rootView.requestFocus()
         rootView.setOnKeyListener(object : View.OnKeyListener {
             override fun onKey(v: View?, keyCode: Int, event: KeyEvent?): Boolean {
-                if (keyCode == KeyEvent.KEYCODE_BACK /*&& isInEditMode*/) {
+                /*if (keyCode == KeyEvent.KEYCODE_BACK *//*&& isInEditMode*//*) {
                     restoreOriginalMedia()
                     return true
-                }
+                }*/
                 return false
             }
         })
