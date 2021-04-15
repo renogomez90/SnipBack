@@ -94,8 +94,14 @@ class VideoUtils(private val opListener: IVideoOpListener) {
         var totalDuration = 0L
         fileList.forEach {
             if (it.exists() && it.length() > 0) {
-                retriever.setDataSource(it.absolutePath)
-                totalDuration += retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION).toLong()
+                try {
+                    retriever.setDataSource(it.absolutePath)
+                    totalDuration += retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)
+                        .toLong()
+                }catch (e: IllegalArgumentException){
+                    Log.e(TAG, "concatenateMultiple: unable to user provided data source")
+                    opListener.failed(IVideoOpListener.VideoOp.CONCAT, comingFrom)
+                }
             }
         }
         val rotationKey = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)

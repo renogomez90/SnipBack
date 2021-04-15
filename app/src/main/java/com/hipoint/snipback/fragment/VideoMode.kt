@@ -1513,6 +1513,10 @@ class VideoMode : Fragment(), View.OnClickListener, OnTouchListener, ActivityCom
                 //  launch the quick edit fragment to handle down swipe
                 (requireActivity() as AppMainActivity).loadFragment(QuickEditFragment.newInstance(0, 0, null, null, QuickEditFragment.OperationMode.QB_PLUS), true)
             }
+
+            if(swipeAction == SwipeAction.SWIPE_UP){
+                (requireActivity() as AppMainActivity).loadFragment(CreateTag.newInstance(null), true)
+            }
         }
         if(swipeAction == SwipeAction.SWIPE_RIGHT) {
             CoroutineScope(Main).launch{
