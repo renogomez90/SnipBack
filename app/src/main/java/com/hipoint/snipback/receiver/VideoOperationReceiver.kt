@@ -194,7 +194,8 @@ class VideoOperationReceiver: BroadcastReceiver(), AppRepository.OnTaskCompleted
 
             if((swipeAction == SwipeAction.SWIPE_LEFT && !isFromSlowNo(comingFrom)) ||  //  left swipe on normal recording
                     (swipeAction == SwipeAction.SWIPE_LEFT && isFromSlowNo(comingFrom) && VideoMode.showHFPSPreview) || //  left swipe on slow mo with preview
-                    swipeAction == SwipeAction.SWIPE_DOWN) {    //  when swipe action is down
+                    swipeAction == SwipeAction.SWIPE_DOWN ||
+                    swipeAction == SwipeAction.SWIPE_UP) {    //  when swipe action is down
 
                 val bufferFile = VideoOpItem(
                     operation      = IVideoOpListener.VideoOp.TRIMMED,
