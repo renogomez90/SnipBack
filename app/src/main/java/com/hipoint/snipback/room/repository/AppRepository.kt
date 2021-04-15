@@ -157,7 +157,7 @@ class AppRepository(context: Context?) {
         return snip.await()
     }
 
-    suspend fun getSnipByVideoPath(videoPath: String): Snip {
+    suspend fun getSnipByVideoPath(videoPath: String): Snip? {
         val snip = CoroutineScope(IO).async {
             snipsDao.getSnipByVideoPath(videoPath)
         }

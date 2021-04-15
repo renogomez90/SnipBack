@@ -226,6 +226,13 @@ class QuickEditFragment : Fragment() {
                             if (bufferHdSnipId == 0) {
                                 CoroutineScope(Default).launch {
                                     videoSnip = appRepository.getSnipByVideoPath(inputName!!)
+                                    tries = 0
+                                    while (videoSnip == null && tries < 5) {
+                                        delay(50)
+                                        videoSnip = appRepository.getSnipByVideoPath(inputName!!)
+                                        tries++
+                                    }
+
                                     withContext(Main) {
                                         hideProgress()
                                         videoSnip?.let { snip -> //  we can't just pop since the fragment only contains the unaltered snip as an argument
