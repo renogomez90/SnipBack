@@ -1,16 +1,24 @@
 package com.hipoint.snipback.fragment
 
 import Jni.FFmpegCmd
+import VideoHandle.EpEditor
 import VideoHandle.OnEditorListener
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.graphics.*
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.*
+import android.view.animation.AnimationUtils
+import android.webkit.MimeTypeMap
 import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
@@ -30,6 +38,7 @@ import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.util.MimeTypes
 import com.google.android.exoplayer2.util.Util
 import com.google.common.primitives.Doubles
 import com.hipoint.snipback.AppMainActivity
@@ -55,6 +64,7 @@ import kotlinx.coroutines.Dispatchers.Main
 import net.kibotu.fastexoplayerseeker.SeekPositionEmitter
 import net.kibotu.fastexoplayerseeker.seekWhenReady
 import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.absoluteValue
@@ -101,6 +111,8 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
     private lateinit var tvConvertToReal       : ImageButton
     private lateinit var swipeDetector         : SwipeDistanceView
     private lateinit var bottomMenu            : LinearLayout
+    private lateinit var layoutHolder          : FrameLayout
+    private lateinit var blinkEffect           : View
 
     // new
     private var event: Event? = null
@@ -428,6 +440,14 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
         quickEditBtn           = rootView.findViewById(R.id.quickEdit_button)
         quickEditTimeTxt       = rootView.findViewById(R.id.quick_edit_time)
         bottomMenu             = rootView.findViewById(R.id.bottom_menu)
+        layoutHolder           = rootView.findViewById(R.id.layout_holder)
+        blinkEffect            = rootView.findViewById(R.id.overlay)
+
+        if ((if (snip != null) snip!!.is_virtual_version else 0) == 1) {
+            tvConvertToReal.visibility = View.VISIBLE
+        } else {
+            tvConvertToReal.visibility = View.GONE
+        }
     }
 
 
@@ -455,11 +475,6 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             validateVideo(snip)
             requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
-        if ((if (snip != null) snip!!.is_virtual_version else 0) == 1) {
-            tvConvertToReal.visibility = View.VISIBLE
-        } else {
-            tvConvertToReal.visibility = View.GONE
-        }
 
         backArrow.setOnClickListener {
             player.release()
@@ -468,6 +483,7 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             requireActivity().onBackPressed()
         }
 
+        /** returns the user to the recording screen*/
         buttonCamera.setOnClickListener {
 //            (AppMainActivity).loadFragment(VideoMode.newInstance(),true);
             requireActivity().requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT
@@ -475,22 +491,79 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
             popToVideoMode()
         }
 
+        /** launches quick edit when buffer is available*/
         quickEditBtn.setOnClickListener {
             player.playWhenReady = false
             launchQuickEdit()
         }
 
+        /** triggers the tagging screen to tag current video*/
         tag.setOnClickListener {
             (requireActivity() as AppMainActivity).loadFragment(CreateTag.newInstance(snip), true)
         }
+
+        /**saves the current frame to gallery*/
         shutter.setOnClickListener {
+            blinkAnimation()
+            val timeStamp = SimpleDateFormat("yyyy-MM-dd_HHmmss", Locale.getDefault()).format(Date())
+            val cmd = "-ss ${player.currentPosition.toFloat()/1000} -i ${snip!!.videoFilePath} -vframes 1 -f image2 ${paths.EXTERNAL_VIDEO_DIR}/IMAGE_${timeStamp}.jpg"
+            EpEditor.execCmd(cmd, 1, object : OnEditorListener {
+                override fun onSuccess() {
+                    Log.d(TAG, "onSuccess: image saved")
+                    MediaScannerConnection.scanFile(
+                        requireContext(),
+                        arrayOf("${paths.EXTERNAL_VIDEO_DIR}/${timeStamp}.jpg"),
+                        arrayOf(MimeTypeMap.getSingleton().getMimeTypeFromExtension("jpg")),
+                        null
+                    )
 
+                    val values = ContentValues()
+
+                    values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis())
+                    values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                    values.put(MediaStore.MediaColumns.DATA,
+                        "${paths.EXTERNAL_VIDEO_DIR}/IMAGE_${timeStamp}.jpg")
+
+                    context!!.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                }
+
+                override fun onFailure() {
+                    Log.e(TAG, "onFailure: save failed")
+                }
+
+                override fun onProgress(progress: Float) {}
+            })
         }
+
+         /**shares the current video snip not the buffer*/
         share.setOnClickListener {
-
+            val shareIntent = Intent(Intent.ACTION_SEND)
+            shareIntent.type = MimeTypes.VIDEO_MP4
+            shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(snip!!.videoFilePath))
+            startActivity(Intent.createChooser(shareIntent, null))
         }
-        delete.setOnClickListener {
 
+        /**  deletes the snip and the buffer */
+        delete.setOnClickListener {
+            CoroutineScope(IO).launch {
+                appRepository.deleteSnip(snip!!)    //  deletes the current snip
+                File(snip!!.videoFilePath).delete()
+                appRepository.getHDSnipsBySnipID(object : AppRepository.HDSnipResult {  //  deletes HD snips (this should remove the buffer as well)
+                    override suspend fun queryResult(hdSnips: List<Hd_snips>?) {
+                        if (!hdSnips.isNullOrEmpty()) {
+                            for (items in hdSnips) {
+                                appRepository.deleteHDSnip(items)
+                                File(items.video_path_processed).delete()
+                            }
+                        }
+
+                        withContext(Main) {
+                            delay(100)  //  just so that the DB can be updated and the changes will show up in the gallery
+                            requireActivity().supportFragmentManager.popBackStack()
+                        }
+                    }
+                }, snip!!.snip_id)
+            }
         }
 
         editBtn.setOnClickListener {
@@ -760,5 +833,21 @@ class FragmentPlayVideo2 : Fragment(), AppRepository.HDSnipResult {
                 }
             }
         }
+    }
+
+    private fun blinkAnimation() {
+        val animBlink = AnimationUtils.loadAnimation(context, R.anim.blink)
+        layoutHolder.startAnimation(animBlink)
+        blinkEffect.visibility = View.VISIBLE
+        blinkEffect.animate()
+            .alpha(02f)
+            .setDuration(100)
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    blinkEffect.visibility = View.GONE
+                    blinkEffect.clearAnimation()
+                    layoutHolder.clearAnimation()
+                }
+            })
     }
 }
